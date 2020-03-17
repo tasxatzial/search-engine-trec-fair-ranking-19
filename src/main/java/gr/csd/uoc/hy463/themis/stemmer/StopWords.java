@@ -104,4 +104,11 @@ public class StopWords {
                 || word.compareToIgnoreCase("or") == 0
                 || word.compareToIgnoreCase("not") == 0;
     }
+
+    public static void main(String[] args) {
+        StopWords.Initialize();
+        System.out.println(StopWords.isStopWord("ending")); // false
+        System.out.println(StopWords.isStopWord("other"));  // true
+
+    }
 }

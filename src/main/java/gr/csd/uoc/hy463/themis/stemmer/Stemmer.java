@@ -66,7 +66,7 @@ public class Stemmer {
         EnglishStemmer.Singleton();
     }
 
-    public static void main(String[] a) {
+    public static void anotherMain(String[] a) {
         String w;
         Stemmer.Initialize();
 
@@ -75,6 +75,13 @@ public class Stemmer {
             JOptionPane.showMessageDialog(null, Stemmer.Stem(w), w,
                     JOptionPane.INFORMATION_MESSAGE);
         } while (!w.equals(""));
+    }
+
+    public static void main(String[] args) {
+        Stemmer.Initialize();
+        System.out.println(Stemmer.Stem("ending"));
+        System.out.println(Stemmer.Stem("publications"));
+
     }
 
 } // class Stemmer
