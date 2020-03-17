@@ -57,11 +57,20 @@ public class Config {
     }
 
     /**
-     * Currently we only have a property about the index path
+     * a property about the index path
      *
      * @return
      */
     public String getIndexPath() {
         return prop.getProperty("INDEX_PATH");
+    }
+
+    /**
+     * a property about the dataset path
+     *
+     * @return
+     */
+    public String getDatasetPath() {
+        return prop.getProperty("DATASET_PATH");
     }
 }
