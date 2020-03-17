@@ -53,7 +53,7 @@
    Release 4
 
  */
-package gr.csd.uoc.hy463.fairness.trec.stemmer.english;
+package gr.csd.uoc.hy463.themis.stemmer.english;
 
 /**
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)

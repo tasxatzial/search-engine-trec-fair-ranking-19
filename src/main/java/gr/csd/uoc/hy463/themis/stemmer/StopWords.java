@@ -15,7 +15,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.fairness.trec.stemmer;
+package gr.csd.uoc.hy463.themis.stemmer;
 
 /**
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)

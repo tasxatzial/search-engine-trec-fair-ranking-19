@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gr.csd.uoc.hy463.fairness.trec.model;
+package gr.csd.uoc.hy463.themis.model;
 
 import java.util.List;
 

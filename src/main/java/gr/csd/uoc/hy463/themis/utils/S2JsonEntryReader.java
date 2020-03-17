@@ -15,9 +15,9 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.fairness.trec.utils;
+package gr.csd.uoc.hy463.themis.utils;
 
-import gr.csd.uoc.hy463.fairness.trec.model.S2TextualEntry;
+import gr.csd.uoc.hy463.themis.model.S2TextualEntry;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.simple.JSONArray;

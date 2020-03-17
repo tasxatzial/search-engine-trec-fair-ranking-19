@@ -16,12 +16,12 @@
  /*
     !! Code from mitos web search engine !!
  */
-package gr.csd.uoc.hy463.fairness.trec.stemmer;
+package gr.csd.uoc.hy463.themis.stemmer;
 
 /**
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-import gr.csd.uoc.hy463.fairness.trec.stemmer.english.EnglishStemmer;
+import gr.csd.uoc.hy463.themis.stemmer.english.EnglishStemmer;
 import javax.swing.*;
 
 /*
