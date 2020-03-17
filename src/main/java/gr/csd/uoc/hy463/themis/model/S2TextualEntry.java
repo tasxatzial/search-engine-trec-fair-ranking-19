@@ -13,95 +13,95 @@ import java.util.List;
  */
 public class S2TextualEntry {
 
-    private String id = null;
-    private String title = null;
-    private String paperAbstract = null;
-    private List<String> entities = null;
-    private List<String> fieldsOfStudy = null;
-    private List<String> authors = null;
-    private int year = 0;
-    private String venue = null;
-    private String journalName = null;
-    private List<String> sources = null;
+    private String __ID__ = null;
+    private String __TITLE__ = null;
+    private String __ABSTRACT__ = null;
+    private List<String> __ENTITIES__ = null;
+    private List<String> __FIELDS_OF_STUDY__ = null;
+    private List<String> __AUTHORS__ = null;
+    private int __YEAR__ = 0;
+    private String __VENUE__ = null;
+    private String __JOURNAL_NAME__ = null;
+    private List<String> __SOURCES__ = null;
 
     public String getId() {
-        return id;
+        return __ID__;
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.__ID__ = id;
     }
 
     public String getTitle() {
-        return title;
+        return __TITLE__;
     }
 
     public void setTitle(String title) {
-        this.title = title;
+        this.__TITLE__ = title;
     }
 
     public String getPaperAbstract() {
-        return paperAbstract;
+        return __ABSTRACT__;
     }
 
     public void setPaperAbstract(String paperAbstract) {
-        this.paperAbstract = paperAbstract;
+        this.__ABSTRACT__ = paperAbstract;
     }
 
     public List<String> getEntities() {
-        return entities;
+        return __ENTITIES__;
     }
 
     public void setEntities(List<String> entities) {
-        this.entities = entities;
+        this.__ENTITIES__ = entities;
     }
 
     public List<String> getFieldsOfStudy() {
-        return fieldsOfStudy;
+        return __FIELDS_OF_STUDY__;
     }
 
     public void setFieldsOfStudy(List<String> fieldsOfStudy) {
-        this.fieldsOfStudy = fieldsOfStudy;
+        this.__FIELDS_OF_STUDY__ = fieldsOfStudy;
     }
 
     public List<String> getAuthors() {
-        return authors;
+        return __AUTHORS__;
     }
 
     public void setAuthors(List<String> authors) {
-        this.authors = authors;
+        this.__AUTHORS__ = authors;
     }
 
     public int getYear() {
-        return year;
+        return __YEAR__;
     }
 
     public void setYear(int year) {
-        this.year = year;
+        this.__YEAR__ = year;
     }
 
     public String getVenue() {
-        return venue;
+        return __VENUE__;
     }
 
     public void setVenue(String venue) {
-        this.venue = venue;
+        this.__VENUE__ = venue;
     }
 
     public String getJournalName() {
-        return journalName;
+        return __JOURNAL_NAME__;
     }
 
     public void setJournalName(String journalName) {
-        this.journalName = journalName;
+        this.__JOURNAL_NAME__ = journalName;
     }
 
     public List<String> getSources() {
-        return sources;
+        return __SOURCES__;
     }
 
     public void setSources(List<String> sources) {
-        this.sources = sources;
+        this.__SOURCES__ = sources;
     }
 
     /**
@@ -110,16 +110,16 @@ public class S2TextualEntry {
      */
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (title != null) {
-            sb.append("Title: ").append(title).append("\n");
+        if (__TITLE__ != null) {
+            sb.append("Title: ").append(__TITLE__).append("\n");
         }
-        if (paperAbstract != null) {
-            sb.append("Abstract: ").append(paperAbstract).append("\n");
+        if (__ABSTRACT__ != null) {
+            sb.append("Abstract: ").append(__ABSTRACT__).append("\n");
         }
-        if (entities != null) {
+        if (__ENTITIES__ != null) {
             boolean first = true;
             sb.append("Entities:");
-            for (String entity : entities) {
+            for (String entity : __ENTITIES__) {
                 sb.append(entity);
                 if (!first) {
                     sb.append(",");
@@ -129,10 +129,10 @@ public class S2TextualEntry {
             }
             sb.append("\n");
         }
-        if (fieldsOfStudy != null) {
+        if (__FIELDS_OF_STUDY__ != null) {
             boolean first = true;
             sb.append("Fields Of Study:");
-            for (String field : fieldsOfStudy) {
+            for (String field : __FIELDS_OF_STUDY__) {
                 sb.append(field);
                 if (!first) {
                     sb.append(",");
@@ -142,11 +142,11 @@ public class S2TextualEntry {
             }
             sb.append("\n");
         }
-        if (authors != null) {
+        if (__AUTHORS__ != null) {
             boolean first = true;
 
             sb.append("Author Names:");
-            for (String author : authors) {
+            for (String author : __AUTHORS__) {
                 sb.append(author);
                 if (!first) {
                     sb.append(",");
@@ -156,16 +156,16 @@ public class S2TextualEntry {
             }
             sb.append("\n");
         }
-        if (journalName != null) {
-            sb.append("Journal Name: ").append(journalName).append("\n");
+        if (__JOURNAL_NAME__ != null) {
+            sb.append("Journal Name: ").append(__JOURNAL_NAME__).append("\n");
         }
-        if (venue != null) {
-            sb.append("Venue: ").append(venue).append("\n");
+        if (__VENUE__ != null) {
+            sb.append("Venue: ").append(__VENUE__).append("\n");
         }
-        if (sources != null) {
+        if (__SOURCES__ != null) {
             boolean first = true;
             sb.append("Sources:");
-            for (String source : sources) {
+            for (String source : __SOURCES__) {
                 sb.append(source);
                 if (!first) {
                     sb.append(",");
@@ -175,8 +175,8 @@ public class S2TextualEntry {
             }
             sb.append("\n");
         }
-        if (year != 0) {
-            sb.append("Year: ").append(year).append("\n");
+        if (__YEAR__ != 0) {
+            sb.append("Year: ").append(__YEAR__).append("\n");
         }
 
         return sb.toString();

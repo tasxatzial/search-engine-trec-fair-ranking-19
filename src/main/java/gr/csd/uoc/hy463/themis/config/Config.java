@@ -30,20 +30,19 @@ import org.apache.logging.log4j.Logger;
  */
 public class Config {
 
-    private InputStream input;
-    private static final Logger LOGGER = LogManager.getLogger(Config.class);
-    private Properties prop;
+    private static final Logger __LOGGER__ = LogManager.getLogger(Config.class);
+    private Properties __PROP__;
 
     public Config() throws IOException {
-        prop = new Properties();
+        __PROP__ = new Properties();
         String propFileName = "/themis.config";
 
-        input = getClass().getResourceAsStream(propFileName);
+        InputStream input = getClass().getResourceAsStream(propFileName);
 
         if (input != null) {
-            prop.load(input);
+            __PROP__.load(input);
         } else {
-            LOGGER.error("property file '" + propFileName + "' not found in the classpath");
+            __LOGGER__.error("property file '" + propFileName + "' not found in the classpath");
         }
     }
 
@@ -53,7 +52,7 @@ public class Config {
      * @return
      */
     public boolean valid() {
-        return input != null;
+        return !__PROP__.isEmpty();
     }
 
     /**
@@ -62,7 +61,7 @@ public class Config {
      * @return
      */
     public String getIndexPath() {
-        return prop.getProperty("INDEX_PATH");
+        return __PROP__.getProperty("INDEX_PATH");
     }
 
     /**
@@ -71,6 +70,20 @@ public class Config {
      * @return
      */
     public String getDatasetPath() {
-        return prop.getProperty("DATASET_PATH");
+        return __PROP__.getProperty("DATASET_PATH");
+    }
+
+    /**
+     * number of max number of files per each partial index
+     *
+     * @return
+     */
+    public int getPartialIndexSize() {
+        String size = __PROP__.getProperty("PARTIAL_INDEX_MAX_DOCS_SIZE");
+        if (size != null) {
+            return Integer.parseInt(size);
+        } else {
+            return 0;
+        }
     }
 }

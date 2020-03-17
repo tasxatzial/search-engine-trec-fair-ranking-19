@@ -31,18 +31,18 @@ import org.apache.logging.log4j.Logger;
 
 public class StopWords {
 
-    private static final Logger LOGGER = LogManager.getLogger(StopWords.class);
-    private static HashSet<String> words;
-    private static StopWords m_stopWords = null;
-    private static String STOPLIST_PATH = "stopwords.txt";
-    private BufferedReader br;
-    private StringBuffer strBuf;
+    private static final Logger __LOGGER__ = LogManager.getLogger(StopWords.class);
+    private static HashSet<String> __WORDS__;
+    private static StopWords __STOPWORDS__ = null;
+    private static String __STOPLIST_PATH__ = "stopwords.txt";
 
     /**
      * Words constructor, initializes stoplist
      */
     private StopWords() {
-        words = new HashSet<String>();
+        BufferedReader br;
+        StringBuffer strBuf;
+        __WORDS__ = new HashSet<String>();
 
         try {
             br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/stopwords.txt")));
@@ -58,13 +58,13 @@ public class StopWords {
 
             StringTokenizer strTok = new StringTokenizer(strBuf.toString());
             while (strTok.hasMoreTokens()) {
-                words.add(strTok.nextToken().toLowerCase());
+                __WORDS__.add(strTok.nextToken().toLowerCase());
             }
 
         } catch (FileNotFoundException e) {
-            LOGGER.error("Could not load stopwords file!");
+            __LOGGER__.error("Could not load stopwords file!");
         } catch (IOException e) {
-            LOGGER.error("IOException found!");
+            __LOGGER__.error("IOException found!");
         }
 
     }
@@ -73,7 +73,7 @@ public class StopWords {
      * Initialize stopwords. Add the stopwords from file
      */
     public static void Initialize() {
-        m_stopWords = (m_stopWords == null) ? new StopWords() : m_stopWords;
+        __STOPWORDS__ = (__STOPWORDS__ == null) ? new StopWords() : __STOPWORDS__;
     }
 
     /**
@@ -86,7 +86,7 @@ public class StopWords {
     public static boolean isStopWord(String word) {
         Initialize();
 
-        return words.contains(word);
+        return __WORDS__.contains(word);
     }
 
     /**

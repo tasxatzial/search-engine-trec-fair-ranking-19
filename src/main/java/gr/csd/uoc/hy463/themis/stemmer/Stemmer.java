@@ -25,8 +25,7 @@ import gr.csd.uoc.hy463.themis.stemmer.english.EnglishStemmer;
 import javax.swing.*;
 
 /*
- *
- *
+ * Stemmer Class. A Singleton
  *
  */
 public class Stemmer {
