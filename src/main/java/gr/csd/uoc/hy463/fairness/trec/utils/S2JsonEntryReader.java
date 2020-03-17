@@ -1,7 +1,19 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * themis - A fair search engine for scientific articles
+ *
+ * Computer Science Department
+ *
+ * University of Crete
+ *
+ * http://www.csd.uoc.gr
+ *
+ * Project for hy463 Information Retrieval Systems course
+ * Spring Semester 2020
+ *
+ * LICENCE: TO BE ADDED
+ *
+ * Copyright 2020
+ *
  */
 package gr.csd.uoc.hy463.fairness.trec.utils;
 
@@ -18,7 +30,7 @@ import org.json.simple.parser.JSONParser;
  *
  * TODO: you have to update the code so that you can read all the relevant info
  *
- * @author papadako
+ * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class S2JsonEntryReader {
 
