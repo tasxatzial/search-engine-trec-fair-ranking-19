@@ -12,7 +12,8 @@
  * Collaborative work with the undergraduate/graduate students of
  * Information Retrieval Systems (hy463) course
  * Spring Semester 2020
- * of Computer Science Department
+ *
+ * Computer Science Department
  * University of Crete
  * http://www.csd.uoc.gr
  * Greece
