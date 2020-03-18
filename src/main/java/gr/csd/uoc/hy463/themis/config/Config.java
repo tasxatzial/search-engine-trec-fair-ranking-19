@@ -81,6 +81,33 @@ public class Config {
     }
 
     /**
+     * Returns the filename of vocabulary index
+     *
+     * @return
+     */
+    public String getVocabularyFileName() {
+        return __PROP__.getProperty("VOCABULARY_FILENAME");
+    }
+
+    /**
+     * Returns the filename of postings index
+     *
+     * @return
+     */
+    public String getPostingsFileName() {
+        return __PROP__.getProperty("POSTINGS_FILENAME");
+    }
+
+    /**
+     * Returns the filename of documents index
+     *
+     * @return
+     */
+    public String getDocumentsFileName() {
+        return __PROP__.getProperty("DOCUMENTS_FILENAME");
+    }
+
+    /**
      * number of max number of files per each partial index
      *
      * @return
