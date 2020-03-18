@@ -1,14 +1,21 @@
 /*
  * themis - A fair search engine for scientific articles
  *
- * Computer Science Department
+ * Currently over the Semantic Scholar Open Research Corpus
+ * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
  *
- * University of Crete
+ * Aiming to participate in TREC 2020 Fair Ranking Track
+ * https://fair-trec.github.io/
  *
- * http://www.csd.uoc.gr
+ * Writing code during COVID-19 pandemic times :-(
  *
- * Project for hy463 Information Retrieval Systems course
+ * Collaborative work with the undergraduate/graduate students of
+ * Information Retrieval Systems (hy463) course
  * Spring Semester 2020
+ * of Computer Science Department
+ * University of Crete
+ * http://www.csd.uoc.gr
+ * Greece
  *
  * LICENCE: TO BE ADDED
  *

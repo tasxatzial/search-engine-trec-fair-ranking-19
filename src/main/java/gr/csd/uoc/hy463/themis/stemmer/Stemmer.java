@@ -1,20 +1,30 @@
 /*
- * bias goggles - Measuring the bias of web domains through the eyes of users
+ * themis - A fair search engine for scientific articles
  *
- * FOUNDATION OF RESEARCH AND TECHNOLOGY - HELLAS (FORTH-ICS)
+ * Currently over the Semantic Scholar Open Research Corpus
+ * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
  *
- * INFORMATION SYSTEMS LABORATORY (ISL)
+ * Aiming to participate in TREC 2020 Fair Ranking Track
+ * https://fair-trec.github.io/
  *
- * http://www.ics.forth.gr/isl
+ * Writing code during COVID-19 pandemic times :-(
+ *
+ * Collaborative work with the undergraduate/graduate students of
+ * Information Retrieval Systems (hy463) course
+ * Spring Semester 2020
+ * of Computer Science Department
+ * University of Crete
+ * http://www.csd.uoc.gr
+ * Greece
  *
  * LICENCE: TO BE ADDED
  *
- * Copyright 2019-2020
+ * Copyright 2020
  *
  */
 
  /*
-    !! Code from mitos web search engine !!
+    !! Code from mitos web search engine, old hy463 project !!
  */
 package gr.csd.uoc.hy463.themis.stemmer;
 
