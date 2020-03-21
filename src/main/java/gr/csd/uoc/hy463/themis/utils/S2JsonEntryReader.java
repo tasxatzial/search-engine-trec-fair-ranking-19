@@ -49,7 +49,7 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the title for example
+            // Get the id for example
             String id = (String) jsonObject.get("id");
             entry.setId(id);
 
