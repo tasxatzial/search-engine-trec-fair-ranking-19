@@ -22,9 +22,9 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.utils;
+package gr.csd.uoc.hy463.themis.collections.SemanticScholar;
 
-import gr.csd.uoc.hy463.themis.model.S2TextualEntry;
+import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
