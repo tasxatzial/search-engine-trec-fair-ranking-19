@@ -112,6 +112,16 @@ public class Config {
     }
 
     /**
+     * Returns the filename of meta index, holding meta information about the
+     * index
+     *
+     * @return
+     */
+    public String getMetaFileName() {
+        return __PROP__.getProperty("META_FILENAME");
+    }
+
+    /**
      * Returns if we should user the stemmer
      *
      * @return
