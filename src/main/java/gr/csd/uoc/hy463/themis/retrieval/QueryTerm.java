@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.queryEvaluator;
+package gr.csd.uoc.hy463.themis.retrieval;
 
 /**
  * A query term can have some kind of weight!

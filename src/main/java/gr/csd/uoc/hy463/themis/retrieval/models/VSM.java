@@ -22,9 +22,10 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.queryEvaluator;
+package gr.csd.uoc.hy463.themis.retrieval.models;
 
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
 
