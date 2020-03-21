@@ -27,9 +27,12 @@ package gr.csd.uoc.hy463.themis.utils;
 import gr.csd.uoc.hy463.themis.model.S2TextualEntry;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  * Class responsible for reading textual entries from the json description of
@@ -38,6 +41,8 @@ import org.json.simple.parser.JSONParser;
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class S2JsonEntryReader {
+
+    private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);
 
     // Method that reads all textual information from an entry
     public static S2TextualEntry readTextualEntry(String jsonToRead) {
@@ -79,12 +84,19 @@ public class S2JsonEntryReader {
 
             // Read authors. A JSONArray
             JSONArray authorsList = (JSONArray) jsonObject.get("authors");
-            System.out.println(authorsList);
-            List<String> authors = new ArrayList<>();
+            List<Pair<String, List<String>>> authors = new ArrayList<>();
             for (int i = 0; i < authorsList.size(); i++) {
                 JSONObject authorInfo = (JSONObject) authorsList.get(i);
                 String authorName = (String) authorInfo.get("name");
-                authors.add(authorName);
+                // Now get all the ids
+                JSONArray idsList = (JSONArray) authorInfo.get("ids");
+                List<String> ids = new ArrayList<>();
+                for (int j = 0; j < idsList.size(); j++) {
+                    String ID = (String) idsList.get(j);
+                    ids.add(ID);
+                }
+                Pair author = new Pair(authorName, ids);
+                authors.add(author);
             }
             entry.setAuthors(authors);
 
@@ -108,8 +120,8 @@ public class S2JsonEntryReader {
             String venue = (String) jsonObject.get("venue");
             entry.setVenue(venue);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ParseException e) {
+            __LOGGER__.error(e.getMessage());
         }
 
         return entry;

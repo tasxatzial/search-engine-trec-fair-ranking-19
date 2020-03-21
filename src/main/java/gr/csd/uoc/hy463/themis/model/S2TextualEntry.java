@@ -24,7 +24,10 @@
  */
 package gr.csd.uoc.hy463.themis.model;
 
+import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
@@ -32,12 +35,13 @@ import java.util.List;
  */
 public class S2TextualEntry {
 
+    private static final Logger __LOGGER__ = LogManager.getLogger(S2TextualEntry.class);
     private String __ID__ = null;
     private String __TITLE__ = null;
     private String __ABSTRACT__ = null;
     private List<String> __ENTITIES__ = null;
     private List<String> __FIELDS_OF_STUDY__ = null;
-    private List<String> __AUTHORS__ = null;
+    private List<Pair<String, List<String>>> __AUTHORS__ = null;
     private int __YEAR__ = 0;
     private String __VENUE__ = null;
     private String __JOURNAL_NAME__ = null;
@@ -83,11 +87,11 @@ public class S2TextualEntry {
         this.__FIELDS_OF_STUDY__ = fieldsOfStudy;
     }
 
-    public List<String> getAuthors() {
+    public List<Pair<String, List<String>>> getAuthors() {
         return __AUTHORS__;
     }
 
-    public void setAuthors(List<String> authors) {
+    public void setAuthors(List<Pair<String, List<String>>> authors) {
         this.__AUTHORS__ = authors;
     }
 
@@ -139,12 +143,12 @@ public class S2TextualEntry {
             boolean first = true;
             sb.append("Entities:");
             for (String entity : __ENTITIES__) {
-                sb.append(entity);
                 if (!first) {
                     sb.append(",");
                 } else {
                     first = false;
                 }
+                sb.append(entity);
             }
             sb.append("\n");
         }
@@ -152,12 +156,12 @@ public class S2TextualEntry {
             boolean first = true;
             sb.append("Fields Of Study:");
             for (String field : __FIELDS_OF_STUDY__) {
-                sb.append(field);
                 if (!first) {
                     sb.append(",");
                 } else {
                     first = false;
                 }
+                sb.append(field);
             }
             sb.append("\n");
         }
@@ -165,13 +169,19 @@ public class S2TextualEntry {
             boolean first = true;
 
             sb.append("Author Names:");
-            for (String author : __AUTHORS__) {
-                sb.append(author);
+            for (Pair<String, List<String>> author : __AUTHORS__) {
                 if (!first) {
                     sb.append(",");
                 } else {
                     first = false;
                 }
+                sb.append(author.getL()); // get the name
+                // Also list its ids
+                List<String> ids = author.getR();
+                sb.append(" => ");
+                ids.forEach((id) -> {
+                    sb.append(id).append(" ");
+                });
             }
             sb.append("\n");
         }
@@ -185,12 +195,12 @@ public class S2TextualEntry {
             boolean first = true;
             sb.append("Sources:");
             for (String source : __SOURCES__) {
-                sb.append(source);
                 if (!first) {
                     sb.append(",");
                 } else {
                     first = false;
                 }
+                sb.append(source);
             }
             sb.append("\n");
         }
