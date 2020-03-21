@@ -26,7 +26,11 @@ package gr.csd.uoc.hy463.themis.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -138,4 +142,64 @@ public class Config {
             return 0;
         }
     }
+
+    /**
+     * number of max memory to use
+     *
+     * @return
+     */
+    public long getMaxMemory() {
+        String size = __PROP__.getProperty("MAX_MEMORY");
+        // make it lowercase
+        size = size.toUpperCase().trim();
+        Pattern p = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*([KMGTP]?B)");
+        Matcher m = p.matcher(size);
+        List<String> parts = new ArrayList<>();
+
+        // We have two groups in the pattern
+        while (m.find()) {
+            parts.add(m.group(1));
+            parts.add(m.group(2));
+        }
+
+        System.out.println(parts);
+        long bytes = 0;
+        // metric unit should be given
+        if (parts.size() == 2) {
+            String unit = parts.get(1);
+            boolean useFloat = true;
+
+            switch (unit) {
+                case "B":
+                    bytes = 1;
+                    useFloat = false;
+                    break;
+                case "KB":
+                    bytes = 1024;
+                    break;
+                case "MB":
+                    bytes = 1024 * 1024;
+                    break;
+                case "GB":
+                    bytes = 1024 * 1024 * 1024;
+                    break;
+                case "TB":
+                    // keep dreaming....!
+                    bytes = 1024 * 1024 * 1024 * 1024;  // not supported by long!
+                    break;
+                case "PB":
+                    // probably in another life!
+                    bytes = 1024 * 1024 * 1024 * 1024 * 1024; // not supported by long!
+                    break;
+            }
+            if (useFloat) {
+                return Math.round(bytes * Float.parseFloat(parts.get(0)));
+            } else {
+                return bytes * ((long) Float.parseFloat(parts.get(0)));
+            }
+        }
+
+        return bytes;
+    }
+
 }
