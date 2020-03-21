@@ -122,6 +122,15 @@ public class Config {
     }
 
     /**
+     * Returns the default retrieval model (VSM/BM25)
+     *
+     * @return
+     */
+    public String getRetrievalModel() {
+        return __PROP__.getProperty("RETRIEVAL_MODEL");
+    }
+
+    /**
      * Returns if we should user the stemmer
      *
      * @return
