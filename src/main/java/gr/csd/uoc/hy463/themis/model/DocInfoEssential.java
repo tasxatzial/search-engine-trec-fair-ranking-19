@@ -24,6 +24,9 @@
  */
 package gr.csd.uoc.hy463.themis.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This class holds any information we might want to communicate with the
  * retrieval model we are implementing about a specific document
@@ -34,54 +37,60 @@ package gr.csd.uoc.hy463.themis.model;
  * whenever we want to get all information related with a document, i.e. the
  * entry of a document in the Documents file
  *
+ * Since probably we are going to store in memory a lot of these objects, we
+ * have to be as memory efficient as we can. This implementation with a map is
+ * worst than just keeping all properties as primitives and private members but
+ * seems to be simpler to interact with
+ *
+ * ID and offset are set only in the constructor
+ *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class DocInfoEssential {
 
+    public enum PROPERTY {
+        PAGERANK, // pagerank score for 2nd phase (Value should be double)
+        WEIGHT, // weight (norm) of document VSM (Value should be double)
+        LENGTH   // for OkapiBM25 (Value should be integer)
+    }
+
     private String id = "";         // the 40 byte id
-    private double weight = 0.0;    // weight (norm) of document (vector space)
-    private double pagerank = 0.0;  // pagerank score for 2nd phase
-    private int length = 0;         // for OkapiBM25
     private long offset = 0;        // offset in documents file
+    // The size of the hashmap is only 3.... since up to now we have 3 properties to hold
+    private final Map<PROPERTY, Object> props = new HashMap<>(3);
+
+    public DocInfoEssential(String id, long offset) {
+        this.id = id;
+        this.offset = offset;
+    }
+
+    /**
+     * Set property for this docID. Properties come from the PROPERY enum and
+     * value is an object
+     *
+     * @param prop
+     * @param value
+     */
+    public void setProperty(DocInfoEssential.PROPERTY prop, Object value) {
+        props.put(prop, value);
+    }
+
+    /**
+     * Return the value of the property
+     *
+     * @param prop
+     * @return
+     */
+    public Object getProperty(DocInfoEssential.PROPERTY prop) {
+        return props.get(prop);
+    }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public double getWeight() {
-        return weight;
-    }
-
-    public void setWeight(double weight) {
-        this.weight = weight;
-    }
-
-    public double getPagerank() {
-        return pagerank;
-    }
-
-    public void setPagerank(double pagerank) {
-        this.pagerank = pagerank;
-    }
-
-    public int getLength() {
-        return length;
-    }
-
-    public void setLength(int length) {
-        this.length = length;
-    }
-
     public long getOffset() {
         return offset;
-    }
-
-    public void setOffset(long offset) {
-        this.offset = offset;
     }
 
 }
