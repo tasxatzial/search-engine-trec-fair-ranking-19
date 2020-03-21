@@ -108,6 +108,24 @@ public class Config {
     }
 
     /**
+     * Returns if we should user the stemmer
+     *
+     * @return
+     */
+    public boolean getUseStemmer() {
+        return Boolean.parseBoolean(__PROP__.getProperty("USE_STEMMER"));
+    }
+
+    /**
+     * Returns if we should use the stopwords
+     *
+     * @return
+     */
+    public boolean getUseStopwords() {
+        return Boolean.parseBoolean(__PROP__.getProperty("USE_STOPWORDS"));
+    }
+
+    /**
      * number of max number of files per each partial index
      *
      * @return
