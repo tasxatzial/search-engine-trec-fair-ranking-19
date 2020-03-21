@@ -36,4 +36,21 @@ public class DocInfoFull extends DocInfoEssential {
         super(id, offset);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DocInfoEssential other = (DocInfoEssential) o;
+        return this.id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
 }

@@ -54,10 +54,10 @@ public class DocInfoEssential {
         LENGTH   // for OkapiBM25 (Value should be integer)
     }
 
-    private String id = "";         // the 40 byte id
-    private long offset = 0;        // offset in documents file
+    protected String id = "";         // the 40 byte id
+    protected long offset = 0;        // offset in documents file
     // The size of the hashmap is only 3.... since up to now we have 3 properties to hold
-    private final Map<PROPERTY, Object> props = new HashMap<>(3);
+    protected final Map<PROPERTY, Object> props = new HashMap<>(3);
 
     public DocInfoEssential(String id, long offset) {
         this.id = id;
@@ -91,6 +91,23 @@ public class DocInfoEssential {
 
     public long getOffset() {
         return offset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DocInfoEssential other = (DocInfoEssential) o;
+        return this.id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 
 }
