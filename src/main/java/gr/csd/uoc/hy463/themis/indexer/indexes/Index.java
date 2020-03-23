@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * This class holds all information related to a specific (partial or not) index
- * in memory. It also knows how to store this information in files
+ * in memory. It also knows how to store this information to files
  *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
@@ -85,30 +85,34 @@ public class Index {
      * 1) VOCABULARY FILE => vocabulary.idx (Normal Sequential file)
      *
      * This is a normal sequential file where we write in lexicographic order
-     * the following entries separated with space: | TERM (a term of the
+     * the following entries separated by space: | TERM (a term of the
      * vocabulary) | DF document frequency of this term | POINTER_TO_POSTING
-     * (the offset in the posting.idx) |
+     * (the offset in the posting.idx, this is a long number) |
      *
      * =========================================================================
      * 2) POSTING FILE => posting.idx (Random Access File)
      *
-     * For each entry it stores: |DOCUMENT_ID (40 ASCII chars - 40 bytes)| |TF
-     * (int 4 bytes) | POINTER_TO_DOCUMENT_FILE (long 4 bytes)
+     * For each entry it stores: | DOCUMENT_ID (40 ASCII chars => 40 bytes) | TF
+     * (int => 4 bytes) | POINTER_TO_DOCUMENT_FILE (long => 4 bytes)
      *
      * =========================================================================
      * 3) DOCUMENTS FILE => documents.idx (Random Access File)
      *
      * For each entry it stores: | Title (variable bytes) | Author1,Author2,
-     * ...,Author_k (variable size) | Year (2 bytes short)| Journal Name
-     * (variable bytes) | The weight of Document (double - 8 bytes)| Length of
-     * Document (int - 4 bytes) | PageRank Score (double - 8 bytes => this will
-     * be used in the second phase of the project)
+     * ...,Author_k (variable size) | AuthorID1, AuthorID, ...,Author_IDk
+     * (variable size) | Year (2 bytes short)| Journal Name (variable bytes) |
+     * The weight (norm) of Document (double => 8 bytes)| Length of Document
+     * (int => 4 bytes) | PageRank Score (double => 8 bytes => this will be used
+     * in the second phase of the project)
      *
      *
      * ==> IMPORTANT NOTES
      *
      * For strings that have a variable size, just add as an int (4 bytes)
-     * prefix storing the size in bytes of the string
+     * prefix storing the size in bytes of the string. Also make sure that you
+     * use the correct representation ASCII (1 byte) or UTF-8 (2 bytes). For
+     * example the doc id is a hexadecimal hash so there is no need for UTF
+     * encoding
      *
      * Authors are separated by a comma
      *
@@ -118,7 +122,7 @@ public class Index {
      * collection by scanning the whole postings list
      *
      * For now add 0.0 for PageRank score (a team will be responsible for
-     * computing it in the second phase of the project
+     * computing it in the second phase of the project)
      *
      *
      * @return

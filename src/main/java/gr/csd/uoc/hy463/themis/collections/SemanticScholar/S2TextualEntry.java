@@ -30,6 +30,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
+ * Class that holds all textual information read from an entry of the collection
+ * It is used by the S2JSONEntryReader
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */

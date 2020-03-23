@@ -46,7 +46,7 @@ public class VSM extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<String, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

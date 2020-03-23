@@ -29,6 +29,8 @@
 package gr.csd.uoc.hy463.themis.stemmer.english;
 
 /**
+ * English Stemmer
+ *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class EnglishStemmer {

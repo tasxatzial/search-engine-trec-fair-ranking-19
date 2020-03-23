@@ -26,7 +26,8 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
  * This class could be used when we want to get all information of a specific
- * document, etc. title, authors, etc.
+ * document, etc. title, authors, etc. by reading the appropriate entry in the
+ * documents file
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
@@ -34,23 +35,6 @@ public class DocInfoFull extends DocInfoEssential {
 
     public DocInfoFull(String id, long offset) {
         super(id, offset);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        DocInfoEssential other = (DocInfoEssential) o;
-        return this.id == other.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id.hashCode();
     }
 
 }

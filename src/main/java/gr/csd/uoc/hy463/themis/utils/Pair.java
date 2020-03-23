@@ -27,7 +27,7 @@ package gr.csd.uoc.hy463.themis.utils;
 import java.io.Serializable;
 
 /**
- * FORTH-ICS
+ * Class that represents a Pair, i.e. a tuple of size two
  *
  * @param <L>
  * @param <R>

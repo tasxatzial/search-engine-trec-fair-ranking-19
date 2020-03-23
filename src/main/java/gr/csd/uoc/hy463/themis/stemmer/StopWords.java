@@ -25,6 +25,8 @@
 package gr.csd.uoc.hy463.themis.stemmer;
 
 /**
+ * Class responsible for identifying stopwords
+ *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 import java.io.BufferedReader;

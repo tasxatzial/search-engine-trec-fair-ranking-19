@@ -31,18 +31,18 @@ import java.util.Map;
  * This class holds any information we might want to communicate with the
  * retrieval model we are implementing about a specific document
  *
- * Currently just holds the important things.
+ * This essential representation just holds the important things.
  *
- * Can also be extended by another class, DocInfoFull, that will be used
- * whenever we want to get all information related with a document, i.e. the
- * entry of a document in the Documents file
+ * Can also be extended by another class, like the DocInfoFull, that will be
+ * used whenever we want to get all information related with a document, i.e.
+ * all information in the entry of a document in the Documents file
  *
  * Since probably we are going to store in memory a lot of these objects, we
  * have to be as memory efficient as we can. This implementation with a map is
  * worst than just keeping all properties as primitives and private members but
  * seems to be simpler to interact with
  *
- * ID and offset are set only in the constructor
+ * ID and offset in document file are set only in the constructor
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
@@ -59,6 +59,12 @@ public class DocInfoEssential {
     // The size of the hashmap is only 3.... since up to now we have 3 properties to hold
     protected final Map<PROPERTY, Object> props = new HashMap<>(3);
 
+    /**
+     *
+     * @param id the id of a document
+     * @param offset the offset in the document file the contains all
+     * information for this document
+     */
     public DocInfoEssential(String id, long offset) {
         this.id = id;
         this.offset = offset;
@@ -76,7 +82,8 @@ public class DocInfoEssential {
     }
 
     /**
-     * Return the value of the property
+     * Return the value of the property. Have to cast to appropriate value the
+     * result in your code!
      *
      * @param prop
      * @return
@@ -102,7 +109,7 @@ public class DocInfoEssential {
             return false;
         }
         DocInfoEssential other = (DocInfoEssential) o;
-        return this.id == other.id;
+        return this.id.equals(other.id);
     }
 
     @Override

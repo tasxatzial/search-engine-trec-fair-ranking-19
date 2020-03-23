@@ -47,21 +47,27 @@ abstract class ARetrievalModel {
     }
 
     /**
-     * Method that evaluates the query and returns the whole ranked list of
-     * results.
+     * Method that evaluates the query and returns a ranked list of pairs of the
+     * whole relevant documents.
      *
      * If type PLAIN then the Object in the Pair is the id of the doc (String),
      * if the type is ESSENTIAL the Object in the Pair is DocInfoEssential, and
-     * if the type is FULL then the Object in the Pair is DocInfoFull
+     * if the type is FULL then the Object in the Pair is DocInfoFull.
      *
-     * @param query
+     * The double is the score of the document as returned by the corresponding
+     * retrieval model.
+     *
+     * The list must be in descending order according to the score
+     *
+     * @param query list of query terms
+     * @param type the type of object in the pair (PLAIN/ESSENTIAL/FULL)
      * @return
      */
     public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type);
 
     /**
-     * Method that evaluates the query and returns the top-k ranked list of
-     * results.
+     * Method that evaluates the query and returns a list of pairs with the
+     * top-k ranked results.
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -75,13 +81,17 @@ abstract class ARetrievalModel {
      * if the type is ESSENTIAL the Object in the Pair is DocInfoEssential, and
      * if the type is FULL then the Object in the Pair is DocInfoFull
      *
+     * The double is the score of the document as returned by the corresponding
+     * retrieval model.
      *
-     * @param query
-     * @param type
-     * @param topk
+     * The list must be in descending order according to the score
+     *
+     * @param query list of query terms
+     * @param type the type of object in the pair (PLAIN/ESSENTIAL/FULL)
+     * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<String, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk);
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk);
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

@@ -25,7 +25,9 @@
 package gr.csd.uoc.hy463.themis.retrieval;
 
 /**
- * A query term can have some kind of weight!
+ * This class represents a query term. A query term can have some kind of
+ * weight! Might be useful for experimenting with different weights for terms
+ * (e.g., synonyms/antonyms)
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
