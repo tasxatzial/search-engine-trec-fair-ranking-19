@@ -17,8 +17,8 @@ List of students: to fill in
 
 Supervision: Panagiotis Papadakos (papadako@ics.forth.gr)
 
-Computer Science Department http://www.csd.uoc.gr\
-University of Crete\
+Computer Science Department http://www.csd.uoc.gr  
+University of Crete  
 Greece
 
 -- Written during COVID-19 pandemic times :-( --
