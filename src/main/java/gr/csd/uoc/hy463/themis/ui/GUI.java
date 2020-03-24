@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.gui;
+package gr.csd.uoc.hy463.themis.ui;
 
 /**
  * Some kind of simple GUI to check the functionality of themis
