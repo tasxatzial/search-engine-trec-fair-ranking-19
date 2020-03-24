@@ -60,7 +60,7 @@
    Release 4
 
  */
-package gr.csd.uoc.hy463.themis.stemmer.english;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english;
 
 /**
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)

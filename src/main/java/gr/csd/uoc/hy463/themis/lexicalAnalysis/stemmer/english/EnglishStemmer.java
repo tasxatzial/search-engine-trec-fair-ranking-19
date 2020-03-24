@@ -26,7 +26,7 @@
  /*
     !! Code from mitos web search engine !!
  */
-package gr.csd.uoc.hy463.themis.stemmer.english;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english;
 
 /**
  * English Stemmer

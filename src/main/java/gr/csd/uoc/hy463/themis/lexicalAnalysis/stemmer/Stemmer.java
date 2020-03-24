@@ -26,12 +26,12 @@
  /*
     !! Code from mitos web search engine, old hy463 project !!
  */
-package gr.csd.uoc.hy463.themis.stemmer;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
 /**
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-import gr.csd.uoc.hy463.themis.stemmer.english.EnglishStemmer;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english.EnglishStemmer;
 import javax.swing.*;
 
 /*
