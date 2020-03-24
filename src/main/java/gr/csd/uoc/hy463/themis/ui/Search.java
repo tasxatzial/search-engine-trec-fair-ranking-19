@@ -25,10 +25,11 @@
 package gr.csd.uoc.hy463.themis.ui;
 
 /**
- * Some kind of simple GUI to check the functionality of themis
+ * Some kind of simple ui to search the indexes. Some kind of GUI will be a
+ * bonus!
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
-public class GUI {
+public class Search {
 
 }
