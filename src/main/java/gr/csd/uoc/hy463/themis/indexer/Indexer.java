@@ -77,8 +77,9 @@ public class Indexer {
     // and should be serialized when the index process has finished. Such
     // information could be the avgDL for the Okapi-BM25 implementation,
     // a timestamp of when the indexing process finished, the path of the indexed
-    // collection, and whatever else you might want. But make sure that before
-    //  querying the serialized file is loaded
+    // collection, the options for stemming and stop-words used in the indexing process,
+    // and whatever else you might want. But make sure that before querying
+    // the serialized file is loaded
     private Map<String, String> __META_INDEX_INFO__ = null;
 
     /**
