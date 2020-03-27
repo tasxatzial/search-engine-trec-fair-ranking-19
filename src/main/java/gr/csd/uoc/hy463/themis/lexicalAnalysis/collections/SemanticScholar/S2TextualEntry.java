@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.collections.SemanticScholar;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
