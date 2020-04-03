@@ -34,8 +34,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -166,10 +168,18 @@ public class Indexer {
      */
     public boolean index(String path) throws IOException {
         Index index = new Index(__CONFIG__);
-        int partialIndexes = 0;
+        int id = 0;
+        // set id of index
+        index.setID(id);
 
         // Holds  all files in path
         List<String> files = new ArrayList<>();
+
+        // We use a linked list as a queuue for our partial indexes
+        Queue<Integer> partialIndexesQueue = new LinkedList<>();
+
+        // Add id to queue
+        partialIndexesQueue.add(id);
 
         // for each file in path
         for (String file : files) {
@@ -182,30 +192,38 @@ public class Indexer {
                 // to files in appropriate directory id and increase partialIndexes
 
                 if (article == __CONFIG__.getPartialIndexSize()) {
-                    // Increase partial indexes and dump files to appropriate directory
-                    partialIndexes++;
-                    index.setID(partialIndexes);
                     index.dump();   // dump partial index to appropriate subdirectory
+                    // Create a new index
+                    // Increase partial indexes and dump files to appropriate directory
+                    id++;
+                    index = new Index(__CONFIG__);
+                    index.setID(id);
+                    // Add id to queue
+                    partialIndexesQueue.add(id);
                 }
             }
         }
 
         // Now we have finished creating the partial indexes
-        // So we have to merge them (call merge())
+        // So we have to merge them (call merge)
+        merge(partialIndexesQueue);
+
         return false;
     }
 
     /**
-     * Method that merges two partial indexes and creates a new index with ID
-     * nextID, which is either a new partial index or the final index if we have
-     * finished merging (i.e., if nextID = 0)
+     * Method that merges the partial indexes and creates a new index with new
+     * ID which is either a new partial index or the final index if the queue is
+     * empty. If it is a partial index it adds it to the queue at the tail using
+     * add
      *
-     * @param id
-     * @param id
-     * @param nextID
+     * @param partialIndexesQueue
      * @return
      */
-    private void merge(int partialID1, int partialID2, boolean nextID) {
+    private void merge(Queue<Integer> partialIndexesQueue) {
+        // Repeatevily use the indexes with the ids stored in the head of the queue
+        // using the get method
+
         // Read vocabulary files line by line in corresponding dirs
         // and check which is the shortest lexicographically.
         // Read the corresponding entries in the postings and documents file
@@ -215,8 +233,8 @@ public class Indexer {
         // Continue with the next lexicographically shortest word
         // Dump the new index and delete the old partial indexes
 
-        // If nextID = 0 (i.e., we have finished merging partial indexes, store
-        // all idx files to INDEX_PATH
+        // If this is the last index in the queue, we have finished merging 
+        // partial indexes, store all idx files to INDEX_PATH
     }
 
     /**
