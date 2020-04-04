@@ -24,6 +24,12 @@
  */
 package gr.csd.uoc.hy463.themis.ui;
 
+import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+
 /**
  *
  * This class runs the indexers
@@ -32,5 +38,25 @@ package gr.csd.uoc.hy463.themis.ui;
  *
  */
 public class CreateIndex {
+    private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
+    private Indexer _indexer = null;
 
+    public void create() {
+        if (isRunning()) {
+            return;
+        }
+        try {
+            _indexer = new Indexer();
+        } catch (IOException | ClassNotFoundException e) {
+            __LOGGER__.error(e.getMessage());
+            return;
+        }
+        _indexer.setTask(Indexer.TASK.CREATE_INDEX);
+        Thread runnableIndexer = new Thread(_indexer);
+        runnableIndexer.start();
+    }
+
+    public boolean isRunning() {
+        return _indexer != null && _indexer.isRunning();
+    }
 }

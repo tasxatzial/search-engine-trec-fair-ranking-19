@@ -38,6 +38,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,7 +58,13 @@ import org.apache.logging.log4j.Logger;
  *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-public class Indexer {
+public class Indexer implements Runnable {
+    public enum TASK {
+        CREATE_INDEX, LOAD_INDEX
+    };
+
+    private TASK _task;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private Config __CONFIG__;  // configuration options
@@ -363,6 +371,32 @@ public class Indexer {
         } else {
             __LOGGER__.error("Index has not been initialized correctly");
             return "";
+        }
+    }
+
+    public void setTask(TASK task) {
+        _task = task;
+    }
+
+    public boolean isRunning() {
+        return running.get() && _task != null;
+    }
+
+    @Override
+    public void run() {
+        running.set(true);
+        try {
+            if (_task == TASK.CREATE_INDEX) {
+                index();
+            }
+            else if (_task == TASK.LOAD_INDEX) {
+                load();
+            }
+        } catch (IOException e) {
+            __LOGGER__.error(e.getMessage());
+        } finally {
+            running.set(false);
+            _task = null;
         }
     }
 }
