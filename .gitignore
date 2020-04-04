@@ -3,12 +3,11 @@ nbproject/private/
 build/
 nbbuild/
 dist/
-logs/
+log/
 nbdist/
 nbactions.xml
 nb-configuration.xml
 target/
-.idea/
 
 # Class Files #
 *.class
@@ -17,3 +16,6 @@ target/
 *.war
 *.ear
 
+# Intellij specific #
+hy463-fairness-trec-2020.iml
+.idea/
