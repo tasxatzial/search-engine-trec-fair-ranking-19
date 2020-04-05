@@ -106,6 +106,17 @@ public class View extends JFrame {
      */
     public void initIndexView() {
         if (_state == STATE.INDEX) {
+            clearResultsArea();
+            return;
+        }
+        if (_state == STATE.SEARCH) {
+            _mainPane.remove(_searchButton);
+            _mainPane.remove(_searchField);
+            _searchField = null;
+            _searchButton = null;
+            _state = STATE.INDEX;
+            clearResultsArea();
+            setIndexViewBounds();
             return;
         }
         _state = STATE.INDEX;
@@ -133,6 +144,16 @@ public class View extends JFrame {
      */
     public void initSearchView() {
         if (_state == STATE.SEARCH) {
+            return;
+        }
+        if (_state == STATE.INDEX) {
+            clearResultsArea();
+            _searchButton = new JButton("Search");
+            _searchField = new JTextField();
+            _mainPane.add(_searchField);
+            _mainPane.add(_searchButton);
+            _state = STATE.SEARCH;
+            setSearchViewBounds();
             return;
         }
         _state = STATE.SEARCH;
@@ -181,6 +202,15 @@ public class View extends JFrame {
         _resultsArea.setFont(_textFont);
         _resultsPane = new JScrollPane(_resultsArea);
         _mainPane.add(_resultsPane);
+    }
+
+    /**
+     * Clears the results of clear/load index, search
+     */
+    public void clearResultsArea() {
+        if (_resultsArea != null) {
+            _resultsArea.setText("");
+        }
     }
 
     /**
