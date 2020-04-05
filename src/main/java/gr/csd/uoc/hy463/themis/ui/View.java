@@ -4,6 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 
 public class View extends JFrame {
+    /* STATE is INDEX for the create/load index view
+       STATE is SEARCH for the search view */
+    public enum STATE {
+        INDEX, SEARCH
+    }
+
+    private STATE _state;
 
     /* The main menu bar */
     private JMenuBar _menu;
@@ -25,6 +32,12 @@ public class View extends JFrame {
 
     /* Everything sits on top of this pane */
     private JLayeredPane _mainPane;
+
+    /* Contains the text area that shows the results of the indexing/searching tasks */
+    private JScrollPane _resultsPane;
+
+    /* shows results of indexing/searching */
+    private JTextArea _resultsArea;
 
     public View() {
         initMenu();
@@ -86,7 +99,39 @@ public class View extends JFrame {
      * Modifies the view when the "create index" menu item is clicked.
      */
     public void initIndexView() {
+        if (_state == STATE.INDEX) {
+            return;
+        }
+        _state = STATE.INDEX;
+        initResultsPane();
+        setIndexViewBounds();
+    }
 
+    /**
+     * Sets the proper bounds of the results area of the indexing task
+     */
+    public void setIndexViewBounds() {
+        if (_state == STATE.INDEX) {
+            Dimension frameDim = getBounds().getSize();
+            int resultsPaneWidth = frameDim.width - getInsets().left - getInsets().right;
+            int resultsPaneHeight = frameDim.height - getInsets().top - getInsets().bottom -
+                    _titleArea.getHeight() - _menu.getHeight();
+            int resultsPaneX = 0;
+            int resultsPaneY = _titleArea.getHeight();
+            _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+        }
+    }
+
+    /* Initializes the area that shows the results of create/load index or search */
+    private void initResultsPane() {
+        if (_resultsPane != null) {
+            return;
+        }
+        _resultsArea = new JTextArea();
+        _resultsArea.setEditable(false);
+        _resultsArea.setFont(_textFont);
+        _resultsPane = new JScrollPane(_resultsArea);
+        _mainPane.add(_resultsPane);
     }
 
     /**
