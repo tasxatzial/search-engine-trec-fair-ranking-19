@@ -399,4 +399,8 @@ public class Indexer implements Runnable {
             _task = null;
         }
     }
+
+    public void stop()  {
+        running.set(false);
+    }
 }

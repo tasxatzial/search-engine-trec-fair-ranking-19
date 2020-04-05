@@ -45,4 +45,19 @@ public class View extends JFrame {
 
         setJMenuBar(_menu);
     }
+
+    /**
+     * Modifies the view when the "create index" menu item is clicked.
+     */
+    public void initIndexView() {
+
+    }
+
+    /**
+     * Returns the "create index" menu item
+     * @return
+     */
+    public JMenuItem get_createIndex() {
+        return _createIndex;
+    }
 }

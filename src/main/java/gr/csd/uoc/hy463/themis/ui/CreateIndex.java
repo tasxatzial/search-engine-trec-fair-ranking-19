@@ -59,4 +59,10 @@ public class CreateIndex {
     public boolean isRunning() {
         return _indexer != null && _indexer.isRunning();
     }
+
+    public void stop() {
+        if (_indexer != null) {
+            _indexer.stop();
+        }
+    }
 }
