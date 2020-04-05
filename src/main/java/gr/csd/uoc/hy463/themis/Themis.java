@@ -15,8 +15,9 @@ public class Themis {
     public static void main(String[] args) {
         view = new View();
 
-        /* add a listener to "create index" menu item */
+        /* add a listeners menu items */
         view.get_createIndex().addActionListener(new createIndexListener());
+        view.get_queryCollection().addActionListener(new searchListener());
 
         view.setVisible(true);
     }
@@ -47,6 +48,15 @@ public class Themis {
             createIndex = new CreateIndex();
             view.initIndexView();
             return true;
+        }
+    }
+
+    private static class searchListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (createIndexListener.init()) {
+                view.initSearchView();
+            }
         }
     }
 }

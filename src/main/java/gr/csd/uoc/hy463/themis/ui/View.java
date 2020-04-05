@@ -39,6 +39,12 @@ public class View extends JFrame {
     /* shows results of indexing/searching */
     private JTextArea _resultsArea;
 
+    /* The search button in search view */
+    private JButton _searchButton;
+
+    /* the search input area in search view */
+    private JTextField _searchField;
+
     public View() {
         initMenu();
         pack();
@@ -108,7 +114,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Sets the proper bounds of the results area of the indexing task
+     * Sets the proper bounds of the create/load index results area
      */
     public void setIndexViewBounds() {
         if (_state == STATE.INDEX) {
@@ -119,6 +125,49 @@ public class View extends JFrame {
             int resultsPaneX = 0;
             int resultsPaneY = _titleArea.getHeight();
             _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+        }
+    }
+
+    /**
+     * Modifies the view when the "query collection" menu item is clicked.
+     */
+    public void initSearchView() {
+        if (_state == STATE.SEARCH) {
+            return;
+        }
+        _state = STATE.SEARCH;
+        _searchButton = new JButton("Search");
+        _searchButton.setFont(_textFont);
+        _searchField = new JTextField();
+        _searchField.setFont(_textFont);
+        _mainPane.add(_searchField);
+        _mainPane.add(_searchButton);
+        initResultsPane();
+        setSearchViewBounds();
+    }
+
+    /**
+     * Sets the proper bounds of the search results area
+     */
+    public void setSearchViewBounds() {
+        if (_state == STATE.SEARCH) {
+            Dimension frameDim = getBounds().getSize();
+            int searchButtonWidth = 150;
+            int searchButtonHeight = 40;
+            int searchButtonX = 0;
+            int searchButtonY = _titleArea.getHeight();
+            int searchFieldWidth = frameDim.width - getInsets().left - getInsets().right - searchButtonWidth;
+            int searchFieldHeight = searchButtonHeight;
+            int searchFieldX = searchButtonWidth;
+            int searchFieldY = _titleArea.getHeight();
+            int resultsPaneWidth = frameDim.width - getInsets().left - getInsets().right;
+            int resultsPaneHeight = frameDim.height - getInsets().top - getInsets().bottom -
+                    _titleArea.getHeight() - _menu.getHeight() - searchButtonHeight;
+            int resultsPaneX = 0;
+            int resultsPaneY = searchButtonHeight + _titleArea.getHeight();
+            _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+            _searchButton.setBounds(searchButtonX, searchButtonY, searchButtonWidth, searchButtonHeight);
+            _searchField.setBounds(searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight);
         }
     }
 
@@ -140,5 +189,13 @@ public class View extends JFrame {
      */
     public JMenuItem get_createIndex() {
         return _createIndex;
+    }
+
+    /**
+     * Returns the "query collection" menu item
+     * @return
+     */
+    public JMenuItem get_queryCollection() {
+        return _queryCollection;
     }
 }
