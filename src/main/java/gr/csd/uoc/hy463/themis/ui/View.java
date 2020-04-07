@@ -1,7 +1,10 @@
 package gr.csd.uoc.hy463.themis.ui;
 
+import gr.csd.uoc.hy463.themis.utils.JTextAreaOutputStream;
+
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public class View extends JFrame {
     /* STATE is INDEX for the create/load index view
@@ -44,6 +47,9 @@ public class View extends JFrame {
 
     /* the search input area in search view */
     private JTextField _searchField;
+
+    /* Prints the create/load index and search results */
+    private JTextAreaOutputStream _viewOut;
 
     public View() {
         initMenu();
@@ -201,6 +207,7 @@ public class View extends JFrame {
         _resultsArea.setEditable(false);
         _resultsArea.setFont(_textFont);
         _resultsPane = new JScrollPane(_resultsArea);
+        _viewOut = new JTextAreaOutputStream(_resultsArea);
         _mainPane.add(_resultsPane);
     }
 
@@ -229,6 +236,15 @@ public class View extends JFrame {
         int quitDialog = JOptionPane.showOptionDialog(this, runningTask + " is in progress. Quit?", "Question",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         return (quitDialog == JOptionPane.YES_OPTION);
+    }
+
+    /**
+     * Prints the provided text to the create/load index and search areas
+     * @param text
+     * @throws IOException
+     */
+    public void print(String text) throws IOException {
+        _viewOut.write(text.getBytes("UTF-8"));
     }
 
     /**
