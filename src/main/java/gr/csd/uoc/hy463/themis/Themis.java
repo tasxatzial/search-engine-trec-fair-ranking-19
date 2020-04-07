@@ -4,10 +4,8 @@ import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import javax.swing.*;
+import java.awt.event.*;
 
 public class Themis {
     public static CreateIndex createIndex;
@@ -16,6 +14,20 @@ public class Themis {
 
     public static void main(String[] args) {
         view = new View();
+
+        /* close window button listener */
+        view.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask()))) {
+                    view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                }
+                else {
+                    view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                    System.exit(0);
+                }
+            }
+        });
 
         /* resized window listeners */
         view.addComponentListener(new ComponentAdapter() {

@@ -65,4 +65,15 @@ public class CreateIndex {
             _indexer.stop();
         }
     }
+
+    public String getTask() {
+        if (_indexer == null) {
+            return null;
+        }
+        Indexer.TASK task = _indexer.getTask();
+        if (task != null) {
+            return _indexer.getTask().toString();
+        }
+        return null;
+    }
 }

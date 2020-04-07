@@ -214,6 +214,24 @@ public class View extends JFrame {
     }
 
     /**
+     * Shows a yes/no quit dialog only when the close button is clicked and
+     * create/load index or search are running.
+     *
+     * @param runningTask The name of the running task.
+     * @return true if the yes button is clicked, false otherwise.
+     * @throws IllegalArgumentException if running task is null.
+     */
+    public boolean showQuitMessage(String runningTask) {
+        if (runningTask == null) {
+            throw new IllegalArgumentException("task is null");
+        }
+        Object[] options = {"Yes", "No"};
+        int quitDialog = JOptionPane.showOptionDialog(this, runningTask + " is in progress. Quit?", "Question",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        return (quitDialog == JOptionPane.YES_OPTION);
+    }
+
+    /**
      * Returns the "create index" menu item
      * @return
      */

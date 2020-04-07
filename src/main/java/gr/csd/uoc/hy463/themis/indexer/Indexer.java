@@ -378,6 +378,10 @@ public class Indexer implements Runnable {
         _task = task;
     }
 
+    public TASK getTask() {
+        return _task;
+    }
+
     public boolean isRunning() {
         return running.get() && _task != null;
     }
