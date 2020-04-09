@@ -24,6 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.indexer;
 
+import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
@@ -260,6 +261,7 @@ public class Indexer implements Runnable {
             return index(collectionPath);
         } else {
             __LOGGER__.error("DATASET_PATH not set in themis.config!");
+            Themis.view.print("DATASET_PATH not set in themis.config!\n");
             return false;
         }
     }
@@ -276,6 +278,7 @@ public class Indexer implements Runnable {
     public boolean load() throws IOException {
         if (!hasIndex()) {
             __LOGGER__.error("Index is not constructed correctly!");
+            Themis.view.print("Index is not constructed correctly!\n");
             return false;
         }
 
@@ -398,6 +401,7 @@ public class Indexer implements Runnable {
             }
         } catch (IOException e) {
             __LOGGER__.error(e.getMessage());
+            Themis.view.showError("Error");
         } finally {
             running.set(false);
             _task = null;
