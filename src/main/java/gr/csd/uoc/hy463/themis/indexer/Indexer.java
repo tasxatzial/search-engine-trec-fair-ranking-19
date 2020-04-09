@@ -29,6 +29,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.io.File;
 import java.io.IOException;
@@ -124,6 +125,13 @@ public class Indexer implements Runnable {
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
+        __META_FILENAME__ = __CONFIG__.getMetaFileName();
+        if (__CONFIG__.getUseStemmer()) {
+            Stemmer.Initialize();
+        }
+        if (__CONFIG__.getUseStopwords()) {
+            gr.csd.uoc.hy463.themis.stemmer.StopWords.Initialize();
+        }
     }
 
     /**
