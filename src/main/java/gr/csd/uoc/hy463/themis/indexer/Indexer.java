@@ -31,6 +31,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
@@ -187,9 +188,8 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
-        // Holds  all files in path
         File folder = new File(path);
-        File[] files = folder.listFiles();
+        File[] files = folder.listFiles();         // Holds  all files in path
         if (files == null) {
             return true;
         }
@@ -197,6 +197,11 @@ public class Indexer implements Runnable {
         String json;
         S2TextualEntry entry;
         int totalArticles = 0;
+
+        WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
+
+        /* Field frequencies of each term in a json entry */
+        Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords;
 
         /* the dataset file that is being parsed */
         BufferedReader currentDataFile;
@@ -220,7 +225,7 @@ public class Indexer implements Runnable {
         for (File file : files) {
             if (file.isFile()) {
                 currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-                System.out.println(file);
+
                 // for each scientific article in file
                 while ((json = currentDataFile.readLine()) != null) {
                     // Extract all textual info
@@ -229,6 +234,11 @@ public class Indexer implements Runnable {
                     // approapriate structures in memory to Index class else dump
                     // to files in appropriate directory id and increase partialIndexes
                     entry = S2JsonEntryReader.readTextualEntry(json);
+                    entryWords = wordFrequencies.createWordsMap(entry);
+
+                    //print the map of field frequencies for this article
+                    //System.out.println(entryWords);
+
                     totalArticles++;
                     if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
                         index.dump();   // dump partial index to appropriate subdirectory

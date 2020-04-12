@@ -49,6 +49,15 @@ import java.util.Map;
 public class DocInfoEssential {
 
     public enum PROPERTY {
+        TITLE,
+        AUTHORS,
+        YEAR,
+        JOURNAL_NAME,
+        ABSTRACT,
+        ENTITIES,
+        FIELDS_OF_STUDY,
+        VENUE,
+        SOURCES,
         PAGERANK, // pagerank score for 2nd phase (Value should be double)
         WEIGHT, // weight (norm) of document VSM (Value should be double)
         LENGTH   // for OkapiBM25 (Value should be integer)
