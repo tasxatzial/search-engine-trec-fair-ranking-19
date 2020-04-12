@@ -29,11 +29,14 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -184,46 +187,76 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
+        // Holds  all files in path
+        File folder = new File(path);
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return true;
+        }
+
+        String json;
+        S2TextualEntry entry;
+        int totalArticles = 0;
+
+        /* the dataset file that is being parsed */
+        BufferedReader currentDataFile;
+
+        /* the dataset folder */
+        String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
+        Files.createDirectories(Paths.get(documentsName).getParent());
+
         Index index = new Index(__CONFIG__);
         int id = 0;
         // set id of index
         index.setID(id);
 
-        // Holds  all files in path
-        List<String> files = new ArrayList<>();
-
-        // We use a linked list as a queuue for our partial indexes
-        Queue<Integer> partialIndexesQueue = new LinkedList<>();
+        // We use a arraylist as a queue for our partial indexes
+        List<Integer> partialIndexes = new LinkedList<>();
 
         // Add id to queue
-        partialIndexesQueue.add(id);
+        partialIndexes.add(id);
 
         // for each file in path
-        for (String file : files) {
-            // for each scientific article in file
-            for (int article = 0;; article++) {
-                // Extract all textual info
-                // if indexed articles for this index less than
-                // config.getPartialIndexSize store all information to
-                // approapriate structures in memory to Index class else dump
-                // to files in appropriate directory id and increase partialIndexes
-
-                if (article == __CONFIG__.getPartialIndexSize()) {
-                    index.dump();   // dump partial index to appropriate subdirectory
-                    // Create a new index
-                    // Increase partial indexes and dump files to appropriate directory
-                    id++;
-                    index = new Index(__CONFIG__);
-                    index.setID(id);
-                    // Add id to queue
-                    partialIndexesQueue.add(id);
+        for (File file : files) {
+            if (file.isFile()) {
+                currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+                System.out.println(file);
+                // for each scientific article in file
+                while ((json = currentDataFile.readLine()) != null) {
+                    // Extract all textual info
+                    // if indexed articles for this index less than
+                    // config.getPartialIndexSize store all information to
+                    // approapriate structures in memory to Index class else dump
+                    // to files in appropriate directory id and increase partialIndexes
+                    entry = S2JsonEntryReader.readTextualEntry(json);
+                    totalArticles++;
+                    if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
+                        index.dump();   // dump partial index to appropriate subdirectory
+                        // Create a new index
+                        // Increase partial indexes and dump files to appropriate directory
+                        id++;
+                        index = new Index(__CONFIG__);
+                        index.setID(id);
+                        // Add id to queue
+                        partialIndexes.add(id);
+                    }
                 }
+                currentDataFile.close();
             }
+        }
+
+        /* dump remaining structures */
+        if (totalArticles != 0 && totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
+            partialIndexes.remove(partialIndexes.size() - 1);
+            id--;
+        }
+        else {
+            index.dump();
         }
 
         // Now we have finished creating the partial indexes
         // So we have to merge them (call merge)
-        merge(partialIndexesQueue);
+        merge(partialIndexes);
 
         return false;
     }
@@ -234,10 +267,10 @@ public class Indexer implements Runnable {
      * empty. If it is a partial index it adds it to the queue at the tail using
      * add
      *
-     * @param partialIndexesQueue
+     * @param partialIndexes
      * @return
      */
-    private void merge(Queue<Integer> partialIndexesQueue) {
+    private void merge(List<Integer> partialIndexes) {
         // Repeatevily use the indexes with the ids stored in the head of the queue
         // using the get method
 
