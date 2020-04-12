@@ -33,7 +33,22 @@ public class WordFrequencies {
         Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWordsMap = new HashMap<>();
 
         addToWordsMap(entry.getTitle(), DocInfoEssential.PROPERTY.TITLE , entryWordsMap);
-
+        addToWordsMap(entry.getPaperAbstract(), DocInfoEssential.PROPERTY.ABSTRACT, entryWordsMap);
+        for (String entity : entry.getEntities()) {
+            addToWordsMap(entity, DocInfoEssential.PROPERTY.ENTITIES, entryWordsMap);
+        }
+        for (String fieldsOfStudy : entry.getFieldsOfStudy()) {
+            addToWordsMap(fieldsOfStudy, DocInfoEssential.PROPERTY.FIELDS_OF_STUDY, entryWordsMap);
+        }
+        for (Pair<String, List<String>> author : entry.getAuthors()) {
+            addToWordsMap(author.getL(), DocInfoEssential.PROPERTY.AUTHORS, entryWordsMap);
+        }
+        addToWordsMap(Integer.toString(entry.getYear()), DocInfoEssential.PROPERTY.YEAR, entryWordsMap);
+        addToWordsMap(entry.getVenue(), DocInfoEssential.PROPERTY.VENUE, entryWordsMap);
+        addToWordsMap(entry.getJournalName(), DocInfoEssential.PROPERTY.JOURNAL_NAME, entryWordsMap);
+        for (String source : entry.getSources()) {
+            addToWordsMap(source, DocInfoEssential.PROPERTY.SOURCES, entryWordsMap);
+        }
         return entryWordsMap;
     }
 
