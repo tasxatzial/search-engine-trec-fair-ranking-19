@@ -197,6 +197,7 @@ public class Indexer implements Runnable {
         String json;
         S2TextualEntry entry;
         int totalArticles = 0;
+        int totalArticleLength = 0;
 
         WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
 
@@ -235,7 +236,7 @@ public class Indexer implements Runnable {
                     // to files in appropriate directory id and increase partialIndexes
                     entry = S2JsonEntryReader.readTextualEntry(json);
                     entryWords = wordFrequencies.createWordsMap(entry);
-
+                    totalArticleLength += entryWords.size();
                     //print the map of field frequencies for this article
                     //System.out.println(entryWords);
 
@@ -263,6 +264,8 @@ public class Indexer implements Runnable {
         else {
             index.dump();
         }
+
+        double avgdl = (0.0 + totalArticleLength) / totalArticles;
 
         // Now we have finished creating the partial indexes
         // So we have to merge them (call merge)
