@@ -200,6 +200,7 @@ public class Indexer implements Runnable {
         int totalArticles = 0;
         int totalArticleLength = 0;
         long docOffset = 0;
+        long prevDocOffset;
 
         WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
 
@@ -216,6 +217,12 @@ public class Indexer implements Runnable {
         /* The documents file for writing the article info */
         BufferedOutputStream documentsOut = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(documentsName, "rw").getFD()));
+
+        /* Temp file that has the offset of each document entry. Needed for fast
+        access to the each document entry when an update of its info is required,
+        e.g. calculating VSM weights */
+        BufferedWriter docLengthWriter = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(__INDEX_PATH__ + "/doc_length"), "UTF-8"));
 
         Index index = new Index(__CONFIG__);
         int id = 0;
@@ -243,8 +250,10 @@ public class Indexer implements Runnable {
                     entry = S2JsonEntryReader.readTextualEntry(json);
                     entryWords = wordFrequencies.createWordsMap(entry);
                     totalArticleLength += entryWords.size();
+                    prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
-
+                    docLengthWriter.write(((int) docOffset - prevDocOffset) + "\n");
+                    
                     //print the map of field frequencies for this article
                     //System.out.println(entryWords);
 
