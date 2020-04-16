@@ -36,6 +36,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -198,6 +199,7 @@ public class Indexer implements Runnable {
         S2TextualEntry entry;
         int totalArticles = 0;
         int totalArticleLength = 0;
+        long docOffset = 0;
 
         WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
 
@@ -210,6 +212,10 @@ public class Indexer implements Runnable {
         /* the dataset folder */
         String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
         Files.createDirectories(Paths.get(documentsName).getParent());
+
+        /* The documents file for writing the article info */
+        BufferedOutputStream documentsOut = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(documentsName, "rw").getFD()));
 
         Index index = new Index(__CONFIG__);
         int id = 0;
@@ -237,6 +243,8 @@ public class Indexer implements Runnable {
                     entry = S2JsonEntryReader.readTextualEntry(json);
                     entryWords = wordFrequencies.createWordsMap(entry);
                     totalArticleLength += entryWords.size();
+                    docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
+
                     //print the map of field frequencies for this article
                     //System.out.println(entryWords);
 
@@ -298,6 +306,82 @@ public class Indexer implements Runnable {
 
         // If this is the last index in the queue, we have finished merging 
         // partial indexes, store all idx files to INDEX_PATH
+    }
+
+    /* Writes the appropriate document entry for textual entry to the documents file and
+    * returns an offset that is the sum of the previous offset plus the document entry size
+    * (in bytes) */
+    private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, int docLength, long offset)
+            throws IOException {
+        int sizeOfShort = 2;
+        int sizeOfInt = 4;
+        int sizeOfDouble = 8;
+        int docEntryLength = 0;
+
+        /* id */
+        byte[] id = textualEntry.getId().getBytes("ASCII");
+        docEntryLength += id.length;
+
+        /* title */
+        byte[] title = textualEntry.getTitle().getBytes("UTF-8");
+        byte[] titleLength = ByteBuffer.allocate(sizeOfShort).putShort((short) title.length).array();
+        docEntryLength += title.length + sizeOfShort;
+
+        /* authors, authors ids */
+        List<Pair<String, List<String>>> authors;
+        StringBuilder sb_authorNames;
+        StringBuilder sb_authorIds;
+
+        authors = textualEntry.getAuthors();
+        sb_authorNames = new StringBuilder();
+        sb_authorIds = new StringBuilder();
+        for (int i = 0; i < authors.size(); i++) {
+            sb_authorNames.append(authors.get(i).getL());
+            sb_authorIds.append(authors.get(i).getR());
+            if (i != authors.size() - 1) {
+                sb_authorNames.append(",");
+                sb_authorIds.append(",");
+            }
+        }
+
+        byte[] authorNames = sb_authorNames.toString().getBytes("UTF-8");
+        byte[] authorNamesLength = ByteBuffer.allocate(sizeOfShort).putShort((short) authorNames.length).array();
+        docEntryLength += authorNames.length + sizeOfShort;
+
+        byte[] authorIds = sb_authorIds.toString().getBytes("ASCII");
+        byte[] authorIdsLength = ByteBuffer.allocate(sizeOfShort).putShort((short) authorIds.length).array();
+        docEntryLength += authorIds.length + sizeOfShort;
+
+        /* year */
+        byte[] year = ByteBuffer.allocate(sizeOfShort).putShort((short) textualEntry.getYear()).array();
+        docEntryLength += year.length;
+
+        /* journal name */
+        byte[] journalName = textualEntry.getJournalName().getBytes("UTF-8");
+        byte[] journalNameLength = ByteBuffer.allocate(sizeOfShort).putShort((short) journalName.length).array();
+        docEntryLength += journalName.length + sizeOfShort;
+
+        /* weight, length, pagerank */
+        byte[] weight = ByteBuffer.allocate(sizeOfDouble).putDouble(0).array();
+        byte[] length = ByteBuffer.allocate(sizeOfInt).putInt(docLength).array();
+        byte[] pageRank = ByteBuffer.allocate(sizeOfDouble).putDouble(0).array();
+        docEntryLength += weight.length + length.length + pageRank.length;
+
+        out.write(id);
+        out.write(titleLength);
+        out.write(title);
+        out.write(authorNamesLength);
+        out.write(authorNames);
+        out.write(authorIdsLength);
+        out.write(authorIds);
+        out.write(year);
+        out.write(journalNameLength);
+        out.write(journalName);
+        out.write(weight);
+        out.write(length);
+        out.write(pageRank);
+
+        return docEntryLength + offset;
     }
 
     /**
