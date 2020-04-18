@@ -25,7 +25,17 @@
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
 import gr.csd.uoc.hy463.themis.config.Config;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
+
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
+import gr.csd.uoc.hy463.themis.utils.Pair;
+import gr.csd.uoc.hy463.themis.utils.PartialIndexEntry;
+import gr.csd.uoc.hy463.themis.utils.PostingEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,13 +60,12 @@ public class Index {
     // Filenames of indexes
     private String __VOCABULARY_FILENAME__ = null;
     private String __POSTINGS_FILENAME__ = null;
-    private String __DOCUMENTS_FILENAME__ = null;
 
     // We also need to store any information about the vocabulary and
     // posting file in memory
     // For example a TreeMap holds entries sorted which helps with storing the
     // vocabulary file
-    private TreeMap<String, Integer> __VOCABULARY__ = null;
+    private TreeMap<String, PartialIndexEntry> __INDEX__ = null;
 
     // We have to hold also other appropriate data structures for postings / documents
     public Index(Config config) {
@@ -71,6 +80,7 @@ public class Index {
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
+        __INDEX__ = new TreeMap<>();
     }
 
     /**
@@ -118,4 +128,30 @@ public class Index {
         return id != 0;
     }
 
+    /**
+     * Adds the map of term frequencies of a textual entry to the partial index.
+     *
+     * @param entryWords The map of term frequencies
+     * @param docOffset The offset to the document files
+     * @throws IOException
+     */
+    public void add(Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords, long docOffset) throws IOException {
+        for (Map.Entry<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
+            int tf = 0;
+            String key = entry.getKey();
+            PartialIndexEntry indexStruct = __INDEX__.get(key);
+            for (Pair<DocInfoEssential.PROPERTY, Integer> pair : entry.getValue()) {
+                tf += pair.getR();
+            }
+            if (indexStruct != null) {
+                indexStruct.set_df(indexStruct.get_df() + 1);
+                indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
+            }
+            else {
+                indexStruct = new PartialIndexEntry(1);
+                indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
+                __INDEX__.put(key, indexStruct);
+            }
+        }
+    }
 }

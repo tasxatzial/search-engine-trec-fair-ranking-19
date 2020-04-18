@@ -250,6 +250,8 @@ public class Indexer implements Runnable {
                     entry = S2JsonEntryReader.readTextualEntry(json);
                     entryWords = wordFrequencies.createWordsMap(entry);
                     totalArticleLength += entryWords.size();
+                    index.add(entryWords, docOffset);
+
                     prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
                     docLengthWriter.write(((int) docOffset - prevDocOffset) + "\n");
