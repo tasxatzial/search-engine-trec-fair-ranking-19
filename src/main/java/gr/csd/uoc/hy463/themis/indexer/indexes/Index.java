@@ -24,10 +24,15 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
+import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -106,13 +111,13 @@ public class Index {
      *
      * @return
      */
-    public boolean dump() {
-        if (id == 0) {
-            // dump to INDEX_PATH
-        } else {
-            // dump to INDEX_PATH/id
-        }
-        return false;
+    public boolean dump() throws IOException {
+        String vocabularyName;
+        vocabularyName = __INDEX_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
+        Files.createDirectories(Paths.get(vocabularyName).getParent());
+        dumpVocabulary(vocabularyName);
+
+        return true;
     }
 
     public void setID(int id) {
@@ -153,5 +158,18 @@ public class Index {
                 __INDEX__.put(key, indexStruct);
             }
         }
+    }
+
+    /* Dumps the appropriate info from a partial index memory struct to the
+    appropriate partial vocabulary file */
+    private void dumpVocabulary(String filename) throws IOException {
+        BufferedWriter file = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(filename), "UTF-8"));
+        long offset = 0;
+        for (Map.Entry<String, PartialIndexEntry> pair : __INDEX__.entrySet()) {
+            file.write(pair.getKey() + " " + pair.getValue().get_df() + " " + offset + "\n");
+            offset += pair.getValue().get_postings().size() * PostingEntry.POSTING_SIZE;
+        }
+        file.close();
     }
 }
