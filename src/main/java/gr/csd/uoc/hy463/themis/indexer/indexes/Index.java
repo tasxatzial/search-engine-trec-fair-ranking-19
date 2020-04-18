@@ -52,8 +52,8 @@ public class Index {
     private String __POSTINGS_FILENAME__ = null;
     private String __DOCUMENTS_FILENAME__ = null;
 
-    // We also need to store any information about the vocabulary,
-    // posting and document file in memory
+    // We also need to store any information about the vocabulary and
+    // posting file in memory
     // For example a TreeMap holds entries sorted which helps with storing the
     // vocabulary file
     private TreeMap<String, Integer> __VOCABULARY__ = null;
@@ -70,7 +70,6 @@ public class Index {
     private void init() {
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
-        __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
     }
 
@@ -92,38 +91,8 @@ public class Index {
      * =========================================================================
      * 2) POSTING FILE => posting.idx (Random Access File)
      *
-     * For each entry it stores: | DOCUMENT_ID (40 ASCII chars => 40 bytes) | TF
-     * (int => 4 bytes) | POINTER_TO_DOCUMENT_FILE (long => 4 bytes)
-     *
-     * =========================================================================
-     * 3) DOCUMENTS FILE => documents.idx (Random Access File)
-     *
-     * For each entry it stores: | DOCUMENT_ID (40 ASCII chars => 40 bytes) |
-     * Title (variable bytes / UTF-8) | Author_1,Author_2, ...,Author_k
-     * (variable bytes / UTF-8) | AuthorID_1, AuthorID_2, ...,Author_ID_k
-     * (variable size /ASCII) | Year (short => 2 bytes)| Journal Name (variable
-     * bytes / UTF-8) | The weight (norm) of Document (double => 8 bytes)|
-     * Length of Document (int => 4 bytes) | PageRank Score (double => 8 bytes
-     * => this will be used in the second phase of the project)
-     *
-     * ==> IMPORTANT NOTES
-     *
-     * For strings that have a variable size, just add as an int (4 bytes)
-     * prefix storing the size in bytes of the string. Also make sure that you
-     * use the correct representation ASCII (1 byte) or UTF-8 (2 bytes). For
-     * example the doc id is a hexadecimal hash so there is no need for UTF
-     * encoding
-     *
-     * Authors are separated by a comma
-     *
-     * Author ids are also separated with a comma
-     *
-     * The weight of the document will be computed after indexing the whole
-     * collection by scanning the whole postings list
-     *
-     * For now add 0.0 for PageRank score (a team will be responsible for
-     * computing it in the second phase of the project)
-     *
+     * For each entry it stores: | TF (int => 4 bytes) |
+     * POINTER_TO_DOCUMENT_FILE (long => 4 bytes) |
      *
      * @return
      */

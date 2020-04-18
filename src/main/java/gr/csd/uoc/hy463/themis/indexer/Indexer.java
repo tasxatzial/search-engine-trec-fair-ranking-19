@@ -301,7 +301,7 @@ public class Indexer implements Runnable {
      * @return
      */
     private void merge(List<Integer> partialIndexes) {
-        // Repeatevily use the indexes with the ids stored in the head of the queue
+        // Repeateadly use the indexes with the ids stored in the head of the queue
         // using the get method
 
         // Read vocabulary files line by line in corresponding dirs
@@ -317,9 +317,31 @@ public class Indexer implements Runnable {
         // partial indexes, store all idx files to INDEX_PATH
     }
 
-    /* Writes the appropriate document entry for textual entry to the documents file and
-    * returns an offset that is the sum of the previous offset plus the document entry size
-    * (in bytes) */
+     /* DOCUMENTS FILE => documents.idx (Random Access File)
+     * Writes the appropriate document entry for a textual entry to the documents file and
+     * returns an offset that is the sum of the previous offset plus the document entry size
+     * (in bytes).
+     *
+     * For each entry it stores: | DOCUMENT_ID (40 ASCII chars => 40 bytes) |
+     * Title (variable bytes / UTF-8) | Author_1,Author_2, ...,Author_k
+     * (variable bytes / UTF-8) | AuthorID_1, AuthorID_2, ...,Author_ID_k
+     * (variable size /ASCII) | Year (short => 2 bytes)| Journal Name (variable
+     * bytes / UTF-8) | The weight (norm) of Document (double => 8 bytes)|
+     * Length of Document (int => 4 bytes) | PageRank Score (double => 8 bytes)
+     *
+     * ==> IMPORTANT NOTES
+     *
+     * For strings that have a variable size, a short (2 bytes) was added as
+     * prefix storing the size in bytes of the string. Also the
+     * correct representation was used, ASCII (1 byte) or UTF-8 (2 bytes). For
+     * example the doc id is a hexadecimal hash so there is no need for UTF
+     * encoding
+     *
+     * Authors are separated by a comma
+     *
+     * Author ids are also separated with a comma
+     *
+     * For now 0.0 was added as PageRank score and weight */
     private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, int docLength, long offset)
             throws IOException {
         int sizeOfShort = 2;
