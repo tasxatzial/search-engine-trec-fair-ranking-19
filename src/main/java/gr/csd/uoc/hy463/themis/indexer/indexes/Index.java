@@ -27,10 +27,8 @@ package gr.csd.uoc.hy463.themis.indexer.indexes;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -113,9 +111,13 @@ public class Index {
      */
     public boolean dump() throws IOException {
         String vocabularyName;
+        String postingsName;
         vocabularyName = __INDEX_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
+        postingsName = __INDEX_PATH__ + "/" + id + "/" + __POSTINGS_FILENAME__;
         Files.createDirectories(Paths.get(vocabularyName).getParent());
+        Files.createDirectories(Paths.get(postingsName).getParent());
         dumpVocabulary(vocabularyName);
+        dumpPostings(postingsName);
 
         return true;
     }
@@ -171,5 +173,23 @@ public class Index {
             offset += pair.getValue().get_postings().size() * PostingEntry.POSTING_SIZE;
         }
         file.close();
+    }
+
+    /* Dumps the appropriate info from a partial index memory struct to the
+    appropriate partial postings file */
+    private void dumpPostings(String filename) throws IOException {
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(filename, "rw").getFD()));
+        byte[] tf;
+        byte[] offset;
+        for (PartialIndexEntry index : __INDEX__.values()) {
+            for (PostingEntry postings : index.get_postings()) {
+                tf = ByteBuffer.allocate(4).putInt(postings.get_tf()).array();
+                offset = ByteBuffer.allocate(8).putLong(postings.get_docPointer()).array();
+                out.write(tf);
+                out.write(offset);
+            }
+        }
+        out.close();
     }
 }
