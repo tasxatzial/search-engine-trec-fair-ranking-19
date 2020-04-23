@@ -6,11 +6,11 @@ import java.util.List;
 /* Class that holds basic information about an entry that belongs to a partial
 index: The DF and a list of posting entries.
  */
-public class PartialIndexEntry {
+public class PartialIndexStruct {
     private int _df;
     private List<PostingEntry> _postings;
 
-    public PartialIndexEntry(int df) {
+    public PartialIndexStruct(int df) {
         _df = df;
         _postings = new ArrayList<>();
     }

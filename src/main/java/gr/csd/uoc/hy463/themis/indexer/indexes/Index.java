@@ -24,7 +24,6 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
-import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 
 import java.io.*;
@@ -37,7 +36,7 @@ import java.util.TreeMap;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import gr.csd.uoc.hy463.themis.utils.PartialIndexEntry;
+import gr.csd.uoc.hy463.themis.utils.PartialIndexStruct;
 import gr.csd.uoc.hy463.themis.utils.PostingEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,7 +67,7 @@ public class Index {
     // posting file in memory
     // For example a TreeMap holds entries sorted which helps with storing the
     // vocabulary file
-    private TreeMap<String, PartialIndexEntry> __INDEX__ = null;
+    private TreeMap<String, PartialIndexStruct> __INDEX__ = null;
 
     // We have to hold also other appropriate data structures for postings / documents
     public Index(Config config) {
@@ -147,7 +146,7 @@ public class Index {
         for (Map.Entry<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
-            PartialIndexEntry indexStruct = __INDEX__.get(key);
+            PartialIndexStruct indexStruct = __INDEX__.get(key);
             for (Pair<DocInfoEssential.PROPERTY, Integer> pair : entry.getValue()) {
                 tf += pair.getR();
             }
@@ -156,7 +155,7 @@ public class Index {
                 indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
             }
             else {
-                indexStruct = new PartialIndexEntry(1);
+                indexStruct = new PartialIndexStruct(1);
                 indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
                 __INDEX__.put(key, indexStruct);
             }
@@ -171,7 +170,7 @@ public class Index {
         BufferedWriter file = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(filename), "UTF-8"));
         long offset = 0;
-        for (Map.Entry<String, PartialIndexEntry> pair : __INDEX__.entrySet()) {
+        for (Map.Entry<String, PartialIndexStruct> pair : __INDEX__.entrySet()) {
             file.write(pair.getKey() + " " + pair.getValue().get_df() + " " + offset + "\n");
             offset += pair.getValue().get_postings().size() * PostingEntry.POSTING_SIZE;
         }
@@ -185,7 +184,7 @@ public class Index {
                 (new RandomAccessFile(filename, "rw").getFD()));
         byte[] tf;
         byte[] offset;
-        for (PartialIndexEntry index : __INDEX__.values()) {
+        for (PartialIndexStruct index : __INDEX__.values()) {
             for (PostingEntry postings : index.get_postings()) {
                 tf = ByteBuffer.allocate(4).putInt(postings.get_tf()).array();
                 offset = ByteBuffer.allocate(8).putLong(postings.get_docPointer()).array();
