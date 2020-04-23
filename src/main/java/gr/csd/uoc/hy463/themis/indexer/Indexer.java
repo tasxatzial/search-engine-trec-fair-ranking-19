@@ -231,7 +231,7 @@ public class Indexer implements Runnable {
                 (new FileOutputStream(__INDEX_PATH__ + "/freq"), "UTF-8"));
 
         Index index = new Index(__CONFIG__);
-        int id = 0;
+        int id = 1;
         // set id of index
         index.setID(id);
 
