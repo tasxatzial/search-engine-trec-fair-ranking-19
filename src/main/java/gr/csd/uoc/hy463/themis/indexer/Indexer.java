@@ -289,6 +289,10 @@ public class Indexer implements Runnable {
             index.dump();
         }
 
+        documentsOut.close();
+        termFreqWriter.close();
+        docLengthWriter.close();
+
         double avgdl = (0.0 + totalArticleLength) / totalArticles;
 
         // Now we have finished creating the partial indexes
