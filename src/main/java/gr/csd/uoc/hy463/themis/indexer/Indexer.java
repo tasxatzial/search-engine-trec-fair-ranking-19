@@ -224,6 +224,12 @@ public class Indexer implements Runnable {
         BufferedWriter docLengthWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(__INDEX_PATH__ + "/doc_length"), "UTF-8"));
 
+        /* Temp file that stores the <term, TF> of every term that appears in
+        each article (one line per article). Will be used for fast calculation
+        of the VSM weights */
+        BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(__INDEX_PATH__ + "/freq"), "UTF-8"));
+
         Index index = new Index(__CONFIG__);
         int id = 0;
         // set id of index
@@ -250,8 +256,7 @@ public class Indexer implements Runnable {
                     entry = S2JsonEntryReader.readTextualEntry(json);
                     entryWords = wordFrequencies.createWordsMap(entry);
                     totalArticleLength += entryWords.size();
-                    index.add(entryWords, docOffset);
-
+                    index.add(entryWords, docOffset, termFreqWriter);
                     prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
                     docLengthWriter.write(((int) docOffset - prevDocOffset) + "\n");

@@ -142,7 +142,8 @@ public class Index {
      * @param docOffset The offset to the document files
      * @throws IOException
      */
-    public void add(Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords, long docOffset) throws IOException {
+    public void add(Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords, long docOffset,
+                    BufferedWriter tfWriter) throws IOException {
         for (Map.Entry<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
@@ -159,7 +160,9 @@ public class Index {
                 indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
                 __INDEX__.put(key, indexStruct);
             }
+            tfWriter.write(key + " " + tf + " ");
         }
+        tfWriter.write("\n");
     }
 
     /* Dumps the appropriate info from a partial index memory struct to the
