@@ -39,6 +39,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -303,17 +304,13 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * Method that merges the partial indexes and creates a new index with new
-     * ID which is either a new partial index or the final index if the queue is
-     * empty. If it is a partial index it adds it to the queue at the tail using
-     * add
+     * Method that merges the partial indexes and creates a new final index.
      *
      * @param partialIndexes
      * @return
      */
     private void merge(List<Integer> partialIndexes) {
-        // Repeateadly use the indexes with the ids stored in the head of the queue
-        // using the get method
+        // Use the indexes with the ids stored in the array.
 
         // Read vocabulary files line by line in corresponding dirs
         // and check which is the shortest lexicographically.
@@ -322,10 +319,29 @@ public class Indexer implements Runnable {
         // If both partial indexes contain the same word, them we have to update
         // the df and append the postings and documents of both
         // Continue with the next lexicographically shortest word
-        // Dump the new index and delete the old partial indexes
+        // Dump the final index and delete the old partial indexes
+        // Store all idx files to INDEX_PATH
+        try {
+            if (partialIndexes.size() == 1) {
+                String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
+                Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
+                        Paths.get(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__),
+                        StandardCopyOption.REPLACE_EXISTING);
+                Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
+                        Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
+                        StandardCopyOption.REPLACE_EXISTING);
+                Files.delete(Paths.get(partialIndexPath));
+            } else {
+                combinePartialIndexes(partialIndexes);
+            }
+        }  catch (IOException e) {
+            __LOGGER__.error(e.getMessage());
+            Themis.view.showError("Error merging\n");
+        }
+    }
 
-        // If this is the last index in the queue, we have finished merging 
-        // partial indexes, store all idx files to INDEX_PATH
+    private void combinePartialIndexes(List<Integer> partialIndexes) throws IOException {
+
     }
 
      /* DOCUMENTS FILE => documents.idx (Random Access File)
