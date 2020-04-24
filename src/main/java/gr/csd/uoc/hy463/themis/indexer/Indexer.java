@@ -40,14 +40,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import gr.csd.uoc.hy463.themis.utils.PartialIndex;
+import gr.csd.uoc.hy463.themis.utils.VocabularyEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -342,6 +339,64 @@ public class Indexer implements Runnable {
 
     private void combinePartialIndexes(List<Integer> partialIndexes) throws IOException {
 
+        /* initialize the partial indexes */
+        PartialIndex[] partialIndex = new PartialIndex[partialIndexes.size()];
+        for (int i = 0; i < partialIndexes.size(); i++) {
+            String vocabularyPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
+            String postingsPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
+            partialIndex[i] = new PartialIndex(vocabularyPath, postingsPath, i);
+        }
+
+        /* the final vocabulary file */
+        String vocabularyName = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
+        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(vocabularyName), "UTF-8"));
+
+        /* the final postings file */
+        String postingsName = __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
+        BufferedOutputStream postingsOut = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(postingsName, "rw").getFD()));
+
+        /* the previous lex min word */
+        String prevMinTerm = "";
+
+        /* keep all consecutive vocabulary entries that have equal terms in an array */
+        List<VocabularyEntry> equalTerms = new ArrayList<>();
+
+        /* pointer to the postings file */
+        long offset = 0;
+
+        /* the current vocabulary entry that has the min lex word */
+        VocabularyEntry minTermVocabularyEntry;
+
+        /* the next vocabulary entry in the same vocabulary file as the one that
+        has the min lex word */
+        VocabularyEntry nextVocabularyEntry;
+
+        /* the current partial index that has the lex min word */
+        PartialIndex minTermIndex;
+
+        /* put all first vocabulary entries from each partial index into a queue */
+        PriorityQueue<VocabularyEntry> vocabularyQueue = new PriorityQueue<>();
+        for (int i = 0; i < partialIndexes.size(); i++) {
+            minTermVocabularyEntry = partialIndex[i].readNextVocabularyEntry();
+            if (minTermVocabularyEntry != null) {
+                vocabularyQueue.add(new VocabularyEntry(
+                        minTermVocabularyEntry.get_term(),
+                        minTermVocabularyEntry.get_df(),
+                        minTermVocabularyEntry.get_offset(),
+                        i));
+            }
+        }
+
+        /* TODO */
+
+        /* close any open files */
+        for (int i = 0; i < partialIndexes.size(); i++) {
+            partialIndex[i].closeFiles();
+        }
+        vocabularyWriter.close();
+        postingsOut.close();
     }
 
      /* DOCUMENTS FILE => documents.idx (Random Access File)
