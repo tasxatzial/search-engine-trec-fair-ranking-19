@@ -44,6 +44,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import gr.csd.uoc.hy463.themis.utils.PartialIndex;
+import gr.csd.uoc.hy463.themis.utils.PostingEntry;
 import gr.csd.uoc.hy463.themis.utils.VocabularyEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -301,7 +302,7 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * Method that merges the partial indexes and creates a new final index.
+     * Method that merges the partial indexes and creates a new single index.
      *
      * @param partialIndexes
      * @return
@@ -337,6 +338,8 @@ public class Indexer implements Runnable {
         }
     }
 
+    /* Combines the partial indexes when their size is > 1. Writes the merged vocabulary
+    and postings files */
     private void combinePartialIndexes(List<Integer> partialIndexes) throws IOException {
 
         /* initialize the partial indexes */
@@ -376,7 +379,8 @@ public class Indexer implements Runnable {
         /* the current partial index that has the lex min word */
         PartialIndex minTermIndex;
 
-        /* put all first vocabulary entries from each partial index into a queue */
+        /* put all first vocabulary entries (they have the min lex terms)
+        from each partial index into a queue */
         PriorityQueue<VocabularyEntry> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i < partialIndexes.size(); i++) {
             minTermVocabularyEntry = partialIndex[i].readNextVocabularyEntry();
@@ -389,7 +393,38 @@ public class Indexer implements Runnable {
             }
         }
 
-        /* TODO */
+        /* get the next min term */
+        while((minTermVocabularyEntry = vocabularyQueue.poll()) != null) {
+            minTermIndex = partialIndex[minTermVocabularyEntry.get_indexId()];
+
+            /* if the min term is not equal to the previous term, we must write all
+            vocabulary entries that are in the array of equal terms to the final
+            vocabulary file (this also includes writing their postings to the final
+            postings file) */
+            if (!minTermVocabularyEntry.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
+                offset = dumpEqualTerms(equalTerms, vocabularyWriter, postingsOut, partialIndex, offset);
+            }
+
+            /* save the current term for the next iteration */
+            prevMinTerm = minTermVocabularyEntry.get_term();
+
+            /* the current vocabulary entry is put into the array of equal terms */
+            equalTerms.add(new VocabularyEntry(prevMinTerm, minTermVocabularyEntry.get_df(),
+                    minTermVocabularyEntry.get_offset(), minTermVocabularyEntry.get_indexId()));
+
+            /* finally add the next vocabulary entry to the queue of min lex terms */
+            nextVocabularyEntry = minTermIndex.readNextVocabularyEntry();
+            if (nextVocabularyEntry != null) {
+                vocabularyQueue.add(nextVocabularyEntry);
+            }
+        }
+
+        /* we are done reading the vocabularies. Write the remaining vocabulary entries that are
+        still in the array of equal terms to the final vocabulary file (this also includes writing
+        their postings to the final postings file) */
+        if (!equalTerms.isEmpty()) {
+            dumpEqualTerms(equalTerms, vocabularyWriter, postingsOut, partialIndex, offset);
+        }
 
         /* close any open files */
         for (int i = 0; i < partialIndexes.size(); i++) {
@@ -397,6 +432,40 @@ public class Indexer implements Runnable {
         }
         vocabularyWriter.close();
         postingsOut.close();
+    }
+
+    /* Used during merging. Writes all entries in the array of equal terms to the final
+    vocabulary files. This also includes writing their postings to the final postings file.
+    Returns an offset to the postings file that will be used during the next iteration */
+    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter,
+                                BufferedOutputStream postingsOut, PartialIndex[] partialIndex,
+                                long offset) throws IOException {
+        int df = 0;
+        byte[] postings;
+
+        for (VocabularyEntry equalTerm : equalTerms) {
+
+            //calculate final DF by simply adding all DF from each equal term
+            df += equalTerm.get_df();
+
+            //allocate memory for the postings of this term
+            postings = new byte[equalTerm.get_df() * PostingEntry.POSTING_SIZE];
+
+            //read the postings of this term from the partial posting file
+            partialIndex[equalTerm.get_indexId()].get_postingFile().read(postings);
+
+            //finally write the postings of this term to the final postings file
+            postingsOut.write(postings);
+        }
+
+        //finally write a new entry in the final vocabulary file
+        vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
+
+        //and calculate the offset of the next term
+        offset += df * PostingEntry.POSTING_SIZE;
+
+        equalTerms.clear();
+        return offset;
     }
 
      /* DOCUMENTS FILE => documents.idx (Random Access File)
