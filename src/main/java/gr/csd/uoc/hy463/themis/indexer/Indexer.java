@@ -566,6 +566,19 @@ public class Indexer implements Runnable {
         return docEntryLength + offset;
     }
 
+    /* Deletes everything in indexPath including indexpath */
+    private boolean deleteIndex(File indexPath) throws IOException {
+        File[] contents = indexPath.listFiles();
+        if (contents != null) {
+            for (File file : contents) {
+                if (!deleteIndex(file)) {
+                    return false;
+                }
+            }
+        }
+        return Files.deleteIfExists(indexPath.toPath());
+    }
+
     /**
      * Method that indexes the collection that is given in the themis.config
      * file
