@@ -334,6 +334,9 @@ public class Indexer implements Runnable {
                 Files.delete(Paths.get(partialIndexPath));
             } else {
                 combinePartialIndexes(partialIndexes);
+                for (Integer partialIndex : partialIndexes) {
+                    deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
+                }
             }
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
@@ -661,6 +664,10 @@ public class Indexer implements Runnable {
         articleSizeReader.close();
         __DOCUMENTS__.close();
         __DOCUMENTS__ = null;
+
+        /* delete files */
+        deleteIndex(new File(__INDEX_PATH__ + "/doc_length"));
+        deleteIndex(new File(__INDEX_PATH__ + "/freq"));
     }
 
     /**
