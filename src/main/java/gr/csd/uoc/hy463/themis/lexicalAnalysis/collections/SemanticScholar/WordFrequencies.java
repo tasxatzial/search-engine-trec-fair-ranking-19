@@ -92,8 +92,12 @@ public class WordFrequencies {
     /* Returns the split pattern that will be used for splitting a prop (e.g title) */
     private String getDelimiter(DocInfoEssential.PROPERTY prop) {
         switch (prop) {
-            case TITLE:
+            case TITLE: case ABSTRACT:
                 return " ›‹′_`‘@″•‡†‟„&#.,()'\"[]$|/\\?-“”*{}<>:;’%+»«§¡!\n\t\r\f";
+            case AUTHORS:
+                return " .()&'#\n";
+            case VENUE: case JOURNAL_NAME:
+                return " #(),.:/'&\"\n";
             default:
                 return " \n\t\r\f";
         }
