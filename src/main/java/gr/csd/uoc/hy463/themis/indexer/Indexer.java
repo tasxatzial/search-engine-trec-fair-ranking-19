@@ -579,6 +579,23 @@ public class Indexer implements Runnable {
         return Files.deleteIfExists(indexPath.toPath());
     }
 
+    /* Loads the final vocabulary file */
+    private void loadVocabulary() throws IOException {
+        __VOCABULARY__ = new HashMap<>();
+        String line;
+        String[] fields;
+
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
+
+        while ((line = vocabularyReader.readLine()) != null) {
+            fields = line.split(" ");
+            __VOCABULARY__.put(fields[0], new Pair<>(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
+        }
+
+        vocabularyReader.close();
+    }
+
     /**
      * Method that indexes the collection that is given in the themis.config
      * file
