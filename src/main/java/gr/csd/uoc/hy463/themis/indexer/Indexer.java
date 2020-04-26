@@ -737,8 +737,13 @@ public class Indexer implements Runnable {
         }
 
         // Else load vocabulary file in memory in a HashMap and open
-        // indexes postings and documents RAF files
-        return false;
+        // indexes postings and documents RAF files. Also load the meta index file.
+        loadVocabulary();
+        loadMetaInfo();
+        __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
+        __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
+
+        return true;
     }
 
     /**
