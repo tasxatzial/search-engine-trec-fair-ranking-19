@@ -200,7 +200,7 @@ public class Indexer implements Runnable {
         int totalArticleLength = 0;
         long docOffset = 0;
         long prevDocOffset;
-
+        __META_INDEX_INFO__ = new HashMap<>();
         WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
 
         /* Field frequencies of each term in a json entry */
@@ -300,6 +300,14 @@ public class Indexer implements Runnable {
 
         /* update VSM weights */
         updateVSMweights(totalArticles);
+
+        /* save any info related to this index */
+        __META_INDEX_INFO__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
+        __META_INDEX_INFO__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
+        __META_INDEX_INFO__.put("articles", String.valueOf(totalArticles));
+        __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
+        __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
+        saveMetaInfo();
 
         return false;
     }
@@ -583,6 +591,14 @@ public class Indexer implements Runnable {
             }
         }
         return Files.deleteIfExists(indexPath.toPath());
+    }
+
+    private void saveMetaInfo() throws IOException {
+        BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
+            meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
+        }
+        meta.close();
     }
 
     /* Loads the final vocabulary file */
