@@ -194,6 +194,9 @@ public class Indexer implements Runnable {
             return true;
         }
 
+        /* delete previous index */
+        deleteIndex(new File(__INDEX_PATH__ + "/"));
+
         String json;
         S2TextualEntry entry;
         int totalArticles = 0;
@@ -228,7 +231,7 @@ public class Indexer implements Runnable {
         of the VSM weights */
         BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(__INDEX_PATH__ + "/tf"), "UTF-8"));
-
+        
         Index index = new Index(__CONFIG__);
         int id = 1;
         // set id of index
