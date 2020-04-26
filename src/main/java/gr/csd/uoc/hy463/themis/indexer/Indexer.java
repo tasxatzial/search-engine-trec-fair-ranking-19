@@ -593,10 +593,24 @@ public class Indexer implements Runnable {
         return Files.deleteIfExists(indexPath.toPath());
     }
 
+    /* Saves to disk the meta_index_info map */
     private void saveMetaInfo() throws IOException {
         BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
+        }
+        meta.close();
+    }
+
+    /* Loads from disk the info from the meta_filename file */
+    private void loadMetaInfo() throws IOException {
+        BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        __META_INDEX_INFO__ = new HashMap<>();
+        String line;
+        String[] split;
+        while((line = meta.readLine()) != null) {
+            split = line.split("=");
+            __META_INDEX_INFO__.put(split[0], split[1]);
         }
         meta.close();
     }
