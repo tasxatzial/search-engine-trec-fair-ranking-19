@@ -217,17 +217,17 @@ public class Indexer implements Runnable {
         BufferedOutputStream documentsOut = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(documentsName, "rw").getFD()));
 
-        /* Temp file that has the offset of each document entry. Needed for fast
+        /* Temp file that has the size of each document entry in bytes. Needed for fast
         access to the each document entry when an update of its info is required,
         e.g. calculating VSM weights */
         BufferedWriter docLengthWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_PATH__ + "/doc_length"), "UTF-8"));
+                (new FileOutputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
 
         /* Temp file that stores the <term, TF> of every term that appears in
         each article (one line per article). Will be used for fast calculation
         of the VSM weights */
         BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_PATH__ + "/freq"), "UTF-8"));
+                (new FileOutputStream(__INDEX_PATH__ + "/tf"), "UTF-8"));
 
         Index index = new Index(__CONFIG__);
         int id = 1;
@@ -609,12 +609,12 @@ public class Indexer implements Runnable {
         /* load the vocabulary file */
         loadVocabulary();
 
-        /* open the required files: documents, freq, doc_length */
+        /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
         BufferedReader freqReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/freq"), "UTF-8"));
+                new FileInputStream(__INDEX_PATH__ + "/tf"), "UTF-8"));
         BufferedReader articleSizeReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/doc_length"), "UTF-8"));
+                new FileInputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
 
         /* write the weights into an array before writing to disk */
         double[] weights = new double[totalArticles];
@@ -666,8 +666,8 @@ public class Indexer implements Runnable {
         __DOCUMENTS__ = null;
 
         /* delete files */
-        deleteIndex(new File(__INDEX_PATH__ + "/doc_length"));
-        deleteIndex(new File(__INDEX_PATH__ + "/freq"));
+        deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
+        deleteIndex(new File(__INDEX_PATH__ + "/tf"));
     }
 
     /**
