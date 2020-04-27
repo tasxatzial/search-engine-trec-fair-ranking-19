@@ -24,6 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
+import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 
 import java.io.*;
@@ -109,6 +110,7 @@ public class Index {
      * @return
      */
     public boolean dump() throws IOException {
+        Themis.view.print("Dumping in: " + __INDEX_PATH__ + "/" + id + "/\n");
         String vocabularyName;
         String postingsName;
         vocabularyName = __INDEX_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;

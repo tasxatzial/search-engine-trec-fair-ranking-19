@@ -188,14 +188,18 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
+
+        /* delete previous index */
+        deleteIndex(new File(__INDEX_PATH__ + "/"));
+
+        long startTime = System.nanoTime();
+        Themis.view.print(">>> Start indexing\n");
+
         File folder = new File(path);
         File[] files = folder.listFiles();         // Holds  all files in path
         if (files == null) {
             return true;
         }
-
-        /* delete previous index */
-        deleteIndex(new File(__INDEX_PATH__ + "/"));
 
         String json;
         S2TextualEntry entry;
@@ -246,6 +250,7 @@ public class Indexer implements Runnable {
         // for each file in path
         for (File file : files) {
             if (file.isFile()) {
+                Themis.view.print("Processing file: " + file + "\n");
                 currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 
                 // for each scientific article in file
@@ -295,14 +300,8 @@ public class Indexer implements Runnable {
         termFreqWriter.close();
         docLengthWriter.close();
 
+        /* calculate avgdl for Okapi BM25 */
         double avgdl = (0.0 + totalArticleLength) / totalArticles;
-
-        // Now we have finished creating the partial indexes
-        // So we have to merge them (call merge)
-        merge(partialIndexes);
-
-        /* update VSM weights */
-        updateVSMweights(totalArticles);
 
         /* save any info related to this index */
         __META_INDEX_INFO__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
@@ -311,6 +310,15 @@ public class Indexer implements Runnable {
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
         saveMetaInfo();
+
+        Themis.view.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+
+        // Now we have finished creating the partial indexes
+        // So we have to merge them (call merge)
+        merge(partialIndexes);
+
+        /* update VSM weights */
+        updateVSMweights(totalArticles);
 
         return false;
     }
@@ -333,7 +341,9 @@ public class Indexer implements Runnable {
         // Continue with the next lexicographically shortest word
         // Dump the final index and delete the old partial indexes
         // Store all idx files to INDEX_PATH
+        long startTime =  System.nanoTime();
         try {
+            Themis.view.print(">>> Start Merging\n");
             if (partialIndexes.size() == 1) {
                 String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
                 Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
@@ -349,6 +359,7 @@ public class Indexer implements Runnable {
                     deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
                 }
             }
+            Themis.view.print("Partial index merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
             Themis.view.showError("Error merging\n");
@@ -620,6 +631,7 @@ public class Indexer implements Runnable {
 
     /* Loads the final vocabulary file */
     private void loadVocabulary() throws IOException {
+        Themis.view.print("Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
         String[] fields;
@@ -633,11 +645,14 @@ public class Indexer implements Runnable {
         }
 
         vocabularyReader.close();
+        Themis.view.print("DONE\n");
     }
 
     /* Calculates and updates the VSM weights in the documents file. Reads the
     * frequencies file freq and the documents size file doc_length */
     private void updateVSMweights(int totalArticles) throws IOException {
+        long startTime = System.nanoTime();
+        Themis.view.print(">>> Calculating VSM weights\n");
 
         /* load the vocabulary file */
         loadVocabulary();
@@ -682,6 +697,7 @@ public class Indexer implements Runnable {
         freqReader.close();
 
         /* once the weights are calculated, update the documents file */
+        Themis.view.print("Updating documents.idx");
         long offset = 0;
         int docSize;
         byte[] weightB;
@@ -701,6 +717,8 @@ public class Indexer implements Runnable {
         /* delete files */
         deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
         deleteIndex(new File(__INDEX_PATH__ + "/tf"));
+
+        Themis.view.print(" > DONE\nVSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
 
     /**
