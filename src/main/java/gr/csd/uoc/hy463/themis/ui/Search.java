@@ -74,7 +74,7 @@ public class Search {
         }
         Indexer.TASK task = _indexer.getTask();
         if (task != null) {
-            return _indexer.getTask().toString();
+            return task.toString();
         }
         return null;
     }
