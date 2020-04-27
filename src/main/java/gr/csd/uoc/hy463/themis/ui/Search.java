@@ -45,6 +45,9 @@ public class Search {
             return;
         }
         try {
+            if (_indexer != null) {
+                _indexer.unload();
+            }
             _indexer = new Indexer();
         } catch (IOException e) {
             __LOGGER__.error(e.getMessage());
@@ -53,6 +56,16 @@ public class Search {
         _indexer.setTask(Indexer.TASK.LOAD_INDEX);
         Thread runnableIndexer = new Thread(_indexer);
         runnableIndexer.start();
+    }
+
+    public void unloadIndex() {
+        try {
+            if (_indexer != null) {
+                _indexer.unload();
+            }
+        } catch (IOException e) {
+            __LOGGER__.error(e.getMessage());
+        }
     }
 
     public String getTask() {

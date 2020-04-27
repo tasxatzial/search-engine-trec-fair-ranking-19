@@ -188,6 +188,7 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
+        unload();
 
         /* delete previous index */
         deleteIndex(new File(__INDEX_PATH__ + "/"));
@@ -751,6 +752,7 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean load() throws IOException {
+        unload();
         if (!hasIndex()) {
             __LOGGER__.error("Index is not constructed correctly!");
             Themis.view.print("Index is not constructed correctly!\n");
@@ -765,6 +767,20 @@ public class Indexer implements Runnable {
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
 
         return true;
+    }
+
+    /* Unloads an index from memory */
+    public void unload() throws IOException {
+        if (__POSTINGS__ != null) {
+            __POSTINGS__.close();
+            __POSTINGS__ = null;
+        }
+        if (__DOCUMENTS__ != null) {
+            __DOCUMENTS__.close();
+            __DOCUMENTS__ = null;
+        }
+        __VOCABULARY__ = null;
+        __META_INDEX_INFO__ = null;
     }
 
     /**

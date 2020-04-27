@@ -86,6 +86,7 @@ public class Themis {
                         ex.printStackTrace();
                     }
                 }
+                search.unloadIndex();
             }
             return true;
         }
