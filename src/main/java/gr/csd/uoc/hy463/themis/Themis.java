@@ -19,7 +19,8 @@ public class Themis {
         view.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask()))) {
+                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
+                        (search != null && search.isRunning() && !view.showQuitMessage(search.getTask()))) {
                     view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 }
                 else {
@@ -46,7 +47,7 @@ public class Themis {
         /* add a listeners on menu items */
         view.get_createIndex().addActionListener(new createIndexListener());
         view.get_queryCollection().addActionListener(new searchListener());
-
+        view.get_loadIndex().addActionListener(new loadIndexListener());
         view.setVisible(true);
     }
 
@@ -55,12 +56,15 @@ public class Themis {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (init()) {
+                createIndex = new CreateIndex();
+                view.initIndexView();
                 createIndex.create();
             }
         }
 
         private static boolean init() {
-            if ((createIndex != null && createIndex.isRunning())) {
+            if ((createIndex != null && createIndex.isRunning()) ||
+                    (search != null && search.isRunning())) {
                 return false;
             }
             if (createIndex != null) {
@@ -73,17 +77,38 @@ public class Themis {
                     }
                 }
             }
-            createIndex = new CreateIndex();
-            view.initIndexView();
+            if (search != null) {
+                search.stop();
+                while (search.isRunning()) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
             return true;
         }
     }
 
+    /* The listener for the "query collection" menu item */
     private static class searchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (createIndexListener.init()) {
                 view.initSearchView();
+            }
+        }
+    }
+
+    /* The listener for the "load index" menu item */
+    private static class loadIndexListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (createIndexListener.init()) {
+                search = new Search();
+                view.initIndexView();
+                search.loadIndex();
             }
         }
     }

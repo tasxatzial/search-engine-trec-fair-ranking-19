@@ -47,7 +47,7 @@ public class CreateIndex {
         }
         try {
             _indexer = new Indexer();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             __LOGGER__.error(e.getMessage());
             return;
         }

@@ -273,4 +273,12 @@ public class View extends JFrame {
     public JMenuItem get_queryCollection() {
         return _queryCollection;
     }
+
+    /**
+     * Returns the "load index" menu item
+     * @return
+     */
+    public JMenuItem get_loadIndex() {
+        return _loadIndex;
+    }
 }

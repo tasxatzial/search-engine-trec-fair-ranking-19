@@ -104,7 +104,7 @@ public class Indexer implements Runnable {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public Indexer() throws IOException, ClassNotFoundException {
+    public Indexer() throws IOException {
         __CONFIG__ = new Config();  // reads info from themis.config file
         init();
     }
