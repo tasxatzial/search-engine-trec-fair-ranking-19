@@ -34,10 +34,11 @@ import net.sf.extjwnl.data.Word;
 import net.sf.extjwnl.dictionary.Dictionary;
 
 /**
+ * Class that showcases example of external java wordnet library usage
  *
- * @author papadako
+ * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-public class EXTJWNL {
+public class EXTJWNLRename {
 
     public static void main(String[] args) throws FileNotFoundException, JWNLException, CloneNotSupportedException {
         Dictionary dictionary = null;
