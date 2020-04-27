@@ -14,13 +14,15 @@ public class Themis {
 
     public static void main(String[] args) {
         view = new View();
+        createIndex = new CreateIndex();
+        search = new Search();
 
         /* close window button listener */
         view.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
-                        (search != null && search.isRunning() && !view.showQuitMessage(search.getTask()))) {
+                if ((createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
+                        (search.isRunning() && !view.showQuitMessage(search.getTask()))) {
                     view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 }
                 else {
@@ -55,40 +57,12 @@ public class Themis {
     private static class createIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (init()) {
-                createIndex = new CreateIndex();
-                view.initIndexView();
-                createIndex.create();
+            if (createIndex.isRunning() || search.isRunning()) {
+                return;
             }
-        }
-
-        private static boolean init() {
-            if ((createIndex != null && createIndex.isRunning()) ||
-                    (search != null && search.isRunning())) {
-                return false;
-            }
-            if (createIndex != null) {
-                createIndex.stop();
-                while(createIndex.isRunning()) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }
-            if (search != null) {
-                search.stop();
-                while (search.isRunning()) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                search.unloadIndex();
-            }
-            return true;
+            search.unloadIndex();
+            view.initIndexView();
+            createIndex.create();
         }
     }
 
@@ -96,9 +70,10 @@ public class Themis {
     private static class searchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (createIndexListener.init()) {
-                view.initSearchView();
+            if (createIndex.isRunning() || search.isRunning()) {
+                return;
             }
+            view.initSearchView();
         }
     }
 
@@ -106,11 +81,12 @@ public class Themis {
     private static class loadIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (createIndexListener.init()) {
-                search = new Search();
-                view.initIndexView();
-                search.loadIndex();
+            if (createIndex.isRunning() || search.isRunning()) {
+                return;
             }
+            search.unloadIndex();
+            view.initIndexView();
+            search.loadIndex();
         }
     }
 }
