@@ -50,7 +50,8 @@ public class DocInfoEssential {
 
     public enum PROPERTY {
         TITLE,
-        AUTHORS,
+        AUTHORS_NAMES,
+        AUTHORS_IDS,
         YEAR,
         JOURNAL_NAME,
         ABSTRACT,

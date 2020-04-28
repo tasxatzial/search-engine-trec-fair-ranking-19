@@ -41,7 +41,7 @@ public class WordFrequencies {
             addToWordsMap(fieldsOfStudy, DocInfoEssential.PROPERTY.FIELDS_OF_STUDY, entryWordsMap);
         }
         for (Pair<String, List<String>> author : entry.getAuthors()) {
-            addToWordsMap(author.getL(), DocInfoEssential.PROPERTY.AUTHORS, entryWordsMap);
+            addToWordsMap(author.getL(), DocInfoEssential.PROPERTY.AUTHORS_NAMES, entryWordsMap);
         }
         addToWordsMap(Integer.toString(entry.getYear()), DocInfoEssential.PROPERTY.YEAR, entryWordsMap);
         addToWordsMap(entry.getVenue(), DocInfoEssential.PROPERTY.VENUE, entryWordsMap);
@@ -94,7 +94,7 @@ public class WordFrequencies {
         switch (prop) {
             case TITLE: case ABSTRACT:
                 return " ›‹′_`‘@″•‡†‟„&#.,()'\"[]$|/\\?-“”*{}<>:;’%+»«§¡!\n\t\r\f";
-            case AUTHORS:
+            case AUTHORS_NAMES:
                 return " .()&'#\n";
             case VENUE: case JOURNAL_NAME:
                 return " #(),.:/'&\"\n";
