@@ -779,6 +779,41 @@ public class Indexer implements Runnable {
 
     /**
      * Basic method for querying functionality. Given the list of terms in the
+     * query, returns a List of Lists of String objects, where each
+     * list of String objects holds the docIds of the
+     * docs that the corresponding term of the query appears in.
+     * @param terms
+     * @return
+     */
+    public List<List<String>> getDocId(List<String> terms) throws IOException {
+        if (!loaded()) {
+            return null;
+        }
+
+        List<List<String>> docIds = new ArrayList<>();
+        List<String> termDocId;
+        long documentPointer;
+        long postingPointer;
+        int df;
+        byte[] docId = new byte[DocumentEntry.ID_SIZE];
+        for (String term : terms) {
+            termDocId = new ArrayList<>();
+            postingPointer = __VOCABULARY__.get(term).getR();
+            df = __VOCABULARY__.get(term).getL();
+            for (int i = 0; i < df; i++) {
+                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
+                documentPointer = __POSTINGS__.readLong();
+                __DOCUMENTS__.seek(documentPointer);
+                __DOCUMENTS__.readFully(docId);
+                termDocId.add(new String(docId, "ASCII"));
+            }
+            docIds.add(termDocId);
+        }
+        return docIds;
+    }
+
+    /**
+     * Basic method for querying functionality. Given the list of terms in the
      * query, returns a List of Lists of DocInfoEssential objects, where each
      * list of DocInfoEssential objects holds where each list of
      * DocInfoEssential objects holds the DocInfoEssential representation of the
