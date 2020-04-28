@@ -825,14 +825,68 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfoEssential>> getDocInfoEssentialForTerms(List<String> terms) {
-        // If indexes are not loaded
-        if (!loaded()) {
-            return null;
-        } else {
-            // to implement
+    public List<List<DocInfoEssential>> getDocInfoEssentialForTerms(List<String> terms) throws IOException {
+        if (!loaded()) { // If indexes are not loaded
             return null;
         }
+
+        List<List<DocInfoEssential>> docInfoEssential_list = new ArrayList<>();
+        List<DocInfoEssential> termDocInfoEssential;
+        DocInfoEssential docInfoEssential;
+        long documentPointer;
+        long postingPointer;
+        //short field_length;
+        int df;
+        byte[] docId = new byte[DocumentEntry.ID_SIZE];
+        for (String term : terms) {
+            termDocInfoEssential = new ArrayList<>();
+            postingPointer = __VOCABULARY__.get(term).getR();
+            df = __VOCABULARY__.get(term).getL();
+            __POSTINGS__.seek(postingPointer);
+            for (int i = 0; i < df; i++) {
+                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
+                documentPointer = __POSTINGS__.readLong();
+                __DOCUMENTS__.seek(documentPointer);
+                __DOCUMENTS__.readFully(docId);
+                docInfoEssential = new DocInfoEssential(new String(docId, "ASCII"), documentPointer);
+
+                //move pointer past docId
+                documentPointer += DocumentEntry.ID_SIZE;
+
+                //move pointer past title
+                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+
+                //move pointer past author names
+                documentPointer +=  __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+
+                //move pointer past author ids
+                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+
+                //move pointer past year
+                documentPointer += DocumentEntry.YEAR_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+
+                //move pointer past journal name
+                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+
+                //read weight
+                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
+
+                //read length
+                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
+
+                //read pagerank
+                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
+
+                termDocInfoEssential.add(docInfoEssential);
+            }
+            docInfoEssential_list.add(termDocInfoEssential);
+        }
+        return docInfoEssential_list;
     }
 
     /**
