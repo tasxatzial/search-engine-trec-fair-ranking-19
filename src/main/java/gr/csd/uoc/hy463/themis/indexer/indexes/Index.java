@@ -174,7 +174,7 @@ public class Index {
         long offset = 0;
         for (Map.Entry<String, PartialIndexStruct> pair : __INDEX__.entrySet()) {
             file.write(pair.getKey() + " " + pair.getValue().get_df() + " " + offset + "\n");
-            offset += pair.getValue().get_postings().size() * PostingEntry.POSTING_SIZE;
+            offset += pair.getValue().get_postings().size() * PostingEntry.SIZE;
         }
         file.close();
     }

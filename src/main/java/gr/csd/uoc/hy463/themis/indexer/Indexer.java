@@ -33,7 +33,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Jso
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
-import gr.csd.uoc.hy463.themis.utils.Pair;
+import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -43,9 +43,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import gr.csd.uoc.hy463.themis.utils.PartialIndex;
-import gr.csd.uoc.hy463.themis.utils.PostingEntry;
-import gr.csd.uoc.hy463.themis.utils.VocabularyEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -478,7 +475,7 @@ public class Indexer implements Runnable {
             df += equalTerm.get_df();
 
             //allocate memory for the postings of this term
-            postings = new byte[equalTerm.get_df() * PostingEntry.POSTING_SIZE];
+            postings = new byte[equalTerm.get_df() * PostingEntry.SIZE];
 
             //read the postings of this term from the partial posting file
             partialIndex[equalTerm.get_indexId()].get_postingFile().read(postings);
@@ -491,7 +488,7 @@ public class Indexer implements Runnable {
         vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
 
         //and calculate the offset of the next term
-        offset += df * PostingEntry.POSTING_SIZE;
+        offset += df * PostingEntry.SIZE;
 
         equalTerms.clear();
         return offset;
@@ -524,9 +521,6 @@ public class Indexer implements Runnable {
      * For now 0.0 was added as PageRank score and weight */
     private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, int docLength, long offset)
             throws IOException {
-        int sizeOfShort = 2;
-        int sizeOfInt = 4;
-        int sizeOfDouble = 8;
         int docEntryLength = 0;
 
         /* id */
@@ -535,8 +529,8 @@ public class Indexer implements Runnable {
 
         /* title */
         byte[] title = textualEntry.getTitle().getBytes("UTF-8");
-        byte[] titleLength = ByteBuffer.allocate(sizeOfShort).putShort((short) title.length).array();
-        docEntryLength += title.length + sizeOfShort;
+        byte[] titleLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) title.length).array();
+        docEntryLength += title.length + DocumentEntry.VAR_FIELD_SIZE;
 
         /* authors, authors ids */
         List<Pair<String, List<String>>> authors;
@@ -556,26 +550,26 @@ public class Indexer implements Runnable {
         }
 
         byte[] authorNames = sb_authorNames.toString().getBytes("UTF-8");
-        byte[] authorNamesLength = ByteBuffer.allocate(sizeOfShort).putShort((short) authorNames.length).array();
-        docEntryLength += authorNames.length + sizeOfShort;
+        byte[] authorNamesLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) authorNames.length).array();
+        docEntryLength += authorNames.length + DocumentEntry.VAR_FIELD_SIZE;
 
         byte[] authorIds = sb_authorIds.toString().getBytes("ASCII");
-        byte[] authorIdsLength = ByteBuffer.allocate(sizeOfShort).putShort((short) authorIds.length).array();
-        docEntryLength += authorIds.length + sizeOfShort;
+        byte[] authorIdsLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) authorIds.length).array();
+        docEntryLength += authorIds.length + DocumentEntry.VAR_FIELD_SIZE;
 
         /* year */
-        byte[] year = ByteBuffer.allocate(sizeOfShort).putShort((short) textualEntry.getYear()).array();
+        byte[] year = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) textualEntry.getYear()).array();
         docEntryLength += year.length;
 
         /* journal name */
         byte[] journalName = textualEntry.getJournalName().getBytes("UTF-8");
-        byte[] journalNameLength = ByteBuffer.allocate(sizeOfShort).putShort((short) journalName.length).array();
-        docEntryLength += journalName.length + sizeOfShort;
+        byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) journalName.length).array();
+        docEntryLength += journalName.length + DocumentEntry.VAR_FIELD_SIZE;
 
         /* weight, length, pagerank */
-        byte[] weight = ByteBuffer.allocate(sizeOfDouble).putDouble(0).array();
-        byte[] length = ByteBuffer.allocate(sizeOfInt).putInt(docLength).array();
-        byte[] pageRank = ByteBuffer.allocate(sizeOfDouble).putDouble(0).array();
+        byte[] weight = ByteBuffer.allocate(8).putDouble(0).array();
+        byte[] length = ByteBuffer.allocate(4).putInt(docLength).array();
+        byte[] pageRank = ByteBuffer.allocate(8).putDouble(0).array();
         docEntryLength += weight.length + length.length + pageRank.length;
 
         out.write(id);
