@@ -46,4 +46,11 @@ public class QueryTerm {
 
     }
 
+    public String getTerm() {
+        return term;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
 }

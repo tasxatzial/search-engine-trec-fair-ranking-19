@@ -27,6 +27,8 @@ package gr.csd.uoc.hy463.themis.retrieval.models;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -40,7 +42,7 @@ abstract class ARetrievalModel {
         PLAIN, ESSENTIAL, FULL
     }
 
-    private Indexer indexer;
+    protected Indexer indexer;
 
     public ARetrievalModel(Indexer indexer) {
         this.indexer = indexer;
@@ -63,7 +65,7 @@ abstract class ARetrievalModel {
      * @param type the type of object in the pair (PLAIN/ESSENTIAL/FULL)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type);
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with the
@@ -91,7 +93,7 @@ abstract class ARetrievalModel {
      * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk);
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) throws IOException;
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

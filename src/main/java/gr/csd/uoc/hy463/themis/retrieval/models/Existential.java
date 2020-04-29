@@ -25,8 +25,15 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,13 +51,55 @@ public class Existential extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type) throws IOException {
+        return getRankedResults(query, type, -1);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) throws IOException {
+        List<String> terms = new ArrayList<>();
+        List<Pair<Object, Double>> result = new ArrayList<>();
 
+        for (QueryTerm q : query) {
+            terms.add(q.getTerm());
+        }
+
+        if (type == RESULT_TYPE.PLAIN) {
+            List<List<String>> docInfoPlain = null;
+            docInfoPlain = indexer.getDocId(terms);
+            for (List<String> termDocInfoPlain : docInfoPlain) {
+                for (String docId : termDocInfoPlain) {
+                    if (result.size() == topk) {
+                        return result;
+                    }
+                    result.add(new Pair<>(docId, 1.0));
+                }
+            }
+        }
+        if (type == RESULT_TYPE.ESSENTIAL) {
+            List<List<DocInfoEssential>> docInfoEssential_list = null;
+            docInfoEssential_list = indexer.getDocInfoEssentialForTerms(terms);
+            for (List<DocInfoEssential> termDocInfoEssential : docInfoEssential_list) {
+                for (DocInfoEssential docInfo : termDocInfoEssential) {
+                    if (result.size() == topk) {
+                        return result;
+                    }
+                    result.add(new Pair<>(docInfo, 1.0));
+                }
+            }
+        }
+        else if (type == RESULT_TYPE.FULL) {
+            List<List<DocInfoFull>> docInfoFull_list = null;
+            docInfoFull_list = indexer.getDocInfoFullTerms(terms);
+            for (List<DocInfoFull> termDocInfoFull : docInfoFull_list) {
+                for (DocInfoFull docInfo : termDocInfoFull) {
+                    if (result.size() == topk) {
+                        return result;
+                    }
+                    result.add(new Pair<>(docInfo, 1.0));
+                }
+            }
+        }
+        return result;
+    }
 }
