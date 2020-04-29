@@ -36,7 +36,6 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -573,7 +572,8 @@ public class Indexer implements Runnable {
      * ==> IMPORTANT NOTES
      *
      * For strings that have a variable size, a short (2 bytes) was added as
-     * prefix storing the size in bytes of the string. Also the
+     * prefix storing the size in bytes of the string. Exceptions are the author names
+     * and author ids for which the prefix is 4 bytes. Also the
      * correct representation was used, ASCII (1 byte) or UTF-8 (2 bytes). For
      * example the doc id is a hexadecimal hash so there is no need for UTF
      * encoding
@@ -593,8 +593,8 @@ public class Indexer implements Runnable {
 
         /* title */
         byte[] title = textualEntry.getTitle().getBytes("UTF-8");
-        byte[] titleLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) title.length).array();
-        docEntryLength += title.length + DocumentEntry.VAR_FIELD_SIZE;
+        byte[] titleLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) title.length).array();
+        docEntryLength += title.length + DocumentEntry.VAR_FIELD_SHORT_SIZE;
 
         /* authors, authors ids */
         List<Pair<String, List<String>>> authors;
@@ -614,21 +614,21 @@ public class Indexer implements Runnable {
         }
 
         byte[] authorNames = sb_authorNames.toString().getBytes("UTF-8");
-        byte[] authorNamesLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) authorNames.length).array();
-        docEntryLength += authorNames.length + DocumentEntry.VAR_FIELD_SIZE;
+        byte[] authorNamesLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_INT_SIZE).putInt(authorNames.length).array();
+        docEntryLength += authorNames.length + DocumentEntry.VAR_FIELD_INT_SIZE;
 
         byte[] authorIds = sb_authorIds.toString().getBytes("ASCII");
-        byte[] authorIdsLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) authorIds.length).array();
-        docEntryLength += authorIds.length + DocumentEntry.VAR_FIELD_SIZE;
+        byte[] authorIdsLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_INT_SIZE).putInt(authorIds.length).array();
+        docEntryLength += authorIds.length + DocumentEntry.VAR_FIELD_INT_SIZE;
 
         /* year */
-        byte[] year = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) textualEntry.getYear()).array();
+        byte[] year = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) textualEntry.getYear()).array();
         docEntryLength += year.length;
 
         /* journal name */
         byte[] journalName = textualEntry.getJournalName().getBytes("UTF-8");
-        byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SIZE).putShort((short) journalName.length).array();
-        docEntryLength += journalName.length + DocumentEntry.VAR_FIELD_SIZE;
+        byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) journalName.length).array();
+        docEntryLength += journalName.length + DocumentEntry.VAR_FIELD_SHORT_SIZE;
 
         /* weight, length, pagerank */
         byte[] weight = ByteBuffer.allocate(8).putDouble(0).array();
@@ -919,15 +919,15 @@ public class Indexer implements Runnable {
                 documentPointer += DocumentEntry.ID_SIZE;
 
                 //move pointer past title
-                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SHORT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
 
                 //move pointer past author names
-                documentPointer +=  __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer +=  __DOCUMENTS__.readInt() + DocumentEntry.VAR_FIELD_INT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
 
                 //move pointer past author ids
-                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += __DOCUMENTS__.readInt() + DocumentEntry.VAR_FIELD_INT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
 
                 //move pointer past year
@@ -935,7 +935,7 @@ public class Indexer implements Runnable {
                 __DOCUMENTS__.seek(documentPointer);
 
                 //move pointer past journal name
-                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SHORT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
 
                 //read weight
@@ -1001,21 +1001,21 @@ public class Indexer implements Runnable {
                 __DOCUMENTS__.readFully(title);
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
 
-                documentPointer += titleLength + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += titleLength + DocumentEntry.VAR_FIELD_SHORT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
-                short authorNamesLength = __DOCUMENTS__.readShort();
+                int authorNamesLength = __DOCUMENTS__.readInt();
                 byte[] authorNames = new byte[authorNamesLength];
                 __DOCUMENTS__.readFully(authorNames);
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
 
-                documentPointer += authorNamesLength + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += authorNamesLength + DocumentEntry.VAR_FIELD_INT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
-                short authorIdsLength = __DOCUMENTS__.readShort();
+                int authorIdsLength = __DOCUMENTS__.readInt();
                 byte[] authorIds = new byte[authorIdsLength];
                 __DOCUMENTS__.readFully(authorIds);
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
 
-                documentPointer += authorIdsLength + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += authorIdsLength + DocumentEntry.VAR_FIELD_INT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
                 short year = __DOCUMENTS__.readShort();
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
@@ -1027,7 +1027,7 @@ public class Indexer implements Runnable {
                 __DOCUMENTS__.readFully(journalName);
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
 
-                documentPointer += journalNameLength + DocumentEntry.VAR_FIELD_SIZE;
+                documentPointer += journalNameLength + DocumentEntry.VAR_FIELD_SHORT_SIZE;
                 __DOCUMENTS__.seek(documentPointer);
                 double weight = __DOCUMENTS__.readDouble();
                 docInfoFull.setProperty(DocInfoEssential.PROPERTY.WEIGHT, weight);

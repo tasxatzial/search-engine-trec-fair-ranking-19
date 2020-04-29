@@ -9,6 +9,7 @@ package gr.csd.uoc.hy463.themis.utils;
  */
 public class DocumentEntry {
     public static int ID_SIZE = 40;
-    public static int VAR_FIELD_SIZE = 2;
+    public static int VAR_FIELD_SHORT_SIZE = 2;
+    public static int VAR_FIELD_INT_SIZE = 4;
     public static int YEAR_SIZE = 2;
 }
