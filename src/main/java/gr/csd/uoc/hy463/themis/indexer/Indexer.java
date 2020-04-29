@@ -351,7 +351,7 @@ public class Indexer implements Runnable {
             Themis.view.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
-            Themis.view.showError("Error merging\n");
+            Themis.view.showError("Error merging vocabularies\n");
         }
     }
 
@@ -369,6 +369,9 @@ public class Indexer implements Runnable {
         String vocabularyName = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
         BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(vocabularyName), "UTF-8"));
+
+        BufferedWriter termTfWriter = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(__INDEX_PATH__ + "/term_tf"), "UTF-8"));
 
         /* the previous lex min word */
         String prevMinTerm = "";
@@ -407,7 +410,7 @@ public class Indexer implements Runnable {
             vocabulary entries that are in the array of equal terms to the final
             vocabulary file */
             if (!minTermVocabularyEntry.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
-                offset = dumpEqualTerms(equalTerms, vocabularyWriter, offset);
+                offset = dumpEqualTerms(equalTerms, vocabularyWriter, termTfWriter, offset);
             }
 
             /* save the current term for the next iteration */
@@ -428,7 +431,7 @@ public class Indexer implements Runnable {
         /* we are done reading the vocabularies. Write the remaining vocabulary entries that are
         still in the array of equal terms to the final vocabulary file */
         if (!equalTerms.isEmpty()) {
-            dumpEqualTerms(equalTerms, vocabularyWriter, offset);
+            dumpEqualTerms(equalTerms, vocabularyWriter, termTfWriter, offset);
         }
 
         /* close any open files */
@@ -436,6 +439,7 @@ public class Indexer implements Runnable {
             vocabularyReader[i].close();
         }
         vocabularyWriter.close();
+        termTfWriter.close();
     }
 
     /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
@@ -451,16 +455,19 @@ public class Indexer implements Runnable {
         return null;
     }
 
-    /* Used during merging. Writes all entries in the array of equal terms to the final
-    vocabulary files. Returns an offset to the postings file that will be used during the next iteration */
-    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter, long offset)
-            throws IOException {
+    /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
+    vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
+    all (partial index id, tf) for each term to a file that will be used during the merging of postings */
+    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter,
+                                BufferedWriter termTfWriter, long offset) throws IOException {
         int df = 0;
 
         //calculate final DF
         for (VocabularyEntry equalTerm : equalTerms) {
             df += equalTerm.get_df();
+            termTfWriter.write(equalTerm.get_indexId() + " " + equalTerm.get_df() + " ");
         }
+        termTfWriter.write("\n");
 
         //finally write a new entry in the final vocabulary file
         vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
