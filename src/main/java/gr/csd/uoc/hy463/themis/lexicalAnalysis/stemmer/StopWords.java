@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.stemmer;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
 /**
  * Class responsible for identifying stopwords

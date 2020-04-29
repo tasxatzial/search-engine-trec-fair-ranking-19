@@ -33,6 +33,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Jso
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
@@ -131,7 +132,7 @@ public class Indexer implements Runnable {
             Stemmer.Initialize();
         }
         if (__CONFIG__.getUseStopwords()) {
-            gr.csd.uoc.hy463.themis.stemmer.StopWords.Initialize();
+            StopWords.Initialize();
         }
     }
 

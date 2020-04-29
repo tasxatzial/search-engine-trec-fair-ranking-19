@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.util.*;
@@ -64,7 +65,7 @@ public class WordFrequencies {
         Pair<DocInfoEssential.PROPERTY, Integer> lastPair;
         while(tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken().toLowerCase();
-            if (useStopwords && gr.csd.uoc.hy463.themis.stemmer.StopWords.isStopWord(currentToken)) {
+            if (useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }
             if (useStemmer) {
