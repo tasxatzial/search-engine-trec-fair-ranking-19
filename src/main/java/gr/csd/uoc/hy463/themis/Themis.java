@@ -6,6 +6,7 @@ import gr.csd.uoc.hy463.themis.ui.View;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 public class Themis {
     public static CreateIndex createIndex;
@@ -14,15 +15,13 @@ public class Themis {
 
     public static void main(String[] args) {
         view = new View();
-        createIndex = new CreateIndex();
-        search = new Search();
 
         /* close window button listener */
         view.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if ((createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
-                        (search.isRunning() && !view.showQuitMessage(search.getTask()))) {
+                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
+                        (search != null && search.isRunning() && !view.showQuitMessage(search.getTask()))) {
                     view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 }
                 else {
@@ -57,12 +56,21 @@ public class Themis {
     private static class createIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (createIndex.isRunning() || search.isRunning()) {
+            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            search.unloadIndex();
             view.initIndexView();
-            createIndex.create();
+            if (search != null && !search.unloadIndex()) {
+                view.showError("Failed to unload previous index\n");
+                return;
+            }
+            try {
+                createIndex = new CreateIndex();
+            } catch (IOException ex) {
+                view.showError("Failed to initialize indexer\n");
+                return;
+            }
+            createIndex.createIndex();
         }
     }
 
@@ -70,10 +78,15 @@ public class Themis {
     private static class searchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (createIndex.isRunning() || search.isRunning()) {
+            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
             view.initSearchView();
+            try {
+                search = new Search();
+            } catch (IOException ex) {
+                view.showError("Failed to initialize indexer\n");
+            }
         }
     }
 
@@ -81,11 +94,19 @@ public class Themis {
     private static class loadIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (createIndex.isRunning() || search.isRunning()) {
+            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            search.unloadIndex();
             view.initIndexView();
+            if (search != null && !search.unloadIndex()) {
+                view.showError("Failed to unload previous index\n");
+                return;
+            }
+            try {
+                search = new Search();
+            } catch (IOException ex) {
+                view.showError("Failed to initialize indexer\n");
+            }
             search.loadIndex();
         }
     }

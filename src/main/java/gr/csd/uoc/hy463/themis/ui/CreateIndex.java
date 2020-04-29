@@ -39,16 +39,14 @@ import java.io.IOException;
  */
 public class CreateIndex {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
-    private Indexer _indexer = null;
+    private Indexer _indexer;
 
-    public void create() {
+    public CreateIndex() throws IOException {
+        _indexer = new Indexer();
+    }
+
+    public void createIndex() {
         if (isRunning()) {
-            return;
-        }
-        try {
-            _indexer = new Indexer();
-        } catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
             return;
         }
         _indexer.setTask(Indexer.TASK.CREATE_INDEX);
@@ -56,24 +54,19 @@ public class CreateIndex {
         runnableIndexer.start();
     }
 
-    public boolean isRunning() {
-        return _indexer != null && _indexer.isRunning();
-    }
-
-    public void stop() {
-        if (_indexer != null) {
-            _indexer.stop();
-        }
-    }
-
     public String getTask() {
-        if (_indexer == null) {
-            return null;
-        }
         Indexer.TASK task = _indexer.getTask();
         if (task != null) {
             return task.toString();
         }
         return null;
+    }
+
+    public boolean isRunning() {
+        return _indexer.isRunning();
+    }
+
+    public void stop() {
+        _indexer.stop();
     }
 }

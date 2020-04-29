@@ -38,19 +38,14 @@ import java.io.IOException;
  */
 public class Search {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
-    private Indexer _indexer = null;
+    private Indexer _indexer;
+
+    public Search() throws IOException {
+        _indexer = new Indexer();
+    }
 
     public void loadIndex() {
         if (isRunning()) {
-            return;
-        }
-        try {
-            if (_indexer != null) {
-                _indexer.unload();
-            }
-            _indexer = new Indexer();
-        } catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
             return;
         }
         _indexer.setTask(Indexer.TASK.LOAD_INDEX);
@@ -58,20 +53,17 @@ public class Search {
         runnableIndexer.start();
     }
 
-    public void unloadIndex() {
+    public boolean unloadIndex() {
         try {
-            if (_indexer != null) {
-                _indexer.unload();
-            }
+            _indexer.unload();
         } catch (IOException e) {
             __LOGGER__.error(e.getMessage());
+            return false;
         }
+        return true;
     }
 
     public String getTask() {
-        if (_indexer == null) {
-            return null;
-        }
         Indexer.TASK task = _indexer.getTask();
         if (task != null) {
             return task.toString();
@@ -80,12 +72,10 @@ public class Search {
     }
 
     public void stop() {
-        if (_indexer != null) {
-            _indexer.stop();
-        }
+        _indexer.stop();
     }
 
     public boolean isRunning() {
-        return _indexer != null && _indexer.isRunning();
+        return _indexer.isRunning();
     }
 }
