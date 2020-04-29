@@ -233,7 +233,7 @@ public class Indexer implements Runnable {
         each article (one line per article). Will be used for fast calculation
         of the VSM weights */
         BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_PATH__ + "/tf"), "UTF-8"));
+                (new FileOutputStream(__INDEX_PATH__ + "/doc_tf"), "UTF-8"));
         
         Index index = new Index(__CONFIG__);
         int id = 1;
@@ -359,9 +359,10 @@ public class Indexer implements Runnable {
     }
 
     /* Merges the partial vocabularies when there are more than 1 partial indexes.
-    Writes the merged vocabulary file and deletes the partial vocabularies */
+    Writes the merged vocabulary file */
     private void combinePartialVocabularies(List<Integer> partialIndexes) throws IOException {
 
+        /* the partial vocabularies */
         BufferedReader[] vocabularyReader = new BufferedReader[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
             String vocabularyPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
@@ -718,7 +719,7 @@ public class Indexer implements Runnable {
         /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
         BufferedReader freqReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/tf"), "UTF-8"));
+                new FileInputStream(__INDEX_PATH__ + "/doc_tf"), "UTF-8"));
         BufferedReader articleSizeReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
 
@@ -774,7 +775,7 @@ public class Indexer implements Runnable {
 
         /* delete files */
         deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
-        deleteIndex(new File(__INDEX_PATH__ + "/tf"));
+        deleteIndex(new File(__INDEX_PATH__ + "/doc_tf"));
 
         Themis.view.print(" > DONE\nVSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
