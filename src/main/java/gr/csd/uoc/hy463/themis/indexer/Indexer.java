@@ -36,6 +36,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -311,22 +312,24 @@ public class Indexer implements Runnable {
 
         Themis.view.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
 
-        // Now we have finished creating the partial indexes
-        // So we have to merge them (call merge)
+        /* merge the vocabularies and delete them */
         mergeVocabularies(partialIndexes);
 
-        /* update VSM weights */
+        /* update VSM weights and delete doc_size and tf files */
         updateVSMweights(totalArticles);
+
+        /* merge the postings and delete them */
+        mergePostings(partialIndexes);
+
+        /* delete the partial indexes folders */
+        for (Integer partialIndex : partialIndexes) {
+            deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
+        }
 
         return false;
     }
 
-    /**
-     * Method that merges the partial indexes and creates a new single index.
-     *
-     * @param partialIndexes
-     * @return
-     */
+    /* Merges the partial vocabularies and creates a new single vocabulary */
     private void mergeVocabularies(List<Integer> partialIndexes) {
         // Use the indexes with the ids stored in the array.
 
@@ -355,8 +358,8 @@ public class Indexer implements Runnable {
         }
     }
 
-    /* Combines the partial vocabularies when their size is > 1. Writes the merged vocabulary file and deletes
-    * the partial vocabulary files */
+    /* Merges the partial vocabularies when there are more than 1 partial indexes.
+    Writes the merged vocabulary file and deletes the partial vocabularies */
     private void combinePartialVocabularies(List<Integer> partialIndexes) throws IOException {
 
         BufferedReader[] vocabularyReader = new BufferedReader[partialIndexes.size()];
@@ -479,7 +482,82 @@ public class Indexer implements Runnable {
         return offset;
     }
 
-     /* DOCUMENTS FILE => documents.idx (Random Access File)
+    /* Method that merges the partial postings and creates a new single posting file. The partial postings
+    * are then deleted */
+    private void mergePostings(List<Integer> partialIndexes) {
+        // Use the indexes with the ids stored in the array.
+
+        /* If there is only one partial index, no merging is needed for the postings. Just move them
+        in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete the
+        partial postings */
+        long startTime =  System.nanoTime();
+        try {
+            Themis.view.print(">>> Start Merging of partial postings\n");
+            if (partialIndexes.size() == 1) {
+                String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
+                Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
+                        Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
+                        StandardCopyOption.REPLACE_EXISTING);
+            } else {
+                combinePartialPostings(partialIndexes);
+                for (Integer partialIndex : partialIndexes) {
+                    String partialIndexPath = __INDEX_PATH__ + "/" + partialIndex;
+                    deleteIndex(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
+                }
+            }
+            Themis.view.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        }  catch (IOException e) {
+            __LOGGER__.error(e.getMessage());
+            Themis.view.showError("Error merging postings\n");
+        }
+    }
+
+    /* Merges the partial postings when there are more than 1 partial indexes.
+    Writes the merged posting file and deletes the term_tf file */
+    private void combinePartialPostings(List<Integer> partialIndexes) throws IOException {
+
+        /* the partial postings */
+        BufferedInputStream[] postingsStream = new BufferedInputStream[partialIndexes.size()];
+        for (int i = 0; i < partialIndexes.size(); i++) {
+            String postingPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
+            postingsStream[i] = new BufferedInputStream(new FileInputStream
+                    (new RandomAccessFile(postingPath, "rw").getFD()));
+        }
+
+        /* the final posting file */
+        String postingName = __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
+        BufferedOutputStream postingOut = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(postingName, "rw").getFD()));
+
+        /* the file with the (partial index id, tf) for each term */
+        BufferedReader termTfReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_PATH__ + "/term_tf"), "ASCII"));
+
+        /* read each line of the file that has the (partial index id, tf). Each line corresponds to
+        the same line in the final vocabulary file, thus both lines refer to the same term */
+        String line;
+        String[] split;
+        while ((line = termTfReader.readLine()) != null){
+            split = line.split(" ");
+            for (int i = 0; i < split.length; i+=2) {
+                byte[] postings = new byte[Integer.parseInt(split[i + 1])  * PostingEntry.SIZE];
+                postingsStream[Integer.parseInt(split[i])].read(postings); //read into postings byte array
+                postingOut.write(postings);  //and write to final postings file
+            }
+        }
+
+        /* close any open files */
+        for (BufferedInputStream bufferedInputStream : postingsStream) {
+            bufferedInputStream.close();
+        }
+        postingOut.close();
+        termTfReader.close();
+
+        /* finally delete temporary file */
+        deleteIndex(new File(__INDEX_PATH__ + "/term_tf"));
+    }
+
+    /* DOCUMENTS FILE => documents.idx (Random Access File)
      * Writes the appropriate document entry for a textual entry to the documents file and
      * returns an offset that is the sum of the previous offset plus the document entry size
      * (in bytes).
