@@ -718,58 +718,50 @@ public class Indexer implements Runnable {
 
         /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
-        BufferedReader freqReader = new BufferedReader(new InputStreamReader(
+        BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/doc_tf"), "UTF-8"));
-        BufferedReader articleSizeReader = new BufferedReader(new InputStreamReader(
+        BufferedReader docSizeReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
-
-        /* write the weights into an array before writing to disk */
-        double[] weights = new double[totalArticles];
 
         /* the TFs for each article */
         int[] tfs;
 
-        int article = 0;
-        int maxFreq;
         String line;
         String[] split;
+        double weight;
+        long docOffset = 0;
+        int docSize;
+        int maxTf;
+        byte[] weightB;
 
         /* read an entry from the frequencies file and calculate the weight */
-        while ((line = freqReader.readLine()) != null) {
+        while ((line = tfReader.readLine()) != null) {
             split = line.split(" ");
             tfs = new int[split.length / 2];
-            maxFreq = 0;
+            maxTf = 0;
             for (int i = 0; i < split.length; i+=2) {
                 tfs[i / 2] = Integer.parseInt(split[i+1]);
-                if (tfs[i / 2] > maxFreq) {
-                    maxFreq = tfs[i / 2];
+                if (tfs[i / 2] > maxTf) {
+                    maxTf = tfs[i / 2];
                 }
             }
+            weight = 0;
             for (int i = 0; i < split.length; i+= 2) {
-                double x = (0.0 + tfs[i / 2]) / maxFreq * Math.log((0.0 + totalArticles) /
+                double x = (0.0 + tfs[i / 2]) / maxTf * Math.log((0.0 + totalArticles) /
                         __VOCABULARY__.get(split[i]).getL()) / Math.log(2);
-                weights[article] += x * x;
+                weight += x * x;
             }
-            weights[article] = Math.sqrt(weights[article]);
-            article++;
-        }
-        freqReader.close();
-
-        /* once the weights are calculated, update the documents file */
-        Themis.view.print("Updating documents.idx...");
-        long offset = 0;
-        int docSize;
-        byte[] weightB;
-        for (double weight : weights) {
-            docSize = Integer.parseInt(articleSizeReader.readLine());
-            __DOCUMENTS__.seek(offset + docSize - 20);
-            offset += docSize;
+            weight = Math.sqrt(weight);
+            docSize = Integer.parseInt(docSizeReader.readLine());
+            __DOCUMENTS__.seek(docOffset + docSize - 20);
+            docOffset += docSize;
             weightB = ByteBuffer.allocate(8).putDouble(weight).array();
             __DOCUMENTS__.write(weightB);
         }
+        tfReader.close();
 
         /* close files */
-        articleSizeReader.close();
+        docSizeReader.close();
         __DOCUMENTS__.close();
         __DOCUMENTS__ = null;
 
@@ -777,7 +769,7 @@ public class Indexer implements Runnable {
         deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
         deleteIndex(new File(__INDEX_PATH__ + "/doc_tf"));
 
-        Themis.view.print("DONE\nVSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.view.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
 
     /**
