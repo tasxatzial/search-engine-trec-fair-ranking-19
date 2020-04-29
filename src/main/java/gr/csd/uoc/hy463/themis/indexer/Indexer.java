@@ -835,7 +835,6 @@ public class Indexer implements Runnable {
         DocInfoEssential docInfoEssential;
         long documentPointer;
         long postingPointer;
-        //short field_length;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
         for (String term : terms) {
@@ -901,14 +900,78 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfoFull>> getDocInfoFullTerms(List<String> terms) {
-        // If indexes are not loaded
-        if (!loaded()) {
-            return null;
-        } else {
-            // to implement
+    public List<List<DocInfoFull>> getDocInfoFullTerms(List<String> terms) throws IOException {
+        if (!loaded()) { // If indexes are not loaded
             return null;
         }
+
+        List<List<DocInfoFull>> docInfoFull_list = new ArrayList<>();
+        List<DocInfoFull> termDocInfoFull;
+        DocInfoFull docInfoFull;
+        long documentPointer;
+        long postingPointer;
+        int df;
+        byte[] docId = new byte[DocumentEntry.ID_SIZE];
+        for (String term : terms) {
+            termDocInfoFull = new ArrayList<>();
+            postingPointer = __VOCABULARY__.get(term).getR();
+            df = __VOCABULARY__.get(term).getL();
+            __POSTINGS__.seek(postingPointer);
+            for (int i = 0; i < df; i++) {
+                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
+                documentPointer = __POSTINGS__.readLong();
+                __DOCUMENTS__.seek(documentPointer);
+                __DOCUMENTS__.readFully(docId);
+                docInfoFull = new DocInfoFull(new String(docId, "ASCII"), documentPointer);
+
+                documentPointer += DocumentEntry.ID_SIZE;
+                short titleLength = __DOCUMENTS__.readShort();
+                byte[] title = new byte[titleLength];
+                __DOCUMENTS__.readFully(title);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
+
+                documentPointer += titleLength + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+                short authorNamesLength = __DOCUMENTS__.readShort();
+                byte[] authorNames = new byte[authorNamesLength];
+                __DOCUMENTS__.readFully(authorNames);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
+
+                documentPointer += authorNamesLength + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+                short authorIdsLength = __DOCUMENTS__.readShort();
+                byte[] authorIds = new byte[authorIdsLength];
+                __DOCUMENTS__.readFully(authorIds);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
+
+                documentPointer += authorIdsLength + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+                short year = __DOCUMENTS__.readShort();
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
+
+                documentPointer += DocumentEntry.YEAR_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+                short journalNameLength = __DOCUMENTS__.readShort();
+                byte[] journalName = new byte[journalNameLength];
+                __DOCUMENTS__.readFully(journalName);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
+
+                documentPointer += journalNameLength + DocumentEntry.VAR_FIELD_SIZE;
+                __DOCUMENTS__.seek(documentPointer);
+                double weight = __DOCUMENTS__.readDouble();
+                docInfoFull.setProperty(DocInfoEssential.PROPERTY.WEIGHT, weight);
+
+                int length = __DOCUMENTS__.readInt();
+                docInfoFull.setProperty(DocInfoEssential.PROPERTY.LENGTH, length);
+
+                double pageRank = __DOCUMENTS__.readDouble();
+                docInfoFull.setProperty(DocInfoEssential.PROPERTY.PAGERANK, pageRank);
+
+                termDocInfoFull.add(docInfoFull);
+            }
+            docInfoFull_list.add(termDocInfoFull);
+        }
+        return docInfoFull_list;
     }
 
     /**
