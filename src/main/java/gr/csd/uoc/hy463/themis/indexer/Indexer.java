@@ -848,14 +848,19 @@ public class Indexer implements Runnable {
 
         List<List<String>> docIds = new ArrayList<>();
         List<String> termDocId;
+        Pair<Integer, Long> termValue;
         long documentPointer;
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
         for (String term : terms) {
+            termValue = __VOCABULARY__.get(term);
+            if (termValue == null) {
+                continue;
+            }
             termDocId = new ArrayList<>();
-            postingPointer = __VOCABULARY__.get(term).getR();
-            df = __VOCABULARY__.get(term).getL();
+            postingPointer = termValue.getR();
+            df = termValue.getL();
             for (int i = 0; i < df; i++) {
                 __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
                 documentPointer = __POSTINGS__.readLong();
@@ -889,14 +894,19 @@ public class Indexer implements Runnable {
         List<List<DocInfoEssential>> docInfoEssential_list = new ArrayList<>();
         List<DocInfoEssential> termDocInfoEssential;
         DocInfoEssential docInfoEssential;
+        Pair<Integer, Long> termValue;
         long documentPointer;
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
         for (String term : terms) {
+            termValue = __VOCABULARY__.get(term);
+            if (termValue == null) {
+                continue;
+            }
             termDocInfoEssential = new ArrayList<>();
-            postingPointer = __VOCABULARY__.get(term).getR();
-            df = __VOCABULARY__.get(term).getL();
+            postingPointer = termValue.getR();
+            df = termValue.getL();
             __POSTINGS__.seek(postingPointer);
             for (int i = 0; i < df; i++) {
                 __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
@@ -964,14 +974,19 @@ public class Indexer implements Runnable {
         List<List<DocInfoFull>> docInfoFull_list = new ArrayList<>();
         List<DocInfoFull> termDocInfoFull;
         DocInfoFull docInfoFull;
+        Pair<Integer, Long> termValue;
         long documentPointer;
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
         for (String term : terms) {
+            termValue = __VOCABULARY__.get(term);
+            if (termValue == null) {
+                continue;
+            }
             termDocInfoFull = new ArrayList<>();
-            postingPointer = __VOCABULARY__.get(term).getR();
-            df = __VOCABULARY__.get(term).getL();
+            postingPointer = termValue.getR();
+            df = termValue.getL();
             __POSTINGS__.seek(postingPointer);
             for (int i = 0; i < df; i++) {
                 __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
