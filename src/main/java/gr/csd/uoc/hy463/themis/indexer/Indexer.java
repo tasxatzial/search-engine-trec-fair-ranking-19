@@ -147,13 +147,13 @@ public class Indexer implements Runnable {
         // Check if path exists
         File file = new File(__INDEX_PATH__);
         if (!file.exists() || !file.isDirectory()) {
-            __LOGGER__.error(__INDEX_PATH__ + "directory does not exist!");
+            __LOGGER__.error(__INDEX_PATH__ + " directory does not exist!");
             return false;
         }
         // Check if index files exist
         file = new File(__INDEX_PATH__ + __VOCABULARY_FILENAME__);
         if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__VOCABULARY_FILENAME__ + "vocabulary file does not exist in " + __INDEX_PATH__);
+            __LOGGER__.error(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
             return false;
         }
         file = new File(__INDEX_PATH__ + __POSTINGS_FILENAME__);
@@ -164,6 +164,11 @@ public class Indexer implements Runnable {
         file = new File(__INDEX_PATH__ + __DOCUMENTS_FILENAME__);
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_FILENAME__ + "documents binary file does not exist in " + __INDEX_PATH__);
+            return false;
+        }
+        file = new File(__INDEX_PATH__ + __META_FILENAME__);
+        if (!file.exists() || file.isDirectory()) {
+            __LOGGER__.error(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
             return false;
         }
         return true;
@@ -1074,7 +1079,7 @@ public class Indexer implements Runnable {
      */
     public boolean loaded() {
         return __VOCABULARY__ != null && __POSTINGS__ != null
-                && __DOCUMENTS__ != null;
+                && __DOCUMENTS__ != null && __META_INDEX_INFO__ != null;
     }
 
     /**
