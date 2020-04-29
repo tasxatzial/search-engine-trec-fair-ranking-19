@@ -326,16 +326,17 @@ public class Indexer implements Runnable {
             deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
         }
 
+        Themis.view.print(">>> End of indexing\n");
         return false;
     }
 
-    /* Merges the partial vocabularies and creates a new single vocabulary */
+    /* Merges the partial vocabularies and creates a new single vocabulary. The partial vocabularies are then
+    * deleted */
     private void mergeVocabularies(List<Integer> partialIndexes) {
         // Use the indexes with the ids stored in the array.
 
         /* If there is only one partial index, no merging is needed for the vocabularies. Just move them
-        in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete the
-        partial vocabularies */
+        in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete them */
         long startTime =  System.nanoTime();
         try {
             Themis.view.print(">>> Start Merging of partial vocabularies\n");
@@ -489,8 +490,7 @@ public class Indexer implements Runnable {
         // Use the indexes with the ids stored in the array.
 
         /* If there is only one partial index, no merging is needed for the postings. Just move them
-        in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete the
-        partial postings */
+        in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete them */
         long startTime =  System.nanoTime();
         try {
             Themis.view.print(">>> Start Merging of partial postings\n");
@@ -756,7 +756,7 @@ public class Indexer implements Runnable {
         freqReader.close();
 
         /* once the weights are calculated, update the documents file */
-        Themis.view.print("Updating documents.idx");
+        Themis.view.print("Updating documents.idx...");
         long offset = 0;
         int docSize;
         byte[] weightB;
@@ -777,7 +777,7 @@ public class Indexer implements Runnable {
         deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
         deleteIndex(new File(__INDEX_PATH__ + "/doc_tf"));
 
-        Themis.view.print(" > DONE\nVSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.view.print("DONE\nVSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
 
     /**
