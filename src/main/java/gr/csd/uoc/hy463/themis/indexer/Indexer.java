@@ -839,6 +839,26 @@ public class Indexer implements Runnable {
         __META_INDEX_INFO__ = null;
     }
 
+    /* Returns a new list of terms based on the options for stemming and stopwords from the
+     * meta_index_info map */
+    private List<String> preprocessTerms(List<String> terms) {
+        boolean useStopwords = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
+        boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
+        List<String> editedTerms = new ArrayList<>();
+        for (String term : terms) {
+            if (useStopwords && StopWords.isStopWord(term)) {
+                continue;
+            }
+            if (useStemmer) {
+                editedTerms.add(Stemmer.Stem(term));
+            }
+            else {
+                editedTerms.add(term.toLowerCase());
+            }
+        }
+        return editedTerms;
+    }
+
     /**
      * Basic method for querying functionality. Given the list of terms in the
      * query, returns a List of Lists of String objects, where each
@@ -851,7 +871,7 @@ public class Indexer implements Runnable {
         if (!loaded()) {
             return null;
         }
-
+        List<String> editedTerms = preprocessTerms(terms);
         List<List<String>> docIds = new ArrayList<>();
         List<String> termDocId;
         Pair<Integer, Long> termValue;
@@ -859,7 +879,7 @@ public class Indexer implements Runnable {
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : terms) {
+        for (String term : editedTerms) {
             termValue = __VOCABULARY__.get(term);
             if (termValue == null) {
                 continue;
@@ -896,7 +916,7 @@ public class Indexer implements Runnable {
         if (!loaded()) { // If indexes are not loaded
             return null;
         }
-
+        List<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfoEssential>> docInfoEssential_list = new ArrayList<>();
         List<DocInfoEssential> termDocInfoEssential;
         DocInfoEssential docInfoEssential;
@@ -905,7 +925,7 @@ public class Indexer implements Runnable {
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : terms) {
+        for (String term : editedTerms) {
             termValue = __VOCABULARY__.get(term);
             if (termValue == null) {
                 continue;
@@ -976,7 +996,7 @@ public class Indexer implements Runnable {
         if (!loaded()) { // If indexes are not loaded
             return null;
         }
-
+        List<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfoFull>> docInfoFull_list = new ArrayList<>();
         List<DocInfoFull> termDocInfoFull;
         DocInfoFull docInfoFull;
@@ -985,7 +1005,7 @@ public class Indexer implements Runnable {
         long postingPointer;
         int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : terms) {
+        for (String term : editedTerms) {
             termValue = __VOCABULARY__.get(term);
             if (termValue == null) {
                 continue;
