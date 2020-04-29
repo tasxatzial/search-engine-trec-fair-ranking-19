@@ -313,7 +313,7 @@ public class Indexer implements Runnable {
 
         // Now we have finished creating the partial indexes
         // So we have to merge them (call merge)
-        merge(partialIndexes);
+        mergeVocabularies(partialIndexes);
 
         /* update VSM weights */
         updateVSMweights(totalArticles);
@@ -327,64 +327,48 @@ public class Indexer implements Runnable {
      * @param partialIndexes
      * @return
      */
-    private void merge(List<Integer> partialIndexes) {
+    private void mergeVocabularies(List<Integer> partialIndexes) {
         // Use the indexes with the ids stored in the array.
 
-        // Read vocabulary files line by line in corresponding dirs
-        // and check which is the shortest lexicographically.
-        // Read the corresponding entries in the postings and documents file
-        // and append accordingly the new ones
-        // If both partial indexes contain the same word, them we have to update
-        // the df and append the postings and documents of both
-        // Continue with the next lexicographically shortest word
-        // Dump the final index and delete the old partial indexes
-        // Store all idx files to INDEX_PATH
+        /* If there is only one partial index, no merging is needed for the vocabularies. Just move them
+        in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete the
+        partial vocabularies */
         long startTime =  System.nanoTime();
         try {
-            Themis.view.print(">>> Start Merging\n");
+            Themis.view.print(">>> Start Merging of partial vocabularies\n");
             if (partialIndexes.size() == 1) {
                 String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
                 Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
                         Paths.get(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__),
                         StandardCopyOption.REPLACE_EXISTING);
-                Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
-                        Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
-                        StandardCopyOption.REPLACE_EXISTING);
-                Files.delete(Paths.get(partialIndexPath));
             } else {
-                combinePartialIndexes(partialIndexes);
-                for (Integer partialIndex : partialIndexes) {
-                    deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
+                combinePartialVocabularies(partialIndexes);
+                for (int i = 0; i < partialIndexes.size(); i++) {
+                    String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(i);
+                    deleteIndex(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
                 }
             }
-            Themis.view.print("Partial index merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+            Themis.view.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
             Themis.view.showError("Error merging\n");
         }
     }
 
-    /* Combines the partial indexes when their size is > 1. Writes the merged vocabulary
-    and postings files */
-    private void combinePartialIndexes(List<Integer> partialIndexes) throws IOException {
+    /* Combines the partial vocabularies when their size is > 1. Writes the merged vocabulary file and deletes
+    * the partial vocabulary files */
+    private void combinePartialVocabularies(List<Integer> partialIndexes) throws IOException {
 
-        /* initialize the partial indexes */
-        PartialIndex[] partialIndex = new PartialIndex[partialIndexes.size()];
+        BufferedReader[] vocabularyReader = new BufferedReader[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
             String vocabularyPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
-            String postingsPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
-            partialIndex[i] = new PartialIndex(vocabularyPath, postingsPath, i);
+            vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(vocabularyPath), "UTF-8"));
         }
 
         /* the final vocabulary file */
         String vocabularyName = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
         BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(vocabularyName), "UTF-8"));
-
-        /* the final postings file */
-        String postingsName = __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
-        BufferedOutputStream postingsOut = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(postingsName, "rw").getFD()));
 
         /* the previous lex min word */
         String prevMinTerm = "";
@@ -402,14 +386,11 @@ public class Indexer implements Runnable {
         has the min lex word */
         VocabularyEntry nextVocabularyEntry;
 
-        /* the current partial index that has the lex min word */
-        PartialIndex minTermIndex;
-
         /* put all first vocabulary entries (they have the min lex terms)
-        from each partial index into a queue */
+        from each partial vocabulary into a queue */
         PriorityQueue<VocabularyEntry> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i < partialIndexes.size(); i++) {
-            minTermVocabularyEntry = partialIndex[i].readNextVocabularyEntry();
+            minTermVocabularyEntry = getNextVocabularyEntry(vocabularyReader[i], i);
             if (minTermVocabularyEntry != null) {
                 vocabularyQueue.add(new VocabularyEntry(
                         minTermVocabularyEntry.get_term(),
@@ -421,14 +402,12 @@ public class Indexer implements Runnable {
 
         /* get the next min term */
         while((minTermVocabularyEntry = vocabularyQueue.poll()) != null) {
-            minTermIndex = partialIndex[minTermVocabularyEntry.get_indexId()];
 
             /* if the min term is not equal to the previous term, we must write all
             vocabulary entries that are in the array of equal terms to the final
-            vocabulary file (this also includes writing their postings to the final
-            postings file) */
+            vocabulary file */
             if (!minTermVocabularyEntry.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
-                offset = dumpEqualTerms(equalTerms, vocabularyWriter, postingsOut, partialIndex, offset);
+                offset = dumpEqualTerms(equalTerms, vocabularyWriter, offset);
             }
 
             /* save the current term for the next iteration */
@@ -439,49 +418,48 @@ public class Indexer implements Runnable {
                     minTermVocabularyEntry.get_offset(), minTermVocabularyEntry.get_indexId()));
 
             /* finally add the next vocabulary entry to the queue of min lex terms */
-            nextVocabularyEntry = minTermIndex.readNextVocabularyEntry();
+            int indexId = minTermVocabularyEntry.get_indexId();
+            nextVocabularyEntry = getNextVocabularyEntry(vocabularyReader[indexId], indexId);
             if (nextVocabularyEntry != null) {
                 vocabularyQueue.add(nextVocabularyEntry);
             }
         }
 
         /* we are done reading the vocabularies. Write the remaining vocabulary entries that are
-        still in the array of equal terms to the final vocabulary file (this also includes writing
-        their postings to the final postings file) */
+        still in the array of equal terms to the final vocabulary file */
         if (!equalTerms.isEmpty()) {
-            dumpEqualTerms(equalTerms, vocabularyWriter, postingsOut, partialIndex, offset);
+            dumpEqualTerms(equalTerms, vocabularyWriter, offset);
         }
 
         /* close any open files */
         for (int i = 0; i < partialIndexes.size(); i++) {
-            partialIndex[i].closeFiles();
+            vocabularyReader[i].close();
         }
         vocabularyWriter.close();
-        postingsOut.close();
+    }
+
+    /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
+    private VocabularyEntry getNextVocabularyEntry(BufferedReader vocabularyReader, int indexId) throws IOException {
+        String line;
+        String[] fields;
+
+        line = vocabularyReader.readLine();
+        if (line != null) {
+            fields = line.split(" ");
+            return new VocabularyEntry(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]), indexId);
+        }
+        return null;
     }
 
     /* Used during merging. Writes all entries in the array of equal terms to the final
-    vocabulary files. This also includes writing their postings to the final postings file.
-    Returns an offset to the postings file that will be used during the next iteration */
-    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter,
-                                BufferedOutputStream postingsOut, PartialIndex[] partialIndex,
-                                long offset) throws IOException {
+    vocabulary files. Returns an offset to the postings file that will be used during the next iteration */
+    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter, long offset)
+            throws IOException {
         int df = 0;
-        byte[] postings;
 
+        //calculate final DF
         for (VocabularyEntry equalTerm : equalTerms) {
-
-            //calculate final DF by simply adding all DF from each equal term
             df += equalTerm.get_df();
-
-            //allocate memory for the postings of this term
-            postings = new byte[equalTerm.get_df() * PostingEntry.SIZE];
-
-            //read the postings of this term from the partial posting file
-            partialIndex[equalTerm.get_indexId()].get_postingFile().read(postings);
-
-            //finally write the postings of this term to the final postings file
-            postingsOut.write(postings);
         }
 
         //finally write a new entry in the final vocabulary file
