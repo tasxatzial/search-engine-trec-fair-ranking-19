@@ -54,6 +54,14 @@ public class CreateIndex {
         runnableIndexer.start();
     }
 
+    public boolean isIndexDirEmpty() {
+        return _indexer.isIndexDirEmpty();
+    }
+
+    public void deleteIndex() throws IOException {
+        _indexer.deleteIndex();
+    }
+
     public String getTask() {
         Indexer.TASK task = _indexer.getTask();
         if (task != null) {

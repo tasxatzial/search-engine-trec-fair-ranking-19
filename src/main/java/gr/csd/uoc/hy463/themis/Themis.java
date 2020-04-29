@@ -3,12 +3,16 @@ package gr.csd.uoc.hy463.themis;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
 
 public class Themis {
+    private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
+
     public static CreateIndex createIndex;
     public static Search search;
     public static View view;
@@ -20,8 +24,8 @@ public class Themis {
         view.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if ((createIndex != null && createIndex.isRunning() && !view.showQuitMessage(createIndex.getTask())) ||
-                        (search != null && search.isRunning() && !view.showQuitMessage(search.getTask()))) {
+                if ((createIndex != null && createIndex.isRunning() && !view.showYesNoMessage(createIndex.getTask())) ||
+                        (search != null && search.isRunning() && !view.showYesNoMessage(search.getTask()))) {
                     view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 }
                 else {
@@ -67,10 +71,26 @@ public class Themis {
             try {
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
                 view.showError("Failed to initialize indexer\n");
                 return;
             }
-            createIndex.createIndex();
+            if (createIndex.isIndexDirEmpty()) {
+                createIndex.createIndex();
+            }
+            else {
+                boolean delete = view.showYesNoMessage("Delete previous index folder?");
+                if (delete) {
+                    try {
+                        createIndex.deleteIndex();
+                    } catch (IOException ex) {
+                        __LOGGER__.error(ex.getMessage());
+                        view.showError("Failed to delete previous index\n");
+                        return;
+                    }
+                    createIndex.createIndex();
+                }
+            }
         }
     }
 
@@ -85,6 +105,7 @@ public class Themis {
             try {
                 search = new Search();
             } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
                 view.showError("Failed to initialize indexer\n");
             }
         }
@@ -105,6 +126,7 @@ public class Themis {
             try {
                 search = new Search();
             } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
                 view.showError("Failed to initialize indexer\n");
             }
             search.loadIndex();

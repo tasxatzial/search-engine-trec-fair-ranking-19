@@ -193,9 +193,6 @@ public class Indexer implements Runnable {
     public boolean index(String path) throws IOException {
         unload();
 
-        /* delete previous index */
-        deleteIndex(new File(__INDEX_PATH__ + "/"));
-
         long startTime = System.nanoTime();
         Themis.view.print(">>> Start indexing\n");
 
@@ -328,7 +325,7 @@ public class Indexer implements Runnable {
 
         /* delete the partial indexes folders */
         for (Integer partialIndex : partialIndexes) {
-            deleteIndex(new File(__INDEX_PATH__ + "/" + partialIndex));
+            deleteDir(new File(__INDEX_PATH__ + "/" + partialIndex));
         }
 
         Themis.view.print(">>> End of indexing\n");
@@ -354,7 +351,7 @@ public class Indexer implements Runnable {
                 combinePartialVocabularies(partialIndexes);
                 for (int i = 0; i < partialIndexes.size(); i++) {
                     String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(i);
-                    deleteIndex(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
+                    deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
                 }
             }
             Themis.view.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
@@ -508,7 +505,7 @@ public class Indexer implements Runnable {
                 combinePartialPostings(partialIndexes);
                 for (Integer partialIndex : partialIndexes) {
                     String partialIndexPath = __INDEX_PATH__ + "/" + partialIndex;
-                    deleteIndex(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
+                    deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
                 }
             }
             Themis.view.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
@@ -560,7 +557,7 @@ public class Indexer implements Runnable {
         termTfReader.close();
 
         /* finally delete temporary file */
-        deleteIndex(new File(__INDEX_PATH__ + "/term_tf"));
+        deleteDir(new File(__INDEX_PATH__ + "/term_tf"));
     }
 
     /* DOCUMENTS FILE => documents.idx (Random Access File)
@@ -660,11 +657,11 @@ public class Indexer implements Runnable {
     }
 
     /* Deletes everything in indexPath including indexpath */
-    private boolean deleteIndex(File indexPath) throws IOException {
+    private boolean deleteDir(File indexPath) throws IOException {
         File[] contents = indexPath.listFiles();
         if (contents != null) {
             for (File file : contents) {
-                if (!deleteIndex(file)) {
+                if (!deleteDir(file)) {
                     return false;
                 }
             }
@@ -772,8 +769,8 @@ public class Indexer implements Runnable {
         __DOCUMENTS__ = null;
 
         /* delete files */
-        deleteIndex(new File(__INDEX_PATH__ + "/doc_size"));
-        deleteIndex(new File(__INDEX_PATH__ + "/doc_tf"));
+        deleteDir(new File(__INDEX_PATH__ + "/doc_size"));
+        deleteDir(new File(__INDEX_PATH__ + "/doc_tf"));
 
         Themis.view.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
@@ -837,6 +834,24 @@ public class Indexer implements Runnable {
         }
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
+    }
+
+    /**
+     * Deletes the index folder.
+     * @throws IOException
+     */
+    public void deleteIndex() throws IOException {
+        deleteDir(new File(__INDEX_PATH__ + "/"));
+    }
+
+    /**
+     * Returns true if index directory exists and is empty, false otherwise.
+     * @return
+     */
+    public boolean isIndexDirEmpty() {
+        File file = new File(__INDEX_PATH__);
+        File[] fileList = file.listFiles();
+        return fileList == null || fileList.length == 0;
     }
 
     /* Returns a new list of terms based on the options for stemming and stopwords from the
