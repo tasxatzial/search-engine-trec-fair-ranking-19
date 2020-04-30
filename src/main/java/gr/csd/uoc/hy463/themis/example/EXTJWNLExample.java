@@ -38,7 +38,7 @@ import net.sf.extjwnl.dictionary.Dictionary;
  *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-public class EXTJWNLRename {
+public class EXTJWNLExample {
 
     public static void main(String[] args) throws FileNotFoundException, JWNLException, CloneNotSupportedException {
         Dictionary dictionary = null;
