@@ -163,6 +163,24 @@ public class Config {
     }
 
     /**
+     * Returns the path to the compressed word2vec model
+     *
+     * @return
+     */
+    public String getWord2VecModelFileName() {
+        return __PROP__.getProperty("WORD2VEC_FILENAME");
+    }
+
+    /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getGloveModelFileName() {
+        return __PROP__.getProperty("GLOVE_FILENAME");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return
