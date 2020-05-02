@@ -24,15 +24,21 @@
  */
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
+import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Class responsible for reading textual entries from the json description of
@@ -71,34 +77,42 @@ public class S2JsonEntryReader {
             // Read entities. A JSONArray
             JSONArray entitiesArray = (JSONArray) jsonObject.get("entities");
             List<String> entities = new ArrayList<>();
-            entitiesArray.forEach(entity -> {
-                entities.add(entity.toString());
-            });
+            if(entitiesArray != null) {
+                entitiesArray.forEach(entity -> {
+                    entities.add(entity.toString());
+                });
+            }
             entry.setEntities(entities);
 
             // Read fieldsOfStudy. A JSONArray
             JSONArray fieldsArray = (JSONArray) jsonObject.get("fieldsOfStudy");
             List<String> fields = new ArrayList<>();
-            fieldsArray.forEach(field -> {
-                fields.add(field.toString());
-            });
+            if(fieldsArray != null) {
+                fieldsArray.forEach(field -> {
+                    fields.add(field.toString());
+                });
+            }
             entry.setFieldsOfStudy(fields);
 
             // Read authors. A JSONArray
             JSONArray authorsList = (JSONArray) jsonObject.get("authors");
             List<Pair<String, List<String>>> authors = new ArrayList<>();
-            for (int i = 0; i < authorsList.size(); i++) {
-                JSONObject authorInfo = (JSONObject) authorsList.get(i);
-                String authorName = (String) authorInfo.get("name");
-                // Now get all the ids
-                JSONArray idsList = (JSONArray) authorInfo.get("ids");
-                List<String> ids = new ArrayList<>();
-                for (int j = 0; j < idsList.size(); j++) {
-                    String ID = (String) idsList.get(j);
-                    ids.add(ID);
+            if (authorsList != null) {
+                for (int i = 0; i < authorsList.size(); i++) {
+                    JSONObject authorInfo = (JSONObject) authorsList.get(i);
+                    String authorName = (String) authorInfo.get("name");
+                    // Now get all the ids
+                    JSONArray idsList = (JSONArray) authorInfo.get("ids");
+                    List<String> ids = new ArrayList<>();
+                    if(idsList != null) {
+                        for (int j = 0; j < idsList.size(); j++) {
+                            String ID = (String) idsList.get(j);
+                            ids.add(ID);
+                        }
+                    }
+                    Pair author = new Pair(authorName, ids);
+                    authors.add(author);
                 }
-                Pair author = new Pair(authorName, ids);
-                authors.add(author);
             }
             entry.setAuthors(authors);
 
@@ -110,9 +124,11 @@ public class S2JsonEntryReader {
             // Read sources. A JSONArray
             JSONArray sourcesArray = (JSONArray) jsonObject.get("sources");
             List<String> sources = new ArrayList<>();
-            sourcesArray.forEach(source -> {
-                sources.add(source.toString());
-            });
+            if(sourcesArray !=null ) {
+                sourcesArray.forEach(source -> {
+                    sources.add(source.toString());
+                });
+            }
             entry.setSources(sources);
 
             // Get year for example
@@ -132,7 +148,47 @@ public class S2JsonEntryReader {
         return entry;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        Config config = new Config();
+
+        // Get all filenames in collection
+        String datasetPath = config.getDatasetPath();
+        Set<String> result = Stream.of(new File(datasetPath).listFiles())
+                .filter(file -> !file.isDirectory())
+                .map(File::getName)
+                .collect(Collectors.toSet());
+
+            String titlesDir = "/home/papadako/titles/";
+            File dir = new File(titlesDir);
+            if(!dir.exists()) {
+                dir.mkdir();
+            }
+
+            // for each file name
+            for(String file : result) {
+                BufferedReader reader = new BufferedReader(new FileReader(datasetPath + file));
+                String publication = reader.readLine();
+                while(publication != null) {
+                    S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(publication);
+                    String title = entry.getTitle();
+                    String id = entry.getId();
+
+                    // Create directory using the first 3 characters
+                    // since we reach limits of common filesystem due to the huge
+                    // number of files
+                    File dirInternal = new File(titlesDir + id.substring(0, 3));
+                    if(!dirInternal.exists()) {
+                        dirInternal.mkdir();
+                    }
+
+                    FileWriter fileWriter = new FileWriter(dirInternal + "/" + id);
+                    fileWriter.write(title);
+                    fileWriter.close();
+                    publication = reader.readLine();
+                }
+            }
+
+
         String json = "{\n"
                 + "	\"entities\": [],\n"
                 + "	\"journalVolume\": \"\",\n"
