@@ -149,6 +149,24 @@ public class Config {
     }
 
     /**
+     * Returns if we should use the titles
+     *
+     * @return
+     */
+    public boolean getUseTitles() {
+        return Boolean.parseBoolean(__PROP__.getProperty("TITLES_ENABLED"));
+    }
+
+    /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getTitlesFileName() {
+        return __PROP__.getProperty("TITLES_PATH");
+    }
+
+    /**
      * number of max number of files per each partial index
      *
      * @return
@@ -185,8 +203,8 @@ public class Config {
      *
      * @return
      */
-    public String getRelevanceJUDGMENTFileName() {
-        return __PROP__.getProperty("RELEVANCE_JUDGMENT");
+    public String getJudgmentsFileName() {
+        return __PROP__.getProperty("JUDGMENTS_PATH");
     }
 
     /**
