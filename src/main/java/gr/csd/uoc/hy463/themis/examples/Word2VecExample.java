@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.example;
+package gr.csd.uoc.hy463.themis.examples;
 
 import gr.csd.uoc.hy463.themis.config.Config;
 import org.apache.logging.log4j.LogManager;

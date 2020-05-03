@@ -181,6 +181,15 @@ public class Config {
     }
 
     /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getRelevanceJUDGMENTFileName() {
+        return __PROP__.getProperty("RELEVANCE_JUDGMENT");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return

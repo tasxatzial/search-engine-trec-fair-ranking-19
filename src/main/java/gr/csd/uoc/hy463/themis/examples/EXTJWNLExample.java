@@ -22,7 +22,7 @@
  * Copyright 2020
  *
  */
-package gr.csd.uoc.hy463.themis.example;
+package gr.csd.uoc.hy463.themis.examples;
 
 import java.io.FileNotFoundException;
 import java.util.List;
