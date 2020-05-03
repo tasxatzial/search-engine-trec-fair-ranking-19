@@ -50,6 +50,10 @@ public class GloveExample {
         // Wikipedia 2014 + Gigaword 5  from https://nlp.stanford.edu/projects/glove/
         __LOGGER__.info("Loading  model! This will take some time and memory. Please wait...");
         WordVectors model = WordVectorSerializer.readWord2VecModel(gloveModel);
+
+        // Again you can use the stanford pos tagger to identify specific POS to expand...
+        // Check the EXTJWNL example
+
         // For this example just get the two nearest words
         Collection<String> stringList = model.wordsNearest("information", 2);
         System.out.println(stringList);

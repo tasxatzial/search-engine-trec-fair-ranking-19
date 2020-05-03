@@ -131,6 +131,33 @@ public class Config {
     }
 
     /**
+     * Returns the weight for the retrieval model
+     *
+     * @return
+     */
+    public double getRetrievalModelWeight() {
+        return Double.parseDouble(__PROP__.getProperty("RETRIEVAL_MODEL_WEIGHT"));
+    }
+
+    /**
+     * Returns the weight for the publications pagerank weight
+     *
+     * @return
+     */
+    public double getPagerankPublicationsWeight() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_PUBLICATIONS_WEIGHT"));
+    }
+
+    /**
+     * Returns the weight for the authors pagerank weight
+     *
+     * @return
+     */
+    public double getPagerankAuthorsWeight() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHOR_WEIGHT"));
+    }
+
+    /**
      * Returns if we should user the stemmer
      *
      * @return
