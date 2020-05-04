@@ -116,6 +116,16 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
+            // Read sources. A JSONArray
+            JSONArray citationsArray = (JSONArray) jsonObject.get("outCitations");
+            List<String> citations = new ArrayList<>();
+            if(citationsArray !=null ) {
+                citationsArray.forEach(citation -> {
+                    citations.add(citation.toString());
+                });
+            }
+            entry.setCitations(citations);
+
             // Get journal for example
             String journalCheck = (String) jsonObject.get("journalName");
             String journal = journalCheck != null ? journalCheck : "";
