@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
-abstract class ARetrievalModel {
+public abstract class ARetrievalModel {
 
     public enum RESULT_TYPE {
         PLAIN, ESSENTIAL, FULL

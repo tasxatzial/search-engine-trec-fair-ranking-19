@@ -1,5 +1,7 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
@@ -53,7 +55,21 @@ public class Themis {
         view.get_createIndex().addActionListener(new createIndexListener());
         view.get_queryCollection().addActionListener(new searchListener());
         view.get_loadIndex().addActionListener(new loadIndexListener());
+
+
         view.setVisible(true);
+    }
+
+    private static class searchButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                view.clearResultsArea();
+                search.search(view.get_searchField().getText(), ARetrievalModel.RESULT_TYPE.PLAIN);
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+            }
+        }
     }
 
     /* The listener for the "create index" menu item */
@@ -65,14 +81,15 @@ public class Themis {
             }
             view.initIndexView();
             if (search != null && !search.unloadIndex()) {
-                view.showError("Failed to unload previous index\n");
+                view.showError("Failed to unload previous index");
                 return;
             }
             try {
+                search = null;
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to initialize indexer\n");
+                view.showError("Failed to initialize indexer");
                 return;
             }
             if (createIndex.isIndexDirEmpty()) {
@@ -85,7 +102,7 @@ public class Themis {
                         createIndex.deleteIndex();
                     } catch (IOException ex) {
                         __LOGGER__.error(ex.getMessage());
-                        view.showError("Failed to delete previous index\n");
+                        view.showError("Failed to delete previous index");
                         return;
                     }
                     createIndex.createIndex();
@@ -101,12 +118,13 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
+            if (search == null || !search.isIndexLoaded()) {
+                view.showError("Index is not loaded!");
+                return;
+            }
             view.initSearchView();
-            try {
-                search = new Search();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to initialize indexer\n");
+            if (view.get_searchButton().getActionListeners().length == 0) {
+                view.get_searchButton().addActionListener(new searchButtonListener());
             }
         }
     }
@@ -120,14 +138,15 @@ public class Themis {
             }
             view.initIndexView();
             if (search != null && !search.unloadIndex()) {
-                view.showError("Failed to unload previous index\n");
+                view.showError("Failed to unload previous index");
                 return;
             }
             try {
+                createIndex = null;
                 search = new Search();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to initialize indexer\n");
+                view.showError("Failed to initialize indexer");
             }
             search.loadIndex();
         }

@@ -156,6 +156,7 @@ public class View extends JFrame {
             clearResultsArea();
             _searchButton = new JButton("Search");
             _searchField = new JTextField();
+            _searchField.setFont(_textFont);
             _mainPane.add(_searchField);
             _mainPane.add(_searchButton);
             _state = STATE.SEARCH;
@@ -279,5 +280,21 @@ public class View extends JFrame {
      */
     public JMenuItem get_loadIndex() {
         return _loadIndex;
+    }
+
+    /**
+     * Returns the search button
+     * @return
+     */
+    public JButton get_searchButton() {
+        return _searchButton;
+    }
+
+    /**
+     * Returns the search input field
+     * @return
+     */
+    public JTextField get_searchField() {
+        return _searchField;
     }
 }

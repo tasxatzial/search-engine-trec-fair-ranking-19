@@ -25,6 +25,8 @@
 package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,6 +55,10 @@ public class Search {
         runnableIndexer.start();
     }
 
+    public boolean isIndexLoaded() {
+        return _indexer.loaded();
+    }
+
     public boolean unloadIndex() {
         try {
             _indexer.unload();
@@ -69,6 +75,10 @@ public class Search {
             return task.toString();
         }
         return null;
+    }
+
+    public void search(String terms, ARetrievalModel.RESULT_TYPE type) throws IOException {
+
     }
 
     public void stop() {
