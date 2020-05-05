@@ -128,12 +128,6 @@ public class Indexer implements Runnable {
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
         __META_FILENAME__ = __CONFIG__.getMetaFileName();
-        if (__CONFIG__.getUseStemmer()) {
-            Stemmer.Initialize();
-        }
-        if (__CONFIG__.getUseStopwords()) {
-            StopWords.Initialize();
-        }
     }
 
     /**
@@ -192,6 +186,13 @@ public class Indexer implements Runnable {
      */
     public boolean index(String path) throws IOException {
         unload();
+
+        if (__CONFIG__.getUseStemmer()) {
+            Stemmer.Initialize();
+        }
+        if (__CONFIG__.getUseStopwords()) {
+            StopWords.Initialize();
+        }
 
         long startTime = System.nanoTime();
         Themis.view.print(">>> Start indexing\n");
@@ -819,6 +820,12 @@ public class Indexer implements Runnable {
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
 
+        if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"))) {
+            StopWords.Initialize();
+        }
+        if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"))) {
+            Stemmer.Initialize();
+        }
         return true;
     }
 
