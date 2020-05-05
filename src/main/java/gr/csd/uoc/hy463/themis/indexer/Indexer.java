@@ -1138,6 +1138,14 @@ public class Indexer implements Runnable {
         }
     }
 
+    /**
+     * Returns the retrieval model found in the config file
+     * @return
+     */
+    public String getRetrievalModel() {
+        return __CONFIG__.getRetrievalModel();
+    }
+
     public void setTask(TASK task) {
         _task = task;
     }
