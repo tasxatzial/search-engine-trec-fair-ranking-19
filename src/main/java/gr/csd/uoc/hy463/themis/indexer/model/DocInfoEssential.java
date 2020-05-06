@@ -52,6 +52,7 @@ public class DocInfoEssential {
         TITLE,
         AUTHORS_NAMES,
         AUTHORS_IDS,
+        AVG_AUTHOR_RANK,
         YEAR,
         JOURNAL_NAME,
         ABSTRACT,

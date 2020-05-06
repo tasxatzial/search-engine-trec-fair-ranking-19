@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
+
 /**
  * Our basic indexer class. This class is responsible for two tasks:
  *
@@ -593,12 +595,12 @@ public class Indexer implements Runnable {
 
         /* id */
         byte[] id = textualEntry.getId().getBytes("ASCII");
-        docEntryLength += id.length;
+        docEntryLength += DocumentEntry.ID_SIZE;
 
         /* title */
         byte[] title = textualEntry.getTitle().getBytes("UTF-8");
-        byte[] titleLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) title.length).array();
-        docEntryLength += title.length + DocumentEntry.VAR_FIELD_SHORT_SIZE;
+        byte[] titleLength = ByteBuffer.allocate(DocumentEntry.TITLE_SIZE_SIZE).putInt(title.length).array();
+        docEntryLength += title.length + DocumentEntry.TITLE_SIZE_SIZE;
 
         /* authors, authors ids */
         List<Pair<String, List<String>>> authors;
@@ -618,41 +620,47 @@ public class Indexer implements Runnable {
         }
 
         byte[] authorNames = sb_authorNames.toString().getBytes("UTF-8");
-        byte[] authorNamesLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_INT_SIZE).putInt(authorNames.length).array();
-        docEntryLength += authorNames.length + DocumentEntry.VAR_FIELD_INT_SIZE;
+        byte[] authorNamesLength = ByteBuffer.allocate(DocumentEntry.AUTHOR_NAMES_SIZE_SIZE).putInt(authorNames.length).array();
+        docEntryLength += authorNames.length + DocumentEntry.AUTHOR_NAMES_SIZE_SIZE;
 
         byte[] authorIds = sb_authorIds.toString().getBytes("ASCII");
-        byte[] authorIdsLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_INT_SIZE).putInt(authorIds.length).array();
-        docEntryLength += authorIds.length + DocumentEntry.VAR_FIELD_INT_SIZE;
+        byte[] authorIdsLength = ByteBuffer.allocate(DocumentEntry.AUTHOR_IDS_SIZE_SIZE).putInt(authorIds.length).array();
+        docEntryLength += authorIds.length + DocumentEntry.AUTHOR_IDS_SIZE_SIZE;
 
         /* year */
-        byte[] year = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) textualEntry.getYear()).array();
-        docEntryLength += year.length;
+        byte[] year = ByteBuffer.allocate(DocumentEntry.YEAR_SIZE).putShort((short) textualEntry.getYear()).array();
+        docEntryLength += DocumentEntry.YEAR_SIZE;
 
         /* journal name */
         byte[] journalName = textualEntry.getJournalName().getBytes("UTF-8");
-        byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.VAR_FIELD_SHORT_SIZE).putShort((short) journalName.length).array();
-        docEntryLength += journalName.length + DocumentEntry.VAR_FIELD_SHORT_SIZE;
+        byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.JOURNAL_NAME_SIZE_SIZE).putShort((short) journalName.length).array();
+        docEntryLength += journalName.length + DocumentEntry.JOURNAL_NAME_SIZE_SIZE;
 
-        /* weight, length, pagerank */
-        byte[] weight = ByteBuffer.allocate(8).putDouble(0).array();
-        byte[] length = ByteBuffer.allocate(4).putInt(docLength).array();
-        byte[] pageRank = ByteBuffer.allocate(8).putDouble(0).array();
-        docEntryLength += weight.length + length.length + pageRank.length;
+        /* weight, length, pagerank, avgAuthorRank */
+        byte[] weight = ByteBuffer.allocate(DocumentEntry.WEIGHT_SIZE).putDouble(0).array();
+        byte[] length = ByteBuffer.allocate(DocumentEntry.LENGTH_SIZE).putInt(docLength).array();
+        byte[] pageRank = ByteBuffer.allocate(DocumentEntry.PAGERANK_SIZE).putDouble(0).array();
+        byte[] avgAuthorRank = ByteBuffer.allocate(DocumentEntry.AVG_AUTHOR_RANK_SIZE).putDouble(0).array();
+        docEntryLength += DocumentEntry.WEIGHT_SIZE + DocumentEntry.LENGTH_SIZE +
+                DocumentEntry.PAGERANK_SIZE + DocumentEntry.AVG_AUTHOR_RANK_SIZE;
 
+        /* write first the fixed size fields */
         out.write(id);
-        out.write(titleLength);
-        out.write(title);
-        out.write(authorNamesLength);
-        out.write(authorNames);
-        out.write(authorIdsLength);
-        out.write(authorIds);
-        out.write(year);
-        out.write(journalNameLength);
-        out.write(journalName);
+        out.write(pageRank);
         out.write(weight);
         out.write(length);
-        out.write(pageRank);
+        out.write(avgAuthorRank);
+        out.write(year);
+        out.write(titleLength);
+        out.write(authorIdsLength);
+        out.write(authorNamesLength);
+        out.write(journalNameLength);
+
+        /* write the variable size fields */
+        out.write(title);
+        out.write(authorIds);
+        out.write(authorNames);
+        out.write(journalName);
 
         return docEntryLength + offset;
     }
@@ -763,7 +771,7 @@ public class Indexer implements Runnable {
             }
             weight = Math.sqrt(weight);
             docSize = Integer.parseInt(docSizeReader.readLine());
-            __DOCUMENTS__.seek(docOffset + docSize - 20);
+            __DOCUMENTS__.seek(docOffset + DocumentEntry.WEIGHT_OFFSET);
             docOffset += docSize;
             __DOCUMENTS__.write(ByteBuffer.allocate(8).putDouble(weight).array());
         }
@@ -967,39 +975,9 @@ public class Indexer implements Runnable {
                 __DOCUMENTS__.seek(documentPointer);
                 __DOCUMENTS__.readFully(docId);
                 docInfoEssential = new DocInfoEssential(new String(docId, "ASCII"), documentPointer);
-
-                //move pointer past docId
-                documentPointer += DocumentEntry.ID_SIZE;
-
-                //move pointer past title
-                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SHORT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-
-                //move pointer past author names
-                documentPointer +=  __DOCUMENTS__.readInt() + DocumentEntry.VAR_FIELD_INT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-
-                //move pointer past author ids
-                documentPointer += __DOCUMENTS__.readInt() + DocumentEntry.VAR_FIELD_INT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-
-                //move pointer past year
-                documentPointer += DocumentEntry.YEAR_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-
-                //move pointer past journal name
-                documentPointer += __DOCUMENTS__.readShort() + DocumentEntry.VAR_FIELD_SHORT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-
-                //read weight
-                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
-
-                //read length
-                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
-
-                //read pagerank
                 docInfoEssential.setProperty(DocInfoEssential.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
-
+                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
+                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
                 termDocInfoEssential.add(docInfoEssential);
             }
             docInfoEssential_list.add(termDocInfoEssential);
@@ -1048,48 +1026,41 @@ public class Indexer implements Runnable {
                 __DOCUMENTS__.readFully(docId);
                 docInfoFull = new DocInfoFull(new String(docId, "ASCII"), documentPointer);
 
-                documentPointer += DocumentEntry.ID_SIZE;
-                short titleLength = __DOCUMENTS__.readShort();
-                byte[] title = new byte[titleLength];
-                __DOCUMENTS__.readFully(title);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
+                double pageRank = __DOCUMENTS__.readDouble();
+                docInfoFull.setProperty(DocInfoEssential.PROPERTY.PAGERANK, pageRank);
 
-                documentPointer += titleLength + DocumentEntry.VAR_FIELD_SHORT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-                int authorNamesLength = __DOCUMENTS__.readInt();
-                byte[] authorNames = new byte[authorNamesLength];
-                __DOCUMENTS__.readFully(authorNames);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
-
-                documentPointer += authorNamesLength + DocumentEntry.VAR_FIELD_INT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-                int authorIdsLength = __DOCUMENTS__.readInt();
-                byte[] authorIds = new byte[authorIdsLength];
-                __DOCUMENTS__.readFully(authorIds);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
-
-                documentPointer += authorIdsLength + DocumentEntry.VAR_FIELD_INT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-                short year = __DOCUMENTS__.readShort();
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
-
-                documentPointer += DocumentEntry.YEAR_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
-                short journalNameLength = __DOCUMENTS__.readShort();
-                byte[] journalName = new byte[journalNameLength];
-                __DOCUMENTS__.readFully(journalName);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
-
-                documentPointer += journalNameLength + DocumentEntry.VAR_FIELD_SHORT_SIZE;
-                __DOCUMENTS__.seek(documentPointer);
                 double weight = __DOCUMENTS__.readDouble();
                 docInfoFull.setProperty(DocInfoEssential.PROPERTY.WEIGHT, weight);
 
                 int length = __DOCUMENTS__.readInt();
                 docInfoFull.setProperty(DocInfoEssential.PROPERTY.LENGTH, length);
 
-                double pageRank = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfoEssential.PROPERTY.PAGERANK, pageRank);
+                double avgAuthorRank = __DOCUMENTS__.readDouble();
+                docInfoFull.setProperty(DocInfoEssential.PROPERTY.AVG_AUTHOR_RANK, avgAuthorRank);
+
+                short year = __DOCUMENTS__.readShort();
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
+
+                int titleLength = __DOCUMENTS__.readInt();
+                int authorIdsLength = __DOCUMENTS__.readInt();
+                int authorNamesLength = __DOCUMENTS__.readInt();
+                short journalNameLength = __DOCUMENTS__.readShort();
+
+                byte[] title = new byte[titleLength];
+                __DOCUMENTS__.readFully(title);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
+
+                byte[] authorIds = new byte[authorIdsLength];
+                __DOCUMENTS__.readFully(authorIds);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
+
+                byte[] authorNames = new byte[authorNamesLength];
+                __DOCUMENTS__.readFully(authorNames);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
+
+                byte[] journalName = new byte[journalNameLength];
+                __DOCUMENTS__.readFully(journalName);
+                docInfoFull.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
 
                 termDocInfoFull.add(docInfoFull);
             }
