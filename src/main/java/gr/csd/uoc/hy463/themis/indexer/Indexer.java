@@ -717,8 +717,19 @@ public class Indexer implements Runnable {
         long startTime = System.nanoTime();
         Themis.view.print(">>> Calculating VSM weights\n");
 
-        /* load the vocabulary file */
-        loadVocabulary();
+        /* load the vocabulary file except the offsets */
+        Themis.view.print("Loading vocabulary terms...");
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
+        Map<String, Integer> vocabulary = new HashMap<>();
+        String line;
+        String[] split;
+        while ((line = vocabularyReader.readLine()) != null) {
+            split = line.split(" ");
+            vocabulary.put(split[0], Integer.parseInt(split[1]));
+        }
+        vocabularyReader.close();
+        Themis.view.print("DONE\n");
 
         /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
@@ -727,16 +738,11 @@ public class Indexer implements Runnable {
         BufferedReader docSizeReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
 
-        /* the TFs for each article */
-        int[] tfs;
-
-        String line;
-        String[] split;
-        double weight;
-        long docOffset = 0;
-        int docSize;
-        int maxTf;
-        byte[] weightB;
+        int[] tfs; //the TFs for each document
+        double weight; //the weight of each document
+        long docOffset = 0; //offset in documents file
+        int docSize; //size of each entry in the document file
+        int maxTf; //maximum tf in each document
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
@@ -752,15 +758,14 @@ public class Indexer implements Runnable {
             weight = 0;
             for (int i = 0; i < split.length; i+= 2) {
                 double x = (0.0 + tfs[i / 2]) / maxTf * Math.log((0.0 + totalArticles) /
-                        __VOCABULARY__.get(split[i]).getL()) / Math.log(2);
+                        vocabulary.get(split[i])) / Math.log(2);
                 weight += x * x;
             }
             weight = Math.sqrt(weight);
             docSize = Integer.parseInt(docSizeReader.readLine());
             __DOCUMENTS__.seek(docOffset + docSize - 20);
             docOffset += docSize;
-            weightB = ByteBuffer.allocate(8).putDouble(weight).array();
-            __DOCUMENTS__.write(weightB);
+            __DOCUMENTS__.write(ByteBuffer.allocate(8).putDouble(weight).array());
         }
         tfReader.close();
 
