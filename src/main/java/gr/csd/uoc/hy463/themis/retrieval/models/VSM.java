@@ -29,6 +29,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of the OkapiBM25 retrieval model
@@ -42,12 +43,12 @@ public class VSM extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

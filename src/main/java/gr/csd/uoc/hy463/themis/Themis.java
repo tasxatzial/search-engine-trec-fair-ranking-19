@@ -1,8 +1,6 @@
 package gr.csd.uoc.hy463.themis;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
-import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
@@ -68,8 +66,9 @@ public class Themis {
         public void actionPerformed(ActionEvent e) {
             try {
                 view.clearResultsArea();
-                List<Object> selectedFields = new ArrayList<>();
-                search.search(view.get_searchField().getText(), selectedFields, -1);
+                List<DocInfo.PROPERTY> props = new ArrayList<>();
+                //add props here
+                search.search(view.get_searchField().getText(), props, -1);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
             }

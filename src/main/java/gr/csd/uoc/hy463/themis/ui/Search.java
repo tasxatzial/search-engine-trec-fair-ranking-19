@@ -37,8 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Some kind of simple ui to search the indexes. Some kind of GUI will be a
@@ -49,6 +48,8 @@ import java.util.List;
 public class Search {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
     private Indexer _indexer;
+    private Set<String> _prevTerms = null;
+    private List<Pair<Object, Double>> _prevResults = null;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -85,7 +86,7 @@ public class Search {
         return null;
     }
 
-    public void search(String terms, List<Object> fields, int topk) throws IOException {
+    public void search(String query, List<DocInfo.PROPERTY> props, int topk) throws IOException {
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
         switch (retrievalModel) {
@@ -101,16 +102,26 @@ public class Search {
             default:
                 return;
         }
+        List<Pair<Object, Double>> newResults;
+        String[] splitQuery = query.split(" ");
+        Set<String> newTerms = new HashSet<>();
+        Collections.addAll(newTerms, splitQuery);
 
-        String[] split = terms.split(" ");
-        List<QueryTerm> query = new ArrayList<>();
-        for (String term : split) {
-            query.add(new QueryTerm(term, 1.0));
+        if (newTerms.containsAll(_prevTerms) && _prevTerms.containsAll(newTerms)) {
+            _indexer.updateDocInfo(_prevResults, props);
+            newResults = _prevResults;
         }
-        List<DocInfo.PROPERTY> props = new ArrayList<>();
-        List<Pair<Object, Double>> results = model.getRankedResults(query, props, topk);
+        else {
+            Set<QueryTerm> queryList = new HashSet<>();
+            for (String term : newTerms) {
+                queryList.add(new QueryTerm(term, 1.0));
+            }
+            newResults = model.getRankedResults(queryList, props, topk);
+            _prevResults = newResults;
+        }
+        _prevTerms = newTerms;
 
-        for (Pair<Object, Double> pair : results) {
+        for (Pair<Object, Double> pair : newResults) {
             DocInfo docInfo = (DocInfo) pair.getL();
             Themis.view.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY prop : props) {

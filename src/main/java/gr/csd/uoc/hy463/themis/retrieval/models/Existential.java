@@ -32,6 +32,7 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of the Existential retrieval model. Returns the documents that
@@ -48,12 +49,12 @@ public class Existential extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props) {
         return getRankedResults(query, props,-1);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
         List<String> terms = new ArrayList<>();
         List<Pair<Object, Double>> result = new ArrayList<>();
 

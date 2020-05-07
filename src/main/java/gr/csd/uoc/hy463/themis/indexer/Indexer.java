@@ -894,7 +894,11 @@ public class Indexer implements Runnable {
 
     public List<List<DocInfo>> getDocInfo(List<String> terms, List<DocInfo.PROPERTY> props) {
 
-        return new ArrayList<>();
+        return null;
+    }
+
+    public void updateDocInfo(List<Pair<Object, Double>> ranked_list, List<DocInfo.PROPERTY> props) {
+
     }
 
     /**
