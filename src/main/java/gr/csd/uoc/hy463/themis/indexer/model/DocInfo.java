@@ -46,7 +46,7 @@ import java.util.Map;
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
-public class DocInfoEssential {
+public class DocInfo {
 
     public enum PROPERTY {
         TITLE,
@@ -65,10 +65,9 @@ public class DocInfoEssential {
         LENGTH   // for OkapiBM25 (Value should be integer)
     }
 
-    protected String id = "";         // the 40 byte id
-    protected long offset = 0;        // offset in documents file
-    // The size of the hashmap is only 3.... since up to now we have 3 properties to hold
-    protected final Map<PROPERTY, Object> props = new HashMap<>(3);
+    private String id = "";         // the 40 byte id
+    private long offset = 0;        // offset in documents file
+    private final Map<PROPERTY, Object> props = new HashMap<>();
 
     /**
      *
@@ -76,7 +75,7 @@ public class DocInfoEssential {
      * @param offset the offset in the document file the contains all
      * information for this document
      */
-    public DocInfoEssential(String id, long offset) {
+    public DocInfo(String id, long offset) {
         this.id = id;
         this.offset = offset;
     }
@@ -88,7 +87,7 @@ public class DocInfoEssential {
      * @param prop
      * @param value
      */
-    public void setProperty(DocInfoEssential.PROPERTY prop, Object value) {
+    public void setProperty(DocInfo.PROPERTY prop, Object value) {
         props.put(prop, value);
     }
 
@@ -99,7 +98,7 @@ public class DocInfoEssential {
      * @param prop
      * @return
      */
-    public Object getProperty(DocInfoEssential.PROPERTY prop) {
+    public Object getProperty(DocInfo.PROPERTY prop) {
         return props.get(prop);
     }
 
@@ -119,7 +118,7 @@ public class DocInfoEssential {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DocInfoEssential other = (DocInfoEssential) o;
+        DocInfo other = (DocInfo) o;
         return this.id.equals(other.id);
     }
 

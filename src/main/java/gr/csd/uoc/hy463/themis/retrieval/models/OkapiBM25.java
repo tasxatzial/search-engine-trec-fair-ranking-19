@@ -25,6 +25,7 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
@@ -41,12 +42,12 @@ public class OkapiBM25 extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type) {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -26,8 +26,7 @@ package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
@@ -86,7 +85,7 @@ public class Search {
         return null;
     }
 
-    public void search(String terms, ARetrievalModel.RESULT_TYPE type, int topk) throws IOException {
+    public void search(String terms, List<Object> fields, int topk) throws IOException {
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
         switch (retrievalModel) {
@@ -108,34 +107,17 @@ public class Search {
         for (String term : split) {
             query.add(new QueryTerm(term, 1.0));
         }
-        List<Pair<Object, Double>> results = model.getRankedResults(query, type, topk);
+        List<DocInfo.PROPERTY> props = new ArrayList<>();
+        List<Pair<Object, Double>> results = model.getRankedResults(query, props, topk);
 
-        if (type == ARetrievalModel.RESULT_TYPE.PLAIN) {
-            for (Pair<Object, Double> pair : results) {
-                Themis.view.print(pair.getL() + "\n");
+        for (Pair<Object, Double> pair : results) {
+            DocInfo docInfo = (DocInfo) pair.getL();
+            Themis.view.print("DOC_ID: " + docInfo.getId() + "\n");
+            for (DocInfo.PROPERTY prop : props) {
+                Themis.view.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n");
             }
-        }
-        else if (type == ARetrievalModel.RESULT_TYPE.ESSENTIAL) {
-            for (Pair<Object, Double> pair : results) {
-                DocInfoEssential docInfo = (DocInfoEssential) pair.getL();
-                Themis.view.print("doc id: " + docInfo.getId() + "\n");
-                Themis.view.print("weight: " + docInfo.getProperty(DocInfoEssential.PROPERTY.WEIGHT) + "\n");
-                Themis.view.print("length: " + docInfo.getProperty(DocInfoEssential.PROPERTY.LENGTH) + "\n");
-                Themis.view.print("pagerank: " + docInfo.getProperty(DocInfoEssential.PROPERTY.PAGERANK) + "\n\n");
-            }
-        }
-        else if (type == ARetrievalModel.RESULT_TYPE.FULL) {
-            for (Pair<Object, Double> pair : results) {
-                DocInfoFull docInfo = (DocInfoFull) pair.getL();
-                Themis.view.print("doc id: " + docInfo.getId() + "\n");
-                Themis.view.print("title: " + docInfo.getProperty(DocInfoEssential.PROPERTY.TITLE) + "\n");
-                Themis.view.print("authors: " + docInfo.getProperty(DocInfoEssential.PROPERTY.AUTHORS_NAMES) + "\n");
-                Themis.view.print("authors ids: " + docInfo.getProperty(DocInfoEssential.PROPERTY.AUTHORS_IDS) + "\n");
-                Themis.view.print("year: " + docInfo.getProperty(DocInfoEssential.PROPERTY.YEAR) + "\n");
-                Themis.view.print("journal name: " + docInfo.getProperty(DocInfoEssential.PROPERTY.JOURNAL_NAME) + "\n");
-                Themis.view.print("weight: " + docInfo.getProperty(DocInfoEssential.PROPERTY.WEIGHT) + "\n");
-                Themis.view.print("length: " + docInfo.getProperty(DocInfoEssential.PROPERTY.LENGTH) + "\n");
-                Themis.view.print("pagerank: " + docInfo.getProperty(DocInfoEssential.PROPERTY.PAGERANK) + "\n\n");
+            if (!props.isEmpty()) {
+                Themis.view.print("\n");
             }
         }
     }

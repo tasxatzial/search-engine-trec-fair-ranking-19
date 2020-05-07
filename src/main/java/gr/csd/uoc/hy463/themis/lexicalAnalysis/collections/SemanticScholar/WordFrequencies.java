@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
@@ -30,25 +30,25 @@ public class WordFrequencies {
      * @param entry
      * @return
      */
-    public Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> createWordsMap(S2TextualEntry entry) {
-        Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWordsMap = new HashMap<>();
+    public Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> createWordsMap(S2TextualEntry entry) {
+        Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWordsMap = new HashMap<>();
 
-        addToWordsMap(entry.getTitle(), DocInfoEssential.PROPERTY.TITLE , entryWordsMap);
-        addToWordsMap(entry.getPaperAbstract(), DocInfoEssential.PROPERTY.ABSTRACT, entryWordsMap);
+        addToWordsMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , entryWordsMap);
+        addToWordsMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, entryWordsMap);
         for (String entity : entry.getEntities()) {
-            addToWordsMap(entity, DocInfoEssential.PROPERTY.ENTITIES, entryWordsMap);
+            addToWordsMap(entity, DocInfo.PROPERTY.ENTITIES, entryWordsMap);
         }
         for (String fieldsOfStudy : entry.getFieldsOfStudy()) {
-            addToWordsMap(fieldsOfStudy, DocInfoEssential.PROPERTY.FIELDS_OF_STUDY, entryWordsMap);
+            addToWordsMap(fieldsOfStudy, DocInfo.PROPERTY.FIELDS_OF_STUDY, entryWordsMap);
         }
         for (Pair<String, List<String>> author : entry.getAuthors()) {
-            addToWordsMap(author.getL(), DocInfoEssential.PROPERTY.AUTHORS_NAMES, entryWordsMap);
+            addToWordsMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, entryWordsMap);
         }
-        addToWordsMap(Integer.toString(entry.getYear()), DocInfoEssential.PROPERTY.YEAR, entryWordsMap);
-        addToWordsMap(entry.getVenue(), DocInfoEssential.PROPERTY.VENUE, entryWordsMap);
-        addToWordsMap(entry.getJournalName(), DocInfoEssential.PROPERTY.JOURNAL_NAME, entryWordsMap);
+        addToWordsMap(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, entryWordsMap);
+        addToWordsMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, entryWordsMap);
+        addToWordsMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, entryWordsMap);
         for (String source : entry.getSources()) {
-            addToWordsMap(source, DocInfoEssential.PROPERTY.SOURCES, entryWordsMap);
+            addToWordsMap(source, DocInfo.PROPERTY.SOURCES, entryWordsMap);
         }
         return entryWordsMap;
     }
@@ -56,13 +56,13 @@ public class WordFrequencies {
     /* Takes a field (e.g title) and updates the entryWords map of term
     frequencies based on the terms that appear in this field.
      */
-    private void addToWordsMap(String field, DocInfoEssential.PROPERTY prop,
-                               Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords) {
+    private void addToWordsMap(String field, DocInfo.PROPERTY prop,
+                               Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
-        List<Pair<DocInfoEssential.PROPERTY, Integer>> tokenValues;
+        List<Pair<DocInfo.PROPERTY, Integer>> tokenValues;
         String currentToken;
-        Pair<DocInfoEssential.PROPERTY, Integer> lastPair;
+        Pair<DocInfo.PROPERTY, Integer> lastPair;
         while(tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken().toLowerCase();
             if (useStopwords && StopWords.isStopWord(currentToken)) {
@@ -91,7 +91,7 @@ public class WordFrequencies {
     }
 
     /* Returns the split pattern that will be used for splitting a prop (e.g title) */
-    private String getDelimiter(DocInfoEssential.PROPERTY prop) {
+    private String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:
                 return " ›‹′_`‘@″•‡†‟„&#.,()'\"[]$|/\\?-“”*{}<>:;’%+»«§¡!\n\t\r\f";

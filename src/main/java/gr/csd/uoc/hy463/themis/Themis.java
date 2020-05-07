@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
@@ -11,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Themis {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
@@ -65,7 +68,8 @@ public class Themis {
         public void actionPerformed(ActionEvent e) {
             try {
                 view.clearResultsArea();
-                search.search(view.get_searchField().getText(), ARetrievalModel.RESULT_TYPE.PLAIN, -1);
+                List<Object> selectedFields = new ArrayList<>();
+                search.search(view.get_searchField().getText(), selectedFields, -1);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
             }

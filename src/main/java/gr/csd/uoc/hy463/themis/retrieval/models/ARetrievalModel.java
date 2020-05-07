@@ -25,6 +25,7 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
@@ -37,10 +38,6 @@ import java.util.List;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public abstract class ARetrievalModel {
-
-    public enum RESULT_TYPE {
-        PLAIN, ESSENTIAL, FULL
-    }
 
     protected Indexer indexer;
 
@@ -62,10 +59,9 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
-     * @param type the type of object in the pair (PLAIN/ESSENTIAL/FULL)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props);
 
     /**
      * Method that evaluates the query and returns a list of pairs with the
@@ -89,11 +85,10 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
-     * @param type the type of object in the pair (PLAIN/ESSENTIAL/FULL)
      * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, RESULT_TYPE type, int topk) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk);
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

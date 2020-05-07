@@ -31,7 +31,7 @@ package gr.csd.uoc.hy463.themis.indexer.model;
  *
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
-public class DocInfoFull extends DocInfoEssential {
+public class DocInfoFull extends DocInfo {
 
     public DocInfoFull(String id, long offset) {
         super(id, offset);

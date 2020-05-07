@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import gr.csd.uoc.hy463.themis.utils.PartialIndexStruct;
 import gr.csd.uoc.hy463.themis.utils.PostingEntry;
@@ -143,13 +143,13 @@ public class Index {
      * @param docOffset The offset to the document files
      * @throws IOException
      */
-    public void add(Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords, long docOffset,
+    public void add(Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords, long docOffset,
                     BufferedWriter tfWriter) throws IOException {
-        for (Map.Entry<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
+        for (Map.Entry<String, List<Pair<DocInfo.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
             PartialIndexStruct indexStruct = __INDEX__.get(key);
-            for (Pair<DocInfoEssential.PROPERTY, Integer> pair : entry.getValue()) {
+            for (Pair<DocInfo.PROPERTY, Integer> pair : entry.getValue()) {
                 tf += pair.getR();
             }
             if (indexStruct != null) {

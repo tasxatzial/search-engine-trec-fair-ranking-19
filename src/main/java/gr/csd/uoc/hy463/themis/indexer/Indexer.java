@@ -27,7 +27,7 @@ package gr.csd.uoc.hy463.themis.indexer;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoEssential;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
@@ -46,8 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.print.Doc;
 
 /**
  * Our basic indexer class. This class is responsible for two tasks:
@@ -215,7 +213,7 @@ public class Indexer implements Runnable {
         WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
 
         /* Field frequencies of each term in a json entry */
-        Map<String, List<Pair<DocInfoEssential.PROPERTY, Integer>>> entryWords;
+        Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords;
 
         /* the dataset file that is being parsed */
         BufferedReader currentDataFile;
@@ -894,6 +892,11 @@ public class Indexer implements Runnable {
         return editedTerms;
     }
 
+    public List<List<DocInfo>> getDocInfo(List<String> terms, List<DocInfo.PROPERTY> props) {
+
+        return new ArrayList<>();
+    }
+
     /**
      * Basic method for querying functionality. Given the list of terms in the
      * query, returns a List of Lists of String objects, where each
@@ -902,13 +905,14 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<String>> getDocId(List<String> terms) throws IOException {
+    public List<List<DocInfo>> getDocId(List<String> terms) throws IOException {
         if (!loaded()) {
             return null;
         }
         List<String> editedTerms = preprocessTerms(terms);
-        List<List<String>> docIds = new ArrayList<>();
-        List<String> termDocId;
+        List<List<DocInfo>> docIds = new ArrayList<>();
+        List<DocInfo> termDocInfo;
+        DocInfo docInfo;
         Pair<Integer, Long> termValue;
         long documentPointer;
         long postingPointer;
@@ -919,7 +923,7 @@ public class Indexer implements Runnable {
             if (termValue == null) {
                 continue;
             }
-            termDocId = new ArrayList<>();
+            termDocInfo = new ArrayList<>();
             postingPointer = termValue.getR();
             df = termValue.getL();
             for (int i = 0; i < df; i++) {
@@ -927,9 +931,10 @@ public class Indexer implements Runnable {
                 documentPointer = __POSTINGS__.readLong();
                 __DOCUMENTS__.seek(documentPointer);
                 __DOCUMENTS__.readFully(docId);
-                termDocId.add(new String(docId, "ASCII"));
+                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
+                termDocInfo.add(docInfo);
             }
-            docIds.add(termDocId);
+            docIds.add(termDocInfo);
         }
         return docIds;
     }
@@ -947,14 +952,14 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfoEssential>> getDocInfoEssentialForTerms(List<String> terms) throws IOException {
+    public List<List<DocInfo>> getDocInfoEssentialForTerms(List<String> terms) throws IOException {
         if (!loaded()) { // If indexes are not loaded
             return null;
         }
         List<String> editedTerms = preprocessTerms(terms);
-        List<List<DocInfoEssential>> docInfoEssential_list = new ArrayList<>();
-        List<DocInfoEssential> termDocInfoEssential;
-        DocInfoEssential docInfoEssential;
+        List<List<DocInfo>> docInfoEssential_list = new ArrayList<>();
+        List<DocInfo> termDocInfo;
+        DocInfo docInfo;
         Pair<Integer, Long> termValue;
         long documentPointer;
         long postingPointer;
@@ -965,7 +970,7 @@ public class Indexer implements Runnable {
             if (termValue == null) {
                 continue;
             }
-            termDocInfoEssential = new ArrayList<>();
+            termDocInfo = new ArrayList<>();
             postingPointer = termValue.getR();
             df = termValue.getL();
             __POSTINGS__.seek(postingPointer);
@@ -974,13 +979,13 @@ public class Indexer implements Runnable {
                 documentPointer = __POSTINGS__.readLong();
                 __DOCUMENTS__.seek(documentPointer);
                 __DOCUMENTS__.readFully(docId);
-                docInfoEssential = new DocInfoEssential(new String(docId, "ASCII"), documentPointer);
-                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
-                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
-                docInfoEssential.setProperty(DocInfoEssential.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
-                termDocInfoEssential.add(docInfoEssential);
+                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
+                docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
+                docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
+                docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
+                termDocInfo.add(docInfo);
             }
-            docInfoEssential_list.add(termDocInfoEssential);
+            docInfoEssential_list.add(termDocInfo);
         }
         return docInfoEssential_list;
     }
@@ -1027,16 +1032,16 @@ public class Indexer implements Runnable {
                 docInfoFull = new DocInfoFull(new String(docId, "ASCII"), documentPointer);
 
                 double pageRank = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfoEssential.PROPERTY.PAGERANK, pageRank);
+                docInfoFull.setProperty(DocInfo.PROPERTY.PAGERANK, pageRank);
 
                 double weight = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfoEssential.PROPERTY.WEIGHT, weight);
+                docInfoFull.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
 
                 int length = __DOCUMENTS__.readInt();
-                docInfoFull.setProperty(DocInfoEssential.PROPERTY.LENGTH, length);
+                docInfoFull.setProperty(DocInfo.PROPERTY.LENGTH, length);
 
                 double avgAuthorRank = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfoEssential.PROPERTY.AVG_AUTHOR_RANK, avgAuthorRank);
+                docInfoFull.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, avgAuthorRank);
 
                 short year = __DOCUMENTS__.readShort();
                 docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
@@ -1080,7 +1085,7 @@ public class Indexer implements Runnable {
      * @param docs
      * @return
      */
-    public List<DocInfoFull> getDocDescription(List<DocInfoEssential> docs) {
+    public List<DocInfoFull> getDocDescription(List<DocInfo> docs) {
         // If indexes are not loaded
         if (!loaded()) {
             return null;
