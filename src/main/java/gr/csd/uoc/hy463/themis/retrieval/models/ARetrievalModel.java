@@ -50,16 +50,13 @@ public abstract class ARetrievalModel {
      * Method that evaluates the query and returns a ranked list of pairs of the
      * whole relevant documents.
      *
-     * If type PLAIN then the Object in the Pair is the id of the doc (String),
-     * if the type is ESSENTIAL the Object in the Pair is DocInfoEssential, and
-     * if the type is FULL then the Object in the Pair is DocInfoFull.
-     *
      * The double is the score of the document as returned by the corresponding
      * retrieval model.
      *
      * The list must be in descending order according to the score
      *
-     * @param query list of query terms
+     * @param query set of query terms
+     * @param props set of properties we want to be retrieved from the documents
      * @return
      */
     public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
@@ -76,16 +73,13 @@ public abstract class ARetrievalModel {
      * document frequency, cutoff based on maximum estimated weight, and cutoff
      * based on the weight of a disk page in the posting list
      *
-     * If type PLAIN then the Object in the Pair is the id of the doc (String),
-     * if the type is ESSENTIAL the Object in the Pair is DocInfoEssential, and
-     * if the type is FULL then the Object in the Pair is DocInfoFull
-     *
      * The double is the score of the document as returned by the corresponding
      * retrieval model.
      *
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
+     * @param props set of properties we want to be retrieved from the documents
      * @param topk a number (i.e. the top-10 results)
      * @return
      */

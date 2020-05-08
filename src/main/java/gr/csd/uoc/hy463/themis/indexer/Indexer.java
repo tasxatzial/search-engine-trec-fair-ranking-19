@@ -28,7 +28,6 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFull;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
@@ -46,8 +45,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.print.Doc;
 
 /**
  * Our basic indexer class. This class is responsible for two tasks:
@@ -568,27 +565,29 @@ public class Indexer implements Runnable {
      * returns an offset that is the sum of the previous offset plus the document entry size
      * (in bytes).
      *
-     * For each entry it stores: | DOCUMENT_ID (40 ASCII chars => 40 bytes) |
-     * Title (variable bytes / UTF-8) | Author_1,Author_2, ...,Author_k
-     * (variable bytes / UTF-8) | AuthorID_1, AuthorID_2, ...,Author_ID_k
-     * (variable size /ASCII) | Year (short => 2 bytes)| Journal Name (variable
-     * bytes / UTF-8) | The weight (norm) of Document (double => 8 bytes)|
-     * Length of Document (int => 4 bytes) | PageRank Score (double => 8 bytes)
+     * For each entry it stores in the following order:
+     * DOCUMENT_ID (40 ASCII chars => 40 bytes) |
+     * PageRank Score (double => 8 bytes) |
+     * The weight (norm) of Document (double => 8 bytes) |
+     * Length of Document (int => 4 bytes) |
+     * Average author rank (double -> 8 bytes) |
+     * Year (short => 2 bytes) |
+     * [Title size] (int => 4 bytes) |
+     * [Author_1,Author_2, ...,Author_k] size (int => 4 bytes) |
+     * [AuthorID_1, AuthorID_2, ...,Author_ID_k] size (int => 4 bytes) |
+     * [Journal name] size (short => 2 bytes) |
+     * Title (variable bytes / UTF-8) |
+     * Author_1,Author_2, ...,Author_k (variable bytes / UTF-8) |
+     * AuthorID_1, AuthorID_2, ...,Author_ID_k (variable bytes / ASCII) |
+     * Journal name (variable bytes / UTF-8)
      *
      * ==> IMPORTANT NOTES
-     *
-     * For strings that have a variable size, a short (2 bytes) was added as
-     * prefix storing the size in bytes of the string. Exceptions are the author names
-     * and author ids for which the prefix is 4 bytes. Also the
-     * correct representation was used, ASCII (1 byte) or UTF-8 (2 bytes). For
-     * example the doc id is a hexadecimal hash so there is no need for UTF
-     * encoding
      *
      * Authors are separated by a comma
      *
      * Author ids are also separated with a comma
      *
-     * For now 0.0 was added as PageRank score and weight */
+     * For now 0.0 was added as PageRank, weight, average author rank */
     private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, int docLength, long offset)
             throws IOException {
         int docEntryLength = 0;
@@ -894,6 +893,18 @@ public class Indexer implements Runnable {
         return editedTerms;
     }
 
+    /**
+     * Basic method for querying functionality. Given the list of terms in the
+     * query, returns a List of Lists of DocInfo objects, where each
+     * DocInfo object objects holds the DocInfo representation of the
+     * docs that the corresponding term of the query appears in. Only the document properties
+     * specified by the props are included in the representation.
+     *
+     * @param terms
+     * @param props
+     * @return
+     * @throws IOException
+     */
     public List<List<DocInfo>> getDocInfo(Set<String> terms, Set<DocInfo.PROPERTY> props) throws IOException {
         if (!loaded()) {
             return null;
@@ -902,11 +913,11 @@ public class Indexer implements Runnable {
         List<List<DocInfo>> docIds = new ArrayList<>();
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
-        Pair<Integer, Long> termValue;
+        Pair<Integer, Long> termValue; //(df, posting pointer)
         long documentPointer;
         long postingPointer;
-        int df;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
+
         boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
         boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
         boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
@@ -924,8 +935,7 @@ public class Indexer implements Runnable {
             }
             termDocInfo = new ArrayList<>();
             postingPointer = termValue.getR();
-            df = termValue.getL();
-            for (int i = 0; i < df; i++) {
+            for (int i = 0; i < termValue.getL(); i++) {
                 __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
                 documentPointer = __POSTINGS__.readLong();
                 __DOCUMENTS__.seek(documentPointer);
@@ -996,7 +1006,7 @@ public class Indexer implements Runnable {
                     }
                     byte[] title = new byte[titleLength];
                     __DOCUMENTS__.readFully(title);
-                    docInfo.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
+                    docInfo.setProperty(DocInfo.PROPERTY.TITLE, new String(title, "UTF-8"));
                 }
 
                 if (hasAuthorNames) {
@@ -1005,25 +1015,27 @@ public class Indexer implements Runnable {
                     }
                     byte[] authorNames = new byte[authorNamesLength];
                     __DOCUMENTS__.readFully(authorNames);
-                    docInfo.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
+                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
                 }
 
                 if (hasAuthorIds) {
                     if (!hasAuthorNames) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength + authorNamesLength);
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
+                                authorNamesLength);
                     }
                     byte[] authorIds = new byte[authorIdsLength];
                     __DOCUMENTS__.readFully(authorIds);
-                    docInfo.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
+                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
                 }
 
                 if (hasJournalName) {
                     if (!hasAuthorIds) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength + authorNamesLength + authorIdsLength);
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
+                                authorNamesLength + authorIdsLength);
                     }
                     byte[] journalName = new byte[journalNameLength];
                     __DOCUMENTS__.readFully(journalName);
-                    docInfo.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
+                    docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
                 }
             }
             docIds.add(termDocInfo);
@@ -1034,206 +1046,7 @@ public class Indexer implements Runnable {
     public void updateDocInfo(List<Pair<Object, Double>> ranked_list, Set<DocInfo.PROPERTY> props) {
 
     }
-
-
-    /**
-     * Basic method for querying functionality. Given the list of terms in the
-     * query, returns a List of Lists of String objects, where each
-     * list of String objects holds the docIds of the
-     * docs that the corresponding term of the query appears in.
-     * @param terms
-     * @return
-     */
-    public List<List<DocInfo>> getDocId(Set<String> terms) throws IOException {
-        if (!loaded()) {
-            return null;
-        }
-        Set<String> editedTerms = preprocessTerms(terms);
-        List<List<DocInfo>> docIds = new ArrayList<>();
-        List<DocInfo> termDocInfo;
-        DocInfo docInfo;
-        Pair<Integer, Long> termValue;
-        long documentPointer;
-        long postingPointer;
-        int df;
-        byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : editedTerms) {
-            termValue = __VOCABULARY__.get(term);
-            if (termValue == null) {
-                continue;
-            }
-            termDocInfo = new ArrayList<>();
-            postingPointer = termValue.getR();
-            df = termValue.getL();
-            for (int i = 0; i < df; i++) {
-                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
-                documentPointer = __POSTINGS__.readLong();
-                __DOCUMENTS__.seek(documentPointer);
-                __DOCUMENTS__.readFully(docId);
-                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
-                termDocInfo.add(docInfo);
-            }
-            docIds.add(termDocInfo);
-        }
-        return docIds;
-    }
-
-    /**
-     * Basic method for querying functionality. Given the list of terms in the
-     * query, returns a List of Lists of DocInfoEssential objects, where each
-     * list of DocInfoEssential objects holds where each list of
-     * DocInfoEssential objects holds the DocInfoEssential representation of the
-     * docs that the corresponding term of the query appears in. A
-     * DocInfoEssential, should hold all needed information for implementing a
-     * retrieval model, like VSM, Okapi-BM25, etc. This is more memory efficient
-     * than holding getDocInfoFullTerms objects
-     *
-     * @param terms
-     * @return
-     */
-    public List<List<DocInfo>> getDocInfoEssentialForTerms(Set<String> terms) throws IOException {
-        if (!loaded()) { // If indexes are not loaded
-            return null;
-        }
-        Set<String> editedTerms = preprocessTerms(terms);
-        List<List<DocInfo>> docInfoEssential_list = new ArrayList<>();
-        List<DocInfo> termDocInfo;
-        DocInfo docInfo;
-        Pair<Integer, Long> termValue;
-        long documentPointer;
-        long postingPointer;
-        int df;
-        byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : editedTerms) {
-            termValue = __VOCABULARY__.get(term);
-            if (termValue == null) {
-                continue;
-            }
-            termDocInfo = new ArrayList<>();
-            postingPointer = termValue.getR();
-            df = termValue.getL();
-            __POSTINGS__.seek(postingPointer);
-            for (int i = 0; i < df; i++) {
-                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
-                documentPointer = __POSTINGS__.readLong();
-                __DOCUMENTS__.seek(documentPointer);
-                __DOCUMENTS__.readFully(docId);
-                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
-                docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
-                docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
-                docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
-                termDocInfo.add(docInfo);
-            }
-            docInfoEssential_list.add(termDocInfo);
-        }
-        return docInfoEssential_list;
-    }
-
-    /**
-     * Basic method for querying functionality. Given the list of terms in the
-     * query, returns a List of Lists of DocInfoFull objects, where each list of
-     * DocInfoFull objects holds the DocInfoFull representation of the docs that
-     * the corresponding term of the query appears in (i.e., the whole
-     * information). Not memory efficient though...
-     *
-     * Useful when we want to return the title, authors, etc.
-     *
-     * @param terms
-     * @return
-     */
-    public List<List<DocInfoFull>> getDocInfoFullTerms(Set<String> terms) throws IOException {
-        if (!loaded()) { // If indexes are not loaded
-            return null;
-        }
-        Set<String> editedTerms = preprocessTerms(terms);
-        List<List<DocInfoFull>> docInfoFull_list = new ArrayList<>();
-        List<DocInfoFull> termDocInfoFull;
-        DocInfoFull docInfoFull;
-        Pair<Integer, Long> termValue;
-        long documentPointer;
-        long postingPointer;
-        int df;
-        byte[] docId = new byte[DocumentEntry.ID_SIZE];
-        for (String term : editedTerms) {
-            termValue = __VOCABULARY__.get(term);
-            if (termValue == null) {
-                continue;
-            }
-            termDocInfoFull = new ArrayList<>();
-            postingPointer = termValue.getR();
-            df = termValue.getL();
-            __POSTINGS__.seek(postingPointer);
-            for (int i = 0; i < df; i++) {
-                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
-                documentPointer = __POSTINGS__.readLong();
-                __DOCUMENTS__.seek(documentPointer);
-                __DOCUMENTS__.readFully(docId);
-                docInfoFull = new DocInfoFull(new String(docId, "ASCII"), documentPointer);
-
-                double pageRank = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfo.PROPERTY.PAGERANK, pageRank);
-
-                double weight = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
-
-                int length = __DOCUMENTS__.readInt();
-                docInfoFull.setProperty(DocInfo.PROPERTY.LENGTH, length);
-
-                double avgAuthorRank = __DOCUMENTS__.readDouble();
-                docInfoFull.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, avgAuthorRank);
-
-                short year = __DOCUMENTS__.readShort();
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.YEAR, year);
-
-                int titleLength = __DOCUMENTS__.readInt();
-                int authorIdsLength = __DOCUMENTS__.readInt();
-                int authorNamesLength = __DOCUMENTS__.readInt();
-                short journalNameLength = __DOCUMENTS__.readShort();
-
-                byte[] title = new byte[titleLength];
-                __DOCUMENTS__.readFully(title);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
-
-                byte[] authorIds = new byte[authorIdsLength];
-                __DOCUMENTS__.readFully(authorIds);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
-
-                byte[] authorNames = new byte[authorNamesLength];
-                __DOCUMENTS__.readFully(authorNames);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
-
-                byte[] journalName = new byte[journalNameLength];
-                __DOCUMENTS__.readFully(journalName);
-                docInfoFull.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
-
-                termDocInfoFull.add(docInfoFull);
-            }
-            docInfoFull_list.add(termDocInfoFull);
-        }
-        return docInfoFull_list;
-    }
-
-    /**
-     * This is a method that given a list of docs in the essential
-     * representation, returns a list with the full description of docs stored
-     * in the Documents File. This method is needed when we want to return the
-     * full information of a list of documents. Could be useful if we support
-     * pagination to the results (i.e. provide the full results of ten
-     * documents)
-     *
-     * @param docs
-     * @return
-     */
-    public List<DocInfoFull> getDocDescription(List<DocInfo> docs) {
-        // If indexes are not loaded
-        if (!loaded()) {
-            return null;
-        } else {
-            // to implement
-            return null;
-        }
-    }
-
+    
     /**
      * Method that checks if indexes have been loaded/opened
      *
@@ -1258,10 +1071,6 @@ public class Indexer implements Runnable {
         }
     }
 
-    /**
-     * Returns the retrieval model found in the config file
-     * @return
-     */
     public String getRetrievalModel() {
         return __CONFIG__.getRetrievalModel();
     }

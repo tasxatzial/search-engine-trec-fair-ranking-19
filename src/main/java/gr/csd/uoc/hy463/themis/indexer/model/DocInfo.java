@@ -31,12 +31,6 @@ import java.util.Map;
  * This class holds any information we might want to communicate with the
  * retrieval model we are implementing about a specific document
  *
- * This essential representation just holds the important things.
- *
- * Can also be extended by another class, like the DocInfoFull, that will be
- * used whenever we want to get all information related with a document, i.e.
- * all information in the entry of a document in the Documents file
- *
  * Since probably we are going to store in memory a lot of these objects, we
  * have to be as memory efficient as we can. This implementation with a map is
  * worst than just keeping all properties as primitives and private members but
@@ -67,7 +61,7 @@ public class DocInfo {
 
     private String id = "";         // the 40 byte id
     private long offset = 0;        // offset in documents file
-    private final Map<PROPERTY, Object> props = new HashMap<>();
+    private final Map<PROPERTY, Object> props = new HashMap<>(4);
 
     /**
      *

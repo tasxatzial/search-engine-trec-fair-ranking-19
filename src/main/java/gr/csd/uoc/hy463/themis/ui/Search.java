@@ -86,6 +86,14 @@ public class Search {
         return null;
     }
 
+    /**
+     * Searches for a query. The results should contain at least the document information specified by
+     * the props.
+     * @param query A string that contains some terms
+     * @param props The document information that we want to be retrieved
+     * @param topk Return the topk documents
+     * @throws IOException
+     */
     public void search(String query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
@@ -102,11 +110,16 @@ public class Search {
             default:
                 return;
         }
+
+        /* find the terms in the query string and add them into a set */
         List<Pair<Object, Double>> newResults;
         String[] splitQuery = query.split(" ");
         Set<String> newTerms = new HashSet<>();
         Collections.addAll(newTerms, splitQuery);
 
+        /* compare the current set of terms with the previous set of terms. If they are equal just fetch
+        any new information from the documents file. If they are not equal, do a new search using the
+        retrieval model */
         if (_prevTerms != null && newTerms.containsAll(_prevTerms) && _prevTerms.containsAll(newTerms)) {
             _indexer.updateDocInfo(_prevResults, props);
             newResults = _prevResults;
@@ -123,6 +136,7 @@ public class Search {
         }
         _prevTerms = newTerms;
 
+        /* print the results */
         for (Pair<Object, Double> pair : newResults) {
             DocInfo docInfo = (DocInfo) pair.getL();
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
@@ -135,11 +149,11 @@ public class Search {
         }
     }
 
-    public void stop() {
-        _indexer.stop();
-    }
-
     public boolean isRunning() {
         return _indexer.isRunning();
+    }
+
+    public void stop() {
+        _indexer.stop();
     }
 }
