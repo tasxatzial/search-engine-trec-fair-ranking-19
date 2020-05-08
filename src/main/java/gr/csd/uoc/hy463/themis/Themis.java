@@ -7,11 +7,12 @@ import gr.csd.uoc.hy463.themis.ui.View;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Themis {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
@@ -66,8 +67,16 @@ public class Themis {
         public void actionPerformed(ActionEvent e) {
             try {
                 view.clearResultsArea();
-                List<DocInfo.PROPERTY> props = new ArrayList<>();
-                //add props here
+                Set<DocInfo.PROPERTY> props = new HashSet<>();
+                props.add(DocInfo.PROPERTY.PAGERANK);
+                props.add(DocInfo.PROPERTY.WEIGHT);
+                props.add(DocInfo.PROPERTY.LENGTH);
+                props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+                props.add(DocInfo.PROPERTY.YEAR);
+                props.add(DocInfo.PROPERTY.TITLE);
+                props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+                props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+                props.add(DocInfo.PROPERTY.JOURNAL_NAME);
                 search.search(view.get_searchField().getText(), props, -1);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());

@@ -12,12 +12,12 @@ public class DocumentEntry {
     public static int AVG_AUTHOR_RANK_SIZE = 8;
     public static int YEAR_SIZE = 2;
     public static int TITLE_SIZE_SIZE = 4;
-    public static int AUTHOR_IDS_SIZE_SIZE = 4;
     public static int AUTHOR_NAMES_SIZE_SIZE = 4;
+    public static int AUTHOR_IDS_SIZE_SIZE = 4;
     public static int JOURNAL_NAME_SIZE_SIZE = 2;
     //title -> variable size
-    //author ids -> variable size
     //author names -> variable size
+    //author ids -> variable size
     //journal name -> variable size
 
     public static int ID_OFFSET = 0;
@@ -27,11 +27,11 @@ public class DocumentEntry {
     public static int AVG_AUTHOR_RANK_OFFSET = 60;
     public static int YEAR_OFFSET = 68;
     public static int TITLE_SIZE_OFFSET = 70;
-    public static int AUTHOR_IDS_SIZE_OFFSET = 74;
-    public static int AUTHOR_NAMES_SIZE_OFFSET = 78;
+    public static int AUTHOR_NAMES_SIZE_OFFSET = 74;
+    public static int AUTHOR_IDS_SIZE_OFFSET = 78;
     public static int JOURNAL_NAME_SIZE_OFFSET = 82;
-    public static int TITLE = 84;
-    //author ids
+    public static int TITLE_OFFSET = 84;
     //author names
+    //author ids
     //journal name
 }

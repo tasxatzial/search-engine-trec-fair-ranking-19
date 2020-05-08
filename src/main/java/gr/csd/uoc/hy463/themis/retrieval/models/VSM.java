@@ -43,12 +43,12 @@ public class VSM extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

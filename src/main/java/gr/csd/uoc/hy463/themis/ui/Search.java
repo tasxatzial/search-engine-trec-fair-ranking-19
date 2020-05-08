@@ -86,7 +86,7 @@ public class Search {
         return null;
     }
 
-    public void search(String query, List<DocInfo.PROPERTY> props, int topk) throws IOException {
+    public void search(String query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
         switch (retrievalModel) {
@@ -107,7 +107,7 @@ public class Search {
         Set<String> newTerms = new HashSet<>();
         Collections.addAll(newTerms, splitQuery);
 
-        if (newTerms.containsAll(_prevTerms) && _prevTerms.containsAll(newTerms)) {
+        if (_prevTerms != null && newTerms.containsAll(_prevTerms) && _prevTerms.containsAll(newTerms)) {
             _indexer.updateDocInfo(_prevResults, props);
             newResults = _prevResults;
         }
@@ -116,7 +116,9 @@ public class Search {
             for (String term : newTerms) {
                 queryList.add(new QueryTerm(term, 1.0));
             }
+            long startTime = System.nanoTime();
             newResults = model.getRankedResults(queryList, props, topk);
+            Themis.view.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
             _prevResults = newResults;
         }
         _prevTerms = newTerms;

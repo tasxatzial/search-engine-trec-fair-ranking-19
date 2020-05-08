@@ -29,6 +29,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public abstract class ARetrievalModel {
      * @param query list of query terms
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props);
+    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with the
@@ -88,7 +89,7 @@ public abstract class ARetrievalModel {
      * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk);
+    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) throws IOException;
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

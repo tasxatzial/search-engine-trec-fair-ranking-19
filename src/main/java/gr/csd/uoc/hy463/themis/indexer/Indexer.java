@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
+
 /**
  * Our basic indexer class. This class is responsible for two tasks:
  *
@@ -650,14 +652,14 @@ public class Indexer implements Runnable {
         out.write(avgAuthorRank);
         out.write(year);
         out.write(titleLength);
-        out.write(authorIdsLength);
         out.write(authorNamesLength);
+        out.write(authorIdsLength);
         out.write(journalNameLength);
 
         /* write the variable size fields */
         out.write(title);
-        out.write(authorIds);
         out.write(authorNames);
+        out.write(authorIds);
         out.write(journalName);
 
         return docEntryLength + offset;
@@ -874,10 +876,10 @@ public class Indexer implements Runnable {
 
     /* Returns a new list of terms based on the options for stemming and stopwords from the
      * meta_index_info map */
-    private List<String> preprocessTerms(List<String> terms) {
+    private Set<String> preprocessTerms(Set<String> terms) {
         boolean useStopwords = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
         boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
-        List<String> editedTerms = new ArrayList<>();
+        Set<String> editedTerms = new HashSet<>();
         for (String term : terms) {
             if (useStopwords && StopWords.isStopWord(term)) {
                 continue;
@@ -892,14 +894,147 @@ public class Indexer implements Runnable {
         return editedTerms;
     }
 
-    public List<List<DocInfo>> getDocInfo(List<String> terms, List<DocInfo.PROPERTY> props) {
+    public List<List<DocInfo>> getDocInfo(Set<String> terms, Set<DocInfo.PROPERTY> props) throws IOException {
+        if (!loaded()) {
+            return null;
+        }
+        Set<String> editedTerms = preprocessTerms(terms);
+        List<List<DocInfo>> docIds = new ArrayList<>();
+        List<DocInfo> termDocInfo;
+        DocInfo docInfo;
+        Pair<Integer, Long> termValue;
+        long documentPointer;
+        long postingPointer;
+        int df;
+        byte[] docId = new byte[DocumentEntry.ID_SIZE];
+        boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
+        boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
+        boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
+        boolean hasAvgAuthorRank = props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        boolean hasYear = props.contains(DocInfo.PROPERTY.YEAR);
+        boolean hasTitle = props.contains(DocInfo.PROPERTY.TITLE);
+        boolean hasAuthorNames = props.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
+        boolean hasAuthorIds = props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
+        boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
 
-        return null;
+        for (String term : editedTerms) {
+            termValue = __VOCABULARY__.get(term);
+            if (termValue == null) {
+                continue;
+            }
+            termDocInfo = new ArrayList<>();
+            postingPointer = termValue.getR();
+            df = termValue.getL();
+            for (int i = 0; i < df; i++) {
+                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
+                documentPointer = __POSTINGS__.readLong();
+                __DOCUMENTS__.seek(documentPointer);
+                __DOCUMENTS__.readFully(docId);
+                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
+                termDocInfo.add(docInfo);
+                if (hasPagerank) {
+                    docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
+                }
+                if (hasWeight) {
+                    if (!hasPagerank) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.WEIGHT_OFFSET);
+                    }
+                    docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
+                }
+                if (hasLength) {
+                    if (!hasWeight) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.LENGTH_OFFSET);
+                    }
+                    docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
+                }
+                if (hasAvgAuthorRank) {
+                    if (!hasLength) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.AVG_AUTHOR_RANK_OFFSET);
+                    }
+                    docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, __DOCUMENTS__.readDouble());
+                }
+                if (hasYear) {
+                    if (!hasAvgAuthorRank) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.YEAR_OFFSET);
+                    }
+                    docInfo.setProperty(DocInfo.PROPERTY.YEAR, __DOCUMENTS__.readShort());
+                }
+                int titleLength = 0;
+                int authorNamesLength = 0;
+                int authorIdsLength = 0;
+                int journalNameLength = 0;
+
+                if (!hasTitle && !hasAuthorNames && !hasAuthorIds && !hasJournalName) {
+                    continue;
+                }
+                if (!hasYear) {
+                    __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_SIZE_OFFSET);
+                }
+
+                if (hasJournalName) {
+                    titleLength = __DOCUMENTS__.readInt();
+                    authorNamesLength = __DOCUMENTS__.readInt();
+                    authorIdsLength = __DOCUMENTS__.readInt();
+                    journalNameLength = __DOCUMENTS__.readShort();
+                }
+                else if (hasAuthorIds) {
+                    titleLength = __DOCUMENTS__.readInt();
+                    authorNamesLength = __DOCUMENTS__.readInt();
+                    authorIdsLength = __DOCUMENTS__.readInt();
+                }
+                else if (hasAuthorNames) {
+                    titleLength = __DOCUMENTS__.readInt();
+                    authorNamesLength = __DOCUMENTS__.readInt();
+                }
+                else {
+                    titleLength = __DOCUMENTS__.readInt();
+                }
+
+                if (hasTitle) {
+                    if (!hasJournalName) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET);
+                    }
+                    byte[] title = new byte[titleLength];
+                    __DOCUMENTS__.readFully(title);
+                    docInfo.setProperty(DocInfoFull.PROPERTY.TITLE, new String(title, "UTF-8"));
+                }
+
+                if (hasAuthorNames) {
+                    if (!hasTitle) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength);
+                    }
+                    byte[] authorNames = new byte[authorNamesLength];
+                    __DOCUMENTS__.readFully(authorNames);
+                    docInfo.setProperty(DocInfoFull.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
+                }
+
+                if (hasAuthorIds) {
+                    if (!hasAuthorNames) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength + authorNamesLength);
+                    }
+                    byte[] authorIds = new byte[authorIdsLength];
+                    __DOCUMENTS__.readFully(authorIds);
+                    docInfo.setProperty(DocInfoFull.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
+                }
+
+                if (hasJournalName) {
+                    if (!hasAuthorIds) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength + authorNamesLength + authorIdsLength);
+                    }
+                    byte[] journalName = new byte[journalNameLength];
+                    __DOCUMENTS__.readFully(journalName);
+                    docInfo.setProperty(DocInfoFull.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
+                }
+            }
+            docIds.add(termDocInfo);
+        }
+        return docIds;
     }
 
-    public void updateDocInfo(List<Pair<Object, Double>> ranked_list, List<DocInfo.PROPERTY> props) {
+    public void updateDocInfo(List<Pair<Object, Double>> ranked_list, Set<DocInfo.PROPERTY> props) {
 
     }
+
 
     /**
      * Basic method for querying functionality. Given the list of terms in the
@@ -909,11 +1044,11 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfo>> getDocId(List<String> terms) throws IOException {
+    public List<List<DocInfo>> getDocId(Set<String> terms) throws IOException {
         if (!loaded()) {
             return null;
         }
-        List<String> editedTerms = preprocessTerms(terms);
+        Set<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfo>> docIds = new ArrayList<>();
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
@@ -956,11 +1091,11 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfo>> getDocInfoEssentialForTerms(List<String> terms) throws IOException {
+    public List<List<DocInfo>> getDocInfoEssentialForTerms(Set<String> terms) throws IOException {
         if (!loaded()) { // If indexes are not loaded
             return null;
         }
-        List<String> editedTerms = preprocessTerms(terms);
+        Set<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfo>> docInfoEssential_list = new ArrayList<>();
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
@@ -1006,11 +1141,11 @@ public class Indexer implements Runnable {
      * @param terms
      * @return
      */
-    public List<List<DocInfoFull>> getDocInfoFullTerms(List<String> terms) throws IOException {
+    public List<List<DocInfoFull>> getDocInfoFullTerms(Set<String> terms) throws IOException {
         if (!loaded()) { // If indexes are not loaded
             return null;
         }
-        List<String> editedTerms = preprocessTerms(terms);
+        Set<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfoFull>> docInfoFull_list = new ArrayList<>();
         List<DocInfoFull> termDocInfoFull;
         DocInfoFull docInfoFull;

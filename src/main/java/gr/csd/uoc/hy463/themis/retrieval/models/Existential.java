@@ -31,6 +31,7 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,13 +50,13 @@ public class Existential extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props) {
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
         return getRankedResults(query, props,-1);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, List<DocInfo.PROPERTY> props, int topk) {
-        List<String> terms = new ArrayList<>();
+    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
+        Set<String> terms = new HashSet<>();
         List<Pair<Object, Double>> result = new ArrayList<>();
 
         for (QueryTerm q : query) {
