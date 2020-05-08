@@ -95,6 +95,7 @@ public class Search {
      * @throws IOException
      */
     public void search(String query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
+        Themis.clearResults();
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
         switch (retrievalModel) {

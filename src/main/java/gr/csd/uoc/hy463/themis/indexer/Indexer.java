@@ -701,7 +701,7 @@ public class Indexer implements Runnable {
 
     /* Loads the final vocabulary file */
     private void loadVocabulary() throws IOException {
-        Themis.print("Loading vocabulary...");
+        Themis.print(">>> Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
         String[] fields;

@@ -110,7 +110,7 @@ public class Index {
      * @return
      */
     public boolean dump() throws IOException {
-        Themis.print("Dumping in: " + __INDEX_PATH__ + "/" + id + "/\n");
+        Themis.print("Dumping in: " + __INDEX_PATH__ + "/" + id + "/ ...");
         String vocabularyName;
         String postingsName;
         vocabularyName = __INDEX_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
@@ -119,7 +119,7 @@ public class Index {
         Files.createDirectories(Paths.get(postingsName).getParent());
         dumpVocabulary(vocabularyName);
         dumpPostings(postingsName);
-
+        Themis.print(" DONE\n");
         return true;
     }
 

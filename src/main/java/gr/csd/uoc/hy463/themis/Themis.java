@@ -57,7 +57,6 @@ public class Themis {
         view.get_queryCollection().addActionListener(new searchListener());
         view.get_loadIndex().addActionListener(new loadIndexListener());
 
-
         view.setVisible(true);
     }
 
@@ -91,11 +90,19 @@ public class Themis {
         }
     }
 
+    /**
+     * Clears the results print area.
+     */
+    public static void clearResults() {
+        if (view != null) {
+            view.clearResultsArea();
+        }
+    }
+
     private static class searchButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                view.clearResultsArea();
                 Set<DocInfo.PROPERTY> props = new HashSet<>();
                 props.add(DocInfo.PROPERTY.PAGERANK);
                 props.add(DocInfo.PROPERTY.WEIGHT);
@@ -120,7 +127,6 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            view.initIndexView();
             if (search != null && !search.unloadIndex()) {
                 view.showError("Failed to unload previous index");
                 return;
@@ -134,12 +140,14 @@ public class Themis {
                 return;
             }
             if (createIndex.isIndexDirEmpty()) {
+                view.initIndexView();
                 createIndex.createIndex();
             }
             else {
                 boolean delete = view.showYesNoMessage("Delete previous index folder?");
                 if (delete) {
                     try {
+                        view.initIndexView();
                         createIndex.deleteIndex();
                     } catch (IOException ex) {
                         __LOGGER__.error(ex.getMessage());
@@ -164,9 +172,7 @@ public class Themis {
                 return;
             }
             view.initSearchView();
-            if (view.get_searchButton().getActionListeners().length == 0) {
-                view.get_searchButton().addActionListener(new searchButtonListener());
-            }
+            view.get_searchButton().addActionListener(new searchButtonListener());
         }
     }
 
@@ -177,12 +183,12 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            view.initIndexView();
             if (search != null && !search.unloadIndex()) {
                 view.showError("Failed to unload previous index");
                 return;
             }
             try {
+                view.initIndexView();
                 createIndex = null;
                 search = new Search();
             } catch (IOException ex) {
