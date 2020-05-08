@@ -197,7 +197,7 @@ public class Indexer implements Runnable {
         }
 
         long startTime = System.nanoTime();
-        Themis.view.print(">>> Start indexing\n");
+        Themis.print(">>> Start indexing\n");
 
         File folder = new File(path);
         File[] files = folder.listFiles();         // Holds  all files in path
@@ -254,7 +254,7 @@ public class Indexer implements Runnable {
         // for each file in path
         for (File file : files) {
             if (file.isFile()) {
-                Themis.view.print("Processing file: " + file + "\n");
+                Themis.print("Processing file: " + file + "\n");
                 currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 
                 // for each scientific article in file
@@ -315,7 +315,7 @@ public class Indexer implements Runnable {
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
         saveMetaInfo();
 
-        Themis.view.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
 
         /* merge the vocabularies and delete them */
         mergeVocabularies(partialIndexes);
@@ -331,7 +331,7 @@ public class Indexer implements Runnable {
             deleteDir(new File(__INDEX_PATH__ + "/" + partialIndex));
         }
 
-        Themis.view.print(">>> End of indexing\n");
+        Themis.print(">>> End of indexing\n");
         return false;
     }
 
@@ -344,7 +344,7 @@ public class Indexer implements Runnable {
         in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete them */
         long startTime =  System.nanoTime();
         try {
-            Themis.view.print(">>> Start Merging of partial vocabularies\n");
+            Themis.print(">>> Start Merging of partial vocabularies\n");
             if (partialIndexes.size() == 1) {
                 String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
                 Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
@@ -357,10 +357,10 @@ public class Indexer implements Runnable {
                     deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
                 }
             }
-            Themis.view.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+            Themis.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
-            Themis.view.showError("Error merging vocabularies\n");
+            Themis.showError("Error merging vocabularies\n");
         }
     }
 
@@ -498,7 +498,7 @@ public class Indexer implements Runnable {
         in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete them */
         long startTime =  System.nanoTime();
         try {
-            Themis.view.print(">>> Start Merging of partial postings\n");
+            Themis.print(">>> Start Merging of partial postings\n");
             if (partialIndexes.size() == 1) {
                 String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
                 Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
@@ -511,10 +511,10 @@ public class Indexer implements Runnable {
                     deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
                 }
             }
-            Themis.view.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+            Themis.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         }  catch (IOException e) {
             __LOGGER__.error(e.getMessage());
-            Themis.view.showError("Error merging postings\n");
+            Themis.showError("Error merging postings\n");
         }
     }
 
@@ -702,7 +702,7 @@ public class Indexer implements Runnable {
 
     /* Loads the final vocabulary file */
     private void loadVocabulary() throws IOException {
-        Themis.view.print("Loading vocabulary...");
+        Themis.print("Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
         String[] fields;
@@ -716,17 +716,17 @@ public class Indexer implements Runnable {
         }
 
         vocabularyReader.close();
-        Themis.view.print("DONE\n");
+        Themis.print("DONE\n");
     }
 
     /* Calculates and updates the VSM weights in the documents file. Reads the
     * frequencies file freq and the documents size file doc_length */
     private void updateVSMweights(int totalArticles) throws IOException {
         long startTime = System.nanoTime();
-        Themis.view.print(">>> Calculating VSM weights\n");
+        Themis.print(">>> Calculating VSM weights\n");
 
         /* load the vocabulary file except the offsets */
-        Themis.view.print("Loading vocabulary terms...");
+        Themis.print("Loading vocabulary terms...");
         BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
         Map<String, Integer> vocabulary = new HashMap<>();
@@ -737,7 +737,7 @@ public class Indexer implements Runnable {
             vocabulary.put(split[0], Integer.parseInt(split[1]));
         }
         vocabularyReader.close();
-        Themis.view.print("DONE\n");
+        Themis.print("DONE\n");
 
         /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
@@ -786,7 +786,7 @@ public class Indexer implements Runnable {
         deleteDir(new File(__INDEX_PATH__ + "/doc_size"));
         deleteDir(new File(__INDEX_PATH__ + "/doc_tf"));
 
-        Themis.view.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
 
     /**
@@ -804,7 +804,7 @@ public class Indexer implements Runnable {
             return index(collectionPath);
         } else {
             __LOGGER__.error("DATASET_PATH not set in themis.config!");
-            Themis.view.print("DATASET_PATH not set in themis.config!\n");
+            Themis.print("DATASET_PATH not set in themis.config!\n");
             return false;
         }
     }
@@ -822,7 +822,7 @@ public class Indexer implements Runnable {
         unload();
         if (!hasIndex()) {
             __LOGGER__.error("Index is not constructed correctly!");
-            Themis.view.print("Index is not constructed correctly!\n");
+            Themis.print("Index is not constructed correctly!\n");
             return false;
         }
 
@@ -1290,7 +1290,7 @@ public class Indexer implements Runnable {
             }
         } catch (IOException e) {
             __LOGGER__.error(e.getMessage());
-            Themis.view.showError("Error");
+            Themis.showError("Error");
         } finally {
             running.set(false);
             _task = null;

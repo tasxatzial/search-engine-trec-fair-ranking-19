@@ -7,7 +7,6 @@ import gr.csd.uoc.hy463.themis.ui.View;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.print.Doc;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -17,9 +16,9 @@ import java.util.Set;
 public class Themis {
     private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
 
-    public static CreateIndex createIndex;
-    public static Search search;
-    public static View view;
+    private static CreateIndex createIndex;
+    private static Search search;
+    private static View view;
 
     public static void main(String[] args) {
         view = new View();
@@ -60,6 +59,36 @@ public class Themis {
 
 
         view.setVisible(true);
+    }
+
+    /**
+     * Prints a string to view or to console if view is null.
+     * @param text
+     */
+    public static void print(String text) {
+        try {
+            if (view == null) {
+                System.out.println(text);
+            }
+            else {
+                view.print(text);
+            }
+        } catch (IOException e) {
+            __LOGGER__.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Displays a swing window showing an error text message.
+     * @param text
+     */
+    public static void showError(String text) {
+        if (view == null) {
+            System.out.println(text);
+        }
+        else {
+            view.showError(text);
+        }
     }
 
     private static class searchButtonListener implements ActionListener {

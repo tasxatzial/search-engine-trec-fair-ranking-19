@@ -118,19 +118,19 @@ public class Search {
             }
             long startTime = System.nanoTime();
             newResults = model.getRankedResults(queryList, props, topk);
-            Themis.view.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+            Themis.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
             _prevResults = newResults;
         }
         _prevTerms = newTerms;
 
         for (Pair<Object, Double> pair : newResults) {
             DocInfo docInfo = (DocInfo) pair.getL();
-            Themis.view.print("DOC_ID: " + docInfo.getId() + "\n");
+            Themis.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY prop : props) {
-                Themis.view.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n");
+                Themis.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n");
             }
             if (!props.isEmpty()) {
-                Themis.view.print("\n");
+                Themis.print("\n");
             }
         }
     }
