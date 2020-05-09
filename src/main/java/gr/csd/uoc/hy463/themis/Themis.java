@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Themis {
-    private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
+    private static final Logger __LOGGER__ = LogManager.getLogger(Themis.class);
 
     private static CreateIndex createIndex;
     private static Search search;

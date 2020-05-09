@@ -46,7 +46,7 @@ import java.util.*;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class Search {
-    private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
+    private static final Logger __LOGGER__ = LogManager.getLogger(Search.class);
     private Indexer _indexer;
     private Set<String> _prevTerms = null;
     private List<Pair<Object, Double>> _prevResults = null;
