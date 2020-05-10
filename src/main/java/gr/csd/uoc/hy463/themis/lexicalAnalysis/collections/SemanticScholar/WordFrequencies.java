@@ -90,17 +90,21 @@ public class WordFrequencies {
         }
     }
 
-    /* Returns the split pattern that will be used for splitting a prop (e.g title) */
+    /* Returns the split pattern that will be used for splitting a String */
     private String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:
-                return " ›‹′_`‘@″•‡†‟„&#.,()'\"[]$|/\\?-“”*{}<>:;’%+»«§¡!\n\t\r\f";
+                return "\u0020.:,[]()'/\"’+?<>*“”\u00A0=×!∗´‘{}∼~^`′›‹_\u0091\u0092@″•·・‡†‟„&#¶，،$|\\¿;%»«§¡˚©™®¸‚…：＂±／〔〕【】《》（）＜＞\n\t\r\f\u2003\u202F\u2009\u2002\u2005\u200A\u2006\u200B\u2008";
             case AUTHORS_NAMES:
-                return " .()&'#\n";
-            case VENUE: case JOURNAL_NAME:
-                return " #(),.:/'&\"\n";
+                return "\u0020'（）．･;,，‘’“”«».*()&#·\n\r";
+            case VENUE:
+                return "\u0020™®’?\\/'&!|*+\";[]=():,.\n\r";
+            case JOURNAL_NAME:
+                return "\u0020'&#[](),.:/\"\n\r";
+            case ENTITIES:
+                return "\u0020’*^:,;&_!#\"<>[]'./()\n\r";
             default:
-                return " \n\t\r\f";
+                return "\u0020\n\r";
         }
     }
 }
