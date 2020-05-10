@@ -66,6 +66,29 @@ public class WordFrequencies {
         Pair<DocInfo.PROPERTY, Integer> lastPair;
         while(tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken();
+            switch (currentToken.charAt(0)) {
+                case '-':
+                    currentToken = currentToken.replaceAll("^-+", "");
+                    break;
+                case '―':
+                    currentToken = currentToken.replaceAll("^―+", "");
+                    break;
+                case '−':
+                    currentToken = currentToken.replaceAll("^−+", "");
+                    break;
+                case '—':
+                    currentToken = currentToken.replaceAll("^—+", "");
+                    break;
+                case '–':
+                    currentToken = currentToken.replaceAll("^–+", "");
+                    break;
+                case '‑':
+                    currentToken = currentToken.replaceAll("^‑+", "");
+                    break;
+                case '‐':
+                    currentToken = currentToken.replaceAll("^‐+", "");
+                    break;
+            }
             if (useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }
