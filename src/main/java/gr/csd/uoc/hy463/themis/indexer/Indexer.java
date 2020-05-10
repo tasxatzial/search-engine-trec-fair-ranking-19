@@ -754,21 +754,26 @@ public class Indexer implements Runnable {
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
             split = line.split(" ");
-            tfs = new int[split.length / 2];
-            maxTf = 0;
-            for (int i = 0; i < split.length; i+=2) {
-                tfs[i / 2] = Integer.parseInt(split[i+1]);
-                if (tfs[i / 2] > maxTf) {
-                    maxTf = tfs[i / 2];
+            if (split.length == 1) {
+                weight = 0;
+            }
+            else {
+                tfs = new int[split.length / 2];
+                maxTf = 0;
+                for (int i = 0; i < split.length; i += 2) {
+                    tfs[i / 2] = Integer.parseInt(split[i + 1]);
+                    if (tfs[i / 2] > maxTf) {
+                        maxTf = tfs[i / 2];
+                    }
                 }
+                weight = 0;
+                for (int i = 0; i < split.length; i += 2) {
+                    double x = (0.0 + tfs[i / 2]) / maxTf * Math.log((0.0 + totalArticles) /
+                            vocabulary.get(split[i])) / Math.log(2);
+                    weight += x * x;
+                }
+                weight = Math.sqrt(weight);
             }
-            weight = 0;
-            for (int i = 0; i < split.length; i+= 2) {
-                double x = (0.0 + tfs[i / 2]) / maxTf * Math.log((0.0 + totalArticles) /
-                        vocabulary.get(split[i])) / Math.log(2);
-                weight += x * x;
-            }
-            weight = Math.sqrt(weight);
             docSize = Integer.parseInt(docSizeReader.readLine());
             __DOCUMENTS__.seek(docOffset + DocumentEntry.WEIGHT_OFFSET);
             docOffset += docSize;
