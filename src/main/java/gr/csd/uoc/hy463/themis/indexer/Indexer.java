@@ -217,11 +217,11 @@ public class Indexer implements Runnable {
         /* the dataset file that is being parsed */
         BufferedReader currentDataFile;
 
-        /* the dataset folder */
-        String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
-        Files.createDirectories(Paths.get(documentsName).getParent());
+        /* create index folder */
+        Files.createDirectories(Paths.get(__INDEX_PATH__));
 
         /* The documents file for writing the article info */
+        String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
         BufferedOutputStream documentsOut = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(documentsName, "rw").getFD()));
 
