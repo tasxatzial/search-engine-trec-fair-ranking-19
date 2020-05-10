@@ -62,16 +62,20 @@ public class WordFrequencies {
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         List<Pair<DocInfo.PROPERTY, Integer>> tokenValues;
         String currentToken;
+        String stemmedToken;
         Pair<DocInfo.PROPERTY, Integer> lastPair;
         while(tokenizer.hasMoreTokens()) {
-            currentToken = tokenizer.nextToken().toLowerCase();
+            currentToken = tokenizer.nextToken();
             if (useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }
-            if (useStemmer) {
-                currentToken = Stemmer.Stem(currentToken);
+            if (useStemmer && currentToken.length() > 2) {
+                stemmedToken = Stemmer.Stem(currentToken);
+                currentToken = (stemmedToken.length() > 1) ? stemmedToken : currentToken.toLowerCase();
             }
-
+            else {
+                currentToken = currentToken.toLowerCase();
+            }
             tokenValues = entryWords.get(currentToken);
             if (tokenValues != null) {
                 lastPair = tokenValues.get(tokenValues.size() - 1);
