@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.utils;
+package gr.csd.uoc.hy463.themis.indexer.model;
 
 import java.util.ArrayList;
 import java.util.List;

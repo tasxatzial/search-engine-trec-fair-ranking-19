@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.utils;
+package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
  * Class that holds basic information about a document entry.

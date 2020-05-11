@@ -37,8 +37,8 @@ import java.util.TreeMap;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import gr.csd.uoc.hy463.themis.utils.PartialIndexStruct;
-import gr.csd.uoc.hy463.themis.utils.PostingEntry;
+import gr.csd.uoc.hy463.themis.indexer.model.PartialIndexStruct;
+import gr.csd.uoc.hy463.themis.indexer.model.PostingEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.utils;
+package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
  * Class is used during merging the partial dictionaries. It holds all the required
