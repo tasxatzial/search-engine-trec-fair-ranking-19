@@ -270,7 +270,7 @@ public class Indexer implements Runnable {
                     index.add(entryWords, docOffset, termFreqWriter);
                     prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
-                    docLengthWriter.write(((int) docOffset - prevDocOffset) + "\n");
+                    docLengthWriter.write((int) (docOffset - prevDocOffset) + "\n");
 
                     //print the map of field frequencies for this article
                     //System.out.println(entryWords);
