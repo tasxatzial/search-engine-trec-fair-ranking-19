@@ -89,6 +89,32 @@ public class WordFrequencies {
                     currentToken = currentToken.replaceAll("^‐+", "");
                     break;
             }
+            if (currentToken.length() == 0) {
+                continue;
+            }
+            switch (currentToken.charAt(currentToken.length() - 1)) {
+                case '-':
+                    currentToken = currentToken.replaceAll("-+$", "");
+                    break;
+                case '―':
+                    currentToken = currentToken.replaceAll("―+$", "");
+                    break;
+                case '−':
+                    currentToken = currentToken.replaceAll("−+$", "");
+                    break;
+                case '—':
+                    currentToken = currentToken.replaceAll("—+$", "");
+                    break;
+                case '–':
+                    currentToken = currentToken.replaceAll("–+$", "");
+                    break;
+                case '‑':
+                    currentToken = currentToken.replaceAll("‑+$", "");
+                    break;
+                case '‐':
+                    currentToken = currentToken.replaceAll("‐+$", "");
+                    break;
+            }
             if (useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }

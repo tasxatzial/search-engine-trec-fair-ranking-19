@@ -208,7 +208,7 @@ public class Indexer implements Runnable {
         String json;
         S2TextualEntry entry;
         int totalArticles = 0;
-        int totalArticleLength = 0;
+        long totalArticleLength = 0;
         long docOffset = 0;
         long prevDocOffset;
         __META_INDEX_INFO__ = new HashMap<>();
