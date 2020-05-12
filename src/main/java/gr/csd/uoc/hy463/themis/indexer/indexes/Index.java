@@ -31,9 +31,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.utils.Pair;
@@ -65,10 +63,11 @@ public class Index {
     private String __POSTINGS_FILENAME__ = null;
 
     // We also need to store any information about the vocabulary and
-    // posting file in memory
-    // For example a TreeMap holds entries sorted which helps with storing the
-    // vocabulary file
-    private TreeMap<String, PartialIndexStruct> __INDEX__ = null;
+    // posting file in memory.
+    private Map<String, PartialIndexStruct> __INDEX__ = null;
+
+    // sorted list of the keys of the vocabulary
+    private List<String> __INDEX_KEYS_SORTED__ = null;
 
     // We have to hold also other appropriate data structures for postings / documents
     public Index(Config config) {
@@ -83,7 +82,7 @@ public class Index {
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
-        __INDEX__ = new TreeMap<>();
+        __INDEX__ = new HashMap<>();
     }
 
     /**
@@ -166,15 +165,23 @@ public class Index {
         tfWriter.write("\n");
     }
 
+    /**
+     * Sorts the terms of the vocabulary in lex min order.
+     */
+    public void sort() {
+        __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
+        Collections.sort(__INDEX_KEYS_SORTED__);
+    }
+
     /* Dumps the appropriate info from a partial index memory struct to the
     appropriate partial vocabulary file */
     private void dumpVocabulary(String filename) throws IOException {
         BufferedWriter file = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(filename), "UTF-8"));
         long offset = 0;
-        for (Map.Entry<String, PartialIndexStruct> pair : __INDEX__.entrySet()) {
-            file.write(pair.getKey() + " " + pair.getValue().get_df() + " " + offset + "\n");
-            offset += pair.getValue().get_postings().size() * PostingEntry.SIZE;
+        for (String term : __INDEX_KEYS_SORTED__) {
+            file.write(term + " " + __INDEX__.get(term).get_df() + " " + offset + "\n");
+            offset += __INDEX__.get(term).get_postings().size() * PostingEntry.SIZE;
         }
         file.close();
     }
@@ -186,8 +193,8 @@ public class Index {
                 (new RandomAccessFile(filename, "rw").getFD()));
         byte[] tf;
         byte[] offset;
-        for (PartialIndexStruct index : __INDEX__.values()) {
-            for (PostingEntry postings : index.get_postings()) {
+        for (String term : __INDEX_KEYS_SORTED__) {
+            for (PostingEntry postings : __INDEX__.get(term).get_postings()) {
                 tf = ByteBuffer.allocate(4).putInt(postings.get_tf()).array();
                 offset = ByteBuffer.allocate(8).putLong(postings.get_docPointer()).array();
                 out.write(tf);
