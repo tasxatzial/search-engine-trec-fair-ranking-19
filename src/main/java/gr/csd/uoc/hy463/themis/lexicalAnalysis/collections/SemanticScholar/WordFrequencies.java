@@ -107,18 +107,24 @@ public class WordFrequencies {
         }
     }
 
-    /* Takes a token from an already split string, performs stemming, and adds it to the map of term frequencies */
+    /* Takes a token from an already split string, applies stemming/stopwords, and adds it to the map of term frequencies */
     private void addToMap_afterStem(String currentToken, DocInfo.PROPERTY prop,
                                     Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
-        String stemmedToken;
-        if (useStopwords && StopWords.isStopWord(currentToken)) {
-            return;
+        String stemmedToken = null;
+
+        if (useStopwords) {
+            currentToken = currentToken.toLowerCase();
+            if (StopWords.isStopWord(currentToken)) {
+                return;
+            }
         }
-        if (useStemmer && currentToken.length() > 2) {
+        if (useStemmer && currentToken.length() > 3) {
             stemmedToken = Stemmer.Stem(currentToken);
-            currentToken = (stemmedToken.length() > 1) ? stemmedToken : currentToken.toLowerCase();
+            if (stemmedToken.length() > 2 && (!useStopwords || !StopWords.isStopWord(stemmedToken))) {
+                currentToken = stemmedToken;
+            }
         }
-        else {
+        if (!useStopwords && stemmedToken != currentToken) {
             currentToken = currentToken.toLowerCase();
         }
         addToMapAsIs(currentToken, prop, entryWords);
