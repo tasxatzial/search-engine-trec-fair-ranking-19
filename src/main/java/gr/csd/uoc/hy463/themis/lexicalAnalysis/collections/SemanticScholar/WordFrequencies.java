@@ -2,12 +2,10 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Creates a map of term frequencies for a textual entry.
@@ -17,9 +15,6 @@ import java.util.regex.Pattern;
 public class WordFrequencies {
     private boolean useStemmer;
     private boolean useStopwords;
-    private Pattern numberCheck;
-    private Pattern leadTrailDash;
-    private Pattern anyDash;
 
     public WordFrequencies(Config config) {
         if (config == null) {
@@ -27,9 +22,6 @@ public class WordFrequencies {
         }
         useStemmer = config.getUseStemmer();
         useStopwords = config.getUseStopwords();
-        numberCheck = Pattern.compile("[0-9]+");
-        leadTrailDash = Pattern.compile("^[-―−—–‑‐]+|[-―−—–‑‐]+$");
-        anyDash = Pattern.compile("[―−—–‑‐]+");
     }
 
     /**
@@ -51,7 +43,7 @@ public class WordFrequencies {
         for (Pair<String, List<String>> author : entry.getAuthors()) {
             addToWordsMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, entryWordsMap);
         }
-        addToMapAsIs(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, entryWordsMap);
+        addToWordsMap_asIs(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, entryWordsMap);
         addToWordsMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, entryWordsMap);
         addToWordsMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, entryWordsMap);
         for (String source : entry.getSources()) {
@@ -60,7 +52,7 @@ public class WordFrequencies {
         return entryWordsMap;
     }
 
-    /* Takes a string, performs stemming, and adds it to the map of term frequencies.
+    /* Takes a string, applies stemming/stopwords, and adds it to the map of term frequencies.
     This method should be used for strings that are NOT dash delimited. */
     private void addToWordsMap(String field, DocInfo.PROPERTY prop,
                                Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
@@ -69,12 +61,15 @@ public class WordFrequencies {
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken();
-            addToMap_afterStem(currentToken, prop, entryWords);
+            currentToken = ProcessTerm.process(currentToken, useStopwords, useStemmer);
+            if (currentToken != null) {
+                addToWordsMap_asIs(currentToken, prop, entryWords);
+            }
         }
     }
 
-    /* Takes a string, performs split based on dashes, and adds the tokens to the map of term frequencies.
-    This method should only be used for strings that are dash delimited. */
+    /* Takes a string, performs split based on dashes, applies stemmimg/stopwords, and adds the tokens to the map
+    of term frequencies. This method should only be used for strings that are dash delimited. */
     private void addToWordsMap_afterDashSplit(String field, DocInfo.PROPERTY prop,
                                               Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
         String delimiter = getDelimiter(prop);
@@ -88,51 +83,40 @@ public class WordFrequencies {
             dashTokenizer = new StringTokenizer(currentToken, "-―−—–‑‐");
             if (dashTokenizer.countTokens() > 1) {
                 dashToken = dashTokenizer.nextToken();
-                if (!numberCheck.matcher(dashToken).matches()) {
-                    addToMap_afterStem(dashToken, prop, entryWords);
+                if (!ProcessTerm.isNumber(dashToken)) {
+                    dashToken = ProcessTerm.process(dashToken, useStopwords, useStemmer);
+                    if (dashToken != null) {
+                        addToWordsMap_asIs(dashToken, prop, entryWords);
+                    }
                     while (dashTokenizer.hasMoreTokens()) {
                         dashToken = dashTokenizer.nextToken();
-                        addToMap_afterStem(dashToken, prop, entryWords);
+                        dashToken = ProcessTerm.process(dashToken, useStopwords, useStemmer);
+                        if (dashToken != null) {
+                            addToWordsMap_asIs(dashToken, prop, entryWords);
+                        }
                     }
                 }
                 else {
-                    currentToken = leadTrailDash.matcher(currentToken).replaceAll("");
-                    currentToken = anyDash.matcher(currentToken).replaceAll("-");
-                    addToMap_afterStem(currentToken, prop, entryWords);
+                    currentToken = ProcessTerm.removeDashes(currentToken);
+                    currentToken = ProcessTerm.process(currentToken, useStopwords, useStemmer);
+                    if (currentToken != null) {
+                        addToWordsMap_asIs(currentToken, prop, entryWords);
+                    }
                 }
             }
-            else if (dashTokenizer.countTokens() == 1){
-                addToMap_afterStem(dashTokenizer.nextToken(), prop, entryWords);
+            else if (dashTokenizer.countTokens() == 1) {
+                dashToken = dashTokenizer.nextToken();
+                dashToken = ProcessTerm.process(dashToken, useStopwords, useStemmer);
+                if (dashToken != null) {
+                    addToWordsMap_asIs(dashToken, prop, entryWords);
+                }
             }
         }
     }
 
-    /* Takes a token from an already split string, applies stemming/stopwords, and adds it to the map of term frequencies */
-    private void addToMap_afterStem(String currentToken, DocInfo.PROPERTY prop,
+    /* Takes a string and adds it to the map of term frequencies. Does not apply dash removal, stemming, stopwords */
+    private void addToWordsMap_asIs(String currentToken, DocInfo.PROPERTY prop,
                                     Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
-        String stemmedToken = null;
-
-        if (useStopwords) {
-            currentToken = currentToken.toLowerCase();
-            if (StopWords.isStopWord(currentToken)) {
-                return;
-            }
-        }
-        if (useStemmer && currentToken.length() > 3) {
-            stemmedToken = Stemmer.Stem(currentToken);
-            if (stemmedToken.length() > 2 && (!useStopwords || !StopWords.isStopWord(stemmedToken))) {
-                currentToken = stemmedToken;
-            }
-        }
-        if (!useStopwords && stemmedToken != currentToken) {
-            currentToken = currentToken.toLowerCase();
-        }
-        addToMapAsIs(currentToken, prop, entryWords);
-    }
-
-    /* Takes a token from an already split string and adds it to the map of term frequencies */
-    private void addToMapAsIs(String currentToken, DocInfo.PROPERTY prop,
-                              Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
         List<Pair<DocInfo.PROPERTY, Integer>> tokenValues = entryWords.get(currentToken);
         Pair<DocInfo.PROPERTY, Integer> lastPair;
         if (tokenValues != null) {

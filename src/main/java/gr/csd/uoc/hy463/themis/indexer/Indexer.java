@@ -34,6 +34,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.VocabularyEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessTerm;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.*;
@@ -894,14 +895,9 @@ public class Indexer implements Runnable {
         boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
         Set<String> editedTerms = new HashSet<>();
         for (String term : terms) {
-            if (useStopwords && StopWords.isStopWord(term)) {
-                continue;
-            }
-            if (useStemmer) {
-                editedTerms.add(Stemmer.Stem(term));
-            }
-            else {
-                editedTerms.add(term.toLowerCase());
+            term = ProcessTerm.process(term, useStopwords, useStemmer);
+            if (term != null) {
+                editedTerms.add(term);
             }
         }
         return editedTerms;
