@@ -1,5 +1,7 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
+import java.util.Comparator;
+
 /**
  * Class is used during merging the partial dictionaries. It holds all the required
  * information for an entry in a partial vocabulary file
@@ -10,6 +12,7 @@ public class VocabularyEntry implements Comparable<VocabularyEntry> {
     private int _df;
     private long _offset;
     private int _indexId;
+    public static Comparator<VocabularyEntry> idComparator = Comparator.comparingInt(VocabularyEntry::get_indexId);
 
     public VocabularyEntry(String term, int df, long offset, int indexId) {
         _term = term;

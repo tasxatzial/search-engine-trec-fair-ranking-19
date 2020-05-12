@@ -474,6 +474,10 @@ public class Indexer implements Runnable {
                                 BufferedWriter termTfWriter, long offset) throws IOException {
         int df = 0;
 
+        //sort based on the partial index id. This ensures that postings will be written in the final
+        //posting file always in the same order.
+        equalTerms.sort(VocabularyEntry.idComparator);
+
         //calculate final DF
         for (VocabularyEntry equalTerm : equalTerms) {
             df += equalTerm.get_df();
