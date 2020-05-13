@@ -1,12 +1,14 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.utils.MapValueComparator;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Creates a histogram of the number of occurrences of each character in a textual entry.
@@ -109,8 +111,10 @@ public class S2TextualEntryCharHistogram {
     /* writes to file the character map associated with a DocInfo property */
     private static void writeField(BufferedWriter writer, DocInfo.PROPERTY property, Map<Integer, Integer> charMap)
             throws IOException {
+        Map<Integer, Integer> sortedCharMap = new TreeMap<>(new MapValueComparator(charMap));
+        sortedCharMap.putAll(charMap);
         writer.write("--------------------" + property + "------------------\n");
-        for (Map.Entry<Integer, Integer> c : charMap.entrySet()) {
+        for (Map.Entry<Integer, Integer> c : sortedCharMap.entrySet()) {
             writer.write(new String(Character.toChars(c.getKey()))  + " " + c.getValue() + "\n");
         }
     }
