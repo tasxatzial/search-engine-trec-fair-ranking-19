@@ -36,7 +36,7 @@ import java.util.*;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import gr.csd.uoc.hy463.themis.indexer.model.PartialIndexStruct;
-import gr.csd.uoc.hy463.themis.indexer.model.PostingEntry;
+import gr.csd.uoc.hy463.themis.indexer.model.PostingStruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -153,11 +153,11 @@ public class Index {
             }
             if (indexStruct != null) {
                 indexStruct.set_df(indexStruct.get_df() + 1);
-                indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
+                indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
             }
             else {
                 indexStruct = new PartialIndexStruct(1);
-                indexStruct.get_postings().add(new PostingEntry(tf, docOffset));
+                indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
                 __INDEX__.put(key, indexStruct);
             }
             tfWriter.write(key + " " + tf + " ");
@@ -181,7 +181,7 @@ public class Index {
         long offset = 0;
         for (String term : __INDEX_KEYS_SORTED__) {
             file.write(term + " " + __INDEX__.get(term).get_df() + " " + offset + "\n");
-            offset += __INDEX__.get(term).get_postings().size() * PostingEntry.SIZE;
+            offset += __INDEX__.get(term).get_postings().size() * PostingStruct.SIZE;
         }
         file.close();
     }
@@ -194,7 +194,7 @@ public class Index {
         byte[] tf;
         byte[] offset;
         for (String term : __INDEX_KEYS_SORTED__) {
-            for (PostingEntry postings : __INDEX__.get(term).get_postings()) {
+            for (PostingStruct postings : __INDEX__.get(term).get_postings()) {
                 tf = ByteBuffer.allocate(4).putInt(postings.get_tf()).array();
                 offset = ByteBuffer.allocate(8).putLong(postings.get_docPointer()).array();
                 out.write(tf);

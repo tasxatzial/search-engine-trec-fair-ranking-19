@@ -29,12 +29,12 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentEntry;
-import gr.csd.uoc.hy463.themis.indexer.model.PostingEntry;
-import gr.csd.uoc.hy463.themis.indexer.model.VocabularyEntry;
+import gr.csd.uoc.hy463.themis.indexer.model.PostingStruct;
+import gr.csd.uoc.hy463.themis.indexer.model.VocabularyStruct;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.WordFrequencies;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessTerm;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.*;
@@ -213,7 +213,7 @@ public class Indexer implements Runnable {
         long docOffset = 0;
         long prevDocOffset;
         __META_INDEX_INFO__ = new HashMap<>();
-        WordFrequencies wordFrequencies = new WordFrequencies(__CONFIG__);
+        S2TextualEntryTermFrequencies wordFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__);
 
         /* Field frequencies of each term in a json entry */
         Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords;
@@ -390,54 +390,54 @@ public class Indexer implements Runnable {
         String prevMinTerm = "";
 
         /* keep all consecutive vocabulary entries that have equal terms in an array */
-        List<VocabularyEntry> equalTerms = new ArrayList<>();
+        List<VocabularyStruct> equalTerms = new ArrayList<>();
 
         /* pointer to the postings file */
         long offset = 0;
 
         /* the current vocabulary entry that has the min lex word */
-        VocabularyEntry minTermVocabularyEntry;
+        VocabularyStruct minTermVocabularyStruct;
 
         /* the next vocabulary entry in the same vocabulary file as the one that
         has the min lex word */
-        VocabularyEntry nextVocabularyEntry;
+        VocabularyStruct nextVocabularyStruct;
 
         /* put all first vocabulary entries (they have the min lex terms)
         from each partial vocabulary into a queue */
-        PriorityQueue<VocabularyEntry> vocabularyQueue = new PriorityQueue<>();
+        PriorityQueue<VocabularyStruct> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i < partialIndexes.size(); i++) {
-            minTermVocabularyEntry = getNextVocabularyEntry(vocabularyReader[i], i);
-            if (minTermVocabularyEntry != null) {
-                vocabularyQueue.add(new VocabularyEntry(
-                        minTermVocabularyEntry.get_term(),
-                        minTermVocabularyEntry.get_df(),
-                        minTermVocabularyEntry.get_offset(),
+            minTermVocabularyStruct = getNextVocabularyEntry(vocabularyReader[i], i);
+            if (minTermVocabularyStruct != null) {
+                vocabularyQueue.add(new VocabularyStruct(
+                        minTermVocabularyStruct.get_term(),
+                        minTermVocabularyStruct.get_df(),
+                        minTermVocabularyStruct.get_offset(),
                         i));
             }
         }
 
         /* get the next min term */
-        while((minTermVocabularyEntry = vocabularyQueue.poll()) != null) {
+        while((minTermVocabularyStruct = vocabularyQueue.poll()) != null) {
 
             /* if the min term is not equal to the previous term, we must write all
             vocabulary entries that are in the array of equal terms to the final
             vocabulary file */
-            if (!minTermVocabularyEntry.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
+            if (!minTermVocabularyStruct.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
                 offset = dumpEqualTerms(equalTerms, vocabularyWriter, termTfWriter, offset);
             }
 
             /* save the current term for the next iteration */
-            prevMinTerm = minTermVocabularyEntry.get_term();
+            prevMinTerm = minTermVocabularyStruct.get_term();
 
             /* the current vocabulary entry is put into the array of equal terms */
-            equalTerms.add(new VocabularyEntry(prevMinTerm, minTermVocabularyEntry.get_df(),
-                    minTermVocabularyEntry.get_offset(), minTermVocabularyEntry.get_indexId()));
+            equalTerms.add(new VocabularyStruct(prevMinTerm, minTermVocabularyStruct.get_df(),
+                    minTermVocabularyStruct.get_offset(), minTermVocabularyStruct.get_indexId()));
 
             /* finally add the next vocabulary entry to the queue of min lex terms */
-            int indexId = minTermVocabularyEntry.get_indexId();
-            nextVocabularyEntry = getNextVocabularyEntry(vocabularyReader[indexId], indexId);
-            if (nextVocabularyEntry != null) {
-                vocabularyQueue.add(nextVocabularyEntry);
+            int indexId = minTermVocabularyStruct.get_indexId();
+            nextVocabularyStruct = getNextVocabularyEntry(vocabularyReader[indexId], indexId);
+            if (nextVocabularyStruct != null) {
+                vocabularyQueue.add(nextVocabularyStruct);
             }
         }
 
@@ -456,14 +456,14 @@ public class Indexer implements Runnable {
     }
 
     /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
-    private VocabularyEntry getNextVocabularyEntry(BufferedReader vocabularyReader, int indexId) throws IOException {
+    private VocabularyStruct getNextVocabularyEntry(BufferedReader vocabularyReader, int indexId) throws IOException {
         String line;
         String[] fields;
 
         line = vocabularyReader.readLine();
         if (line != null) {
             fields = line.split(" ");
-            return new VocabularyEntry(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]), indexId);
+            return new VocabularyStruct(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]), indexId);
         }
         return null;
     }
@@ -471,16 +471,16 @@ public class Indexer implements Runnable {
     /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
     vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
     all (partial index id, tf) for each term to a file that will be used during the merging of postings */
-    private long dumpEqualTerms(List<VocabularyEntry> equalTerms, BufferedWriter vocabularyWriter,
+    private long dumpEqualTerms(List<VocabularyStruct> equalTerms, BufferedWriter vocabularyWriter,
                                 BufferedWriter termTfWriter, long offset) throws IOException {
         int df = 0;
 
         //sort based on the partial index id. This ensures that postings will be written in the final
         //posting file always in the same order.
-        equalTerms.sort(VocabularyEntry.idComparator);
+        equalTerms.sort(VocabularyStruct.idComparator);
 
         //calculate final DF
-        for (VocabularyEntry equalTerm : equalTerms) {
+        for (VocabularyStruct equalTerm : equalTerms) {
             df += equalTerm.get_df();
             termTfWriter.write(equalTerm.get_indexId() + " " + equalTerm.get_df() + " ");
         }
@@ -490,7 +490,7 @@ public class Indexer implements Runnable {
         vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
 
         //and calculate the offset of the next term
-        offset += df * PostingEntry.SIZE;
+        offset += df * PostingStruct.SIZE;
 
         equalTerms.clear();
         return offset;
@@ -553,7 +553,7 @@ public class Indexer implements Runnable {
         while ((line = termTfReader.readLine()) != null){
             split = line.split(" ");
             for (int i = 0; i < split.length; i+=2) {
-                byte[] postings = new byte[Integer.parseInt(split[i + 1])  * PostingEntry.SIZE];
+                byte[] postings = new byte[Integer.parseInt(split[i + 1])  * PostingStruct.SIZE];
                 postingsStream[Integer.parseInt(split[i])].read(postings); //read into postings byte array
                 postingOut.write(postings);  //and write to final postings file
             }
@@ -895,7 +895,7 @@ public class Indexer implements Runnable {
         boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
         List<String> editedTerms = new ArrayList<>();
         for (String term : terms) {
-            term = ProcessTerm.process(term, useStopwords, useStemmer);
+            term = ProcessText.indexingProcess(term, useStopwords, useStemmer);
             if (term != null) {
                 editedTerms.add(term);
             }
@@ -946,7 +946,7 @@ public class Indexer implements Runnable {
             termDocInfo = new ArrayList<>();
             postingPointer = termValue.getR();
             for (int i = 0; i < termValue.getL(); i++) {
-                __POSTINGS__.seek(postingPointer + i * PostingEntry.SIZE + PostingEntry.TF_SIZE);
+                __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
                 documentPointer = __POSTINGS__.readLong();
                 __DOCUMENTS__.seek(documentPointer);
                 __DOCUMENTS__.readFully(docId);

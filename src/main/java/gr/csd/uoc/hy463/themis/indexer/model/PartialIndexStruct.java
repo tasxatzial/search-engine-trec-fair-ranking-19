@@ -8,7 +8,7 @@ index: The DF and a list of posting entries.
  */
 public class PartialIndexStruct {
     private int _df;
-    private List<PostingEntry> _postings;
+    private List<PostingStruct> _postings;
 
     public PartialIndexStruct(int df) {
         _df = df;
@@ -22,7 +22,7 @@ public class PartialIndexStruct {
         return _df;
     }
 
-    public List<PostingEntry> get_postings() {
+    public List<PostingStruct> get_postings() {
         return _postings;
     }
 }

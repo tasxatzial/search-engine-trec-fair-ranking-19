@@ -6,13 +6,7 @@ import java.util.regex.Pattern;
  * Class that can be used for applying the following operations on a term:
  * Stemming & StopWord check | Dash replacement/removal.
  */
-public class ProcessTerm {
-
-    //number
-    private static Pattern numberCheck = Pattern.compile("[0-9]+");
-
-    //only leading, trailing dashes
-    private static Pattern leadTrailDash = Pattern.compile("^[-―−—–‑‐]+|[-―−—–‑‐]+$");
+public class ProcessText {
 
     //dashes
     private static Pattern anyDash = Pattern.compile("[―−—–‑‐]+");
@@ -25,7 +19,7 @@ public class ProcessTerm {
      * @return Stemmed term if useStemmer is true. Null if useStopwords is true and term is
      * a stopword.
      */
-    public static String process(String term, boolean useStopwords, boolean useStemmer) {
+    public static String indexingProcess(String term, boolean useStopwords, boolean useStemmer) {
         String stemTerm = null;
         if (useStopwords) {
             term = term.toLowerCase();
@@ -51,18 +45,8 @@ public class ProcessTerm {
      * @param term
      * @return
      */
-    public static String removeDashes(String term) {
-        term = leadTrailDash.matcher(term).replaceAll("");
+    public static String editDashes(String term) {
         term = anyDash.matcher(term).replaceAll("-");
         return term;
-    }
-
-    /**
-     * Checks if term is a number.
-     * @param term
-     * @return True if term is a number, false otherwise.
-     */
-    public static boolean isNumber(String term) {
-        return numberCheck.matcher(term).matches();
     }
 }

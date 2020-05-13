@@ -7,14 +7,14 @@ import java.util.Comparator;
  * information for an entry in a partial vocabulary file
  * (term, df, postings offset, partial index id)
  */
-public class VocabularyEntry implements Comparable<VocabularyEntry> {
+public class VocabularyStruct implements Comparable<VocabularyStruct> {
     private String _term;
     private int _df;
     private long _offset;
     private int _indexId;
-    public static Comparator<VocabularyEntry> idComparator = Comparator.comparingInt(VocabularyEntry::get_indexId);
+    public static Comparator<VocabularyStruct> idComparator = Comparator.comparingInt(VocabularyStruct::get_indexId);
 
-    public VocabularyEntry(String term, int df, long offset, int indexId) {
+    public VocabularyStruct(String term, int df, long offset, int indexId) {
         _term = term;
         _df = df;
         _offset = offset;
@@ -38,7 +38,7 @@ public class VocabularyEntry implements Comparable<VocabularyEntry> {
     }
 
     @Override
-    public int compareTo(VocabularyEntry o) {
+    public int compareTo(VocabularyStruct o) {
         return _term.compareTo(o.get_term());
     }
 }
