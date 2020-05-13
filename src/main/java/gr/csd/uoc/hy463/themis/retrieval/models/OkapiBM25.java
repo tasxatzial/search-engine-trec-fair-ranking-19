@@ -43,12 +43,12 @@ public class OkapiBM25 extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

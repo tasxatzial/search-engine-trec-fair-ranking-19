@@ -56,10 +56,10 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query set of query terms
-     * @param props set of properties we want to be retrieved from the documents
+     * @param docInfoProps set of properties we want to be retrieved from the documents
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with the
@@ -79,11 +79,11 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
-     * @param props set of properties we want to be retrieved from the documents
+     * @param docInfoProps set of properties we want to be retrieved from the documents
      * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException;
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

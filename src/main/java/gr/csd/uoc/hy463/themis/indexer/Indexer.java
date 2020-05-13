@@ -890,10 +890,10 @@ public class Indexer implements Runnable {
 
     /* Returns a new list of terms based on the options for stemming and stopwords from the
      * meta_index_info map */
-    private Set<String> preprocessTerms(Set<String> terms) {
+    private List<String> preprocessTerms(List<String> terms) {
         boolean useStopwords = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
         boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
-        Set<String> editedTerms = new HashSet<>();
+        List<String> editedTerms = new ArrayList<>();
         for (String term : terms) {
             term = ProcessTerm.process(term, useStopwords, useStemmer);
             if (term != null) {
@@ -915,11 +915,11 @@ public class Indexer implements Runnable {
      * @return
      * @throws IOException
      */
-    public List<List<DocInfo>> getDocInfo(Set<String> terms, Set<DocInfo.PROPERTY> props) throws IOException {
+    public List<List<DocInfo>> getDocInfo(List<String> terms, Set<DocInfo.PROPERTY> props) throws IOException {
         if (!loaded()) {
             return null;
         }
-        Set<String> editedTerms = preprocessTerms(terms);
+        List<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfo>> docIds = new ArrayList<>();
         List<DocInfo> termDocInfo;
         DocInfo docInfo;

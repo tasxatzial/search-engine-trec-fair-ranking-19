@@ -50,27 +50,24 @@ public class Existential extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
-        return getRankedResults(query, props,-1);
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        return getRankedResults(query, docInfoProps,-1);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(Set<QueryTerm> query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
-        Set<String> terms = new HashSet<>();
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
+        List<String> terms = new ArrayList<>();
         List<Pair<Object, Double>> result = new ArrayList<>();
-
-        for (QueryTerm q : query) {
-            terms.add(q.getTerm());
-        }
-
         List<List<DocInfo>> docInfo_list;
-        docInfo_list = indexer.getDocInfo(terms, props);
+
+        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+        docInfo_list = indexer.getDocInfo(terms, docInfoProps);
         for (List<DocInfo> termDocInfo : docInfo_list) {
             for (DocInfo docInfo : termDocInfo) {
+                result.add(new Pair<>(docInfo, 1.0));
                 if (result.size() == topk) {
                     return result;
                 }
-                result.add(new Pair<>(docInfo, 1.0));
             }
         }
 

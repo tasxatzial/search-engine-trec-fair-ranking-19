@@ -48,8 +48,6 @@ import java.util.*;
 public class Search {
     private static final Logger __LOGGER__ = LogManager.getLogger(Search.class);
     private Indexer _indexer;
-    private Set<String> _prevTerms = null;
-    private List<Pair<Object, Double>> _prevResults = null;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -88,13 +86,13 @@ public class Search {
 
     /**
      * Searches for a query. The results should contain at least the document information specified by
-     * the props.
+     * the docInfoProps.
      * @param query A string that contains some terms
-     * @param props The document information that we want to be retrieved
+     * @param docInfoProps The document information that we want to be retrieved
      * @param topk Return the topk documents
      * @throws IOException
      */
-    public void search(String query, Set<DocInfo.PROPERTY> props, int topk) throws IOException {
+    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
         Themis.clearResults();
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
@@ -113,38 +111,24 @@ public class Search {
         }
 
         /* find the terms in the query string and add them into a set */
-        List<Pair<Object, Double>> newResults;
-        String[] splitQuery = query.split(" ");
-        Set<String> newTerms = new HashSet<>();
-        Collections.addAll(newTerms, splitQuery);
+        List<Pair<Object, Double>> searchResults;
+        String[] searchTerms = query.split(" "); //the simplest split. suffices for now
 
-        /* compare the current set of terms with the previous set of terms. If they are equal just fetch
-        any new information from the documents file. If they are not equal, do a new search using the
-        retrieval model */
-        if (_prevTerms != null && newTerms.containsAll(_prevTerms) && _prevTerms.containsAll(newTerms)) {
-            _indexer.updateDocInfo(_prevResults, props);
-            newResults = _prevResults;
+        List<QueryTerm> queryTerms = new ArrayList<>();
+        for (String term : searchTerms) {
+            queryTerms.add(new QueryTerm(term, 1.0));
         }
-        else {
-            Set<QueryTerm> queryList = new HashSet<>();
-            for (String term : newTerms) {
-                queryList.add(new QueryTerm(term, 1.0));
-            }
-            long startTime = System.nanoTime();
-            newResults = model.getRankedResults(queryList, props, topk);
-            Themis.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
-            _prevResults = newResults;
-        }
-        _prevTerms = newTerms;
+
+        long startTime = System.nanoTime();
+        searchResults = model.getRankedResults(queryTerms, docInfoProps, topk);
+        Themis.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n\n");
 
         /* print the results */
-        for (Pair<Object, Double> pair : newResults) {
+        for (Pair<Object, Double> pair : searchResults) {
             DocInfo docInfo = (DocInfo) pair.getL();
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
-            for (DocInfo.PROPERTY prop : props) {
-                Themis.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n");
-            }
-            if (!props.isEmpty()) {
+            docInfoProps.forEach(prop -> Themis.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n"));
+            if (!docInfoProps.isEmpty()) {
                 Themis.print("\n");
             }
         }
