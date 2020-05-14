@@ -580,8 +580,9 @@ public class Indexer implements Runnable {
      * DOCUMENT_ID (40 ASCII chars => 40 bytes) |
      * PageRank Score (double => 8 bytes) |
      * The weight (norm) of Document (double => 8 bytes) |
+     * The max tf in the Document (int => 4 bytes) |
      * Length of Document (int => 4 bytes) |
-     * Average author rank (double -> 8 bytes) |
+     * Average author rank (double => 8 bytes) |
      * Year (short => 2 bytes) |
      * [Title size] (int => 4 bytes) |
      * [Author_1,Author_2, ...,Author_k] size (int => 4 bytes) |
@@ -598,7 +599,7 @@ public class Indexer implements Runnable {
      *
      * Author ids are also separated with a comma
      *
-     * For now 0.0 was added as PageRank, weight, average author rank */
+     * For now 0.0 was added as PageRank, weight, max tf, average author rank */
     private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, int docLength, long offset)
             throws IOException {
         int docEntryLength = 0;
@@ -646,18 +647,20 @@ public class Indexer implements Runnable {
         byte[] journalNameLength = ByteBuffer.allocate(DocumentEntry.JOURNAL_NAME_SIZE_SIZE).putShort((short) journalName.length).array();
         docEntryLength += journalName.length + DocumentEntry.JOURNAL_NAME_SIZE_SIZE;
 
-        /* weight, length, pagerank, avgAuthorRank */
+        /* weight, maxTf, length, pagerank, avgAuthorRank */
         byte[] weight = ByteBuffer.allocate(DocumentEntry.WEIGHT_SIZE).putDouble(0).array();
+        byte[] maxTf = ByteBuffer.allocate(DocumentEntry.MAX_TF_SIZE).putInt(0).array();
         byte[] length = ByteBuffer.allocate(DocumentEntry.LENGTH_SIZE).putInt(docLength).array();
         byte[] pageRank = ByteBuffer.allocate(DocumentEntry.PAGERANK_SIZE).putDouble(0).array();
         byte[] avgAuthorRank = ByteBuffer.allocate(DocumentEntry.AVG_AUTHOR_RANK_SIZE).putDouble(0).array();
-        docEntryLength += DocumentEntry.WEIGHT_SIZE + DocumentEntry.LENGTH_SIZE +
+        docEntryLength += DocumentEntry.WEIGHT_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.LENGTH_SIZE +
                 DocumentEntry.PAGERANK_SIZE + DocumentEntry.AVG_AUTHOR_RANK_SIZE;
 
         /* write first the fixed size fields */
         out.write(id);
         out.write(pageRank);
         out.write(weight);
+        out.write(maxTf);
         out.write(length);
         out.write(avgAuthorRank);
         out.write(year);
@@ -729,7 +732,7 @@ public class Indexer implements Runnable {
         Themis.print("DONE\n");
     }
 
-    /* Calculates and updates the VSM weights in the documents file. Reads the
+    /* Calculates and updates the VSM weights and the max tf for each document entry. Reads the
     * frequencies file freq and the documents size file doc_length */
     private void updateVSMweights(int totalArticles) throws IOException {
         long startTime = System.nanoTime();
@@ -760,7 +763,7 @@ public class Indexer implements Runnable {
         double weight; //the weight of each document
         long docOffset = 0; //offset in documents file
         int docSize; //size of each entry in the document file
-        int maxTf; //maximum tf in each document
+        int maxTf = 0; //maximum tf in each document
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
@@ -789,10 +792,11 @@ public class Indexer implements Runnable {
             __DOCUMENTS__.seek(docOffset + DocumentEntry.WEIGHT_OFFSET);
             docOffset += docSize;
             __DOCUMENTS__.write(ByteBuffer.allocate(8).putDouble(weight).array());
+            __DOCUMENTS__.write(ByteBuffer.allocate(4).putInt(maxTf).array());
         }
-        tfReader.close();
 
         /* close files */
+        tfReader.close();
         docSizeReader.close();
         __DOCUMENTS__.close();
         __DOCUMENTS__ = null;
@@ -938,6 +942,7 @@ public class Indexer implements Runnable {
 
         boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
         boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
+        boolean hasMaxTf = props.contains(DocInfo.PROPERTY.MAX_TF);
         boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
         boolean hasAvgAuthorRank = props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
         boolean hasYear = props.contains(DocInfo.PROPERTY.YEAR);
@@ -969,8 +974,14 @@ public class Indexer implements Runnable {
                     }
                     docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
                 }
-                if (hasLength) {
+                if (hasMaxTf) {
                     if (!hasWeight) {
+                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.MAX_TF_OFFSET);
+                    }
+                    docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, __DOCUMENTS__.readInt());
+                }
+                if (hasLength) {
+                    if (!hasMaxTf) {
                         __DOCUMENTS__.seek(documentPointer + DocumentEntry.LENGTH_OFFSET);
                     }
                     docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
