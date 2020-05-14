@@ -77,6 +77,8 @@ public class Indexer implements Runnable {
     private Config __CONFIG__;  // configuration options
     // The file path of indexes
     private String __INDEX_PATH__ = null;
+    private String __INDEX_TMP_PATH__ = null;
+
     // Filenames of indexes
     private String __VOCABULARY_FILENAME__ = null;
     private String __POSTINGS_FILENAME__ = null;
@@ -130,6 +132,7 @@ public class Indexer implements Runnable {
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __INDEX_PATH__ = __CONFIG__.getIndexPath();
+        __INDEX_TMP_PATH__ = __CONFIG__.getIndexTmpPath();
         __META_FILENAME__ = __CONFIG__.getMetaFileName();
     }
 
@@ -221,8 +224,9 @@ public class Indexer implements Runnable {
         /* the dataset file that is being parsed */
         BufferedReader currentDataFile;
 
-        /* create index folder */
+        /* create index folders */
         Files.createDirectories(Paths.get(__INDEX_PATH__));
+        Files.createDirectories(Paths.get(__INDEX_TMP_PATH__));
 
         /* The documents file for writing the article info */
         String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
@@ -233,13 +237,13 @@ public class Indexer implements Runnable {
         access to the each document entry when an update of its info is required,
         e.g. calculating VSM weights */
         BufferedWriter docLengthWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
+                (new FileOutputStream(__INDEX_TMP_PATH__ + "/doc_size"), "UTF-8"));
 
         /* Temp file that stores the <term, TF> of every term that appears in
         each article (one line per article). Will be used for fast calculation
         of the VSM weights */
         BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_PATH__ + "/doc_tf"), "UTF-8"));
+                (new FileOutputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
         
         Index index = new Index(__CONFIG__);
         int id = 1;
@@ -329,9 +333,11 @@ public class Indexer implements Runnable {
         /* merge the postings and delete them */
         mergePostings(partialIndexes);
 
-        /* delete the partial indexes folders */
-        for (Integer partialIndex : partialIndexes) {
-            deleteDir(new File(__INDEX_PATH__ + "/" + partialIndex));
+        /* delete the tmp index */
+        try {
+            deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
+        } catch (IOException e) {
+            Themis.showError("Error deleting tmp index");
         }
 
         Themis.print(">>> End of indexing\n");
@@ -340,30 +346,29 @@ public class Indexer implements Runnable {
 
     /* Merges the partial vocabularies and creates a new single vocabulary. The partial vocabularies are then
     * deleted */
-    private void mergeVocabularies(List<Integer> partialIndexes) {
+    private void mergeVocabularies(List<Integer> partialIndexes) throws IOException {
         // Use the indexes with the ids stored in the array.
 
         /* If there is only one partial index, no merging is needed for the vocabularies. Just move them
         in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete them */
         long startTime =  System.nanoTime();
+        Themis.print(">>> Start Merging of partial vocabularies\n");
+        if (partialIndexes.size() == 1) {
+            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0);
+            Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
+                    Paths.get(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            combinePartialVocabularies(partialIndexes);
+        }
+        Themis.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         try {
-            Themis.print(">>> Start Merging of partial vocabularies\n");
-            if (partialIndexes.size() == 1) {
-                String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
-                Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
-                        Paths.get(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__),
-                        StandardCopyOption.REPLACE_EXISTING);
-            } else {
-                combinePartialVocabularies(partialIndexes);
-                for (int i = 0; i < partialIndexes.size(); i++) {
-                    String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(i);
-                    deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
-                }
+            for (Integer partialIndex : partialIndexes) {
+                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
+                deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
             }
-            Themis.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
-        }  catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
-            Themis.showError("Error merging vocabularies\n");
+        } catch (IOException e) {
+            Themis.showError("Error deleting partial vocabularies");
         }
     }
 
@@ -374,7 +379,7 @@ public class Indexer implements Runnable {
         /* the partial vocabularies */
         BufferedReader[] vocabularyReader = new BufferedReader[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
-            String vocabularyPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
+            String vocabularyPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
             vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(vocabularyPath), "UTF-8"));
         }
 
@@ -384,7 +389,7 @@ public class Indexer implements Runnable {
                 (new FileOutputStream(vocabularyName), "UTF-8"));
 
         BufferedWriter termTfWriter = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(__INDEX_PATH__ + "/term_tf"), "UTF-8"));
+                new FileOutputStream(__INDEX_TMP_PATH__ + "/term_tf"), "UTF-8"));
 
         /* the previous lex min word */
         String prevMinTerm = "";
@@ -498,30 +503,29 @@ public class Indexer implements Runnable {
 
     /* Method that merges the partial postings and creates a new single posting file. The partial postings
     * are then deleted */
-    private void mergePostings(List<Integer> partialIndexes) {
+    private void mergePostings(List<Integer> partialIndexes) throws IOException {
         // Use the indexes with the ids stored in the array.
 
         /* If there is only one partial index, no merging is needed for the postings. Just move them
         in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete them */
         long startTime =  System.nanoTime();
+        Themis.print(">>> Start Merging of partial postings\n");
+        if (partialIndexes.size() == 1) {
+            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0);
+            Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
+                    Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            combinePartialPostings(partialIndexes);
+        }
+        Themis.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         try {
-            Themis.print(">>> Start Merging of partial postings\n");
-            if (partialIndexes.size() == 1) {
-                String partialIndexPath = __INDEX_PATH__ + "/" + partialIndexes.get(0);
-                Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
-                        Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
-                        StandardCopyOption.REPLACE_EXISTING);
-            } else {
-                combinePartialPostings(partialIndexes);
-                for (Integer partialIndex : partialIndexes) {
-                    String partialIndexPath = __INDEX_PATH__ + "/" + partialIndex;
-                    deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
-                }
+            for (Integer partialIndex : partialIndexes) {
+                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
+                deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
             }
-            Themis.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
-        }  catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
-            Themis.showError("Error merging postings\n");
+        } catch (IOException e) {
+            Themis.showError("Error deleting partial vocabularies");
         }
     }
 
@@ -532,7 +536,7 @@ public class Indexer implements Runnable {
         /* the partial postings */
         BufferedInputStream[] postingsStream = new BufferedInputStream[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
-            String postingPath = __INDEX_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
+            String postingPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
             postingsStream[i] = new BufferedInputStream(new FileInputStream
                     (new RandomAccessFile(postingPath, "rw").getFD()));
         }
@@ -544,7 +548,7 @@ public class Indexer implements Runnable {
 
         /* the file with the (partial index id, tf) for each term */
         BufferedReader termTfReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/term_tf"), "ASCII"));
+                new FileInputStream(__INDEX_TMP_PATH__ + "/term_tf"), "ASCII"));
 
         /* read each line of the file that has the (partial index id, tf). Each line corresponds to
         the same line in the final vocabulary file, thus both lines refer to the same term */
@@ -565,9 +569,6 @@ public class Indexer implements Runnable {
         }
         postingOut.close();
         termTfReader.close();
-
-        /* finally delete temporary file */
-        deleteDir(new File(__INDEX_PATH__ + "/term_tf"));
     }
 
     /* DOCUMENTS FILE => documents.idx (Random Access File)
@@ -751,9 +752,9 @@ public class Indexer implements Runnable {
         /* open the required files: documents, tf, doc_size */
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/doc_tf"), "UTF-8"));
+                new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
         BufferedReader docSizeReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/doc_size"), "UTF-8"));
+                new FileInputStream(__INDEX_TMP_PATH__ + "/doc_size"), "UTF-8"));
 
         int[] tfs; //the TFs for each document
         double weight; //the weight of each document
@@ -797,8 +798,8 @@ public class Indexer implements Runnable {
         __DOCUMENTS__ = null;
 
         /* delete files */
-        deleteDir(new File(__INDEX_PATH__ + "/doc_size"));
-        deleteDir(new File(__INDEX_PATH__ + "/doc_tf"));
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
 
         Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
@@ -871,20 +872,27 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * Deletes the index folder.
+     * Deletes the index and index_tmp directories.
      * @throws IOException
      */
     public void deleteIndex() throws IOException {
         deleteDir(new File(__INDEX_PATH__ + "/"));
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
     }
 
     /**
-     * Returns true if index directory exists and is empty, false otherwise.
+     * Returns true if index and index_tmp directories exist and are empty, false otherwise.
      * @return
      */
     public boolean isIndexDirEmpty() {
         File file = new File(__INDEX_PATH__);
         File[] fileList = file.listFiles();
+        if (fileList != null && fileList.length != 0) {
+            return false;
+        }
+
+        file = new File(__INDEX_TMP_PATH__);
+        fileList = file.listFiles();
         return fileList == null || fileList.length == 0;
     }
 

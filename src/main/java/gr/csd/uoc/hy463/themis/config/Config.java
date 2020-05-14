@@ -163,6 +163,15 @@ public class Config {
     }
 
     /**
+     * a property about the temporary index path
+     *
+     * @return
+     */
+    public String getIndexTmpPath() {
+        return __PROP__.getProperty("INDEX_TMP_PATH");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return

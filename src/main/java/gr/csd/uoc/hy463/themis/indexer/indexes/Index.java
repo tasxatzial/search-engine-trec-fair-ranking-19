@@ -57,7 +57,7 @@ public class Index {
     private Config __CONFIG__;  // configuration options
 
     // The path of index
-    private String __INDEX_PATH__ = null;
+    private String __INDEX_TMP_PATH__ = null;
     // Filenames of indexes
     private String __VOCABULARY_FILENAME__ = null;
     private String __POSTINGS_FILENAME__ = null;
@@ -81,7 +81,7 @@ public class Index {
     private void init() {
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
-        __INDEX_PATH__ = __CONFIG__.getIndexPath();
+        __INDEX_TMP_PATH__ = __CONFIG__.getIndexTmpPath();
         __INDEX__ = new HashMap<>();
     }
 
@@ -109,11 +109,11 @@ public class Index {
      * @return
      */
     public boolean dump() throws IOException {
-        Themis.print("Dumping in: " + __INDEX_PATH__ + "/" + id + "/ ...");
+        Themis.print("Dumping in: " + __INDEX_TMP_PATH__ + "/" + id + "/ ...");
         String vocabularyName;
         String postingsName;
-        vocabularyName = __INDEX_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
-        postingsName = __INDEX_PATH__ + "/" + id + "/" + __POSTINGS_FILENAME__;
+        vocabularyName = __INDEX_TMP_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
+        postingsName = __INDEX_TMP_PATH__ + "/" + id + "/" + __POSTINGS_FILENAME__;
         Files.createDirectories(Paths.get(vocabularyName).getParent());
         Files.createDirectories(Paths.get(postingsName).getParent());
         dumpVocabulary(vocabularyName);
