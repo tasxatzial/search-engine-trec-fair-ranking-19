@@ -135,12 +135,7 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            if (search != null && !search.unloadIndex()) {
-                view.showError("Failed to unload previous index");
-                return;
-            }
             try {
-                search = null;
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -162,6 +157,16 @@ public class Themis {
                         view.showError("Failed to delete previous index");
                         return;
                     }
+                    try {
+                        if (search != null) {
+                            search.unloadIndex();
+                        }
+                    } catch (IOException ex) {
+                        __LOGGER__.error(ex.getMessage());
+                        view.showError("Failed to unload previous index");
+                        return;
+                    }
+                    search = null;
                     createIndex.createIndex();
                 }
             }
@@ -191,18 +196,23 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
-            if (search != null && !search.unloadIndex()) {
+            try {
+                if (search != null) {
+                    search.unloadIndex();
+                }
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
                 view.showError("Failed to unload previous index");
                 return;
             }
             try {
                 view.initIndexView();
-                createIndex = null;
                 search = new Search();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 view.showError("Failed to initialize indexer");
             }
+            createIndex = null;
             search.loadIndex();
         }
     }

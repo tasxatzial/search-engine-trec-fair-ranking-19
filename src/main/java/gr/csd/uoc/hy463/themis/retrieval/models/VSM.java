@@ -90,7 +90,7 @@ public class VSM extends ARetrievalModel {
             queryNorm += queryWeights[i] * queryWeights[i];
         }
         queryNorm = Math.sqrt(queryNorm);
-        
+
         //weights of terms for each document
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < termsDocInfo.size(); i++) {

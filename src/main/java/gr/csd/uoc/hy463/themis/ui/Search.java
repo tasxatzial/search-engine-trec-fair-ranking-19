@@ -66,14 +66,8 @@ public class Search {
         return _indexer.loaded();
     }
 
-    public boolean unloadIndex() {
-        try {
-            _indexer.unload();
-        } catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
-            return false;
-        }
-        return true;
+    public void unloadIndex() throws IOException {
+        _indexer.unload();
     }
 
     public String getTask() {
