@@ -952,10 +952,11 @@ public class Indexer implements Runnable {
 
         for (String term : terms) {
             termValue = __VOCABULARY__.get(term);
+            termDocInfo = new ArrayList<>();
             if (termValue == null) {
+                docIds.add(termDocInfo);
                 continue;
             }
-            termDocInfo = new ArrayList<>();
             postingPointer = termValue.getR();
             for (int i = 0; i < termValue.getL(); i++) {
                 __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
@@ -1134,9 +1135,13 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public int[] getFreq(String term) throws IOException {
-        int df = __VOCABULARY__.get(term).getL();
+        Pair<Integer, Long> vocabularyValue = __VOCABULARY__.get(term);
+        if (vocabularyValue == null) {
+            return new int[0];
+        }
+        int df = vocabularyValue.getL();
         int[] freq = new int[df];
-        long postingPointer = __VOCABULARY__.get(term).getR();
+        long postingPointer = vocabularyValue.getR();
         for (int i = 0; i < df; i++) {
             __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE);
             freq[i] = __POSTINGS__.readInt();

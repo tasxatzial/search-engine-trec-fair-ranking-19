@@ -86,10 +86,7 @@ public class Existential extends ARetrievalModel {
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //apply stemming, stopwords
-        List<String> editedTerms = new ArrayList<>();
-        for (int i = 0; i < query.size(); i++) {
-            editedTerms = indexer.preprocessTerms(terms);
-        }
+        List<String> editedTerms = indexer.preprocessTerms(terms);
 
         return  indexer.getDocInfo(editedTerms, docInfoProps);
     }

@@ -54,10 +54,7 @@ public class VSM extends ARetrievalModel {
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //apply stemming, stopwords
-        List<String> editedTerms = new ArrayList<>();
-        for (int i = 0; i < query.size(); i++) {
-            editedTerms = indexer.preprocessTerms(terms);
-        }
+        List<String> editedTerms = indexer.preprocessTerms(terms);
 
         //get the docInfo objects associated with each term
         termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
@@ -83,7 +80,7 @@ public class VSM extends ARetrievalModel {
         double[] queryWeights = new double[editedTerms.size()];
         for (int i = 0; i < editedTerms.size(); i++) {
             double tf = (0.0 + queryFreqs.get(editedTerms.get(i))) / queryMaxFreq;
-            double idf = Math.log((0.0 + totalArticles) / dfs[i]) / Math.log(2);
+            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
             queryWeights[i] = tf * idf;
         }
 
@@ -93,14 +90,12 @@ public class VSM extends ARetrievalModel {
             queryNorm += queryWeights[i] * queryWeights[i];
         }
         queryNorm = Math.sqrt(queryNorm);
-
-
+        
         //weights of terms for each document
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < termsDocInfo.size(); i++) {
-            String term = editedTerms.get(i);
-            int[] freqs = indexer.getFreq(term);
-            double idf = Math.log((0.0 + totalArticles) / dfs[i]) / Math.log(2);
+            int[] freqs = indexer.getFreq(editedTerms.get(i));
+            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
             for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = termsDocInfo.get(i).get(j);
                 double[] weights = documentsWeights.get(docInfo);
