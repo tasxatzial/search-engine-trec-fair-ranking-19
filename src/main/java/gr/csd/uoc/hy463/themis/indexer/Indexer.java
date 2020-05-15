@@ -1128,6 +1128,23 @@ public class Indexer implements Runnable {
         return dfs;
     }
 
+    /**
+     * Returns an array of the frequencies of the specified term for every article that this term appears in.
+     * @param term
+     * @return
+     * @throws IOException
+     */
+    public int[] getFreq(String term) throws IOException {
+        int df = __VOCABULARY__.get(term).getL();
+        int[] freq = new int[df];
+        long postingPointer = __VOCABULARY__.get(term).getR();
+        for (int i = 0; i < df; i++) {
+            __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE);
+            freq[i] = __POSTINGS__.readInt();
+        }
+        return freq;
+    }
+
     public String getRetrievalModel() {
         return __CONFIG__.getRetrievalModel();
     }

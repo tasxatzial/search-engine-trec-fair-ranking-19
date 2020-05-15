@@ -99,6 +99,39 @@ public class VSM extends ARetrievalModel {
         }
         queryNorm = Math.sqrt(queryNorm);
 
+
+        //weights of terms for each document
+        Map<DocInfo, double[]> documentsWeights = new HashMap<>();
+        for (int i = 0; i < termsDocInfo.size(); i++) {
+            String term = editedTerms.get(i);
+            int[] freqs = indexer.getFreq(term);
+            double idf = Math.log((0.0 + totalArticles) / dfs[i]) / Math.log(2);
+            for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
+                DocInfo docInfo = termsDocInfo.get(i).get(j);
+                double[] weights = documentsWeights.get(docInfo);
+                double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
+                if (weights == null) {
+                    weights = new double[editedTerms.size()];
+                    documentsWeights.put(docInfo, weights);
+                }
+                weights[i] += tf * idf;
+            }
+        }
+
+        //calculate the scores
+        for (Map.Entry<DocInfo, double[]> docWeights : documentsWeights.entrySet()) {
+            double documentScore = 0;
+            double[] weights = docWeights.getValue();
+            DocInfo docInfo = docWeights.getKey();
+            double documentNorm = (double) docInfo.getProperty(DocInfo.PROPERTY.WEIGHT);
+            for (int i = 0; i < queryWeights.length; i++) {
+                documentScore += queryWeights[i] * weights[i];
+            }
+            documentScore /= (documentNorm * queryNorm);
+            result.add(new Pair<>(docInfo, documentScore));
+        }
+
+        result.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
         return result;
     }
 }
