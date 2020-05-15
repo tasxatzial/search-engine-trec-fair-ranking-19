@@ -116,7 +116,9 @@ public class Search {
 
         List<QueryTerm> queryTerms = new ArrayList<>();
         for (String term : searchTerms) {
-            queryTerms.add(new QueryTerm(term, 1.0));
+            if (!term.equals("")) {
+                queryTerms.add(new QueryTerm(term, 1.0));
+            }
         }
 
         long startTime = System.nanoTime();

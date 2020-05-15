@@ -902,7 +902,7 @@ public class Indexer implements Runnable {
 
     /* Returns a new list of terms based on the options for stemming and stopwords from the
      * meta_index_info map */
-    private List<String> preprocessTerms(List<String> terms) {
+    public List<String> preprocessTerms(List<String> terms) {
         boolean useStopwords = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
         boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
         List<String> editedTerms = new ArrayList<>();
@@ -1098,6 +1098,34 @@ public class Indexer implements Runnable {
             __LOGGER__.error("Index has not been initialized correctly");
             return "";
         }
+    }
+
+    /**
+     * Returns the total number of articles of this index
+     * @return
+     */
+    public int getTotalArticles() {
+        if (__META_INDEX_INFO__ != null) {
+            return Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        }
+        return 0;
+    }
+
+    /**
+     * Returns an array of the document frequencies (df) for each term in the specified list.
+     * @param terms
+     * @return
+     */
+    public int[] getDf(List<String> terms) {
+        int[] dfs = new int[terms.size()];
+        Pair<Integer, Long> vocabularyValue;
+        for (int i = 0; i < terms.size(); i++) {
+            vocabularyValue = __VOCABULARY__.get(terms.get(i));
+            if (vocabularyValue != null) {
+                dfs[i] = vocabularyValue.getL();
+            }
+        }
+        return dfs;
     }
 
     public String getRetrievalModel() {
