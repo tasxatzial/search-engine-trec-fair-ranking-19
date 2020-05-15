@@ -44,12 +44,12 @@ public class DocInfo {
 
     public enum PROPERTY {
         TITLE,
+        ABSTRACT,
         AUTHORS_NAMES,
         AUTHORS_IDS,
-        AVG_AUTHOR_RANK,
         YEAR,
         JOURNAL_NAME,
-        ABSTRACT,
+        AVG_AUTHOR_RANK,
         ENTITIES,
         FIELDS_OF_STUDY,
         VENUE,

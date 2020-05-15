@@ -36,6 +36,7 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 
@@ -117,13 +118,19 @@ public class Search {
 
         long startTime = System.nanoTime();
         searchResults = model.getRankedResults(queryTerms, docInfoProps);
-        Themis.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n\n");
+        Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+        Themis.print("Found " + searchResults.size() + " results\n\n");
+
+        List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfoProps);
+        Collections.sort(sortedProps);
 
         /* print the results */
         for (Pair<Object, Double> pair : searchResults) {
             DocInfo docInfo = (DocInfo) pair.getL();
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
-            docInfoProps.forEach(prop -> Themis.print(prop.toString() + ": " + docInfo.getProperty(prop) + "\n"));
+            for (DocInfo.PROPERTY docInfoProp : sortedProps) {
+                Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+            }
             if (!docInfoProps.isEmpty()) {
                 Themis.print("\n");
             }
