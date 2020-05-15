@@ -1112,6 +1112,17 @@ public class Indexer implements Runnable {
     }
 
     /**
+     * Returns the avgdl used by the okapi bm25 retrieval model
+     * @return
+     */
+    public double getAvgdl() {
+        if (__META_INDEX_INFO__ != null) {
+            return Double.parseDouble(__META_INDEX_INFO__.get("avgdl"));
+        }
+        return 0;
+    }
+
+    /**
      * Returns an array of the document frequencies (df) for each term in the specified list.
      * @param terms
      * @return

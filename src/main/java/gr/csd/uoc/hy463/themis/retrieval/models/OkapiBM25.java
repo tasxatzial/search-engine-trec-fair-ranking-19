@@ -28,8 +28,10 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import java.util.List;
-import java.util.Set;
+
+import javax.print.Doc;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Implementation of the OkapiBM25 retrieval model
@@ -37,19 +39,70 @@ import java.util.Set;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class OkapiBM25 extends ARetrievalModel {
+    private double k1 = 2.0;
+    private double b = 0.75;
 
     public OkapiBM25(Indexer index) {
         super(index);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        List<String> terms = new ArrayList<>(query.size());
+        List<Pair<Object, Double>> result = new ArrayList<>();
+        List<List<DocInfo>> termsDocInfo;
+        int totalArticles = indexer.getTotalArticles();
+        double avgdl = indexer.getAvgdl();
+
+        //collect the terms
+        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+
+        //apply stemming, stopwords
+        List<String> editedTerms = indexer.preprocessTerms(terms);
+
+        //get the docInfo objects associated with each term
+        termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+
+        //compute the idf for each term of the query
+        double[] idfs = new double[editedTerms.size()];
+        int[] dfs = indexer.getDf(editedTerms);
+        for (int i = 0; i < editedTerms.size(); i++) {
+            idfs[i] = Math.log((totalArticles - dfs[i] + 0.5) / (dfs[i] + 0.5));
+        }
+
+        //frequencies of each term in each document
+        Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
+        for (int i = 0; i < termsDocInfo.size(); i++) {
+            int[] termFreqs = indexer.getFreq(editedTerms.get(i));
+            for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
+                DocInfo docInfo = termsDocInfo.get(i).get(j);
+                int[] docFreqs = documentsFreqs.get(docInfo);
+                if (docFreqs == null) {
+                    docFreqs = new int[editedTerms.size()];
+                    documentsFreqs.put(docInfo, docFreqs);
+                }
+                docFreqs[i] = termFreqs[j];
+            }
+        }
+        
+        //calculate the scores
+        for (Map.Entry<DocInfo, int[]> docFreqs : documentsFreqs.entrySet()) {
+            double documentScore = 0;
+            int[] freqs = docFreqs.getValue();
+            DocInfo docInfo = docFreqs.getKey();
+            int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.LENGTH);
+            for (int i = 0; i < editedTerms.size(); i++) {
+                documentScore += idfs[i] * freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl));
+            }
+            result.add(new Pair<>(docInfo, documentScore));
+        }
+
+        result.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+        return result;
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
+        return getRankedResults(query, docInfoProps).subList(0, topk);
     }
-
 }
