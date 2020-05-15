@@ -931,7 +931,6 @@ public class Indexer implements Runnable {
         if (!loaded()) {
             return null;
         }
-        List<String> editedTerms = preprocessTerms(terms);
         List<List<DocInfo>> docIds = new ArrayList<>();
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
@@ -951,7 +950,7 @@ public class Indexer implements Runnable {
         boolean hasAuthorIds = props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
         boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
 
-        for (String term : editedTerms) {
+        for (String term : terms) {
             termValue = __VOCABULARY__.get(term);
             if (termValue == null) {
                 continue;

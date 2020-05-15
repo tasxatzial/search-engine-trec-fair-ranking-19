@@ -56,13 +56,19 @@ public class Existential extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
-        List<String> terms = new ArrayList<>();
+        List<String> terms = new ArrayList<>(query.size());
         List<Pair<Object, Double>> result = new ArrayList<>();
-        List<List<DocInfo>> docInfo_list;
+        List<List<DocInfo>> termsDocInfo;
 
+        //apply stemming, stopwords
+        List<String> editedTerms = new ArrayList<>();
+        for (int i = 0; i < query.size(); i++) {
+            editedTerms = indexer.preprocessTerms(terms);
+        }
+        
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-        docInfo_list = indexer.getDocInfo(terms, docInfoProps);
-        for (List<DocInfo> termDocInfo : docInfo_list) {
+        termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+        for (List<DocInfo> termDocInfo : termsDocInfo) {
             for (DocInfo docInfo : termDocInfo) {
                 result.add(new Pair<>(docInfo, 1.0));
                 if (result.size() == topk) {
