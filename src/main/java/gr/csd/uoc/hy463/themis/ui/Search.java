@@ -122,7 +122,7 @@ public class Search {
         }
 
         long startTime = System.nanoTime();
-        searchResults = model.getRankedResults(queryTerms, docInfoProps, topk);
+        searchResults = model.getRankedResults(queryTerms, docInfoProps);
         Themis.print("Search took: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n\n");
 
         /* print the results */

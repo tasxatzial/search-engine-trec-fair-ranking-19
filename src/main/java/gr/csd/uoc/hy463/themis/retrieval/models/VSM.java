@@ -45,11 +45,6 @@ public class VSM extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return getRankedResults(query, docInfoProps,-1);
-    }
-
-    @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
         List<String> terms = new ArrayList<>(query.size());
         List<Pair<Object, Double>> result = new ArrayList<>();
         List<List<DocInfo>> termsDocInfo;
@@ -133,5 +128,10 @@ public class VSM extends ARetrievalModel {
 
         result.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
         return result;
+    }
+
+    @Override
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
+        return getRankedResults(query, docInfoProps).subList(0, topk);
     }
 }
