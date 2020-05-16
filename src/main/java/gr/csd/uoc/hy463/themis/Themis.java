@@ -76,15 +76,11 @@ public class Themis {
      * @param text
      */
     public static void print(String text) {
-        try {
-            if (view == null) {
-                System.out.print(text);
-            }
-            else {
-                view.print(text);
-            }
-        } catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
+        if (view == null) {
+            System.out.print(text);
+        }
+        else {
+            view.print(text);
         }
     }
 
