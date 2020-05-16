@@ -236,17 +236,6 @@ public class View extends JFrame {
     }
 
     /**
-     * Shows an error dialog
-     * @param text
-     */
-    public void showError(String text) {
-        JOptionPane.showMessageDialog(this,
-                text,
-                "Inane error",
-                JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
      * Returns the "create index" menu item
      * @return
      */

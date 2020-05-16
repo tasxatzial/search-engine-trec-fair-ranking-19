@@ -13,6 +13,10 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
+ * enabled by passing swing_window as first argument.
+ */
 public class Themis {
     private static final Logger __LOGGER__ = LogManager.getLogger(Themis.class);
 
@@ -21,15 +25,17 @@ public class Themis {
     private static View view;
 
     public static void main(String[] args) throws IOException {
-        if (args.length > 0 && args[0].equals("swing_window")) {
+        if (args.length > 0 && args[0].equals("swing_window")) { //GUI version
             view = new View();
 
             /* close window button listener */
             view.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    if ((createIndex != null && createIndex.isRunning() && !view.showYesNoMessage(createIndex.getTask())) ||
-                            (search != null && search.isRunning() && !view.showYesNoMessage(search.getTask()))) {
+                    if ((createIndex != null && createIndex.isRunning() &&
+                            !view.showYesNoMessage(createIndex.get_task() + " is in progress. Quit?")) ||
+                        (search != null && search.isRunning() &&
+                            !view.showYesNoMessage(search.get_task() + " is in progress. Quit?"))) {
                         view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     } else {
                         view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -59,11 +65,9 @@ public class Themis {
 
             view.setVisible(true);
         }
-        else {
-            //change the code here
+        else { //non GUI version
             createIndex = new CreateIndex();
-            createIndex.deleteIndex();
-            createIndex.createIndex();
+            createIndex.createIndex(true);
         }
     }
 
@@ -85,19 +89,6 @@ public class Themis {
     }
 
     /**
-     * Displays a swing window showing an error text message.
-     * @param text
-     */
-    public static void showError(String text) {
-        if (view == null) {
-            System.out.println(text);
-        }
-        else {
-            view.showError(text);
-        }
-    }
-
-    /**
      * Clears the results print area.
      */
     public static void clearResults() {
@@ -109,22 +100,18 @@ public class Themis {
     private static class searchButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
-                Set<DocInfo.PROPERTY> props = new HashSet<>();
-                props.add(DocInfo.PROPERTY.PAGERANK);
-                props.add(DocInfo.PROPERTY.WEIGHT);
-                props.add(DocInfo.PROPERTY.LENGTH);
-                props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-                props.add(DocInfo.PROPERTY.YEAR);
-                props.add(DocInfo.PROPERTY.TITLE);
-                props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-                props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-                props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-                props.add(DocInfo.PROPERTY.MAX_TF);
-                search.search(view.get_searchField().getText(), props, -1);
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-            }
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            props.add(DocInfo.PROPERTY.PAGERANK);
+            props.add(DocInfo.PROPERTY.WEIGHT);
+            props.add(DocInfo.PROPERTY.LENGTH);
+            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+            props.add(DocInfo.PROPERTY.YEAR);
+            props.add(DocInfo.PROPERTY.TITLE);
+            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+            props.add(DocInfo.PROPERTY.MAX_TF);
+            search.search(view.get_searchField().getText(), props, -1);
         }
     }
 
@@ -135,41 +122,35 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
+            view.initIndexView();
             try {
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to initialize indexer");
+                print("Failed to initialize indexer\n");
                 return;
             }
-            if (createIndex.isIndexDirEmpty()) {
-                view.initIndexView();
-                createIndex.createIndex();
-            }
-            else {
-                boolean delete = view.showYesNoMessage("Delete previous index folder?");
-                if (delete) {
-                    try {
-                        view.initIndexView();
-                        createIndex.deleteIndex();
-                    } catch (IOException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        view.showError("Failed to delete previous index");
-                        return;
-                    }
-                    try {
-                        if (search != null) {
-                            search.unloadIndex();
-                        }
-                    } catch (IOException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        view.showError("Failed to unload previous index");
-                        return;
-                    }
-                    search = null;
-                    createIndex.createIndex();
+            boolean deletePreviousIndex = false;
+            if (!createIndex.isIndexDirEmpty()) {
+                deletePreviousIndex = view.showYesNoMessage("Delete previous index folders?");
+                if (!deletePreviousIndex) {
+                    createIndex = null;
+                    return;
                 }
             }
+            try {
+                if (search != null) {
+                    search.unloadIndex();
+                }
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to unload previous index\n");
+                return;
+            }
+            finally {
+                search = null;
+            }
+            createIndex.createIndex(deletePreviousIndex);
         }
     }
 
@@ -180,11 +161,12 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
+            view.initSearchView();
             if (search == null || !search.isIndexLoaded()) {
-                view.showError("Index is not loaded!");
+                __LOGGER__.error("Index is not loaded!");
+                print("Index is not loaded!\n");
                 return;
             }
-            view.initSearchView();
             view.get_searchButton().addActionListener(new searchButtonListener());
         }
     }
@@ -196,21 +178,25 @@ public class Themis {
             if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
                 return;
             }
+            view.initIndexView();
             try {
                 if (search != null) {
                     search.unloadIndex();
                 }
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to unload previous index");
+                print("Failed to unload previous index\n");
                 return;
             }
+            finally {
+                search = null;
+            }
             try {
-                view.initIndexView();
                 search = new Search();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                view.showError("Failed to initialize indexer");
+                print("Failed to initialize indexer\n");
+                return;
             }
             createIndex = null;
             search.loadIndex();

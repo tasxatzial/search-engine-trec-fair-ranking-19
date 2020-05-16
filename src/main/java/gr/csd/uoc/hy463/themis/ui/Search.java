@@ -36,7 +36,6 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 
@@ -49,6 +48,10 @@ import java.util.*;
 public class Search {
     private static final Logger __LOGGER__ = LogManager.getLogger(Search.class);
     private Indexer _indexer;
+    private enum TASK {
+        LOAD_INDEX, SEARCH
+    }
+    private TASK _task = null;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -58,8 +61,18 @@ public class Search {
         if (isRunning()) {
             return;
         }
-        _indexer.setTask(Indexer.TASK.LOAD_INDEX);
-        Thread runnableIndexer = new Thread(_indexer);
+        Thread runnableIndexer = new Thread(() -> {
+            _task = TASK.LOAD_INDEX;
+            try {
+                _indexer.load();
+            } catch (IOException e) {
+                Themis.print("Failed to load index\n");
+                __LOGGER__.error(e.getMessage());
+            }
+            finally {
+                _task = null;
+            }
+        });
         runnableIndexer.start();
     }
 
@@ -71,14 +84,6 @@ public class Search {
         _indexer.unload();
     }
 
-    public String getTask() {
-        Indexer.TASK task = _indexer.getTask();
-        if (task != null) {
-            return task.toString();
-        }
-        return null;
-    }
-
     /**
      * Searches for a query. The results should contain at least the document information specified by
      * the docInfoProps.
@@ -87,7 +92,7 @@ public class Search {
      * @param topk Return the topk documents
      * @throws IOException
      */
-    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
+    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int topk) {
         Themis.clearResults();
         String retrievalModel = _indexer.getRetrievalModel();
         ARetrievalModel model;
@@ -105,10 +110,10 @@ public class Search {
                 return;
         }
 
-        /* find the terms in the query string and add them into a set */
-        List<Pair<Object, Double>> searchResults;
-        String[] searchTerms = query.split(" "); //the simplest split. suffices for now
+        /* the simplest split based on spaces, suffices for now */
+        String[] searchTerms = query.split(" ");
 
+        /* create the list of query terms */
         List<QueryTerm> queryTerms = new ArrayList<>();
         for (String term : searchTerms) {
             if (!term.equals("")) {
@@ -116,32 +121,48 @@ public class Search {
             }
         }
 
-        long startTime = System.nanoTime();
-        searchResults = model.getRankedResults(queryTerms, docInfoProps);
-        Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
-        Themis.print("Found " + searchResults.size() + " results\n\n");
-
-        List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfoProps);
-        Collections.sort(sortedProps);
-
-        /* print the results */
-        for (Pair<Object, Double> pair : searchResults) {
-            DocInfo docInfo = (DocInfo) pair.getL();
-            Themis.print("DOC_ID: " + docInfo.getId() + "\n");
-            for (DocInfo.PROPERTY docInfoProp : sortedProps) {
-                Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+        Thread runnableSearch = new Thread(() -> {
+            List<Pair<Object, Double>> searchResults;
+            long startTime = System.nanoTime();
+            _task = TASK.SEARCH;
+            try {
+                //call the model and retrieve the results
+                searchResults = model.getRankedResults(queryTerms, docInfoProps);
+            } catch (IOException e) {
+                __LOGGER__.error(e.getMessage());
+                Themis.print("Search failed\n");
+                return;
             }
-            if (!docInfoProps.isEmpty()) {
-                Themis.print("\n");
+            finally {
+                _task = null;
             }
-        }
+            Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+            Themis.print("Found " + searchResults.size() + " results\n\n");
+
+            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfoProps);
+            Collections.sort(sortedProps);
+
+            /* print the results */
+            for (Pair<Object, Double> pair : searchResults) {
+                DocInfo docInfo = (DocInfo) pair.getL();
+                Themis.print("DOC_ID: " + docInfo.getId() + "\n");
+                for (DocInfo.PROPERTY docInfoProp : sortedProps) {
+                    Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+                }
+                if (!docInfoProps.isEmpty()) {
+                    Themis.print("\n");
+                }
+            }
+        });
+        runnableSearch.start();
+
     }
 
     public boolean isRunning() {
-        return _indexer.isRunning();
+        return _task != null;
     }
 
-    public void stop() {
-        _indexer.stop();
+    public String get_task() {
+        return _task.toString();
     }
 }

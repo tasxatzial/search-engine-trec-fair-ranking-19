@@ -65,16 +65,13 @@ import org.apache.logging.log4j.Logger;
  *
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
-public class Indexer implements Runnable {
-    public enum TASK {
-        CREATE_INDEX, LOAD_INDEX
-    };
-
-    private TASK _task;
+public class Indexer {
     private final AtomicBoolean running = new AtomicBoolean(false);
-
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
-    private Config __CONFIG__;  // configuration options
+
+    // configuration options
+    private Config __CONFIG__;
+
     // The file path of indexes
     private String __INDEX_PATH__ = null;
     private String __INDEX_TMP_PATH__ = null;
@@ -191,8 +188,6 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
-        unload();
-
         if (__CONFIG__.getUseStemmer()) {
             Stemmer.Initialize();
         }
@@ -337,7 +332,7 @@ public class Indexer implements Runnable {
         try {
             deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
         } catch (IOException e) {
-            Themis.showError("Error deleting tmp index");
+            Themis.print("Error deleting tmp index\n");
         }
 
         Themis.print(">>> End of indexing\n");
@@ -368,7 +363,7 @@ public class Indexer implements Runnable {
                 deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
             }
         } catch (IOException e) {
-            Themis.showError("Error deleting partial vocabularies");
+            Themis.print("Error deleting partial vocabularies\n");
         }
     }
 
@@ -525,7 +520,7 @@ public class Indexer implements Runnable {
                 deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
             }
         } catch (IOException e) {
-            Themis.showError("Error deleting partial vocabularies");
+            Themis.print("Error deleting partial vocabularies\n");
         }
     }
 
@@ -838,7 +833,6 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public boolean load() throws IOException {
-        unload();
         if (!hasIndex()) {
             __LOGGER__.error("Index is not constructed correctly!");
             Themis.print("Index is not constructed correctly!\n");
@@ -880,8 +874,10 @@ public class Indexer implements Runnable {
      * @throws IOException
      */
     public void deleteIndex() throws IOException {
+        Themis.print("Deleting previous index...");
         deleteDir(new File(__INDEX_PATH__ + "/"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
+        Themis.print("DONE\n");
     }
 
     /**
@@ -1160,42 +1156,11 @@ public class Indexer implements Runnable {
         return freq;
     }
 
+    /**
+     * Returns the current retrieval model
+     * @return
+     */
     public String getRetrievalModel() {
         return __CONFIG__.getRetrievalModel();
-    }
-
-    public void setTask(TASK task) {
-        _task = task;
-    }
-
-    public TASK getTask() {
-        return _task;
-    }
-
-    public boolean isRunning() {
-        return running.get() && _task != null;
-    }
-
-    @Override
-    public void run() {
-        running.set(true);
-        try {
-            if (_task == TASK.CREATE_INDEX) {
-                index();
-            }
-            else if (_task == TASK.LOAD_INDEX) {
-                load();
-            }
-        } catch (IOException e) {
-            __LOGGER__.error(e.getMessage());
-            Themis.showError("Error");
-        } finally {
-            running.set(false);
-            _task = null;
-        }
-    }
-
-    public void stop()  {
-        running.set(false);
     }
 }
