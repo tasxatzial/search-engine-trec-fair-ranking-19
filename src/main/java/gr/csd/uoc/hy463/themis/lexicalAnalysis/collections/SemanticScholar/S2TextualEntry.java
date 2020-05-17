@@ -48,6 +48,7 @@ public class S2TextualEntry {
     private String __VENUE__ = null;
     private String __JOURNAL_NAME__ = null;
     private List<String> __SOURCES__ = null;
+    private List<String> __CITATIONS__ = null;
 
     public String getId() {
         return __ID__;
@@ -129,6 +130,14 @@ public class S2TextualEntry {
         this.__SOURCES__ = sources;
     }
 
+    public List<String> getCitations() {
+        return __CITATIONS__;
+    }
+
+    public void setCitations(List<String> citations) {
+        this.__CITATIONS__ = citations;
+    }
+
     /**
      *
      * @return
@@ -208,6 +217,21 @@ public class S2TextualEntry {
         }
         if (__YEAR__ != 0) {
             sb.append("Year: ").append(__YEAR__).append("\n");
+        }
+
+        if (__CITATIONS__ != null) {
+            boolean first = true;
+
+            sb.append("Citations IDs:");
+            for (String citation : __CITATIONS__) {
+                if (!first) {
+                    sb.append(",");
+                } else {
+                    first = false;
+                }
+                sb.append(citation); // get the name
+            }
+            sb.append("\n");
         }
 
         return sb.toString();

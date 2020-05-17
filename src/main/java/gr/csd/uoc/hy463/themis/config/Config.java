@@ -76,6 +76,14 @@ public class Config {
     }
 
     /**
+     * a property about the temporary index path
+     * @return
+     */
+    public String getIndexTmpPath() {
+        return __PROP__.getProperty("INDEX_TMP_PATH");
+    }
+
+    /**
      * a property about the dataset path
      *
      * @return
@@ -131,6 +139,33 @@ public class Config {
     }
 
     /**
+     * Returns the weight for the retrieval model
+     *
+     * @return
+     */
+    public double getRetrievalModelWeight() {
+        return Double.parseDouble(__PROP__.getProperty("RETRIEVAL_MODEL_WEIGHT"));
+    }
+
+    /**
+     * Returns the weight for the publications pagerank weight
+     *
+     * @return
+     */
+    public double getPagerankPublicationsWeight() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_PUBLICATIONS_WEIGHT"));
+    }
+
+    /**
+     * Returns the weight for the authors pagerank weight
+     *
+     * @return
+     */
+    public double getPagerankAuthorsWeight() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHOR_WEIGHT"));
+    }
+
+    /**
      * Returns if we should user the stemmer
      *
      * @return
@@ -149,6 +184,24 @@ public class Config {
     }
 
     /**
+     * Returns if we should use the titles
+     *
+     * @return
+     */
+    public boolean getUseTitles() {
+        return Boolean.parseBoolean(__PROP__.getProperty("TITLES_ENABLED"));
+    }
+
+    /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getTitlesFileName() {
+        return __PROP__.getProperty("TITLES_PATH");
+    }
+
+    /**
      * number of max number of files per each partial index
      *
      * @return
@@ -163,12 +216,30 @@ public class Config {
     }
 
     /**
-     * a property about the temporary index path
+     * Returns the path to the compressed word2vec model
      *
      * @return
      */
-    public String getIndexTmpPath() {
-        return __PROP__.getProperty("INDEX_TMP_PATH");
+    public String getWord2VecModelFileName() {
+        return __PROP__.getProperty("WORD2VEC_FILENAME");
+    }
+
+    /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getGloveModelFileName() {
+        return __PROP__.getProperty("GLOVE_FILENAME");
+    }
+
+    /**
+     * Returns the path to the compressed glove model
+     *
+     * @return
+     */
+    public String getJudgmentsFileName() {
+        return __PROP__.getProperty("JUDGMENTS_PATH");
     }
 
     /**
