@@ -44,8 +44,9 @@ import java.util.Set;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class Existential extends ARetrievalModel {
-    private List<QueryTerm> _query = new ArrayList<>();
     private List<Pair<Object, Double>> _results;
+    private Set<DocInfo.PROPERTY> _docInfoProps = new HashSet<>();
+    private List<QueryTerm> _query = new ArrayList<>();
 
     public Existential(Indexer index) {
         super(index);
@@ -54,6 +55,7 @@ public class Existential extends ARetrievalModel {
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
         boolean hasSameQuery = true;
+        boolean hasSameProps = true;
 
         //check if we have the same query second time in a row
         if (query.size() == _query.size()) {
@@ -68,7 +70,26 @@ public class Existential extends ARetrievalModel {
             hasSameQuery = false;
         }
 
-        //if the query is the same, we only need to get the new document fields.
+        //check if we have the same props second  time in a row
+        if (docInfoProps.size() == _docInfoProps.size()) {
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
+            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
+            props1.removeAll(props2);
+            props2.removeAll(props1);
+            if (!props1.isEmpty() || !props2.isEmpty()) {
+                hasSameProps = false;
+            }
+        }
+        else {
+            hasSameProps = false;
+        }
+
+        //return the previous results if both the query and the requested props are unchanged
+        if (hasSameProps && hasSameQuery) {
+            return _results;
+        }
+
+        //else if the query is the same, we only need to get the new document fields.
         if (hasSameQuery) {
             List<DocInfo> docInfoList = new ArrayList<>();
             _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
@@ -88,12 +109,17 @@ public class Existential extends ARetrievalModel {
             _query = query;
             _results = results;
         }
+        _docInfoProps = docInfoProps;
 
         return _results;
     }
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+        if (endDoc == -1) {
+            return getRankedResults(query, docInfoProps);
+        }
+
         List<Pair<Object, Double>> result = new ArrayList<>();
         List<String> terms = new ArrayList<>(query.size());
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));

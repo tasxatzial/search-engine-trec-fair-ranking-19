@@ -107,7 +107,7 @@ public class Themis {
             props.add(DocInfo.PROPERTY.AUTHORS_IDS);
             props.add(DocInfo.PROPERTY.JOURNAL_NAME);
             props.add(DocInfo.PROPERTY.MAX_TF);
-            search.search(view.get_searchField().getText(), props, 0, 0);
+            search.search(view.get_searchField().getText(), props, 0, -1);
         }
     }
 

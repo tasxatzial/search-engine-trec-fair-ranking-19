@@ -124,7 +124,7 @@ public class Search {
             _task = TASK.SEARCH;
             try {
                 //call the model and retrieve the results
-                searchResults = _model.getRankedResults(queryTerms, docInfoProps);
+                searchResults = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
                 Themis.print("Search failed\n");
