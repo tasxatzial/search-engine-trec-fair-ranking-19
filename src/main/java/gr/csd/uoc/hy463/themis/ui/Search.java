@@ -48,6 +48,7 @@ import java.util.*;
 public class Search {
     private static final Logger __LOGGER__ = LogManager.getLogger(Search.class);
     private Indexer _indexer;
+    private ARetrievalModel _model;
     private enum TASK {
         LOAD_INDEX, SEARCH
     }
@@ -55,6 +56,18 @@ public class Search {
 
     public Search() throws IOException {
         _indexer = new Indexer();
+        String retrievalModel = _indexer.getRetrievalModel();
+        switch (retrievalModel) {
+            case "Existential":
+                _model = new Existential(_indexer);
+                break;
+            case "BM25":
+                _model = new OkapiBM25(_indexer);
+                break;
+            case "VSM":
+                _model = new VSM(_indexer);
+                break;
+        }
     }
 
     public void loadIndex() {
@@ -89,26 +102,10 @@ public class Search {
      * the docInfoProps.
      * @param query A string that contains some terms
      * @param docInfoProps The document information that we want to be retrieved
-     * @param topk Return the topk documents
      * @throws IOException
      */
-    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int topk) {
+    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int startResult, int endResult) {
         Themis.clearResults();
-        String retrievalModel = _indexer.getRetrievalModel();
-        ARetrievalModel model;
-        switch (retrievalModel) {
-            case "Existential":
-                model = new Existential(_indexer);
-                break;
-            case "BM25":
-                model = new OkapiBM25(_indexer);
-                break;
-            case "VSM":
-                model = new VSM(_indexer);
-                break;
-            default:
-                return;
-        }
 
         /* the simplest split based on spaces, suffices for now */
         String[] searchTerms = query.split(" ");
@@ -127,7 +124,7 @@ public class Search {
             _task = TASK.SEARCH;
             try {
                 //call the model and retrieve the results
-                searchResults = model.getRankedResults(queryTerms, docInfoProps);
+                searchResults = _model.getRankedResults(queryTerms, docInfoProps);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
                 Themis.print("Search failed\n");

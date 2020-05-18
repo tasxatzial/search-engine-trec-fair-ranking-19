@@ -83,7 +83,7 @@ public abstract class ARetrievalModel {
      * @param topk a number (i.e. the top-10 results)
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException;
 
     // We should also add some kind of paging and caching... but maybe in the future
 }

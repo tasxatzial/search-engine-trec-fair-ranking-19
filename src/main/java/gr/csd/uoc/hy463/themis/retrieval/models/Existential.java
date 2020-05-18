@@ -44,6 +44,8 @@ import java.util.Set;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class Existential extends ARetrievalModel {
+    private List<QueryTerm> _query = new ArrayList<>();
+    private List<Pair<Object, Double>> _results;
 
     public Existential(Indexer index) {
         super(index);
@@ -51,25 +53,47 @@ public class Existential extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        List<Pair<Object, Double>> result = new ArrayList<>();
-        List<String> terms = new ArrayList<>(query.size());
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+        boolean hasSameQuery = true;
 
-        //apply stemming, stopwords
-        List<String> editedTerms = indexer.preprocessTerms(terms);
-
-        List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
-        for (List<DocInfo> termDocInfo : termsDocInfo) {
-            for (DocInfo docInfo : termDocInfo) {
-                result.add(new Pair<>(docInfo, 1.0));
+        //check if we have the same query second time in a row
+        if (query.size() == _query.size()) {
+            for (int i = 0; i < query.size(); i++) {
+                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
+                    hasSameQuery = false;
+                    break;
+                }
             }
         }
+        else {
+            hasSameQuery = false;
+        }
 
-        return result;
+        //if the query is the same, we only need to get the new document fields.
+        if (hasSameQuery) {
+            List<DocInfo> docInfoList = new ArrayList<>();
+            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+        }
+        else { //if the query is not the same, just perform a new search
+            List<Pair<Object, Double>> results = new ArrayList<>();
+            List<String> terms = new ArrayList<>(query.size());
+            query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+            List<String> editedTerms = indexer.preprocessTerms(terms); //apply stemming, stopwords
+            List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+            for (List<DocInfo> termDocInfo : termsDocInfo) {
+                for (DocInfo docInfo : termDocInfo) {
+                    results.add(new Pair<>(docInfo, 1.0));
+                }
+            }
+            _query = query;
+            _results = results;
+        }
+
+        return _results;
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> result = new ArrayList<>();
         List<String> terms = new ArrayList<>(query.size());
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
@@ -81,7 +105,7 @@ public class Existential extends ARetrievalModel {
         for (List<DocInfo> termDocInfo : termsDocInfo) {
             for (DocInfo docInfo : termDocInfo) {
                 result.add(new Pair<>(docInfo, 1.0));
-                if (result.size() == topk) {
+                if (result.size() == startDoc) {
                     return result;
                 }
             }

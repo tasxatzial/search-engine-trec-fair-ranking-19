@@ -126,7 +126,8 @@ public class VSM extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
-        return getRankedResults(query, docInfoProps).subList(0, topk);
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+        //return getRankedResults(query, docInfoProps).subList(0, topk);
+        return null;
     }
 }
