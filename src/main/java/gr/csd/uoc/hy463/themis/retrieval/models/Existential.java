@@ -52,8 +52,13 @@ public class Existential extends ARetrievalModel {
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
         List<Pair<Object, Double>> result = new ArrayList<>();
-        List<List<DocInfo>> termsDocInfo = getDocInfo(query, docInfoProps);
+        List<String> terms = new ArrayList<>(query.size());
+        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
+        //apply stemming, stopwords
+        List<String> editedTerms = indexer.preprocessTerms(terms);
+
+        List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
         for (List<DocInfo> termDocInfo : termsDocInfo) {
             for (DocInfo docInfo : termDocInfo) {
                 result.add(new Pair<>(docInfo, 1.0));
@@ -66,8 +71,13 @@ public class Existential extends ARetrievalModel {
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int topk) throws IOException {
         List<Pair<Object, Double>> result = new ArrayList<>();
-        List<List<DocInfo>> termsDocInfo = getDocInfo(query, docInfoProps);
+        List<String> terms = new ArrayList<>(query.size());
+        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
+        //apply stemming, stopwords
+        List<String> editedTerms = indexer.preprocessTerms(terms);
+
+        List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
         for (List<DocInfo> termDocInfo : termsDocInfo) {
             for (DocInfo docInfo : termDocInfo) {
                 result.add(new Pair<>(docInfo, 1.0));
@@ -78,16 +88,5 @@ public class Existential extends ARetrievalModel {
         }
 
         return result;
-    }
-
-    /* applies stopwords/stemming and returns the a list of docInfo lists. */
-    private List<List<DocInfo>> getDocInfo(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        List<String> terms = new ArrayList<>(query.size());
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-
-        //apply stemming, stopwords
-        List<String> editedTerms = indexer.preprocessTerms(terms);
-
-        return  indexer.getDocInfo(editedTerms, docInfoProps);
     }
 }
