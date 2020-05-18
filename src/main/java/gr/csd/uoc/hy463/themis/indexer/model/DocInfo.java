@@ -24,8 +24,11 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.model;
 
+import javax.print.Doc;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class holds any information we might want to communicate with the
@@ -87,6 +90,14 @@ public class DocInfo {
     }
 
     /**
+     * Removes an enum PROPERTY from the properties map
+     * @param prop
+     */
+    public void removeProperty(DocInfo.PROPERTY prop) {
+        props.remove(prop);
+    }
+
+    /**
      * Return the value of the property. Have to cast to appropriate value the
      * result in your code!
      *
@@ -103,6 +114,10 @@ public class DocInfo {
 
     public long getOffset() {
         return offset;
+    }
+
+    public Set<PROPERTY> getProps() {
+        return new HashSet<>(props.keySet());
     }
 
     @Override

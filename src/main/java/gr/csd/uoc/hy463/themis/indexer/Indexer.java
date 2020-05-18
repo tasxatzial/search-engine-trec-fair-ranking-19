@@ -50,6 +50,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
+
 /**
  * Our basic indexer class. This class is responsible for two tasks:
  *
@@ -935,17 +937,6 @@ public class Indexer {
         long postingPointer;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
 
-        boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
-        boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
-        boolean hasMaxTf = props.contains(DocInfo.PROPERTY.MAX_TF);
-        boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
-        boolean hasAvgAuthorRank = props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-        boolean hasYear = props.contains(DocInfo.PROPERTY.YEAR);
-        boolean hasTitle = props.contains(DocInfo.PROPERTY.TITLE);
-        boolean hasAuthorNames = props.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
-        boolean hasAuthorIds = props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
-        boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
-
         for (String term : terms) {
             termValue = __VOCABULARY__.get(term);
             termDocInfo = new ArrayList<>();
@@ -961,117 +952,164 @@ public class Indexer {
                 __DOCUMENTS__.readFully(docId);
                 docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
                 termDocInfo.add(docInfo);
-                if (hasPagerank) {
-                    docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
-                }
-                if (hasWeight) {
-                    if (!hasPagerank) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.WEIGHT_OFFSET);
-                    }
-                    docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
-                }
-                if (hasMaxTf) {
-                    if (!hasWeight) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.MAX_TF_OFFSET);
-                    }
-                    docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, __DOCUMENTS__.readInt());
-                }
-                if (hasLength) {
-                    if (!hasMaxTf) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.LENGTH_OFFSET);
-                    }
-                    docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
-                }
-                if (hasAvgAuthorRank) {
-                    if (!hasLength) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.AVG_AUTHOR_RANK_OFFSET);
-                    }
-                    docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, __DOCUMENTS__.readDouble());
-                }
-                if (hasYear) {
-                    if (!hasAvgAuthorRank) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.YEAR_OFFSET);
-                    }
-                    docInfo.setProperty(DocInfo.PROPERTY.YEAR, __DOCUMENTS__.readShort());
-                }
-                int titleLength = 0;
-                int authorNamesLength = 0;
-                int authorIdsLength = 0;
-                int journalNameLength = 0;
-
-                if (!hasTitle && !hasAuthorNames && !hasAuthorIds && !hasJournalName) {
-                    continue;
-                }
-                if (!hasYear) {
-                    __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_SIZE_OFFSET);
-                }
-
-                if (hasJournalName) {
-                    titleLength = __DOCUMENTS__.readInt();
-                    authorNamesLength = __DOCUMENTS__.readInt();
-                    authorIdsLength = __DOCUMENTS__.readInt();
-                    journalNameLength = __DOCUMENTS__.readShort();
-                }
-                else if (hasAuthorIds) {
-                    titleLength = __DOCUMENTS__.readInt();
-                    authorNamesLength = __DOCUMENTS__.readInt();
-                    authorIdsLength = __DOCUMENTS__.readInt();
-                }
-                else if (hasAuthorNames) {
-                    titleLength = __DOCUMENTS__.readInt();
-                    authorNamesLength = __DOCUMENTS__.readInt();
-                }
-                else {
-                    titleLength = __DOCUMENTS__.readInt();
-                }
-
-                if (hasTitle) {
-                    if (!hasJournalName) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET);
-                    }
-                    byte[] title = new byte[titleLength];
-                    __DOCUMENTS__.readFully(title);
-                    docInfo.setProperty(DocInfo.PROPERTY.TITLE, new String(title, "UTF-8"));
-                }
-
-                if (hasAuthorNames) {
-                    if (!hasTitle) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength);
-                    }
-                    byte[] authorNames = new byte[authorNamesLength];
-                    __DOCUMENTS__.readFully(authorNames);
-                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
-                }
-
-                if (hasAuthorIds) {
-                    if (!hasAuthorNames) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
-                                authorNamesLength);
-                    }
-                    byte[] authorIds = new byte[authorIdsLength];
-                    __DOCUMENTS__.readFully(authorIds);
-                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
-                }
-
-                if (hasJournalName) {
-                    if (!hasAuthorIds) {
-                        __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
-                                authorNamesLength + authorIdsLength);
-                    }
-                    byte[] journalName = new byte[journalNameLength];
-                    __DOCUMENTS__.readFully(journalName);
-                    docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
-                }
+                readDocInfo(docInfo, props);
             }
             docIds.add(termDocInfo);
         }
         return docIds;
     }
 
-    public void updateDocInfo(List<Pair<Object, Double>> ranked_list, Set<DocInfo.PROPERTY> props) {
+    /**
+     * Updates a list of docInfo objects. The updated objects have all properties specified by newProps
+     * and do not have any of the properties specified by oldProps.
+     * @param newProps
+     * @throws IOException
+     */
+    public void updateDocInfo(List<DocInfo> termDocsInfo, Set<DocInfo.PROPERTY> newProps)
+            throws IOException {
+        if (!loaded()) {
+            return;
+        }
+        if (termDocsInfo.isEmpty()) {
+            return;
+        }
+        DocInfo firstDocInfo = termDocsInfo.get(0);
+        Set<DocInfo.PROPERTY> oldProps = firstDocInfo.getProps();
+        Set<DocInfo.PROPERTY> addProps = new HashSet<>(newProps);
+        addProps.removeAll(oldProps);
+        Set<DocInfo.PROPERTY> removeProps = new HashSet<>(oldProps);
+        removeProps.removeAll(newProps);
 
+        //remove properties we don't want
+        for (DocInfo docInfo : termDocsInfo) {
+            for (DocInfo.PROPERTY prop : removeProps) {
+                docInfo.removeProperty(prop);
+            }
+        }
+
+        //add the new properties
+        for (DocInfo docInfo : termDocsInfo) {
+            readDocInfo(docInfo, addProps);
+        }
     }
-    
+
+    /* Adds to docInfo the document properties specified by props */
+    private void readDocInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props) throws IOException {
+        boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
+        boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
+        boolean hasMaxTf = props.contains(DocInfo.PROPERTY.MAX_TF);
+        boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
+        boolean hasAvgAuthorRank = props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        boolean hasYear = props.contains(DocInfo.PROPERTY.YEAR);
+        boolean hasTitle = props.contains(DocInfo.PROPERTY.TITLE);
+        boolean hasAuthorNames = props.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
+        boolean hasAuthorIds = props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
+        boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
+        long documentPointer = docInfo.getOffset();
+
+        if (hasPagerank) {
+            docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
+        }
+        if (hasWeight) {
+            if (!hasPagerank) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.WEIGHT_OFFSET);
+            }
+            docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
+        }
+        if (hasMaxTf) {
+            if (!hasWeight) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.MAX_TF_OFFSET);
+            }
+            docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, __DOCUMENTS__.readInt());
+        }
+        if (hasLength) {
+            if (!hasMaxTf) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.LENGTH_OFFSET);
+            }
+            docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
+        }
+        if (hasAvgAuthorRank) {
+            if (!hasLength) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.AVG_AUTHOR_RANK_OFFSET);
+            }
+            docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, __DOCUMENTS__.readDouble());
+        }
+        if (hasYear) {
+            if (!hasAvgAuthorRank) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.YEAR_OFFSET);
+            }
+            docInfo.setProperty(DocInfo.PROPERTY.YEAR, __DOCUMENTS__.readShort());
+        }
+        int titleLength = 0;
+        int authorNamesLength = 0;
+        int authorIdsLength = 0;
+        int journalNameLength = 0;
+
+        if (!hasTitle && !hasAuthorNames && !hasAuthorIds && !hasJournalName) {
+            return;
+        }
+        if (!hasYear) {
+            __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_SIZE_OFFSET);
+        }
+
+        if (hasJournalName) {
+            titleLength = __DOCUMENTS__.readInt();
+            authorNamesLength = __DOCUMENTS__.readInt();
+            authorIdsLength = __DOCUMENTS__.readInt();
+            journalNameLength = __DOCUMENTS__.readShort();
+        }
+        else if (hasAuthorIds) {
+            titleLength = __DOCUMENTS__.readInt();
+            authorNamesLength = __DOCUMENTS__.readInt();
+            authorIdsLength = __DOCUMENTS__.readInt();
+        }
+        else if (hasAuthorNames) {
+            titleLength = __DOCUMENTS__.readInt();
+            authorNamesLength = __DOCUMENTS__.readInt();
+        }
+        else {
+            titleLength = __DOCUMENTS__.readInt();
+        }
+
+        if (hasTitle) {
+            if (!hasJournalName) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET);
+            }
+            byte[] title = new byte[titleLength];
+            __DOCUMENTS__.readFully(title);
+            docInfo.setProperty(DocInfo.PROPERTY.TITLE, new String(title, "UTF-8"));
+        }
+
+        if (hasAuthorNames) {
+            if (!hasTitle) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength);
+            }
+            byte[] authorNames = new byte[authorNamesLength];
+            __DOCUMENTS__.readFully(authorNames);
+            docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
+        }
+
+        if (hasAuthorIds) {
+            if (!hasAuthorNames) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
+                        authorNamesLength);
+            }
+            byte[] authorIds = new byte[authorIdsLength];
+            __DOCUMENTS__.readFully(authorIds);
+            docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
+        }
+
+        if (hasJournalName) {
+            if (!hasAuthorIds) {
+                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
+                        authorNamesLength + authorIdsLength);
+            }
+            byte[] journalName = new byte[journalNameLength];
+            __DOCUMENTS__.readFully(journalName);
+            docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
+        }
+    }
+
     /**
      * Method that checks if indexes have been loaded/opened
      *
