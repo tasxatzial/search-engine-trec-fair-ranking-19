@@ -96,6 +96,8 @@ public class Existential extends ARetrievalModel {
             indexer.updateDocInfo(docInfoList, docInfoProps);
         }
         else { //if the query is not the same, just perform a new search
+            _results = null;
+            _query = null;
             List<Pair<Object, Double>> results = new ArrayList<>();
             List<String> terms = new ArrayList<>(query.size());
             query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
