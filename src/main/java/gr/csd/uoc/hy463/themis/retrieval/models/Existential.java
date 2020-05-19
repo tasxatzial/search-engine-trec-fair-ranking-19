@@ -54,43 +54,16 @@ public class Existential extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        boolean hasSameQuery = true;
-        boolean hasSameProps = true;
-
-        //check if we have the same query second time in a row
-        if (query.size() == _query.size()) {
-            for (int i = 0; i < query.size(); i++) {
-                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
-                    hasSameQuery = false;
-                    break;
-                }
-            }
-        }
-        else {
-            hasSameQuery = false;
-        }
-
-        //check if we have the same props second  time in a row
-        if (docInfoProps.size() == _docInfoProps.size()) {
-            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
-            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
-            props1.removeAll(props2);
-            props2.removeAll(props1);
-            if (!props1.isEmpty() || !props2.isEmpty()) {
-                hasSameProps = false;
-            }
-        }
-        else {
-            hasSameProps = false;
-        }
+        boolean isSameQuery = hasSameQuery(query);
+        boolean isSameProps = hasSameProps(docInfoProps);
 
         //return the previous results if both the query and the requested props are unchanged
-        if (hasSameProps && hasSameQuery) {
+        if (isSameQuery && isSameProps) {
             return _results;
         }
 
         //else if the query is the same, we only need to get the new document fields.
-        if (hasSameQuery) {
+        if (isSameQuery) {
             List<DocInfo> docInfoList = new ArrayList<>();
             _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
             indexer.updateDocInfo(docInfoList, docInfoProps);
@@ -122,6 +95,14 @@ public class Existential extends ARetrievalModel {
             return getRankedResults(query, docInfoProps);
         }
 
+        boolean isSameQuery = hasSameQuery(query);
+        boolean isSameProps = hasSameProps(docInfoProps);
+
+        //return the previous results if both the query and the requested props are unchanged
+        if (isSameQuery && isSameProps) {
+            return _results;
+        }
+
         List<Pair<Object, Double>> result = new ArrayList<>();
         List<String> terms = new ArrayList<>(query.size());
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
@@ -140,5 +121,34 @@ public class Existential extends ARetrievalModel {
         }
 
         return result;
+    }
+
+    /* Returns true only if the previous query is the same as the specified query, false otherwise */
+    private boolean hasSameQuery(List<QueryTerm> query) {
+        if (query.size() == _query.size()) {
+            for (int i = 0; i < query.size(); i++) {
+                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
+                    return false;
+                }
+            }
+        }
+        else {
+             return false;
+        }
+        return true;
+    }
+
+    /* Returns true if the previous props is the same as the specified props, false otherwise */
+    private boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoProps) {
+        if (docInfoProps.size() == _docInfoProps.size()) {
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
+            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
+            props1.removeAll(props2);
+            props2.removeAll(props1);
+            return props1.isEmpty() && props2.isEmpty();
+        }
+        else {
+            return false;
+        }
     }
 }
