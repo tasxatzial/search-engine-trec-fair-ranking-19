@@ -47,6 +47,8 @@ public class Existential extends ARetrievalModel {
     private List<Pair<Object, Double>> _results;
     private Set<DocInfo.PROPERTY> _docInfoProps = new HashSet<>();
     private List<QueryTerm> _query = new ArrayList<>();
+    private int _startDoc = 0;
+    private int _endDoc = Integer.MAX_VALUE;
 
     public Existential(Indexer index) {
         super(index);
@@ -57,9 +59,12 @@ public class Existential extends ARetrievalModel {
         boolean isSameQuery = hasSameQuery(query);
         boolean isSameProps = hasSameProps(docInfoProps);
 
-        //return the previous results if both the query and the requested props are unchanged
-        if (isSameQuery && isSameProps) {
-            return _results;
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && _startDoc == 0) {
+            if (_endDoc >= _results.size() - 1) {
+                _endDoc = Integer.MAX_VALUE;
+                return _results;
+            }
         }
 
         //else if the query is the same, we only need to get the new document fields.
@@ -85,13 +90,15 @@ public class Existential extends ARetrievalModel {
             _results = results;
         }
         _docInfoProps = docInfoProps;
+        _startDoc = 0;
+        _endDoc = Integer.MAX_VALUE;
 
         return _results;
     }
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
-        if (endDoc == -1) {
+        if (endDoc == Integer.MAX_VALUE) {
             return getRankedResults(query, docInfoProps);
         }
 

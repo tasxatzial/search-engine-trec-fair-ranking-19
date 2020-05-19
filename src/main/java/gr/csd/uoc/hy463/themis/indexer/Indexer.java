@@ -968,26 +968,22 @@ public class Indexer {
         if (!loaded()) {
             return;
         }
-        if (termDocsInfo.isEmpty()) {
-            return;
-        }
-        DocInfo firstDocInfo = termDocsInfo.get(0);
-        Set<DocInfo.PROPERTY> oldProps = firstDocInfo.getProps();
-        Set<DocInfo.PROPERTY> addProps = new HashSet<>(newProps);
-        addProps.removeAll(oldProps);
-        Set<DocInfo.PROPERTY> removeProps = new HashSet<>(oldProps);
-        removeProps.removeAll(newProps);
 
-        //remove properties we don't want
+        Set<DocInfo.PROPERTY> oldProps;
+        Set<DocInfo.PROPERTY> addProps;
+        Set<DocInfo.PROPERTY> removeProps;
         for (DocInfo docInfo : termDocsInfo) {
+            oldProps = docInfo.getProps();
+            addProps = new HashSet<>(newProps);
+            removeProps = new HashSet<>(oldProps);
+            removeProps.removeAll(newProps);
+            addProps.removeAll(oldProps);
             for (DocInfo.PROPERTY prop : removeProps) {
                 docInfo.removeProperty(prop);
+                if (!addProps.isEmpty()) {
+                    readDocInfo(docInfo, addProps);
+                }
             }
-        }
-
-        //add the new properties
-        for (DocInfo docInfo : termDocsInfo) {
-            readDocInfo(docInfo, addProps);
         }
     }
 
