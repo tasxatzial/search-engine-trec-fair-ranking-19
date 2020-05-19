@@ -134,14 +134,14 @@ public class Search {
                 _task = null;
             }
             Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
-            Themis.print("Found " + searchResults.size() + " results\n\n");
-
-            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfoProps);
-            Collections.sort(sortedProps);
+            Themis.print("Found " + searchResults.size() + " results\n");
+            Themis.print("Displaying results " + (startResult + 1) + " to " + (endResult + 1) + "\n\n");
 
             /* print the results */
-            for (Pair<Object, Double> pair : searchResults) {
-                DocInfo docInfo = (DocInfo) pair.getL();
+            for (int i = startResult; i <= endResult; i++) {
+                DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
+                List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
+                Collections.sort(sortedProps);
                 Themis.print("DOC_ID: " + docInfo.getId() + "\n");
                 for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");

@@ -120,6 +120,10 @@ public class DocInfo {
         return new HashSet<>(props.keySet());
     }
 
+    public void clearProperties() {
+        props.clear();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

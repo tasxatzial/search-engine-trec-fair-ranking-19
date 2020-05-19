@@ -950,7 +950,9 @@ public class Indexer {
                 __DOCUMENTS__.readFully(docId);
                 docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
                 termDocInfo.add(docInfo);
-                readDocInfo(docInfo, props);
+                if (!props.isEmpty()) {
+                    readDocInfo(docInfo, props, false); //seek = false
+                }
             }
             docIds.add(termDocInfo);
         }
@@ -980,15 +982,15 @@ public class Indexer {
             addProps.removeAll(oldProps);
             for (DocInfo.PROPERTY prop : removeProps) {
                 docInfo.removeProperty(prop);
-                if (!addProps.isEmpty()) {
-                    readDocInfo(docInfo, addProps);
-                }
+            }
+            if (!addProps.isEmpty()) {
+                readDocInfo(docInfo, addProps, true); //seek = true
             }
         }
     }
 
-    /* Adds to docInfo the document properties specified by props */
-    private void readDocInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props) throws IOException {
+    /* Adds to docInfo the document properties specified by props. Seek should be true when updating docInfos */
+    private void readDocInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, boolean seek) throws IOException {
         boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
         boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
         boolean hasMaxTf = props.contains(DocInfo.PROPERTY.MAX_TF);
@@ -1001,6 +1003,9 @@ public class Indexer {
         boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
         long documentPointer = docInfo.getOffset();
 
+        if (seek) {
+            __DOCUMENTS__.seek(documentPointer + DocumentEntry.ID_SIZE);
+        }
         if (hasPagerank) {
             docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
         }

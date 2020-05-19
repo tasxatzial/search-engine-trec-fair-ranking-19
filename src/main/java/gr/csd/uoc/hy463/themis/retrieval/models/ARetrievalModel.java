@@ -62,8 +62,12 @@ public abstract class ARetrievalModel {
     public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
 
     /**
-     * Method that evaluates the query and returns a list of pairs with the
-     * top-k ranked results.
+     * Method that evaluates the query and returns a list of pairs with
+     * the ranked results. In that list the properties specified in docInfoProps are retrieved only for the
+     * documents with indexes from startDoc to endDoc.
+     *
+     * startDoc and endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
+     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve the properties of all the documents.
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.

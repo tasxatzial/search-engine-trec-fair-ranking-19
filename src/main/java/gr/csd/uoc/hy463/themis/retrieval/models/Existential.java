@@ -28,7 +28,9 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import org.opencv.core.Mat;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -75,7 +77,6 @@ public class Existential extends ARetrievalModel {
         }
         else { //if the query is not the same, just perform a new search
             _results = null;
-            _query = null;
             List<Pair<Object, Double>> results = new ArrayList<>();
             List<String> terms = new ArrayList<>(query.size());
             query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
@@ -98,36 +99,74 @@ public class Existential extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
-        if (endDoc == Integer.MAX_VALUE) {
-            return getRankedResults(query, docInfoProps);
-        }
-
         boolean isSameQuery = hasSameQuery(query);
         boolean isSameProps = hasSameProps(docInfoProps);
 
-        //return the previous results if both the query and the requested props are unchanged
-        if (isSameQuery && isSameProps) {
-            return _results;
-        }
-
-        List<Pair<Object, Double>> result = new ArrayList<>();
-        List<String> terms = new ArrayList<>(query.size());
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-
-        //apply stemming, stopwords
-        List<String> editedTerms = indexer.preprocessTerms(terms);
-
-        List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
-        for (List<DocInfo> termDocInfo : termsDocInfo) {
-            for (DocInfo docInfo : termDocInfo) {
-                result.add(new Pair<>(docInfo, 1.0));
-                if (result.size() == startDoc) {
-                    return result;
-                }
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && startDoc == _startDoc) {
+            if (endDoc >= _results.size() - 1) {
+                _endDoc = endDoc;
+                return _results;
             }
         }
 
-        return result;
+        if (isSameQuery) {
+            List<DocInfo> docInfoList = new ArrayList<>();
+            for (int i = 0; i < startDoc; i++) {
+                ((DocInfo) _results.get(i).getL()).clearProperties();
+            }
+            if (endDoc != Integer.MAX_VALUE) {
+                for (int i = endDoc + 1; i < _results.size(); i++) {
+                    ((DocInfo) _results.get(i).getL()).clearProperties();
+                }
+            }
+            for (int i = startDoc; i <= Math.min(endDoc, _results.size() - 1); i++) {
+                DocInfo docInfo = (DocInfo) _results.get(i).getL();
+                docInfoList.add(docInfo);
+            }
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+        }
+        else {
+            _results = null;
+            List<Pair<Object, Double>> results = new ArrayList<>();
+            List<String> terms = new ArrayList<>(query.size());
+            query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+
+            //apply stemming, stopwords
+            List<String> editedTerms = indexer.preprocessTerms(terms);
+
+            //get the all results but fetch only the docId
+            List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, new HashSet<>(0));
+
+            //this is the list of docInfo from the above list that fall between startDoc, endDoc.
+            List<DocInfo> docInfoList = new ArrayList<>();
+
+            int i = 0;
+            for (List<DocInfo> termDocInfo : termsDocInfo) {
+                for (DocInfo docInfo : termDocInfo) {
+
+                    //add every docInfo to the results list
+                    results.add(new Pair<>(docInfo, 1.0));
+
+                    //collect those docInfos that fall between startDoc and endDoc
+                    if (i >= startDoc && i <= endDoc) {
+                        docInfoList.add(docInfo);
+                    }
+                    i++;
+                }
+            }
+
+            //now fetch the properties only for the above docInfo list
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = startDoc;
+        _endDoc = endDoc;
+
+        return _results;
     }
 
     /* Returns true only if the previous query is the same as the specified query, false otherwise */
