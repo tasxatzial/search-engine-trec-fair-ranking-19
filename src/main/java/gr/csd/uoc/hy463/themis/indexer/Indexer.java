@@ -279,7 +279,6 @@ public class Indexer {
 
                     totalArticles++;
                     if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
-                        index.sort();
                         index.dump();   // dump partial index to appropriate subdirectory
                         // Create a new index
                         // Increase partial indexes and dump files to appropriate directory
@@ -300,7 +299,6 @@ public class Indexer {
             id--;
         }
         else {
-            index.sort();
             index.dump();
         }
 

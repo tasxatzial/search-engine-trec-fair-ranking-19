@@ -109,6 +109,8 @@ public class Index {
      * @return
      */
     public boolean dump() throws IOException {
+        __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
+        Collections.sort(__INDEX_KEYS_SORTED__);
         Themis.print("Dumping in: " + __INDEX_TMP_PATH__ + "/" + id + "/ ...");
         String vocabularyName;
         String postingsName;
@@ -163,14 +165,6 @@ public class Index {
             tfWriter.write(key + " " + tf + " ");
         }
         tfWriter.write("\n");
-    }
-
-    /**
-     * Sorts the terms of the vocabulary in lex min order.
-     */
-    public void sort() {
-        __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
-        Collections.sort(__INDEX_KEYS_SORTED__);
     }
 
     /* Dumps the appropriate info from a partial index memory struct to the
