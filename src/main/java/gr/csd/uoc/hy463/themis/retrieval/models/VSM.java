@@ -38,6 +38,11 @@ import java.util.*;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class VSM extends ARetrievalModel {
+    private List<Pair<Object, Double>> _results;
+    private Set<DocInfo.PROPERTY> _docInfoProps = new HashSet<>();
+    private List<QueryTerm> _query = new ArrayList<>();
+    private int _startDoc = 0;
+    private int _endDoc = Integer.MAX_VALUE;
 
     public VSM(Indexer index) {
         super(index);
@@ -45,89 +50,142 @@ public class VSM extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        List<String> terms = new ArrayList<>(query.size());
-        List<Pair<Object, Double>> result = new ArrayList<>();
-        List<List<DocInfo>> termsDocInfo;
-        int totalArticles = indexer.getTotalArticles();
+        boolean isSameQuery = hasSameQuery(query);
+        boolean isSameProps = hasSameProps(docInfoProps);
 
-        //collect the terms
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-
-        //apply stemming, stopwords
-        List<String> editedTerms = indexer.preprocessTerms(terms);
-
-        //get the docInfo objects associated with each term
-        termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
-
-        //frequencies of the terms in the query
-        Map<String, Integer> queryFreqs = new HashMap<>(editedTerms.size());
-        for (String term : editedTerms) {
-            queryFreqs.merge(term, 1, Integer::sum);
-        }
-
-        //max frequency of the query terms
-        int queryMaxFreq = 0;
-        for (Integer freq : queryFreqs.values()) {
-            if (freq > queryMaxFreq) {
-                queryMaxFreq = freq;
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && _startDoc == 0) {
+            if (_endDoc >= _results.size() - 1) {
+                _endDoc = Integer.MAX_VALUE;
+                return _results;
             }
         }
 
-        //df of the terms
-        int[] dfs = indexer.getDf(editedTerms);
-
-        //weights of terms in the query
-        double[] queryWeights = new double[editedTerms.size()];
-        for (int i = 0; i < editedTerms.size(); i++) {
-            double tf = (0.0 + queryFreqs.get(editedTerms.get(i))) / queryMaxFreq;
-            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
-            queryWeights[i] = tf * idf;
+        if (isSameQuery) {
+            List<DocInfo> docInfoList = new ArrayList<>();
+            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
+            indexer.updateDocInfo(docInfoList, docInfoProps);
         }
+        else {
+            _results = null;
+            List<Pair<Object, Double>> results = new ArrayList<>();
+            List<String> terms = new ArrayList<>(query.size());
+            List<List<DocInfo>> termsDocInfo;
+            int totalArticles = indexer.getTotalArticles();
 
-        //norm of query
-        double queryNorm = 0;
-        for (int i = 0; i < editedTerms.size(); i++) {
-            queryNorm += queryWeights[i] * queryWeights[i];
-        }
-        queryNorm = Math.sqrt(queryNorm);
+            //collect the terms
+            query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
-        //weights of terms for each document
-        Map<DocInfo, double[]> documentsWeights = new HashMap<>();
-        for (int i = 0; i < termsDocInfo.size(); i++) {
-            int[] freqs = indexer.getFreq(editedTerms.get(i));
-            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
-            for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
-                DocInfo docInfo = termsDocInfo.get(i).get(j);
-                double[] weights = documentsWeights.get(docInfo);
-                double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
-                if (weights == null) {
-                    weights = new double[editedTerms.size()];
-                    documentsWeights.put(docInfo, weights);
+            //apply stemming, stopwords
+            List<String> editedTerms = indexer.preprocessTerms(terms);
+
+            //get the docInfo objects associated with each term
+            termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+
+            //frequencies of the terms in the query
+            Map<String, Integer> queryFreqs = new HashMap<>(editedTerms.size());
+            for (String term : editedTerms) {
+                queryFreqs.merge(term, 1, Integer::sum);
+            }
+
+            //max frequency of the query terms
+            int queryMaxFreq = 0;
+            for (Integer freq : queryFreqs.values()) {
+                if (freq > queryMaxFreq) {
+                    queryMaxFreq = freq;
                 }
-                weights[i] += tf * idf;
             }
-        }
 
-        //calculate the scores
-        for (Map.Entry<DocInfo, double[]> docWeights : documentsWeights.entrySet()) {
-            double documentScore = 0;
-            double[] weights = docWeights.getValue();
-            DocInfo docInfo = docWeights.getKey();
-            double documentNorm = (double) docInfo.getProperty(DocInfo.PROPERTY.WEIGHT);
-            for (int i = 0; i < queryWeights.length; i++) {
-                documentScore += queryWeights[i] * weights[i];
+            //df of the terms
+            int[] dfs = indexer.getDf(editedTerms);
+
+            //weights of terms in the query
+            double[] queryWeights = new double[editedTerms.size()];
+            for (int i = 0; i < editedTerms.size(); i++) {
+                double tf = (0.0 + queryFreqs.get(editedTerms.get(i))) / queryMaxFreq;
+                double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
+                queryWeights[i] = tf * idf;
             }
-            documentScore /= (documentNorm * queryNorm);
-            result.add(new Pair<>(docInfo, documentScore));
-        }
 
-        result.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
-        return result;
+            //norm of query
+            double queryNorm = 0;
+            for (int i = 0; i < editedTerms.size(); i++) {
+                queryNorm += queryWeights[i] * queryWeights[i];
+            }
+            queryNorm = Math.sqrt(queryNorm);
+
+            //weights of terms for each document
+            Map<DocInfo, double[]> documentsWeights = new HashMap<>();
+            for (int i = 0; i < termsDocInfo.size(); i++) {
+                int[] freqs = indexer.getFreq(editedTerms.get(i));
+                double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
+                for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
+                    DocInfo docInfo = termsDocInfo.get(i).get(j);
+                    double[] weights = documentsWeights.get(docInfo);
+                    double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
+                    if (weights == null) {
+                        weights = new double[editedTerms.size()];
+                        documentsWeights.put(docInfo, weights);
+                    }
+                    weights[i] += tf * idf;
+                }
+            }
+
+            //calculate the scores
+            for (Map.Entry<DocInfo, double[]> docWeights : documentsWeights.entrySet()) {
+                double documentScore = 0;
+                double[] weights = docWeights.getValue();
+                DocInfo docInfo = docWeights.getKey();
+                double documentNorm = (double) docInfo.getProperty(DocInfo.PROPERTY.WEIGHT);
+                for (int i = 0; i < queryWeights.length; i++) {
+                    documentScore += queryWeights[i] * weights[i];
+                }
+                documentScore /= (documentNorm * queryNorm);
+                results.add(new Pair<>(docInfo, documentScore));
+            }
+            results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = 0;
+        _endDoc = Integer.MAX_VALUE;
+
+        return _results;
     }
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
         //return getRankedResults(query, docInfoProps).subList(0, topk);
         return null;
+    }
+
+    /* Returns true only if the previous query is the same as the specified query, false otherwise */
+    private boolean hasSameQuery(List<QueryTerm> query) {
+        if (query.size() == _query.size()) {
+            for (int i = 0; i < query.size(); i++) {
+                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
+                    return false;
+                }
+            }
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+
+    /* Returns true if the previous props is the same as the specified props, false otherwise */
+    private boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoProps) {
+        if (docInfoProps.size() == _docInfoProps.size()) {
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
+            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
+            props1.removeAll(props2);
+            props2.removeAll(props1);
+            return props1.isEmpty() && props2.isEmpty();
+        }
+        else {
+            return false;
+        }
     }
 }
