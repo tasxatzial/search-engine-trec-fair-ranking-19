@@ -961,7 +961,6 @@ public class Indexer {
 
     /**
      * Updates a list of docInfo objects. The updated objects have all properties specified by newProps
-     * and do not have any of the properties specified by oldProps.
      * @param newProps
      * @throws IOException
      */

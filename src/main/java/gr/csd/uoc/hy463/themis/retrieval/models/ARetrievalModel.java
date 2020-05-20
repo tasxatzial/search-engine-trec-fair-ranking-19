@@ -42,15 +42,24 @@ import java.util.Set;
  */
 public abstract class ARetrievalModel {
     protected List<Pair<Object, Double>> _results;
-    protected Set<DocInfo.PROPERTY> _docInfoProps = new HashSet<>();
-    protected List<QueryTerm> _query = new ArrayList<>();
-    protected int _startDoc = 0;
-    protected int _endDoc = Integer.MAX_VALUE;
-    protected Indexer indexer;
+    protected Set<DocInfo.PROPERTY> _docInfoProps;
+    protected List<QueryTerm> _query;
+    protected int _startDoc;
+    protected int _endDoc;
+    protected Indexer _indexer;
+    protected Set<DocInfo.PROPERTY> _essentialProps;
 
     public ARetrievalModel(Indexer indexer) {
-        this.indexer = indexer;
+        _indexer = indexer;
+        _docInfoProps = new HashSet<>();
+        _query = new ArrayList<>();
+        _startDoc = 0;
+        _endDoc = Integer.MAX_VALUE;
     }
+
+    /* This method is implemented by all models and returns a ranked list of pair of the relevant documents.
+    * The method is called by the public getRankedResults() function */
+    protected abstract List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
 
     /**
      * Method that evaluates the query and returns a ranked list of pairs of the
@@ -65,7 +74,35 @@ public abstract class ARetrievalModel {
      * @param docInfoProps set of properties we want to be retrieved from the documents
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        boolean isSameQuery = hasSameQuery(query);
+        boolean isSameProps = hasSameProps(docInfoProps);
+
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && _startDoc == 0) {
+            if (_endDoc >= _results.size() - 1) {
+                _endDoc = Integer.MAX_VALUE;
+                return _results;
+            }
+        }
+
+        if (isSameQuery) { //same query, different props -> update all docInfo objects
+            List<DocInfo> docInfoList = new ArrayList<>();
+            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
+            _indexer.updateDocInfo(docInfoList, docInfoProps);
+        }
+        else { //different query -> new search
+            _results = null;
+            List<Pair<Object, Double>> results = getRankedResults_internal(query, docInfoProps);
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = 0;
+        _endDoc = Integer.MAX_VALUE;
+
+        return _results;
+    }
 
     /**
      * Method that evaluates the query and returns a list of pairs with
@@ -73,7 +110,8 @@ public abstract class ARetrievalModel {
      * documents with indexes from startDoc to endDoc.
      *
      * startDoc and endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
-     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve the properties of all the documents.
+     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve the properties of all the documents
+     * but we don't know the actual number of the retrieved documents
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -92,18 +130,82 @@ public abstract class ARetrievalModel {
      * @param docInfoProps set of properties we want to be retrieved from the documents
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException;
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+        boolean isSameQuery = hasSameQuery(query);
+        boolean isSameProps = hasSameProps(docInfoProps);
+
+        /* return the previous results if everything is unchanged */
+        if (isSameQuery && isSameProps && startDoc == _startDoc) {
+            if (endDoc >= _results.size() - 1) {
+                _endDoc = endDoc;
+                return _results;
+            }
+        }
+
+        if (isSameQuery) { /* same query, different props */
+            List<DocInfo> docInfoList = new ArrayList<>();
+
+            /* since we are not going to display all relevant documents, we need to to clear the properties of
+            the corresponding docInfo items that will not be displayed */
+            Set<DocInfo.PROPERTY> removeProps = new HashSet<>(docInfoProps);
+            for (DocInfo.PROPERTY prop : _essentialProps) {
+                removeProps.remove(prop);
+            }
+            for (int i = 0; i < startDoc; i++) {
+                ((DocInfo) _results.get(i).getL()).clearProperties(removeProps);
+            }
+            if (endDoc != Integer.MAX_VALUE) {
+                for (int i = endDoc + 1; i < _results.size(); i++) {
+                    ((DocInfo) _results.get(i).getL()).clearProperties(removeProps);
+                }
+            }
+            for (int i = startDoc; i <= Math.min(endDoc, _results.size() - 1); i++) {
+                DocInfo docInfo = (DocInfo) _results.get(i).getL();
+                docInfoList.add(docInfo);
+            }
+
+            /* update the docInfo items with the new props */
+            _indexer.updateDocInfo(docInfoList, docInfoProps);
+        }
+        else { /* different query */
+            _results = null;
+
+            /* initially fetch only the essential props from each document. Those props will be used
+            by the retrieval model */
+            List<Pair<Object, Double>> results = getRankedResults_internal(query, _essentialProps);
+
+            /* collect all docInfo objects that correspond to the documents that will be displayed */
+            List<DocInfo> docInfoList = new ArrayList<>();
+            int i = 0;
+            for (Pair<Object, Double> result : results) {
+                if (i >= startDoc && i <= endDoc) {
+                    docInfoList.add((DocInfo) result.getL());
+                }
+                i++;
+            }
+
+            /* fetch the properties only for the above docInfo list */
+            _indexer.updateDocInfo(docInfoList, docInfoProps);
+
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = startDoc;
+        _endDoc = endDoc;
+
+        return _results;
+    }
 
     /**
      * Returns true only if the previous query is the same as the new query, false otherwise
-     * @param queryPrev
-     * @param queryNew
+     * @param query
      * @return
      */
-    public boolean hasSameQuery(List<QueryTerm> queryPrev, List<QueryTerm> queryNew) {
-        if (queryPrev.size() == queryNew.size()) {
-            for (int i = 0; i < queryPrev.size(); i++) {
-                if (!queryPrev.get(i).getTerm().equals(queryNew.get(i).getTerm())) {
+    private boolean hasSameQuery(List<QueryTerm> query) {
+        if (query.size() == _query.size()) {
+            for (int i = 0; i < query.size(); i++) {
+                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
                     return false;
                 }
             }
@@ -116,14 +218,13 @@ public abstract class ARetrievalModel {
 
     /**
      * Returns true if the previous props is the same as the new props, false otherwise
-     * @param docInfoPropsPrev
-     * @param docInfoPropsNew
+     * @param docInfoProps
      * @return
      */
-    public boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoPropsPrev, Set<DocInfo.PROPERTY> docInfoPropsNew) {
-        if (docInfoPropsPrev.size() == docInfoPropsNew.size()) {
-            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoPropsPrev);
-            Set<DocInfo.PROPERTY> props2 = new HashSet<>(docInfoPropsNew);
+    private boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoProps) {
+        if (docInfoProps.size() == _docInfoProps.size()) {
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
+            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
             props1.removeAll(props2);
             props2.removeAll(props1);
             return props1.isEmpty() && props2.isEmpty();
@@ -132,6 +233,4 @@ public abstract class ARetrievalModel {
             return false;
         }
     }
-
-    // We should also add some kind of paging and caching... but maybe in the future
 }

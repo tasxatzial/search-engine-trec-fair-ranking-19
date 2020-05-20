@@ -122,8 +122,9 @@ public class Search {
             List<Pair<Object, Double>> searchResults;
             long startTime = System.nanoTime();
             _task = TASK.SEARCH;
+
+            /* call the model and retrieve the results */
             try {
-                //call the model and retrieve the results
                 searchResults = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
@@ -133,11 +134,9 @@ public class Search {
             finally {
                 _task = null;
             }
-            Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
-            Themis.print("Found " + searchResults.size() + " results\n");
 
             /* startResult and endResult might be out of the range of the actual results for this document.
-            therefore we need to find the proper first and last displayed result */
+            therefore we need to find the proper indexes of the first and last displayed result */
             int firstDisplayedResult;
             int lastDisplayedResult;
             if (startResult > searchResults.size() - 1) {
@@ -152,7 +151,12 @@ public class Search {
                 firstDisplayedResult = startResult;
                 lastDisplayedResult = endResult;
             }
-            Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
+
+            Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+            Themis.print("Found " + searchResults.size() + " results\n");
+            if (!searchResults.isEmpty()) {
+                Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
+            }
 
             /* print the results */
             for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {

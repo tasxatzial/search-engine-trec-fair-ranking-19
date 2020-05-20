@@ -29,7 +29,6 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
-import javax.print.Doc;
 import java.io.IOException;
 import java.util.*;
 
@@ -44,119 +43,32 @@ public class OkapiBM25 extends ARetrievalModel {
 
     public OkapiBM25(Indexer index) {
         super(index);
+
+        /* These are the props that are required so that the model knows how to rank */
+        _essentialProps = new HashSet<>(1);
+        _essentialProps.add(DocInfo.PROPERTY.LENGTH);
     }
 
-    @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        boolean isSameQuery = hasSameQuery(_query, query);
-        boolean isSameProps = hasSameProps(_docInfoProps, docInfoProps);
-
-        //return the previous results if everything is unchanged
-        if (isSameQuery && isSameProps && _startDoc == 0) {
-            if (_endDoc >= _results.size() - 1) {
-                _endDoc = Integer.MAX_VALUE;
-                return _results;
-            }
-        }
-
-        if (isSameQuery) {
-            List<DocInfo> docInfoList = new ArrayList<>();
-            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
-            indexer.updateDocInfo(docInfoList, docInfoProps);
-        } else {
-            _results = null;
-            List<Pair<Object, Double>> results = getRankedResults_private(query, docInfoProps);
-            _query = query;
-            _results = results;
-        }
-        _docInfoProps = docInfoProps;
-        _startDoc = 0;
-        _endDoc = Integer.MAX_VALUE;
-
-        return _results;
-    }
-
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
-        boolean isSameQuery = hasSameQuery(_query, query);
-        boolean isSameProps = hasSameProps(_docInfoProps, docInfoProps);
-
-        //return the previous results if everything is unchanged
-        if (isSameQuery && isSameProps && startDoc == _startDoc) {
-            if (endDoc >= _results.size() - 1) {
-                _endDoc = endDoc;
-                return _results;
-            }
-        }
-
-        if (isSameQuery) {
-            List<DocInfo> docInfoList = new ArrayList<>();
-            Set<DocInfo.PROPERTY> props = new HashSet<>(docInfoProps);
-            if (docInfoProps.contains(DocInfo.PROPERTY.LENGTH)) {
-                props.remove(DocInfo.PROPERTY.LENGTH);
-            }
-            for (int i = 0; i < startDoc; i++) {
-                ((DocInfo) _results.get(i).getL()).clearProperties(props);
-            }
-            if (endDoc != Integer.MAX_VALUE) {
-                for (int i = endDoc + 1; i < _results.size(); i++) {
-                    ((DocInfo) _results.get(i).getL()).clearProperties(props);
-                }
-            }
-            for (int i = startDoc; i <= Math.min(endDoc, _results.size() - 1); i++) {
-                DocInfo docInfo = (DocInfo) _results.get(i).getL();
-                docInfoList.add(docInfo);
-            }
-            indexer.updateDocInfo(docInfoList, docInfoProps);
-        }
-        else {
-            _results = null;
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-            props.add(DocInfo.PROPERTY.LENGTH);
-            List<Pair<Object, Double>> results = getRankedResults_private(query, props);
-
-            //this is the list of docInfo from the above list that fall between startDoc, endDoc.
-            List<DocInfo> docInfoList = new ArrayList<>();
-
-            int i = 0;
-            for (Pair<Object, Double> result : results) {
-                if (i >= startDoc && i <= endDoc) {
-                    docInfoList.add((DocInfo) result.getL());
-                }
-                i++;
-            }
-
-            //now fetch the properties only for the above docInfo list
-            indexer.updateDocInfo(docInfoList, docInfoProps);
-
-            _query = query;
-            _results = results;
-        }
-        _docInfoProps = docInfoProps;
-        _startDoc = startDoc;
-        _endDoc = endDoc;
-
-        return _results;
-    }
-
-    private List<Pair<Object, Double>> getRankedResults_private(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+    /* Returns a ranked list of pairs of the relevant documents */
+    protected List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
         List<String> terms = new ArrayList<>(query.size());
         List<Pair<Object, Double>> results = new ArrayList<>();
         List<List<DocInfo>> termsDocInfo;
-        int totalArticles = indexer.getTotalArticles();
-        double avgdl = indexer.getAvgdl();
+        int totalArticles = _indexer.getTotalArticles();
+        double avgdl = _indexer.getAvgdl();
 
         //collect the terms
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //apply stemming, stopwords
-        List<String> editedTerms = indexer.preprocessTerms(terms);
+        List<String> editedTerms = _indexer.preprocessTerms(terms);
 
         //get the docInfo objects associated with each term
-        termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+        termsDocInfo = _indexer.getDocInfo(editedTerms, docInfoProps);
 
         //compute the idf for each term of the query
         double[] idfs = new double[editedTerms.size()];
-        int[] dfs = indexer.getDf(editedTerms);
+        int[] dfs = _indexer.getDf(editedTerms);
         for (int i = 0; i < editedTerms.size(); i++) {
             idfs[i] = Math.log((totalArticles - dfs[i] + 0.5) / (dfs[i] + 0.5));
         }
@@ -164,7 +76,7 @@ public class OkapiBM25 extends ARetrievalModel {
         //frequencies of each term in each document
         Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
         for (int i = 0; i < termsDocInfo.size(); i++) {
-            int[] termFreqs = indexer.getFreq(editedTerms.get(i));
+            int[] termFreqs = _indexer.getFreq(editedTerms.get(i));
             for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = termsDocInfo.get(i).get(j);
                 int[] docFreqs = documentsFreqs.get(docInfo);

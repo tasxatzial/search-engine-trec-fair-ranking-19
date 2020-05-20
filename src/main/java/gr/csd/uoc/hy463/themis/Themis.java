@@ -101,7 +101,6 @@ public class Themis {
             props.add(DocInfo.PROPERTY.WEIGHT);
             props.add(DocInfo.PROPERTY.LENGTH);
             props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-            props.add(DocInfo.PROPERTY.YEAR);
             props.add(DocInfo.PROPERTY.TITLE);
             props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
             props.add(DocInfo.PROPERTY.AUTHORS_IDS);
