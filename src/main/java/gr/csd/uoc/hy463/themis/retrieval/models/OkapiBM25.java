@@ -48,8 +48,99 @@ public class OkapiBM25 extends ARetrievalModel {
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        boolean isSameQuery = hasSameQuery(_query, query);
+        boolean isSameProps = hasSameProps(_docInfoProps, docInfoProps);
+
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && _startDoc == 0) {
+            if (_endDoc >= _results.size() - 1) {
+                _endDoc = Integer.MAX_VALUE;
+                return _results;
+            }
+        }
+
+        if (isSameQuery) {
+            List<DocInfo> docInfoList = new ArrayList<>();
+            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+        } else {
+            _results = null;
+            List<Pair<Object, Double>> results = getRankedResults_private(query, docInfoProps);
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = 0;
+        _endDoc = Integer.MAX_VALUE;
+
+        return _results;
+    }
+
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+        boolean isSameQuery = hasSameQuery(_query, query);
+        boolean isSameProps = hasSameProps(_docInfoProps, docInfoProps);
+
+        //return the previous results if everything is unchanged
+        if (isSameQuery && isSameProps && startDoc == _startDoc) {
+            if (endDoc >= _results.size() - 1) {
+                _endDoc = endDoc;
+                return _results;
+            }
+        }
+
+        if (isSameQuery) {
+            List<DocInfo> docInfoList = new ArrayList<>();
+            Set<DocInfo.PROPERTY> props = new HashSet<>(docInfoProps);
+            if (docInfoProps.contains(DocInfo.PROPERTY.LENGTH)) {
+                props.remove(DocInfo.PROPERTY.LENGTH);
+            }
+            for (int i = 0; i < startDoc; i++) {
+                ((DocInfo) _results.get(i).getL()).clearProperties(props);
+            }
+            if (endDoc != Integer.MAX_VALUE) {
+                for (int i = endDoc + 1; i < _results.size(); i++) {
+                    ((DocInfo) _results.get(i).getL()).clearProperties(props);
+                }
+            }
+            for (int i = startDoc; i <= Math.min(endDoc, _results.size() - 1); i++) {
+                DocInfo docInfo = (DocInfo) _results.get(i).getL();
+                docInfoList.add(docInfo);
+            }
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+        }
+        else {
+            _results = null;
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            props.add(DocInfo.PROPERTY.LENGTH);
+            List<Pair<Object, Double>> results = getRankedResults_private(query, props);
+
+            //this is the list of docInfo from the above list that fall between startDoc, endDoc.
+            List<DocInfo> docInfoList = new ArrayList<>();
+
+            int i = 0;
+            for (Pair<Object, Double> result : results) {
+                if (i >= startDoc && i <= endDoc) {
+                    docInfoList.add((DocInfo) result.getL());
+                }
+                i++;
+            }
+
+            //now fetch the properties only for the above docInfo list
+            indexer.updateDocInfo(docInfoList, docInfoProps);
+
+            _query = query;
+            _results = results;
+        }
+        _docInfoProps = docInfoProps;
+        _startDoc = startDoc;
+        _endDoc = endDoc;
+
+        return _results;
+    }
+
+    private List<Pair<Object, Double>> getRankedResults_private(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
         List<String> terms = new ArrayList<>(query.size());
-        List<Pair<Object, Double>> result = new ArrayList<>();
+        List<Pair<Object, Double>> results = new ArrayList<>();
         List<List<DocInfo>> termsDocInfo;
         int totalArticles = indexer.getTotalArticles();
         double avgdl = indexer.getAvgdl();
@@ -94,16 +185,10 @@ public class OkapiBM25 extends ARetrievalModel {
             for (int i = 0; i < editedTerms.size(); i++) {
                 documentScore += idfs[i] * freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl));
             }
-            result.add(new Pair<>(docInfo, documentScore));
+            results.add(new Pair<>(docInfo, documentScore));
         }
+        results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
 
-        result.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
-        return result;
-    }
-
-    @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
-        //return getRankedResults(query, docInfoProps).subList(0, topk);
-        return null;
+        return results;
     }
 }
