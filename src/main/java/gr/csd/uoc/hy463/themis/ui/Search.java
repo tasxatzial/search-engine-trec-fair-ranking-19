@@ -135,10 +135,27 @@ public class Search {
             }
             Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
             Themis.print("Found " + searchResults.size() + " results\n");
-            Themis.print("Displaying results " + (startResult + 1) + " to " + (endResult + 1) + "\n\n");
+
+            /* startResult and endResult might be out of the range of the actual results for this document.
+            therefore we need to find the proper first and last displayed result */
+            int firstDisplayedResult;
+            int lastDisplayedResult;
+            if (startResult > searchResults.size() - 1) {
+                firstDisplayedResult = 0;
+                lastDisplayedResult = 0;
+            }
+            else if (endResult > searchResults.size() - 1) {
+                firstDisplayedResult = startResult;
+                lastDisplayedResult = searchResults.size() - 1;
+            }
+            else {
+                firstDisplayedResult = startResult;
+                lastDisplayedResult = endResult;
+            }
+            Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
 
             /* print the results */
-            for (int i = startResult; i <= endResult; i++) {
+            for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
                 DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
                 List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
                 Collections.sort(sortedProps);
