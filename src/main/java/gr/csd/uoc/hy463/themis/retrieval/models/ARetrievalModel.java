@@ -30,6 +30,8 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +41,11 @@ import java.util.Set;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public abstract class ARetrievalModel {
-
+    protected List<Pair<Object, Double>> _results;
+    protected Set<DocInfo.PROPERTY> _docInfoProps = new HashSet<>();
+    protected List<QueryTerm> _query = new ArrayList<>();
+    protected int _startDoc = 0;
+    protected int _endDoc = Integer.MAX_VALUE;
     protected Indexer indexer;
 
     public ARetrievalModel(Indexer indexer) {
@@ -84,10 +90,48 @@ public abstract class ARetrievalModel {
      *
      * @param query list of query terms
      * @param docInfoProps set of properties we want to be retrieved from the documents
-     * @param topk a number (i.e. the top-10 results)
      * @return
      */
     public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException;
+
+    /**
+     * Returns true only if the previous query is the same as the new query, false otherwise
+     * @param queryPrev
+     * @param queryNew
+     * @return
+     */
+    public boolean hasSameQuery(List<QueryTerm> queryPrev, List<QueryTerm> queryNew) {
+        if (queryPrev.size() == queryNew.size()) {
+            for (int i = 0; i < queryPrev.size(); i++) {
+                if (!queryPrev.get(i).getTerm().equals(queryNew.get(i).getTerm())) {
+                    return false;
+                }
+            }
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns true if the previous props is the same as the new props, false otherwise
+     * @param docInfoPropsPrev
+     * @param docInfoPropsNew
+     * @return
+     */
+    public boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoPropsPrev, Set<DocInfo.PROPERTY> docInfoPropsNew) {
+        if (docInfoPropsPrev.size() == docInfoPropsNew.size()) {
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoPropsPrev);
+            Set<DocInfo.PROPERTY> props2 = new HashSet<>(docInfoPropsNew);
+            props1.removeAll(props2);
+            props2.removeAll(props1);
+            return props1.isEmpty() && props2.isEmpty();
+        }
+        else {
+            return false;
+        }
+    }
 
     // We should also add some kind of paging and caching... but maybe in the future
 }
