@@ -68,19 +68,9 @@ public class Existential extends ARetrievalModel {
             List<DocInfo> docInfoList = new ArrayList<>();
             _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
             indexer.updateDocInfo(docInfoList, docInfoProps);
-        }
-        else { //if the query is not the same, just perform a new search
+        } else { //if the query is not the same, just perform a new search
             _results = null;
-            List<Pair<Object, Double>> results = new ArrayList<>();
-            List<String> terms = new ArrayList<>(query.size());
-            query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-            List<String> editedTerms = indexer.preprocessTerms(terms); //apply stemming, stopwords
-            List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
-            for (List<DocInfo> termDocInfo : termsDocInfo) {
-                for (DocInfo docInfo : termDocInfo) {
-                    results.add(new Pair<>(docInfo, 1.0));
-                }
-            }
+            List<Pair<Object, Double>> results = getRankedResults_private(query, docInfoProps);
             _query = query;
             _results = results;
         }
@@ -119,35 +109,19 @@ public class Existential extends ARetrievalModel {
                 docInfoList.add(docInfo);
             }
             indexer.updateDocInfo(docInfoList, docInfoProps);
-        }
-        else {
+        } else {
             _results = null;
-            List<Pair<Object, Double>> results = new ArrayList<>();
-            List<String> terms = new ArrayList<>(query.size());
-            query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-
-            //apply stemming, stopwords
-            List<String> editedTerms = indexer.preprocessTerms(terms);
-
-            //get the all results but fetch only the docId
-            List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, new HashSet<>(0));
+            List<Pair<Object, Double>> results = getRankedResults_private(query, docInfoProps);
 
             //this is the list of docInfo from the above list that fall between startDoc, endDoc.
             List<DocInfo> docInfoList = new ArrayList<>();
 
             int i = 0;
-            for (List<DocInfo> termDocInfo : termsDocInfo) {
-                for (DocInfo docInfo : termDocInfo) {
-
-                    //add every docInfo to the results list
-                    results.add(new Pair<>(docInfo, 1.0));
-
-                    //collect those docInfos that fall between startDoc and endDoc
-                    if (i >= startDoc && i <= endDoc) {
-                        docInfoList.add(docInfo);
-                    }
-                    i++;
+            for (Pair<Object, Double> result : results) {
+                if (i >= startDoc && i <= endDoc) {
+                    docInfoList.add((DocInfo) result.getL());
                 }
+                i++;
             }
 
             //now fetch the properties only for the above docInfo list
@@ -161,5 +135,19 @@ public class Existential extends ARetrievalModel {
         _endDoc = endDoc;
 
         return _results;
+    }
+
+    private List<Pair<Object, Double>> getRankedResults_private(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        List<Pair<Object, Double>> results = new ArrayList<>();
+        List<String> terms = new ArrayList<>(query.size());
+        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+        List<String> editedTerms = indexer.preprocessTerms(terms); //apply stemming, stopwords
+        List<List<DocInfo>> termsDocInfo = indexer.getDocInfo(editedTerms, docInfoProps);
+        for (List<DocInfo> termDocInfo : termsDocInfo) {
+            for (DocInfo docInfo : termDocInfo) {
+                results.add(new Pair<>(docInfo, 1.0));
+            }
+        }
+        return results;
     }
 }
