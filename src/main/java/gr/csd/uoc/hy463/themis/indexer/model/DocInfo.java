@@ -124,6 +124,12 @@ public class DocInfo {
         props.clear();
     }
 
+    public void clearProperties(Set<DocInfo.PROPERTY> deleteProps) {
+        for (PROPERTY p : deleteProps) {
+            props.remove(p);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
