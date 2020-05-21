@@ -228,6 +228,7 @@ public class View extends JFrame {
     public void print(String text) {
         if (_resultsArea != null) {
             _resultsArea.append(text);
+            _resultsArea.setCaretPosition(_resultsArea.getDocument().getLength());
         }
     }
 
