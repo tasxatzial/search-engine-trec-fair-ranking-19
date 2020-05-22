@@ -239,7 +239,7 @@ public class Config {
      * @return
      */
     public String getJudgmentsFileName() {
-        return __PROP__.getProperty("JUDGMENTS_PATH");
+        return __PROP__.getProperty("JUDGEMENTS_PATH");
     }
 
     /**
