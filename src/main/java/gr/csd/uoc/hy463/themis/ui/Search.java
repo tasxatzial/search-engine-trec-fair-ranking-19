@@ -33,8 +33,6 @@ import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
@@ -46,13 +44,8 @@ import java.util.*;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class Search {
-    private static final Logger __LOGGER__ = LogManager.getLogger(Search.class);
     private Indexer _indexer;
     private ARetrievalModel _model;
-    private enum TASK {
-        LOAD_INDEX, SEARCH
-    }
-    private TASK _task = null;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -70,23 +63,8 @@ public class Search {
         }
     }
 
-    public void loadIndex() {
-        if (isRunning()) {
-            return;
-        }
-        Thread runnableIndexer = new Thread(() -> {
-            _task = TASK.LOAD_INDEX;
-            try {
-                _indexer.load();
-            } catch (IOException e) {
-                Themis.print("Failed to load index\n");
-                __LOGGER__.error(e.getMessage());
-            }
-            finally {
-                _task = null;
-            }
-        });
-        runnableIndexer.start();
+    public void loadIndex() throws IOException {
+        _indexer.load();
     }
 
     public boolean isIndexLoaded() {
@@ -98,14 +76,14 @@ public class Search {
     }
 
     /**
-     * Searches for a query. The results should contain at least the document information specified by
-     * the docInfoProps.
-     * @param query A string that contains some terms
-     * @param docInfoProps The document information that we want to be retrieved
+     * Searches for a query and returns a ranked list of results. The results should contain at least the document
+     * properties specified by docInfoProps.
+     * @param query
+     * @param docInfoProps The document properties that we want to retrieve
+     * @return
      * @throws IOException
      */
-    public void search(String query, Set<DocInfo.PROPERTY> docInfoProps, int startResult, int endResult) {
-        Themis.clearResults();
+    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps, int startResult, int endResult) throws IOException {
 
         /* the simplest split based on spaces, suffices for now */
         String[] searchTerms = query.split(" ");
@@ -118,68 +96,46 @@ public class Search {
             }
         }
 
-        Thread runnableSearch = new Thread(() -> {
-            List<Pair<Object, Double>> searchResults;
-            long startTime = System.nanoTime();
-            _task = TASK.SEARCH;
-
-            /* call the model and retrieve the results */
-            try {
-                searchResults = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
-            } catch (IOException e) {
-                __LOGGER__.error(e.getMessage());
-                Themis.print("Search failed\n");
-                return;
-            }
-            finally {
-                _task = null;
-            }
-
-            /* startResult and endResult might be out of the range of the actual results for this document.
-            therefore we need to find the proper indexes of the first and last displayed result */
-            int firstDisplayedResult;
-            int lastDisplayedResult;
-            if (startResult > searchResults.size() - 1) {
-                firstDisplayedResult = 0;
-                lastDisplayedResult = 0;
-            }
-            else if (endResult > searchResults.size() - 1) {
-                firstDisplayedResult = startResult;
-                lastDisplayedResult = searchResults.size() - 1;
-            }
-            else {
-                firstDisplayedResult = startResult;
-                lastDisplayedResult = endResult;
-            }
-
-            Themis.print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
-            Themis.print("Found " + searchResults.size() + " results\n");
-            if (!searchResults.isEmpty()) {
-                Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
-            }
-
-            /* print the results */
-            for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
-                DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
-                List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
-                Collections.sort(sortedProps);
-                Themis.print("DOC_ID: " + docInfo.getId() + "\n");
-                for (DocInfo.PROPERTY docInfoProp : sortedProps) {
-                    Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
-                }
-                if (!docInfoProps.isEmpty()) {
-                    Themis.print("\n");
-                }
-            }
-        });
-        runnableSearch.start();
+        return _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
     }
 
-    public boolean isRunning() {
-        return _task != null;
-    }
+    public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
+        if (searchResults == null) {
+            return;
+        }
+        /* startResult and endResult might be out of the range of the actual results for this document.
+        therefore we need to find the proper indexes of the first and last displayed result */
+        int firstDisplayedResult;
+        int lastDisplayedResult;
+        if (startResult > searchResults.size() - 1) {
+            firstDisplayedResult = 0;
+            lastDisplayedResult = 0;
+        }
+        else if (endResult > searchResults.size() - 1) {
+            firstDisplayedResult = startResult;
+            lastDisplayedResult = searchResults.size() - 1;
+        }
+        else {
+            firstDisplayedResult = startResult;
+            lastDisplayedResult = endResult;
+        }
 
-    public String get_task() {
-        return _task.toString();
+        if (!searchResults.isEmpty()) {
+            Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
+        }
+
+        /* print the results */
+        for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
+            DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
+            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
+            Collections.sort(sortedProps);
+            Themis.print("DOC_ID: " + docInfo.getId() + "\n");
+            for (DocInfo.PROPERTY docInfoProp : sortedProps) {
+                Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+            }
+            if (!sortedProps.isEmpty()) {
+                Themis.print("\n");
+            }
+        }
     }
 }

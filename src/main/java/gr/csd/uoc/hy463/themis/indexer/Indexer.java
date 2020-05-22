@@ -190,6 +190,12 @@ public class Indexer {
      * @throws IOException
      */
     public boolean index(String path) throws IOException {
+        if (!isIndexDirEmpty()) {
+            __LOGGER__.error("Previous index found. Aborting...");
+            Themis.print("Previous index found. Aborting...");
+            return false;
+        }
+
         if (__CONFIG__.getUseStemmer()) {
             Stemmer.Initialize();
         }

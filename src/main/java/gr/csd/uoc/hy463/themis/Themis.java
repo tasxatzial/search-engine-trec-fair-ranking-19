@@ -4,6 +4,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
+import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,6 +12,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -23,6 +25,10 @@ public class Themis {
     private static CreateIndex createIndex;
     private static Search search;
     private static View view;
+    private enum TASK {
+        CREATE_INDEX, LOAD_INDEX, SEARCH
+    };
+    private static TASK _task = null;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 0 && args[0].equals("swing_window")) { //GUI version
@@ -32,10 +38,7 @@ public class Themis {
             view.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    if ((createIndex != null && createIndex.isRunning() &&
-                            !view.showYesNoMessage(createIndex.get_task() + " is in progress. Quit?")) ||
-                        (search != null && search.isRunning() &&
-                            !view.showYesNoMessage(search.get_task() + " is in progress. Quit?"))) {
+                    if (_task != null && !view.showYesNoMessage(_task + " is in progress. Quit?")) {
                         view.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     } else {
                         view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -58,7 +61,7 @@ public class Themis {
             view.addWindowStateListener(e -> view.setTitleAreaBounds());
             view.addWindowStateListener(e -> view.setSearchViewBounds());
 
-            /* add a listeners on menu items */
+            /* add listeners on menu items */
             view.get_createIndex().addActionListener(new createIndexListener());
             view.get_queryCollection().addActionListener(new searchListener());
             view.get_loadIndex().addActionListener(new loadIndexListener());
@@ -67,7 +70,8 @@ public class Themis {
         }
         else { //non GUI version
             createIndex = new CreateIndex();
-            createIndex.createIndex(true);
+            createIndex.deleteIndex();
+            createIndex.createIndex();
         }
     }
 
@@ -84,29 +88,16 @@ public class Themis {
         }
     }
 
-    /**
-     * Clears the results print area.
-     */
-    public static void clearResults() {
-        if (view != null) {
-            view.clearResultsArea();
-        }
-    }
-
+    /* The listener for the "search" button click */
     private static class searchButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-            props.add(DocInfo.PROPERTY.PAGERANK);
-            props.add(DocInfo.PROPERTY.WEIGHT);
-            props.add(DocInfo.PROPERTY.LENGTH);
-            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-            props.add(DocInfo.PROPERTY.TITLE);
-            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-            props.add(DocInfo.PROPERTY.MAX_TF);
-            search.search(view.get_searchField().getText(), props, 0, Integer.MAX_VALUE);
+            if (_task != null) {
+                return;
+            }
+            view.clearResultsArea();
+            Thread runnableSearch = new Thread(new Search_runnable());
+            runnableSearch.start();
         }
     }
 
@@ -114,38 +105,12 @@ public class Themis {
     private static class createIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
+            if (_task != null) {
                 return;
             }
             view.initIndexView();
-            try {
-                createIndex = new CreateIndex();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize indexer\n");
-                return;
-            }
-            boolean deletePreviousIndex = false;
-            if (!createIndex.isIndexDirEmpty()) {
-                deletePreviousIndex = view.showYesNoMessage("Delete previous index folders?");
-                if (!deletePreviousIndex) {
-                    createIndex = null;
-                    return;
-                }
-            }
-            try {
-                if (search != null) {
-                    search.unloadIndex();
-                }
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to unload previous index\n");
-                return;
-            }
-            finally {
-                search = null;
-            }
-            createIndex.createIndex(deletePreviousIndex);
+            Thread runnableCreate = new Thread(new CreateIndex_runnable());
+            runnableCreate.start();
         }
     }
 
@@ -153,7 +118,7 @@ public class Themis {
     private static class searchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
+            if (_task != null) {
                 return;
             }
             view.initSearchView();
@@ -170,31 +135,130 @@ public class Themis {
     private static class loadIndexListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if ((createIndex != null && createIndex.isRunning()) || (search != null && search.isRunning())) {
+            if (_task != null) {
                 return;
             }
             view.initIndexView();
+            Thread runnableLoad = new Thread(new LoadIndex_runnable());
+            runnableLoad.start();
+        }
+    }
+
+    private static class CreateIndex_runnable implements Runnable {
+        @Override
+        public void run() {
+            _task = TASK.CREATE_INDEX;
+            try {
+                createIndex = new CreateIndex();
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to initialize indexer\n");
+                _task = null;
+                return;
+            }
+            boolean deleteIndex = false;
+            if (!createIndex.isIndexDirEmpty()) {
+                deleteIndex = view.showYesNoMessage("Delete previous index folders?");
+                if (!deleteIndex) {
+                    _task = null;
+                    return;
+                }
+            }
             try {
                 if (search != null) {
                     search.unloadIndex();
+                    search = null;
                 }
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to unload previous index\n");
+                _task = null;
                 return;
             }
+            if (deleteIndex) {
+                try {
+                    createIndex.deleteIndex();
+                } catch (IOException ex) {
+                    __LOGGER__.error(ex.getMessage());
+                    print("Failed to delete previous index\n");
+                    _task = null;
+                    return;
+                }
+            }
+            try {
+                createIndex.createIndex();
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to create index\n");
+            }
             finally {
-                search = null;
+                _task = null;
+            }
+        }
+    }
+
+    private static class LoadIndex_runnable implements Runnable {
+        @Override
+        public void run() {
+            _task = TASK.LOAD_INDEX;
+            try {
+                if (search != null) {
+                    search.unloadIndex();
+                    search = null;
+                }
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to unload previous index\n");
+                _task = null;
+                return;
             }
             try {
                 search = new Search();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize indexer\n");
+                _task = null;
                 return;
             }
-            createIndex = null;
-            search.loadIndex();
+            try {
+                search.loadIndex();
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to load index\n");
+            } finally {
+                _task = null;
+            }
+        }
+    }
+
+    private static class Search_runnable implements Runnable {
+        @Override
+        public void run() {
+            _task = TASK.SEARCH;
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            props.add(DocInfo.PROPERTY.PAGERANK);
+            props.add(DocInfo.PROPERTY.WEIGHT);
+            props.add(DocInfo.PROPERTY.LENGTH);
+            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+            props.add(DocInfo.PROPERTY.TITLE);
+            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+            props.add(DocInfo.PROPERTY.MAX_TF);
+
+            List<Pair<Object, Double>> results;
+            long startTime = System.nanoTime();
+            try {
+                results = search.search(view.get_searchField().getText(), props, 0, Integer.MAX_VALUE); //thread
+                print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+                print("Found " + results.size() + " results\n");
+                search.printResults(results, 0, Integer.MAX_VALUE);
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Search failed\n");
+            } finally {
+                _task = null;
+            }
         }
     }
 }

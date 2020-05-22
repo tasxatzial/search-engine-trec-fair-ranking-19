@@ -24,10 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.ui;
 
-import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
@@ -39,48 +36,21 @@ import java.io.IOException;
  *
  */
 public class CreateIndex {
-    private static final Logger __LOGGER__ = LogManager.getLogger(CreateIndex.class);
     private Indexer _indexer;
-    private enum TASK {
-        CREATE_INDEX
-    }
-    private TASK _task = null;
 
     public CreateIndex() throws IOException {
         _indexer = new Indexer();
     }
 
-    public void createIndex(boolean deletePreviousIndex) {
-        if (isRunning()) {
-            return;
-        }
-        Thread runnableIndexer = new Thread(() -> {
-            _task = TASK.CREATE_INDEX;
-            try {
-                if (deletePreviousIndex) {
-                    _indexer.deleteIndex();
-                }
-                _indexer.index();
-            } catch (IOException e) {
-                Themis.print("Error: Failed to create index\n");
-                __LOGGER__.error(e.getMessage());
-            }
-            finally {
-                _task = null;
-            }
-        });
-        runnableIndexer.start();
+    public void createIndex() throws IOException {
+        _indexer.index();
+    }
+
+    public void deleteIndex() throws IOException {
+        _indexer.deleteIndex();
     }
 
     public boolean isIndexDirEmpty() {
         return _indexer.isIndexDirEmpty();
-    }
-
-    public boolean isRunning() {
-        return _task != null;
-    }
-
-    public String get_task() {
-        return _task.toString();
     }
 }
