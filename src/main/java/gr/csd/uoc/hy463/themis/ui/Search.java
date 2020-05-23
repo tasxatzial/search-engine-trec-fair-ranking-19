@@ -27,6 +27,7 @@ package gr.csd.uoc.hy463.themis.ui;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
@@ -84,19 +85,17 @@ public class Search {
      * @throws IOException
      */
     public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps, int startResult, int endResult) throws IOException {
-
-        /* the simplest split based on spaces, suffices for now */
-        String[] searchTerms = query.split(" ");
+        Themis.print("Searching for '" + query + "'...\n");
+        long startTime = System.nanoTime();
 
         /* create the list of query terms */
+        List<String> terms = ProcessText.editQuery(query);
         List<QueryTerm> queryTerms = new ArrayList<>();
-        for (String term : searchTerms) {
-            if (!term.equals("")) {
-                queryTerms.add(new QueryTerm(term, 1.0));
-            }
-        }
+        terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 
-        return _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
+        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
+        Themis.print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+        return results;
     }
 
     public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {

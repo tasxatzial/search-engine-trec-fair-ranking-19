@@ -1,5 +1,8 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 /**
@@ -37,6 +40,21 @@ public class ProcessText {
             term = term.toLowerCase();
         }
         return term;
+    }
+
+    /**
+     * Splits a query into tokens
+     * @param query
+     * @return
+     */
+    public static List<String> editQuery(String query) {
+        String tokens = "\u0020\u201c/\"-.\uff0c[]()，";
+        StringTokenizer tokenizer = new StringTokenizer(query, tokens);
+        List<String> terms = new ArrayList<>();
+        while (tokenizer.hasMoreTokens()) {
+            terms.add(tokenizer.nextToken());
+        }
+        return terms;
     }
 
     /**
