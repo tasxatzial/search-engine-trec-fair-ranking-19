@@ -50,15 +50,15 @@ public class Search {
 
     public Search() throws IOException {
         _indexer = new Indexer();
-        String retrievalModel = _indexer.getRetrievalModel();
+        ARetrievalModel.MODEL retrievalModel = _indexer.getRetrievalModel();
         switch (retrievalModel) {
-            case "Existential":
+            case EXISTENTIAL:
                 _model = new Existential(_indexer);
                 break;
-            case "BM25":
+            case BM25:
                 _model = new OkapiBM25(_indexer);
                 break;
-            case "VSM":
+            case VSM:
                 _model = new VSM(_indexer);
                 break;
         }
@@ -67,6 +67,18 @@ public class Search {
 
     public void unloadIndex() throws IOException {
         _indexer.unload();
+    }
+
+    public void setModelVSM() {
+        _model = new VSM(_indexer);
+    }
+
+    public void setModelBM25() {
+        _model = new OkapiBM25(_indexer);
+    }
+
+    public void setModelExistential() {
+        _model = new Existential(_indexer);
     }
 
     /**
@@ -82,34 +94,6 @@ public class Search {
     }
 
     /**
-     * Searches for a query using the specified model and returns a ranked list of results. The results contain at
-     * least the document properties specified by docInfoProps.
-     * @param query
-     * @param docInfoProps The document properties that we want to retrieve
-     * @return
-     * @throws IOException
-     */
-    public List<Pair<Object, Double>> search(ARetrievalModel model, String query, Set<DocInfo.PROPERTY> docInfoProps)
-            throws IOException {
-        return search(model, query, docInfoProps, 0, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Searches for a query and returns a ranked list of results. The results in the range [startResult, endResult]
-     * contain at least the document properties specified by docInfoProps.
-     * @param query
-     * @param docInfoProps The document properties that we want to retrieve
-     * @param startResult From 0 to Integer.MAX_VALUE
-     * @param endResult From 0 to Integer.MAX_VALUE
-     * @return
-     * @throws IOException
-     */
-    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps,
-                                             int startResult, int endResult) throws IOException {
-        return search(_model, query, docInfoProps, startResult, endResult);
-    }
-
-    /**
      * Searches for a query using the specified model and returns a ranked list of results. The results in the range
      * [startResult, endResult] contain at least the document properties specified by docInfoProps.
      * @param query
@@ -119,8 +103,11 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(ARetrievalModel model, String query, Set<DocInfo.PROPERTY> docInfoProps,
+    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps,
                                              int startResult, int endResult) throws IOException {
+        if (_model == null) {
+            return null;
+        }
         Themis.print("Searching for '" + query + "'...\n");
         long startTime = System.nanoTime();
 
@@ -129,7 +116,7 @@ public class Search {
         List<QueryTerm> queryTerms = new ArrayList<>();
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 
-        List<Pair<Object, Double>> results = model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
+        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
         Themis.print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
         return results;
     }

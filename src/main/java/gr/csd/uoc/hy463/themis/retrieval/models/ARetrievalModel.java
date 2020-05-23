@@ -41,6 +41,9 @@ import java.util.Set;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public abstract class ARetrievalModel {
+    public enum MODEL {
+        BM25, VSM, EXISTENTIAL
+    }
     protected List<Pair<Object, Double>> _results;
     protected Set<DocInfo.PROPERTY> _docInfoProps;
     protected List<QueryTerm> _query;

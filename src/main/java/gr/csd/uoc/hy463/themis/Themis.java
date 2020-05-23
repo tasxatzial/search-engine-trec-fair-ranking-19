@@ -1,6 +1,8 @@
 package gr.csd.uoc.hy463.themis;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.metrics.themisEval;
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
@@ -26,8 +28,8 @@ public class Themis {
     private static Search search;
     private static View view;
     private enum TASK {
-        CREATE_INDEX, LOAD_INDEX, SEARCH
-    };
+        CREATE_INDEX, LOAD_INDEX, SEARCH, EVALUATE
+    }
     private static TASK _task = null;
 
     public static void main(String[] args) throws IOException {
@@ -65,6 +67,8 @@ public class Themis {
             view.get_createIndex().addActionListener(new createIndexListener());
             view.get_queryCollection().addActionListener(new searchListener());
             view.get_loadIndex().addActionListener(new loadIndexListener());
+            view.get_evaluateBM25().addActionListener(new evaluateBM25Listener());
+            view.get_evaluateVSM().addActionListener(new evaluateVSMListener());
 
             view.setVisible(true);
         }
@@ -140,6 +144,65 @@ public class Themis {
             view.initIndexView();
             Thread runnableLoad = new Thread(new LoadIndex_runnable());
             runnableLoad.start();
+        }
+    }
+
+    /* The listener for the "evaluate VSM" menu item */
+    private static class evaluateVSMListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initIndexView();
+            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM);
+            Thread runnableEvaluateVSM = new Thread(evaluateVSM);
+            runnableEvaluateVSM.start();
+        }
+    }
+
+    /* The listener for the "evaluate BM25" menu item */
+    private static class evaluateBM25Listener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initIndexView();
+            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25);
+            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
+            runnableEvaluateBM25.start();
+        }
+    }
+
+    private static class Evaluate_runnable implements Runnable {
+        private ARetrievalModel.MODEL _model;
+
+        public Evaluate_runnable(ARetrievalModel.MODEL model) {
+            _model = model;
+        }
+
+        @Override
+        public void run() {
+            _task = TASK.EVALUATE;
+            if (search == null) {
+                try {
+                    search = new Search();
+                } catch (IOException e) {
+                    __LOGGER__.error(e.getMessage());
+                    print("Failed to initialize search\n");
+                    _task = null;
+                    return;
+                }
+            }
+            themisEval evaluator = new themisEval(search);
+            if (_model == ARetrievalModel.MODEL.VSM) {
+                evaluator.evaluateVSM();
+            }
+            else if (_model == ARetrievalModel.MODEL.BM25) {
+                evaluator.evaluateBM25();
+            }
+            _task = null;
         }
     }
 

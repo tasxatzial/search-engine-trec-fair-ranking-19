@@ -24,5 +24,20 @@
  */
 package gr.csd.uoc.hy463.themis.metrics;
 
+import gr.csd.uoc.hy463.themis.ui.Search;
+
 public class themisEval {
+    Search _search;
+
+    public themisEval(Search search) {
+        _search = search;
+    }
+
+    public void evaluateVSM() {
+        _search.setModelVSM();
+    }
+
+    public void evaluateBM25() {
+        _search.setModelBM25();
+    }
 }

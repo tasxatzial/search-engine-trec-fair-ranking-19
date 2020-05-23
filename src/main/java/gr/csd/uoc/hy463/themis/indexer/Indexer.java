@@ -37,6 +37,8 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Tex
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
@@ -45,12 +47,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.print.Doc;
 
 /**
  * Our basic indexer class. This class is responsible for two tasks:
@@ -68,7 +67,6 @@ import javax.print.Doc;
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class Indexer {
-    private final AtomicBoolean running = new AtomicBoolean(false);
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
 
     // configuration options
@@ -118,7 +116,7 @@ public class Indexer {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public Indexer(Config config) throws IOException, ClassNotFoundException {
+    public Indexer(Config config) {
         this.__CONFIG__ = config;  // reads info from themis.config file
         init();
     }
@@ -1202,7 +1200,17 @@ public class Indexer {
      * Returns the current retrieval model
      * @return
      */
-    public String getRetrievalModel() {
-        return __CONFIG__.getRetrievalModel();
+    public ARetrievalModel.MODEL getRetrievalModel() {
+        String modelName = __CONFIG__.getRetrievalModel();
+        if (modelName.equals("BM25")) {
+            return ARetrievalModel.MODEL.BM25;
+        }
+        else if (modelName.equals("VSM")) {
+            return ARetrievalModel.MODEL.VSM;
+        }
+        else if (modelName.equals("Existential")) {
+            return ARetrievalModel.MODEL.EXISTENTIAL;
+        }
+        return null;
     }
 }
