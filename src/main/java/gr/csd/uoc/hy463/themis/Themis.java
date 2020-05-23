@@ -186,6 +186,7 @@ public class Themis {
         public void run() {
             _task = TASK.EVALUATE;
             if (search == null) {
+                createIndex = null;
                 try {
                     search = new Search();
                 } catch (IOException e) {
@@ -274,6 +275,7 @@ public class Themis {
                 _task = null;
                 return;
             }
+            createIndex = null;
             try {
                 search = new Search();
             } catch (IOException ex) {
