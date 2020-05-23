@@ -18,6 +18,12 @@ public class View extends JFrame {
     /* The "query collection" menu item */
     private JMenuItem _queryCollection;
 
+    /* The "evaluate VSM" menu item */
+    private JMenuItem _evaluateVSM;
+
+    /* The "evaluate BM25" menu item */
+    private JMenuItem _evaluateBM25;
+
     /* The font of any text except the menu/title items */
     private Font _textFont;
 
@@ -65,10 +71,18 @@ public class View extends JFrame {
         _queryCollection = new JMenuItem("Query collection");
         search.add(_queryCollection);
 
+        /* evaluate menu */
+        JMenuItem evaluate = new JMenu("Evaluate");
+        _evaluateVSM = new JMenuItem("Evaluate VSM");
+        _evaluateBM25 = new JMenuItem("Evaluate BM25");
+        evaluate.add(_evaluateVSM);
+        evaluate.add(_evaluateBM25);
+
         /* main menu bar */
         _menu = new JMenuBar();
         _menu.add(index);
         _menu.add(search);
+        _menu.add(evaluate);
 
         setJMenuBar(_menu);
     }
@@ -96,7 +110,8 @@ public class View extends JFrame {
     }
 
     /**
-     * Modifies the view when the "create index" menu item is clicked.
+     * Modifies the view when the "create index", "load index", "evaluate VSM", "evaluate BM25" menu items
+     * are clicked.
      */
     public void initIndexView() {
         if (_searchField != null) {
@@ -116,7 +131,8 @@ public class View extends JFrame {
     }
 
     /**
-     * Sets the proper bounds of the create/load index results area
+     * Sets the proper bounds of the results area when the "create index", "load index", "evaluate VSM",
+     * "evaluate BM25" menu items are clicked.
      */
     public void setIndexViewBounds() {
         if (_resultsPane == null) {
@@ -254,6 +270,22 @@ public class View extends JFrame {
      */
     public JMenuItem get_loadIndex() {
         return _loadIndex;
+    }
+
+    /**
+     * Returns the "evaluate VSM" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateVSM() {
+        return _evaluateVSM;
+    }
+
+    /**
+     * Returns the "evaluate BM25" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateBM25() {
+        return _evaluateBM25;
     }
 
     /**
