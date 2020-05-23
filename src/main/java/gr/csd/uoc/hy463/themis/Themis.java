@@ -122,12 +122,11 @@ public class Themis {
                 return;
             }
             view.initSearchView();
-            if (search == null || !search.isIndexLoaded()) {
-                __LOGGER__.error("Index is not loaded!");
-                print("Index is not loaded!\n");
-                return;
-            }
             view.get_searchButton().addActionListener(new searchButtonListener());
+            if (search == null) {
+                Thread runnableLoad = new Thread(new LoadIndex_runnable());
+                runnableLoad.start();
+            }
         }
     }
 
@@ -152,7 +151,7 @@ public class Themis {
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize indexer\n");
+                print("Failed to initialize\n");
                 _task = null;
                 return;
             }
@@ -216,16 +215,9 @@ public class Themis {
                 search = new Search();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize indexer\n");
-                _task = null;
-                return;
+                print("Failed to initialize\n");
             }
-            try {
-                search.loadIndex();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to load index\n");
-            } finally {
+            finally {
                 _task = null;
             }
         }

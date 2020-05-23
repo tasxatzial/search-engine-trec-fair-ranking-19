@@ -62,14 +62,7 @@ public class Search {
                 _model = new VSM(_indexer);
                 break;
         }
-    }
-
-    public void loadIndex() throws IOException {
         _indexer.load();
-    }
-
-    public boolean isIndexLoaded() {
-        return _indexer.loaded();
     }
 
     public void unloadIndex() throws IOException {
