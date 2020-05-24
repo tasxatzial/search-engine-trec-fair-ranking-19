@@ -50,17 +50,16 @@ public class Search {
 
     public Search() throws IOException {
         _indexer = new Indexer();
-        ARetrievalModel.MODEL retrievalModel = _indexer.getRetrievalModel();
+        ARetrievalModel.MODEL retrievalModel = _indexer.getDefaultRetrievalModel();
         switch (retrievalModel) {
-            case EXISTENTIAL:
-                _model = new Existential(_indexer);
-                break;
             case BM25:
                 _model = new OkapiBM25(_indexer);
                 break;
             case VSM:
                 _model = new VSM(_indexer);
                 break;
+            default:
+                _model = new Existential(_indexer);
         }
         _indexer.load();
     }
@@ -79,6 +78,19 @@ public class Search {
 
     public void setModelExistential() {
         _model = new Existential(_indexer);
+    }
+
+    public ARetrievalModel.MODEL getRetrievalModel() {
+        if (_model instanceof OkapiBM25) {
+            return ARetrievalModel.MODEL.BM25;
+        }
+        else if (_model instanceof VSM) {
+            return ARetrievalModel.MODEL.VSM;
+        }
+        else if (_model instanceof Existential) {
+            return ARetrievalModel.MODEL.EXISTENTIAL;
+        }
+        return null;
     }
 
     /**
@@ -105,10 +117,8 @@ public class Search {
      */
     public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps,
                                              int startResult, int endResult) throws IOException {
-        if (_model == null) {
-            return null;
-        }
-        Themis.print("Searching for '" + query + "'...\n");
+        Themis.print("Retrieval model: " + getRetrievalModel());
+        Themis.print("Searching for '" + query + "'...");
         long startTime = System.nanoTime();
 
         /* create the list of query terms */

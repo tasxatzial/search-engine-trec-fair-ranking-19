@@ -27,12 +27,18 @@ package gr.csd.uoc.hy463.themis.metrics;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.ui.Search;
+import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.*;
 
 public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
@@ -77,7 +83,7 @@ public class themisEval {
     /**
      * Runs the VSM evaluator
      */
-    public void evaluateVSM() {
+    public void evaluateVSM() throws IOException {
         if (!hasJudgements()) {
             __LOGGER__.error("VSM evaluation failed");
             Themis.print("No judgements file found! Evaluation failed\n");
@@ -97,7 +103,7 @@ public class themisEval {
     /**
      * Runs the BM25 evaluator
      */
-    public void evaluateBM25() {
+    public void evaluateBM25() throws IOException {
         if (!hasJudgements()) {
             __LOGGER__.error("BM25 evaluation failed");
             Themis.print("No judgements file found! Evaluation failed\n");
@@ -114,7 +120,72 @@ public class themisEval {
         evaluate();
     }
 
-    private void evaluate() {
+    /* the common evaluation function */
+    private void evaluate() throws IOException {
+        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
+        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
+        Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
+        Themis.print("Retrieval model: " + _search.getRetrievalModel() + "\n\n");
+        evaluationWriter.write("Retrieval model: " + _search.getRetrievalModel() + "\n\n");
+        String line;
+        JSONParser parser = new JSONParser();
+        List<Double> aveps = new ArrayList<>();
+        List<Double> bprefs = new ArrayList<>();
+        List<Double> ndcgs = new ArrayList<>();
+        while ((line = judgementsReader.readLine()) != null) {
+            Object obj;
+            try {
+                obj = parser.parse(line);
+            } catch (ParseException e) {
+                __LOGGER__.error(e.getMessage());
+                continue;
+            }
+            JSONObject jsonObject = (JSONObject) obj;
+            JSONArray documentsArray = (JSONArray) jsonObject.get("documents");
+            String query = (String) jsonObject.get("query");
+            Map<String, Long> relevanceMap = new HashMap<>();
+            for (Object o : documentsArray) {
+                JSONObject doc = (JSONObject) o;
+                relevanceMap.put((String) doc.get("doc_id"), (Long) doc.get("relevance"));
+            }
+            List<Pair<Object, Double>> results = _search.search(query, new HashSet<>());
+            evaluationWriter.write("Search query: " + query);
+            double avep = computeAveP(results, relevanceMap);
+            aveps.add(avep);
+            double bpref = computeBpref(results, relevanceMap);
+            bprefs.add(bpref);
+            double ndcg = computeNdcg(results, relevanceMap);
+            ndcgs.add(ndcg);
+            evaluationWriter.write("Average precision: " + avep);
+            evaluationWriter.write("bpref: " + bpref);
+            evaluationWriter.write("ndcg: " + ndcg + "\n\n");
+            evaluationWriter.flush();
+            Themis.print("Average precision: " + avep + "\n");
+            Themis.print("bpref: " + bpref + "\n");
+            Themis.print("ndcg: " + ndcg + "\n\n");
+        }
 
+        evaluationWriter.close();
+        Themis.print("Saved results in " + __EVALUATION_FILENAME__ + "\n");
+        judgementsReader.close();
+    }
+
+    private static double computeAveP(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+        double avep = 0;
+
+        return avep;
+    }
+
+    private static double computeBpref(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+        double bpref = 0;
+
+        return bpref;
+    }
+
+    private static double computeNdcg(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+        double dcg = 0;
+        double idcg = 0;
+
+        return dcg / idcg;
     }
 }

@@ -205,11 +205,15 @@ public class Themis {
                 _task = null;
                 return;
             }
-            if (_model == ARetrievalModel.MODEL.VSM) {
-                evaluator.evaluateVSM();
-            }
-            else if (_model == ARetrievalModel.MODEL.BM25) {
-                evaluator.evaluateBM25();
+            try {
+                if (_model == ARetrievalModel.MODEL.VSM) {
+                    evaluator.evaluateVSM();
+                } else if (_model == ARetrievalModel.MODEL.BM25) {
+                    evaluator.evaluateBM25();
+                }
+            } catch (IOException e) {
+                __LOGGER__.error(e.getMessage());
+                print("Evaluation failed\n");
             }
             _task = null;
         }
@@ -262,9 +266,7 @@ public class Themis {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to create index\n");
             }
-            finally {
-                _task = null;
-            }
+            _task = null;
         }
     }
 
@@ -290,9 +292,7 @@ public class Themis {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize\n");
             }
-            finally {
-                _task = null;
-            }
+            _task = null;
         }
     }
 
@@ -315,15 +315,13 @@ public class Themis {
             long startTime = System.nanoTime();
             try {
                 results = search.search(view.get_searchField().getText(), props, 0, 50);
-                print("Search time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
-                search.printResults(results, 0, Integer.MAX_VALUE);
+                search.printResults(results, 0, 50);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
-            } finally {
-                _task = null;
             }
+            _task = null;
         }
     }
 }

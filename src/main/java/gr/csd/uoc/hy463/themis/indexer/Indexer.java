@@ -1200,7 +1200,7 @@ public class Indexer {
      * Returns the current retrieval model
      * @return
      */
-    public ARetrievalModel.MODEL getRetrievalModel() {
+    public ARetrievalModel.MODEL getDefaultRetrievalModel() {
         String modelName = __CONFIG__.getRetrievalModel();
         if (modelName.equals("BM25")) {
             return ARetrievalModel.MODEL.BM25;
