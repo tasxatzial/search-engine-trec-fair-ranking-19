@@ -158,13 +158,34 @@ public class themisEval {
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep);
             evaluationWriter.write("bpref: " + bpref);
-            evaluationWriter.write("ndcg: " + ndcg + "\n\n");
-            evaluationWriter.flush();
-            Themis.print("Average precision: " + avep + "\n");
-            Themis.print("bpref: " + bpref + "\n");
-            Themis.print("ndcg: " + ndcg + "\n\n");
+            evaluationWriter.write("nDCG: " + ndcg + "\n\n");
         }
 
+        double averageAvep = calculateAverage(aveps);
+        double minAvep = calculateMin(aveps);
+        double maxAvep = calculateMax(aveps);
+
+        double averageBpref = calculateAverage(bprefs);
+        double minBpref = calculateMin(bprefs);
+        double maxBpref = calculateMax(bprefs);
+
+        double averageNdcg = calculateAverage(ndcgs);
+        double minNdcg = calculateMin(ndcgs);
+        double maxNdcg = calculateMax(ndcgs);
+
+        evaluationWriter.write("Summary:\n");
+        evaluationWriter.write("Average precision:\n");
+        evaluationWriter.write("Average: " + averageAvep + "\n");
+        evaluationWriter.write("Min: " + minAvep + "\n");
+        evaluationWriter.write("Max: " + maxAvep + "\n");
+        evaluationWriter.write("bpref:\n");
+        evaluationWriter.write("Average: " + averageBpref + "\n");
+        evaluationWriter.write("Min: " + minBpref + "\n");
+        evaluationWriter.write("Max: " + maxBpref + "\n");
+        evaluationWriter.write("nDCG:\n");
+        evaluationWriter.write("Average: " + averageNdcg + "\n");
+        evaluationWriter.write("Min: " + minNdcg + "\n");
+        evaluationWriter.write("Max: " + maxNdcg + "\n");
         evaluationWriter.close();
         Themis.print("Saved results in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
@@ -187,5 +208,47 @@ public class themisEval {
         double idcg = 0;
 
         return dcg / idcg;
+    }
+
+    /* calculates the average in a list of doubles */
+    private static double calculateAverage(List<Double> list) {
+        double sum = 0;
+        if (list.isEmpty()) {
+            return 0;
+        }
+        for (Double value : list) {
+            sum += value;
+        }
+        return 1.0 * sum / list.size();
+    }
+
+    /* calculates the min in a list of doubles */
+    private static double calculateMin(List<Double> list) {
+        double min = 0;
+        if (list.isEmpty()) {
+            return 0;
+        }
+        min = list.get(0);
+        for (Double value : list) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        return min;
+    }
+
+    /* calculates the max in a list of doubles */
+    private static double calculateMax(List<Double> list) {
+        double max = 0;
+        if (list.isEmpty()) {
+            return 0;
+        }
+        max = list.get(0);
+        for (double value : list) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        return max;
     }
 }
