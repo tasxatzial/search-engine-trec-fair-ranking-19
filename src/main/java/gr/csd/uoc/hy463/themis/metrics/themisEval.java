@@ -253,9 +253,26 @@ public class themisEval {
         return bpref;
     }
 
+    /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
     private static double computeNdcg(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double dcg = 0;
         double idcg = 0;
+        int nonSkippedDocuments = 0;
+        int relevantDocuments = 0;
+        for (Pair<Object, Double> result : results) {
+            String docId = ((DocInfo) result.getL()).getId();
+            Long isJudged = relevanceMap.get(docId);
+            if (isJudged != null) {
+                nonSkippedDocuments++;
+                if (isJudged == 1) {
+                    relevantDocuments++;
+                    dcg += Math.log(2) / Math.log(nonSkippedDocuments + 1);
+                }
+            }
+        }
+        for (int i = 1; i <= Math.min(relevantDocuments, nonSkippedDocuments); i++) {
+            idcg += Math.log(2) / Math.log(i + 1);
+        }
 
         return dcg / idcg;
     }
