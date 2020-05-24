@@ -94,6 +94,17 @@ public class Search {
     }
 
     /**
+     * Searches for a query and returns a ranked list of results. The results contain at least the docId of
+     * the found documents.
+     * @param query
+     * @return
+     * @throws IOException
+     */
+    public List<Pair<Object, Double>> search(String query) throws IOException {
+        return search(query, new HashSet<>(), 0, Integer.MAX_VALUE);
+    }
+
+    /**
      * Searches for a query and returns a ranked list of results. The results contain at least the document
      * properties specified by docInfoProps.
      * @param query

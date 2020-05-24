@@ -153,7 +153,7 @@ public class themisEval {
             //perform a search
             evaluationWriter.write("Search query: " + query + "\n");
             Themis.print("Search query: " + query + "\n");
-            List<Pair<Object, Double>> results = _search.search(query, new HashSet<>());
+            List<Pair<Object, Double>> results = _search.search(query);
 
             //calculate average precision, bpref, nDCG
             double avep = computeAveP(results, relevanceMap);
