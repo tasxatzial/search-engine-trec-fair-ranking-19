@@ -120,12 +120,6 @@ public class DocInfo {
         return new HashSet<>(props.keySet());
     }
 
-    public void clearProperties(Set<DocInfo.PROPERTY> deleteProps) {
-        for (PROPERTY p : deleteProps) {
-            props.remove(p);
-        }
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {

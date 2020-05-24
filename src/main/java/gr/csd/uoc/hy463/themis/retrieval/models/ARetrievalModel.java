@@ -108,43 +108,26 @@ public abstract class ARetrievalModel {
      * @return
      */
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
-        boolean isSameQuery = hasSameQuery(query);
-        boolean isSameProps = hasSameProps(docInfoProps);
+        if (hasSameQuery(query)) {
 
-        /* return the previous results if everything is unchanged */
-        if (isSameQuery && isSameProps && startDoc == _startDoc) {
-            if (endDoc >= _results.size() - 1) {
-                _endDoc = endDoc;
-                return _results;
-            }
-        }
-
-        if (isSameQuery) { /* same query, different props */
-            List<DocInfo> docInfoList = new ArrayList<>();
-
-            /* since we are not going to display all relevant documents, we need to to clear the properties of
-            the corresponding docInfo items that will not be displayed */
-            Set<DocInfo.PROPERTY> removeProps = new HashSet<>(docInfoProps);
+            /* the essentialProps have already been fetched in the previous query, so the props that need to be
+            fetched in this query must not include the essentialProps */
+            Set<DocInfo.PROPERTY> newProps = new HashSet<>(docInfoProps);
             for (DocInfo.PROPERTY prop : _essentialProps) {
-                removeProps.remove(prop);
+                newProps.remove(prop);
             }
-            for (int i = 0; i < startDoc; i++) {
-                ((DocInfo) _results.get(i).getL()).clearProperties(removeProps);
-            }
-            if (endDoc != Integer.MAX_VALUE) {
-                for (int i = endDoc + 1; i < _results.size(); i++) {
-                    ((DocInfo) _results.get(i).getL()).clearProperties(removeProps);
-                }
-            }
-            for (int i = startDoc; i <= Math.min(endDoc, _results.size() - 1); i++) {
-                DocInfo docInfo = (DocInfo) _results.get(i).getL();
+
+            /* put all docInfo in a list */
+            List<DocInfo> docInfoList = new ArrayList<>();
+            for (Pair<Object, Double> result : _results) {
+                DocInfo docInfo = (DocInfo) result.getL();
                 docInfoList.add(docInfo);
             }
 
             /* update the docInfo items with the new props */
-            _indexer.updateDocInfo(docInfoList, docInfoProps);
+            _indexer.updateDocInfo(docInfoList, newProps);
         }
-        else { /* different query */
+        else {
             _results = null;
 
             /* initially fetch only the essential props from each document. Those props will be used
@@ -191,23 +174,5 @@ public abstract class ARetrievalModel {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Returns true if the previous props is the same as the new props, false otherwise
-     * @param docInfoProps
-     * @return
-     */
-    private boolean hasSameProps(Set<DocInfo.PROPERTY> docInfoProps) {
-        if (docInfoProps.size() == _docInfoProps.size()) {
-            Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
-            Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
-            props1.removeAll(_docInfoProps);
-            props2.removeAll(docInfoProps);
-            return props1.isEmpty() && props2.isEmpty();
-        }
-        else {
-            return false;
-        }
     }
 }
