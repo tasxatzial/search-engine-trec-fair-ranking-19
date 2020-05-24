@@ -143,13 +143,19 @@ public class themisEval {
             JSONObject jsonObject = (JSONObject) obj;
             JSONArray documentsArray = (JSONArray) jsonObject.get("documents");
             String query = (String) jsonObject.get("query");
+
+            //construct a map of (docId, binary relevance value) for this query
             Map<String, Long> relevanceMap = new HashMap<>();
             for (Object o : documentsArray) {
                 JSONObject doc = (JSONObject) o;
                 relevanceMap.put((String) doc.get("doc_id"), (Long) doc.get("relevance"));
             }
+
+            //perform a search
             List<Pair<Object, Double>> results = _search.search(query, new HashSet<>());
             evaluationWriter.write("Search query: " + query);
+
+            //calculate average precision, bpref, nDCG
             double avep = computeAveP(results, relevanceMap);
             aveps.add(avep);
             double bpref = computeBpref(results, relevanceMap);
@@ -191,8 +197,27 @@ public class themisEval {
         judgementsReader.close();
     }
 
+    /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
     private static double computeAveP(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double avep = 0;
+        int relevantDocuments = 0;
+        int skippedDocuments = 0;
+        int nonSkippedDocuments = 0;
+
+        for (Pair<Object, Double> rankedDocument : results) {
+            String docId = ((DocInfo) rankedDocument.getL()).getId();
+            Long isJudged = relevanceMap.get(docId);
+            if (isJudged != null) {
+                nonSkippedDocuments++;
+                if (isJudged == 1) {
+                    relevantDocuments++;
+                    avep += (0.0 + isJudged * relevantDocuments) / nonSkippedDocuments;
+                }
+            } else {
+                skippedDocuments++;
+            }
+        }
+        avep /= (results.size() - skippedDocuments);
 
         return avep;
     }
