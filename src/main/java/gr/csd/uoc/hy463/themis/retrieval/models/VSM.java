@@ -57,15 +57,12 @@ public class VSM extends ARetrievalModel {
         //collect the terms
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
-        //apply stemming, stopwords
-        List<String> editedTerms = _indexer.preprocessTerms(terms);
-
         //get the docInfo objects associated with each term
-        termsDocInfo = _indexer.getDocInfo(editedTerms, docInfoProps);
+        termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
 
         //frequencies of the terms in the query
-        Map<String, Integer> queryFreqs = new HashMap<>(editedTerms.size());
-        for (String term : editedTerms) {
+        Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
+        for (String term : terms) {
             queryFreqs.merge(term, 1, Integer::sum);
         }
 
@@ -78,19 +75,19 @@ public class VSM extends ARetrievalModel {
         }
 
         //df of the terms
-        int[] dfs = _indexer.getDf(editedTerms);
+        int[] dfs = _indexer.getDf(terms);
 
         //weights of terms in the query
-        double[] queryWeights = new double[editedTerms.size()];
-        for (int i = 0; i < editedTerms.size(); i++) {
-            double tf = (0.0 + queryFreqs.get(editedTerms.get(i))) / queryMaxFreq;
+        double[] queryWeights = new double[terms.size()];
+        for (int i = 0; i < terms.size(); i++) {
+            double tf = (0.0 + queryFreqs.get(terms.get(i))) / queryMaxFreq;
             double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
             queryWeights[i] = tf * idf;
         }
 
         //norm of query
         double queryNorm = 0;
-        for (int i = 0; i < editedTerms.size(); i++) {
+        for (int i = 0; i < terms.size(); i++) {
             queryNorm += queryWeights[i] * queryWeights[i];
         }
         queryNorm = Math.sqrt(queryNorm);
@@ -98,14 +95,14 @@ public class VSM extends ARetrievalModel {
         //weights of terms for each document
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < termsDocInfo.size(); i++) {
-            int[] freqs = _indexer.getFreq(editedTerms.get(i));
+            int[] freqs = _indexer.getFreq(terms.get(i));
             double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
             for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = termsDocInfo.get(i).get(j);
                 double[] weights = documentsWeights.get(docInfo);
                 double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
                 if (weights == null) {
-                    weights = new double[editedTerms.size()];
+                    weights = new double[terms.size()];
                     documentsWeights.put(docInfo, weights);
                 }
                 weights[i] += tf * idf;

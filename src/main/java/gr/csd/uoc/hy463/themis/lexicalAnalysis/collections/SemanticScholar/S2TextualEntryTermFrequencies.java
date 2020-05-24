@@ -62,7 +62,7 @@ public class S2TextualEntryTermFrequencies {
             currentToken = tokenizer.nextToken();
 
             //apply stopwords, stemming, convert to lowercase
-            currentToken = ProcessText.indexingProcess(currentToken, useStopwords, useStemmer);
+            currentToken = ProcessText.applyStopwordsStemming(currentToken, useStopwords, useStemmer);
             if (currentToken != null) {
                 addToWordsMap_asIs(currentToken, prop, entryWords);
             }

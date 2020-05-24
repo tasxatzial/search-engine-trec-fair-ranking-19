@@ -60,28 +60,25 @@ public class OkapiBM25 extends ARetrievalModel {
         //collect the terms
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
-        //apply stemming, stopwords
-        List<String> editedTerms = _indexer.preprocessTerms(terms);
-
         //get the docInfo objects associated with each term
-        termsDocInfo = _indexer.getDocInfo(editedTerms, docInfoProps);
+        termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
 
         //compute the idf for each term of the query
-        double[] idfs = new double[editedTerms.size()];
-        int[] dfs = _indexer.getDf(editedTerms);
-        for (int i = 0; i < editedTerms.size(); i++) {
+        double[] idfs = new double[terms.size()];
+        int[] dfs = _indexer.getDf(terms);
+        for (int i = 0; i < terms.size(); i++) {
             idfs[i] = Math.log((totalArticles - dfs[i] + 0.5) / (dfs[i] + 0.5));
         }
 
         //frequencies of each term in each document
         Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
         for (int i = 0; i < termsDocInfo.size(); i++) {
-            int[] termFreqs = _indexer.getFreq(editedTerms.get(i));
+            int[] termFreqs = _indexer.getFreq(terms.get(i));
             for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = termsDocInfo.get(i).get(j);
                 int[] docFreqs = documentsFreqs.get(docInfo);
                 if (docFreqs == null) {
-                    docFreqs = new int[editedTerms.size()];
+                    docFreqs = new int[terms.size()];
                     documentsFreqs.put(docInfo, docFreqs);
                 }
                 docFreqs[i] = termFreqs[j];
@@ -94,7 +91,7 @@ public class OkapiBM25 extends ARetrievalModel {
             int[] freqs = docFreqs.getValue();
             DocInfo docInfo = docFreqs.getKey();
             int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.LENGTH);
-            for (int i = 0; i < editedTerms.size(); i++) {
+            for (int i = 0; i < terms.size(); i++) {
                 documentScore += idfs[i] * freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl));
             }
             results.add(new Pair<>(docInfo, documentScore));

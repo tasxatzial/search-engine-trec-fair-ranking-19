@@ -57,8 +57,7 @@ public class Existential extends ARetrievalModel {
         List<Pair<Object, Double>> results = new ArrayList<>();
         List<String> terms = new ArrayList<>(query.size());
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-        List<String> editedTerms = _indexer.preprocessTerms(terms); //apply stemming, stopwords
-        List<List<DocInfo>> termsDocInfo = _indexer.getDocInfo(editedTerms, docInfoProps);
+        List<List<DocInfo>> termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
         for (List<DocInfo> termDocInfo : termsDocInfo) {
             for (DocInfo docInfo : termDocInfo) {
                 results.add(new Pair<>(docInfo, 1.0));

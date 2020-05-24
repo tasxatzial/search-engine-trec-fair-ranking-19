@@ -38,7 +38,6 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
-import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
@@ -900,21 +899,6 @@ public class Indexer {
         return fileList == null || fileList.length == 0;
     }
 
-    /* Returns a new list of terms based on the options for stemming and stopwords from the
-     * meta_index_info map */
-    public List<String> preprocessTerms(List<String> terms) {
-        boolean useStopwords = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
-        boolean useStemmer = Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
-        List<String> editedTerms = new ArrayList<>();
-        for (String term : terms) {
-            term = ProcessText.indexingProcess(term, useStopwords, useStemmer);
-            if (term != null) {
-                editedTerms.add(term);
-            }
-        }
-        return editedTerms;
-    }
-
     /**
      * Basic method for querying functionality. Given the list of terms in the
      * query, returns a List of Lists of DocInfo objects, where each
@@ -1212,5 +1196,31 @@ public class Indexer {
             return ARetrievalModel.MODEL.EXISTENTIAL;
         }
         return null;
+    }
+
+    /**
+     * Returns true if stopwords is enabled for this index. Returns null if meta index info file is not loaded.
+     * @return
+     */
+    public Boolean useStopwords() {
+        if (__META_INDEX_INFO__ != null) {
+            return Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return null;
+        }
+    }
+
+    /**
+     * Returns true if stemming is enabled for this index. Returns null if meta index info file is not loaded.
+     * @return
+     */
+    public Boolean useStemmer() {
+        if (__META_INDEX_INFO__ != null) {
+            return Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return null;
+        }
     }
 }

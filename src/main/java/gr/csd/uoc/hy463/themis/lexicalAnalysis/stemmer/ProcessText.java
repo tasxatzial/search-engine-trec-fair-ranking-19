@@ -22,7 +22,7 @@ public class ProcessText {
      * @return Stemmed term if useStemmer is true. Null if useStopwords is true and term is
      * a stopword.
      */
-    public static String indexingProcess(String term, boolean useStopwords, boolean useStemmer) {
+    public static String applyStopwordsStemming(String term, boolean useStopwords, boolean useStemmer) {
         String stemTerm = null;
         if (useStopwords) {
             term = term.toLowerCase();
@@ -43,16 +43,20 @@ public class ProcessText {
     }
 
     /**
-     * Splits a query into tokens
+     * Splits a query into tokens and applies stopwords, stemming (if they are enabled)
      * @param query
      * @return
      */
-    public static List<String> editQuery(String query) {
+    public static List<String> editQuery(String query, boolean useStopwords, boolean useStemmer) {
         String tokens = "\u0020\u201c/\"-.\uff0c[]()，";
         StringTokenizer tokenizer = new StringTokenizer(query, tokens);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
-            terms.add(tokenizer.nextToken());
+            String token = tokenizer.nextToken();
+            token = applyStopwordsStemming(token, useStopwords, useStemmer);
+            if (token != null) {
+                terms.add(token);
+            }
         }
         return terms;
     }
