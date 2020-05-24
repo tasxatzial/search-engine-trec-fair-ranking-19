@@ -196,7 +196,15 @@ public class Themis {
                     return;
                 }
             }
-            themisEval evaluator = new themisEval(search);
+            themisEval evaluator;
+            try {
+                evaluator = new themisEval(search);
+            } catch (IOException e) {
+                __LOGGER__.error(e.getMessage());
+                print("Failed to initialize evaluator\n");
+                _task = null;
+                return;
+            }
             if (_model == ARetrievalModel.MODEL.VSM) {
                 evaluator.evaluateVSM();
             }

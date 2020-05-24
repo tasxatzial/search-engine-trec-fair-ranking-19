@@ -243,6 +243,22 @@ public class Config {
     }
 
     /**
+     * Returns the path to the filename of the VSM evaluation results
+     * @return
+     */
+    public String getVSMEvaluationFilename() {
+        return __PROP__.getProperty("EVALUATION_VSM_FILENAME");
+    }
+
+    /**
+     * Returns the path to the filename of the BM25 evaluation results
+     * @return
+     */
+    public String getBM25EvaluationFilename() {
+        return __PROP__.getProperty("EVALUATION_BM25_FILENAME");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return
