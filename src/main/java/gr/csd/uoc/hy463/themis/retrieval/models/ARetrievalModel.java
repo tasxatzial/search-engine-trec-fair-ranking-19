@@ -202,8 +202,8 @@ public abstract class ARetrievalModel {
         if (docInfoProps.size() == _docInfoProps.size()) {
             Set<DocInfo.PROPERTY> props1 = new HashSet<>(docInfoProps);
             Set<DocInfo.PROPERTY> props2 = new HashSet<>(_docInfoProps);
-            props1.removeAll(props2);
-            props2.removeAll(props1);
+            props1.removeAll(_docInfoProps);
+            props2.removeAll(docInfoProps);
             return props1.isEmpty() && props2.isEmpty();
         }
         else {
