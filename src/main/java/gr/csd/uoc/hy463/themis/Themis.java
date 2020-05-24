@@ -313,8 +313,11 @@ public class Themis {
 
             List<Pair<Object, Double>> results;
             long startTime = System.nanoTime();
+            String query = view.get_searchField().getText();
+            print("Searching for '" + query + "'...");
             try {
                 results = search.search(view.get_searchField().getText(), props, 0, 50);
+                print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results, 0, 50);
             } catch (IOException ex) {

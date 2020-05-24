@@ -117,10 +117,6 @@ public class Search {
      */
     public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps,
                                              int startResult, int endResult) throws IOException {
-        Themis.print("Retrieval model: " + getRetrievalModel() + "\n");
-        Themis.print("Searching for '" + query + "'...");
-        long startTime = System.nanoTime();
-
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
 
@@ -129,8 +125,9 @@ public class Search {
         List<QueryTerm> queryTerms = new ArrayList<>();
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 
+        /* perform a search */
         List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
-        Themis.print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+
         return results;
     }
 

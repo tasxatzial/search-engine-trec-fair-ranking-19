@@ -126,7 +126,6 @@ public class themisEval {
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
         Themis.print("Retrieval model: " + _search.getRetrievalModel() + "\n\n");
-        evaluationWriter.write("Retrieval model: " + _search.getRetrievalModel() + "\n\n");
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
@@ -152,8 +151,9 @@ public class themisEval {
             }
 
             //perform a search
+            evaluationWriter.write("Search query: " + query + "\n");
+            Themis.print("Search query: " + query + "\n");
             List<Pair<Object, Double>> results = _search.search(query, new HashSet<>());
-            evaluationWriter.write("Search query: " + query);
 
             //calculate average precision, bpref, nDCG
             double avep = computeAveP(results, relevanceMap);
@@ -193,7 +193,7 @@ public class themisEval {
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n");
         evaluationWriter.close();
-        Themis.print("Saved results in " + __EVALUATION_FILENAME__ + "\n");
+        Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
     }
 
