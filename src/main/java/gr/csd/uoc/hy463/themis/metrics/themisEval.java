@@ -222,8 +222,33 @@ public class themisEval {
         return avep;
     }
 
+    /* calculates the bpref given a ranked list of results and a map of (docId, binary relevance value) */
     private static double computeBpref(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double bpref = 0;
+        int knownRelevantDocuments = 0;
+        int knownIrrelevantDocuments = 0;
+        int irrelevantDocuments = 0;
+
+        for (Long relevance : relevanceMap.values()) {
+            if (relevance == 1) {
+                knownRelevantDocuments++;
+            }
+        }
+        knownIrrelevantDocuments = relevanceMap.size() - knownRelevantDocuments;
+        int minRelevantIrrelevant = Math.min(knownIrrelevantDocuments, knownRelevantDocuments);
+
+        for (Pair<Object, Double> result : results) {
+            String docId = ((DocInfo) result.getL()).getId();
+            Long isJudged = relevanceMap.get(docId);
+            if (isJudged != null) {
+                if (isJudged == 1) {
+                    bpref += 1 - (0.0 + irrelevantDocuments) / minRelevantIrrelevant;
+                } else {
+                    irrelevantDocuments++;
+                }
+            }
+        }
+        bpref /= knownRelevantDocuments;
 
         return bpref;
     }
