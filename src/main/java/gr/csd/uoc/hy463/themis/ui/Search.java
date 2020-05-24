@@ -69,15 +69,21 @@ public class Search {
     }
 
     public void setModelVSM() {
-        _model = new VSM(_indexer);
+        if (!(_model instanceof VSM)) {
+            _model = new VSM(_indexer);
+        }
     }
 
     public void setModelBM25() {
-        _model = new OkapiBM25(_indexer);
+        if (!(_model instanceof OkapiBM25)) {
+            _model = new OkapiBM25(_indexer);
+        }
     }
 
     public void setModelExistential() {
-        _model = new Existential(_indexer);
+        if (!(_model instanceof Existential)) {
+            _model = new Existential(_indexer);
+        }
     }
 
     public ARetrievalModel.MODEL getRetrievalModel() {
