@@ -78,33 +78,7 @@ public abstract class ARetrievalModel {
      * @return
      */
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        boolean isSameQuery = hasSameQuery(query);
-        boolean isSameProps = hasSameProps(docInfoProps);
-
-        //return the previous results if everything is unchanged
-        if (isSameQuery && isSameProps && _startDoc == 0) {
-            if (_endDoc >= _results.size() - 1) {
-                _endDoc = Integer.MAX_VALUE;
-                return _results;
-            }
-        }
-
-        if (isSameQuery) { //same query, different props -> update all docInfo objects
-            List<DocInfo> docInfoList = new ArrayList<>();
-            _results.forEach(result -> docInfoList.add((DocInfo) result.getL()));
-            _indexer.updateDocInfo(docInfoList, docInfoProps);
-        }
-        else { //different query -> new search
-            _results = null;
-            List<Pair<Object, Double>> results = getRankedResults_internal(query, docInfoProps);
-            _query = query;
-            _results = results;
-        }
-        _docInfoProps = docInfoProps;
-        _startDoc = 0;
-        _endDoc = Integer.MAX_VALUE;
-
-        return _results;
+        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
     }
 
     /**
