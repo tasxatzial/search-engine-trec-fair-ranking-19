@@ -162,8 +162,8 @@ public class themisEval {
             bprefs.add(bpref);
             double ndcg = computeNdcg(results, relevanceMap);
             ndcgs.add(ndcg);
-            evaluationWriter.write("Average precision: " + avep);
-            evaluationWriter.write("bpref: " + bpref);
+            evaluationWriter.write("Average precision: " + avep + "\n");
+            evaluationWriter.write("bpref: " + bpref + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n\n");
         }
 
@@ -179,19 +179,19 @@ public class themisEval {
         double minNdcg = calculateMin(ndcgs);
         double maxNdcg = calculateMax(ndcgs);
 
-        evaluationWriter.write("Summary:\n");
+        evaluationWriter.write("Summary:\n\n");
         evaluationWriter.write("Average precision:\n");
         evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
-        evaluationWriter.write("Max: " + maxAvep + "\n");
+        evaluationWriter.write("Max: " + maxAvep + "\n\n");
         evaluationWriter.write("bpref:\n");
         evaluationWriter.write("Average: " + averageBpref + "\n");
         evaluationWriter.write("Min: " + minBpref + "\n");
-        evaluationWriter.write("Max: " + maxBpref + "\n");
+        evaluationWriter.write("Max: " + maxBpref + "\n\n");
         evaluationWriter.write("nDCG:\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
-        evaluationWriter.write("Max: " + maxNdcg + "\n");
+        evaluationWriter.write("Max: " + maxNdcg);
         evaluationWriter.close();
         Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
