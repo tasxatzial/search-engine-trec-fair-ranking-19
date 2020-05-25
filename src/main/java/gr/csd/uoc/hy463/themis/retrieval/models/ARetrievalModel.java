@@ -45,19 +45,13 @@ public abstract class ARetrievalModel {
         BM25, VSM, EXISTENTIAL
     }
     protected List<Pair<Object, Double>> _results;
-    protected Set<DocInfo.PROPERTY> _docInfoProps;
     protected List<QueryTerm> _query;
-    protected int _startDoc;
-    protected int _endDoc;
     protected Indexer _indexer;
     protected Set<DocInfo.PROPERTY> _essentialProps;
 
     public ARetrievalModel(Indexer indexer) {
         _indexer = indexer;
-        _docInfoProps = new HashSet<>();
         _query = new ArrayList<>();
-        _startDoc = 0;
-        _endDoc = Integer.MAX_VALUE;
     }
 
     /* This method is implemented by all models and returns a ranked list of pair of the relevant documents.
@@ -108,51 +102,35 @@ public abstract class ARetrievalModel {
      * @return
      */
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+
+        /* new props are all props specified by the user except the essential props */
+        Set<DocInfo.PROPERTY> newProps = new HashSet<>(docInfoProps);
+        newProps.removeAll(_essentialProps);
+
+        /* for same queries, keep only the essential props in the results that fall outside [startDoc, endDoc] */
         if (hasSameQuery(query)) {
-
-            /* the essentialProps have already been fetched in the previous query, so the props that need to be
-            fetched in this query must not include the essentialProps */
-            Set<DocInfo.PROPERTY> newProps = new HashSet<>(docInfoProps);
-            for (DocInfo.PROPERTY prop : _essentialProps) {
-                newProps.remove(prop);
+            for (int i = 0; i < startDoc; i++) {
+                ((DocInfo) _results.get(i).getL()).clearProperties(newProps);
             }
-
-            /* put all docInfo in a list */
-            List<DocInfo> docInfoList = new ArrayList<>();
-            for (Pair<Object, Double> result : _results) {
-                DocInfo docInfo = (DocInfo) result.getL();
-                docInfoList.add(docInfo);
-            }
-
-            /* update the docInfo items with the new props */
-            _indexer.updateDocInfo(docInfoList, newProps);
-        }
-        else {
-            _results = null;
-
-            /* initially fetch only the essential props from each document. Those props will be used
-            by the retrieval model */
-            List<Pair<Object, Double>> results = getRankedResults_internal(query, _essentialProps);
-
-            /* collect all docInfo objects that correspond to the documents that will be displayed */
-            List<DocInfo> docInfoList = new ArrayList<>();
-            int i = 0;
-            for (Pair<Object, Double> result : results) {
-                if (i >= startDoc && i <= endDoc) {
-                    docInfoList.add((DocInfo) result.getL());
+            if (endDoc != Integer.MAX_VALUE) {
+                for (int i = endDoc + 1; i < _results.size(); i++) {
+                    ((DocInfo) _results.get(i).getL()).clearProperties(newProps);
                 }
-                i++;
             }
-
-            /* fetch the properties only for the above docInfo list */
-            _indexer.updateDocInfo(docInfoList, docInfoProps);
-
-            _query = query;
-            _results = results;
         }
-        _docInfoProps = docInfoProps;
-        _startDoc = startDoc;
-        _endDoc = endDoc;
+
+        /* for different queries, retrieve the results using only the essential props */
+        else {
+            _results = getRankedResults_internal(query, _essentialProps);
+            _query = query;
+        }
+
+        /* finally update the results that fall between [startDoc, endDoc] with the new props */
+        List<DocInfo> docInfoList = new ArrayList<>();
+        for (int i = startDoc; i <= Math.min(_results.size() - 1, endDoc); i++) {
+            docInfoList.add(((DocInfo) _results.get(i).getL()));
+        }
+        _indexer.updateDocInfo(docInfoList, newProps);
 
         return _results;
     }

@@ -963,13 +963,17 @@ public class Indexer {
         Set<DocInfo.PROPERTY> removeProps;
         for (DocInfo docInfo : termDocsInfo) {
             oldProps = docInfo.getProps();
+
+            /* the new properties that the docInfo object does not already have */
             addProps = new HashSet<>(newProps);
+            addProps.removeAll(oldProps);
+
+            /* the properties that the docInfo object already has and will be removed */
             removeProps = new HashSet<>(oldProps);
             removeProps.removeAll(newProps);
-            addProps.removeAll(oldProps);
-            for (DocInfo.PROPERTY prop : removeProps) {
-                docInfo.removeProperty(prop);
-            }
+
+            /* update the docInfo properties */
+            docInfo.clearProperties(removeProps);
             if (!addProps.isEmpty()) {
                 readDocInfo(docInfo, addProps, true); //seek = true
             }
