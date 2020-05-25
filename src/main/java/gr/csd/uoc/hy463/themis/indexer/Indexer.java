@@ -318,7 +318,11 @@ public class Indexer {
         __META_INDEX_INFO__.put("articles", String.valueOf(totalArticles));
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
-        saveMetaInfo();
+        BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
+            meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
+        }
+        meta.close();
 
         Themis.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
 
@@ -689,47 +693,6 @@ public class Indexer {
         return Files.deleteIfExists(indexPath.toPath());
     }
 
-    /* Saves to disk the meta_index_info map */
-    private void saveMetaInfo() throws IOException {
-        BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
-        for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
-            meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
-        }
-        meta.close();
-    }
-
-    /* Loads from disk the info from the meta_filename file */
-    private void loadMetaInfo() throws IOException {
-        BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
-        __META_INDEX_INFO__ = new HashMap<>();
-        String line;
-        String[] split;
-        while((line = meta.readLine()) != null) {
-            split = line.split("=");
-            __META_INDEX_INFO__.put(split[0], split[1]);
-        }
-        meta.close();
-    }
-
-    /* Loads the final vocabulary file */
-    private void loadVocabulary() throws IOException {
-        Themis.print(">>> Loading vocabulary...");
-        __VOCABULARY__ = new HashMap<>();
-        String line;
-        String[] fields;
-
-        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
-
-        while ((line = vocabularyReader.readLine()) != null) {
-            fields = line.split(" ");
-            __VOCABULARY__.put(fields[0], new Pair<>(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
-        }
-
-        vocabularyReader.close();
-        Themis.print("DONE\n");
-    }
-
     /* Calculates and updates the VSM weights and the max tf for each document entry. Reads the
     * frequencies file freq and the documents size file doc_length */
     private void updateVSMweights(int totalArticles) throws IOException {
@@ -842,18 +805,54 @@ public class Indexer {
             return false;
         }
 
-        // Else load vocabulary file in memory in a HashMap and open
-        // indexes postings and documents RAF files. Also load the meta index file.
-        loadVocabulary();
-        loadMetaInfo();
+        //load vocabulary
+        Themis.print(">>> Loading vocabulary...");
+        __VOCABULARY__ = new HashMap<>();
+        String line;
+        String[] fields;
+
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
+        while ((line = vocabularyReader.readLine()) != null) {
+            fields = line.split(" ");
+            __VOCABULARY__.put(fields[0], new Pair<>(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
+        }
+
+        vocabularyReader.close();
+        Themis.print("DONE\n");
+
+        //load meta index file
+        Themis.print(">>> Loading meta index file...");
+        BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        __META_INDEX_INFO__ = new HashMap<>();
+        String[] split;
+        while((line = meta.readLine()) != null) {
+            split = line.split("=");
+            __META_INDEX_INFO__.put(split[0], split[1]);
+        }
+        meta.close();
+        Themis.print("DONE\n");
+
+        //open postings, documents
+        Themis.print(">>> Opening documents, postings files...");
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
+        Themis.print("DONE\n");
 
+        //check for stopword, stemming options
         if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"))) {
+            Themis.print("Stopwords is enabled\n");
             StopWords.Initialize();
         }
+        else {
+            Themis.print("Stopwords is disabled\n");
+        }
         if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"))) {
+            Themis.print("Stemming is enabled\n");
             Stemmer.Initialize();
+        }
+        else {
+            Themis.print("Stemming is disabled\n");
         }
         return true;
     }
@@ -1131,8 +1130,10 @@ public class Indexer {
     public int getTotalArticles() {
         if (__META_INDEX_INFO__ != null) {
             return Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return 0;
         }
-        return 0;
     }
 
     /**
@@ -1142,8 +1143,10 @@ public class Indexer {
     public double getAvgdl() {
         if (__META_INDEX_INFO__ != null) {
             return Double.parseDouble(__META_INDEX_INFO__.get("avgdl"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return 0;
         }
-        return 0;
     }
 
     /**

@@ -316,7 +316,7 @@ public class Themis {
             String query = view.get_searchField().getText();
             print("Searching for '" + query + "'...");
             try {
-                results = search.search(view.get_searchField().getText(), props, 0, 50);
+                results = search.search(view.get_searchField().getText(), props);
                 print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results, 0, 50);
