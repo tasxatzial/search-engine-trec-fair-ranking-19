@@ -1,9 +1,9 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Class that holds basic information about a posting entry:
- * the TF and the Pointer to the documents file. It also holds the size of
- * those fields (bytes) and the total size of a posting entry (bytes).
+ * This class is used during the creation of the partial indexes and also during search.
+ * It holds basic information about a posting entry: (tf, document pointer)
+ * It also holds the size of those fields (bytes) and the total size of a posting entry (bytes).
  */
 public class PostingStruct {
     private int _tf;
@@ -17,11 +17,11 @@ public class PostingStruct {
         _docPointer = docPointer;
     }
 
-    public Integer get_tf() {
+    public int get_tf() {
         return _tf;
     }
 
-    public Long get_docPointer() {
+    public long get_docPointer() {
         return _docPointer;
     }
 }

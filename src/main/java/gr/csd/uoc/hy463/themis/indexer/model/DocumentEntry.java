@@ -1,8 +1,8 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Class that holds basic information about a document entry.
- * Currently it holds the size and the offset of each of the fields in a document entry.
+ * Class that holds basic information about a document entry. This class is used during the creation
+ * of the documents file and also during search.
  */
 public class DocumentEntry {
     public static int ID_SIZE = 40;

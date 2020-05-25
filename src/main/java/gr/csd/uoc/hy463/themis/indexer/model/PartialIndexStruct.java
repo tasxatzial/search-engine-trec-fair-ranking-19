@@ -3,8 +3,9 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 import java.util.ArrayList;
 import java.util.List;
 
-/* Class that holds basic information about an entry that belongs to a partial
-index: The DF and a list of posting entries.
+/**
+ *  This class is used during the creation of the partial indexes. It holds all the required information about the
+ *  value of a term: (df, list of posting entries)
  */
 public class PartialIndexStruct {
     private int _df;
@@ -18,7 +19,7 @@ public class PartialIndexStruct {
         _df = df;
     }
 
-    public Integer get_df() {
+    public int get_df() {
         return _df;
     }
 

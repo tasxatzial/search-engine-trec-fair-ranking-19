@@ -1,28 +1,16 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
-import java.util.Comparator;
-
 /**
- * Class is used during merging the partial dictionaries. It holds all the required
- * information for an entry in a partial vocabulary file
- * (term, df, postings offset, partial index id)
+ * This class is used when the final vocabulary is loaded into memory. It represents a vocabulary value:
+ * (df, posting offset)
  */
-public class VocabularyStruct implements Comparable<VocabularyStruct> {
-    private String _term;
+public class VocabularyStruct {
     private int _df;
     private long _offset;
-    private int _indexId;
-    public static Comparator<VocabularyStruct> idComparator = Comparator.comparingInt(VocabularyStruct::get_indexId);
 
-    public VocabularyStruct(String term, int df, long offset, int indexId) {
-        _term = term;
+    public VocabularyStruct(int df, long offset) {
         _df = df;
         _offset = offset;
-        _indexId = indexId;
-    }
-
-    public String get_term() {
-        return _term;
     }
 
     public int get_df() {
@@ -31,14 +19,5 @@ public class VocabularyStruct implements Comparable<VocabularyStruct> {
 
     public long get_offset() {
         return _offset;
-    }
-
-    public int get_indexId() {
-        return _indexId;
-    }
-
-    @Override
-    public int compareTo(VocabularyStruct o) {
-        return _term.compareTo(o.get_term());
     }
 }
