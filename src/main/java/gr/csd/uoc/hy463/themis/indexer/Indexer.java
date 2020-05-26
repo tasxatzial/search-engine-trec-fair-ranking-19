@@ -710,7 +710,11 @@ public class Indexer {
         Themis.print("DONE\n");
 
         /* open the required files: documents, tf, doc_size */
-        __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
+        BufferedOutputStream documentsWriter = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw").getFD()));
+        BufferedInputStream documentsReader = new BufferedInputStream(new FileInputStream
+                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r").getFD()));
+
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
         BufferedReader docSizeReader = new BufferedReader(new InputStreamReader(
@@ -718,9 +722,13 @@ public class Indexer {
 
         int[] tfs; //the TFs for each document
         double weight; //the weight of each document
-        long docOffset = 0; //offset in documents file
         int docSize; //size of each entry in the document file
         int maxTf = 0; //maximum tf in each document
+
+        //offsets required for reading/writing the weight and max frequency to the documents file
+        int offset1 = DocumentEntry.ID_SIZE + DocumentEntry.PAGERANK_SIZE;
+        int offset2 = offset1 + DocumentEntry.WEIGHT_SIZE;
+        int offset3 = offset2 + DocumentEntry.MAX_TF_SIZE;
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
@@ -745,18 +753,23 @@ public class Indexer {
                 }
                 weight = Math.sqrt(weight);
             }
+
+            //update the documents file
             docSize = Integer.parseInt(docSizeReader.readLine());
-            __DOCUMENTS__.seek(docOffset + DocumentEntry.WEIGHT_OFFSET);
-            docOffset += docSize;
-            __DOCUMENTS__.write(ByteBuffer.allocate(8).putDouble(weight).array());
-            __DOCUMENTS__.write(ByteBuffer.allocate(4).putInt(maxTf).array());
+            byte[] documentEntry = new byte[docSize];
+            documentsReader.read(documentEntry);
+            byte[] wnew = ByteBuffer.allocate(8).putDouble(weight).array();
+            byte[] tfnew = ByteBuffer.allocate(4).putInt(maxTf).array();
+            System.arraycopy(wnew, 0, documentEntry, offset1, offset2 - offset1);
+            System.arraycopy(tfnew, 0, documentEntry, offset2, offset3 - offset2);
+            documentsWriter.write(documentEntry);
         }
 
         /* close files */
         tfReader.close();
         docSizeReader.close();
-        __DOCUMENTS__.close();
-        __DOCUMENTS__ = null;
+        documentsReader.close();
+        documentsWriter.close();
 
         /* delete files */
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
