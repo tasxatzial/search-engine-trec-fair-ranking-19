@@ -939,9 +939,12 @@ public class Indexer {
                 continue;
             }
             postingPointer = termValue.get_offset();
+            __POSTINGS__.seek(postingPointer);
+            byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
+            __POSTINGS__.read(postings);
+            ByteBuffer bb = ByteBuffer.wrap(postings);
             for (int i = 0; i < termValue.get_df(); i++) {
-                __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                documentPointer = __POSTINGS__.readLong();
+                documentPointer = bb.getLong(i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
                 __DOCUMENTS__.seek(documentPointer);
                 __DOCUMENTS__.readFully(docId);
                 docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
@@ -1188,10 +1191,12 @@ public class Indexer {
         }
         int df = vocabularyValue.get_df();
         int[] freq = new int[df];
-        long postingPointer = vocabularyValue.get_offset();
+        __POSTINGS__.seek(vocabularyValue.get_offset());
+        byte[] postings = new byte[df * PostingStruct.SIZE];
+        __POSTINGS__.read(postings);
+        ByteBuffer bb = ByteBuffer.wrap(postings);
         for (int i = 0; i < df; i++) {
-            __POSTINGS__.seek(postingPointer + i * PostingStruct.SIZE);
-            freq[i] = __POSTINGS__.readInt();
+            freq[i] = bb.getInt(i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
         }
         return freq;
     }

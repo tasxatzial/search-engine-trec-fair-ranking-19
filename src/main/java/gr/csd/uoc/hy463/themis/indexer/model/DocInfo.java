@@ -65,7 +65,7 @@ public class DocInfo {
 
     private String id = "";         // the 40 byte id
     private long offset = 0;        // offset in documents file
-    private final Map<PROPERTY, Object> props = new HashMap<>(4);
+    private final Map<PROPERTY, Object> props = new HashMap<>(1);
 
     /**
      *
