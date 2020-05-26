@@ -165,6 +165,7 @@ public class themisEval {
             evaluationWriter.write("Average precision: " + avep + "\n");
             evaluationWriter.write("bpref: " + bpref + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n\n");
+            evaluationWriter.flush();
         }
 
         double averageAvep = calculateAverage(aveps);
