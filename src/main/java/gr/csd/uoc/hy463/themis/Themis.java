@@ -214,8 +214,9 @@ public class Themis {
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");
+            } finally {
+                _task = null;
             }
-            _task = null;
         }
     }
 
@@ -265,8 +266,9 @@ public class Themis {
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to create index\n");
+            } finally {
+                _task = null;
             }
-            _task = null;
         }
     }
 
@@ -291,8 +293,9 @@ public class Themis {
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize\n");
+            } finally {
+                _task = null;
             }
-            _task = null;
         }
     }
 
@@ -323,8 +326,9 @@ public class Themis {
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
+            } finally {
+                _task = null;
             }
-            _task = null;
         }
     }
 }
