@@ -153,9 +153,7 @@ public class Search {
     }
 
     public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
-        if (searchResults == null) {
-            return;
-        }
+
         /* startResult and endResult might be out of the range of the actual results for this document.
         therefore we need to find the proper indexes of the first and last displayed result */
         int firstDisplayedResult;
@@ -175,6 +173,9 @@ public class Search {
 
         if (!searchResults.isEmpty()) {
             Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
+        }
+        else {
+            return;
         }
 
         /* print the results */

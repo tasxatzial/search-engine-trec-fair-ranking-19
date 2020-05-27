@@ -108,7 +108,7 @@ public abstract class ARetrievalModel {
         newProps.removeAll(_essentialProps);
 
         /* for same queries, keep only the essential props in the results that fall outside [startDoc, endDoc] */
-        if (hasSameQuery(query)) {
+        if (!query.isEmpty() && hasSameQuery(query)) {
             for (int i = 0; i < startDoc; i++) {
                 ((DocInfo) _results.get(i).getL()).clearProperties(newProps);
             }
