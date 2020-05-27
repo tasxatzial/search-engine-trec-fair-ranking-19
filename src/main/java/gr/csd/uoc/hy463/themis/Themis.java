@@ -73,9 +73,9 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            createIndex = new CreateIndex();
-            createIndex.deleteIndex();
-            createIndex.createIndex();
+            search = new Search();
+            themisEval eval = new themisEval(search);
+            eval.evaluateVSM();
         }
     }
 

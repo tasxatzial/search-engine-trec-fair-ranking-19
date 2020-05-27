@@ -202,7 +202,6 @@ public class themisEval {
     private static double computeAveP(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double avep = 0;
         int relevantDocuments = 0;
-        int skippedDocuments = 0;
         int nonSkippedDocuments = 0;
 
         for (Pair<Object, Double> rankedDocument : results) {
@@ -214,11 +213,9 @@ public class themisEval {
                     relevantDocuments++;
                     avep += (0.0 + isJudged * relevantDocuments) / nonSkippedDocuments;
                 }
-            } else {
-                skippedDocuments++;
             }
         }
-        avep /= (results.size() - skippedDocuments);
+        avep /= nonSkippedDocuments;
 
         return avep;
     }
@@ -235,15 +232,17 @@ public class themisEval {
                 knownRelevantDocuments++;
             }
         }
+        if (knownRelevantDocuments == 0) {
+            return 0;
+        }
         knownIrrelevantDocuments = relevanceMap.size() - knownRelevantDocuments;
-        int minRelevantIrrelevant = Math.min(knownIrrelevantDocuments, knownRelevantDocuments);
 
         for (Pair<Object, Double> result : results) {
             String docId = ((DocInfo) result.getL()).getId();
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 if (isJudged == 1) {
-                    bpref += 1 - (0.0 + irrelevantDocuments) / minRelevantIrrelevant;
+                    bpref += 1 - (0.0 + irrelevantDocuments) / knownIrrelevantDocuments;
                 } else {
                     irrelevantDocuments++;
                 }
