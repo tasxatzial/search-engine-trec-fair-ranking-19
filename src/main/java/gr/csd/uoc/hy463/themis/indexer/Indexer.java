@@ -386,8 +386,8 @@ public class Indexer {
         BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(vocabularyName), "UTF-8"));
 
-        BufferedWriter termTfWriter = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(__INDEX_TMP_PATH__ + "/term_tf"), "UTF-8"));
+        BufferedWriter termDfWriter = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(__INDEX_TMP_PATH__ + "/term_df"), "UTF-8"));
 
         /* the previous lex min word */
         String prevMinTerm = "";
@@ -426,7 +426,7 @@ public class Indexer {
             vocabulary entries that are in the array of equal terms to the final
             vocabulary file */
             if (!minTermVocabularyStruct.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
-                offset = dumpEqualTerms(equalTerms, vocabularyWriter, termTfWriter, offset);
+                offset = dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, offset);
             }
 
             /* save the current term for the next iteration */
@@ -447,7 +447,7 @@ public class Indexer {
         /* we are done reading the vocabularies. Write the remaining vocabulary entries that are
         still in the array of equal terms to the final vocabulary file */
         if (!equalTerms.isEmpty()) {
-            dumpEqualTerms(equalTerms, vocabularyWriter, termTfWriter, offset);
+            dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, offset);
         }
 
         /* close any open files */
@@ -455,7 +455,7 @@ public class Indexer {
             vocabularyReader[i].close();
         }
         vocabularyWriter.close();
-        termTfWriter.close();
+        termDfWriter.close();
     }
 
     /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
@@ -473,9 +473,9 @@ public class Indexer {
 
     /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
     vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
-    all (partial index id, tf) for each term to a file that will be used during the merging of postings */
+    all (partial index id, df) for each term to a file that will be used during the merging of postings */
     private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter,
-                                BufferedWriter termTfWriter, long offset) throws IOException {
+                                BufferedWriter termDfWriter, long offset) throws IOException {
         int df = 0;
 
         //sort based on the partial index id. This ensures that postings will be written in the final
@@ -485,9 +485,9 @@ public class Indexer {
         //calculate final DF
         for (PartialVocabularyStruct equalTerm : equalTerms) {
             df += equalTerm.get_df();
-            termTfWriter.write(equalTerm.get_indexId() + " " + equalTerm.get_df() + " ");
+            termDfWriter.write(equalTerm.get_indexId() + " " + equalTerm.get_df() + " ");
         }
-        termTfWriter.write("\n");
+        termDfWriter.write("\n");
 
         //finally write a new entry in the final vocabulary file
         vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
@@ -528,7 +528,7 @@ public class Indexer {
     }
 
     /* Merges the partial postings when there are more than 1 partial indexes.
-    Writes the merged posting file and deletes the term_tf file */
+    Writes the merged posting file and deletes the term_df file */
     private void combinePartialPostings(List<Integer> partialIndexes) throws IOException {
 
         /* the partial postings */
@@ -544,15 +544,15 @@ public class Indexer {
         BufferedOutputStream postingOut = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(postingName, "rw").getFD()));
 
-        /* the file with the (partial index id, tf) for each term */
-        BufferedReader termTfReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_TMP_PATH__ + "/term_tf"), "ASCII"));
+        /* the file with the (partial index id, df) for each term */
+        BufferedReader termDfReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_TMP_PATH__ + "/term_df"), "ASCII"));
 
-        /* read each line of the file that has the (partial index id, tf). Each line corresponds to
+        /* read each line of the file that has the (partial index id, df). Each line corresponds to
         the same line in the final vocabulary file, thus both lines refer to the same term */
         String line;
         String[] split;
-        while ((line = termTfReader.readLine()) != null){
+        while ((line = termDfReader.readLine()) != null){
             split = line.split(" ");
             for (int i = 0; i < split.length; i+=2) {
                 byte[] postings = new byte[Integer.parseInt(split[i + 1])  * PostingStruct.SIZE];
@@ -566,7 +566,7 @@ public class Indexer {
             bufferedInputStream.close();
         }
         postingOut.close();
-        termTfReader.close();
+        termDfReader.close();
     }
 
     /* DOCUMENTS FILE => documents.idx (Random Access File)
@@ -690,7 +690,7 @@ public class Indexer {
     }
 
     /* Calculates and updates the VSM weights and the max tf for each document entry. Reads the
-    * frequencies file freq and the documents size file doc_length */
+    * frequencies file doc_tf and the documents size file doc_length */
     private void updateVSMweights(int totalArticles) throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
@@ -709,7 +709,7 @@ public class Indexer {
         vocabularyReader.close();
         Themis.print("DONE\n");
 
-        /* open the required files: documents, tf, doc_size */
+        /* open the required files: documents, doc_tf, doc_size */
         BufferedOutputStream documentsWriter = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw").getFD()));
         BufferedInputStream documentsReader = new BufferedInputStream(new FileInputStream
