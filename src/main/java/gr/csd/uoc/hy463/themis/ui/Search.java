@@ -152,6 +152,22 @@ public class Search {
         return results;
     }
 
+    /**
+     * Prints all results from searchResults (descending order based on their score)
+     * @param searchResults
+     */
+    public void printResults(List<Pair<Object, Double>> searchResults) {
+        printResults(searchResults, 0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Prints all results from searchResults that have ranks in [startResult, endResult]
+     * (descending order based on their score). startResult and endResult range should be from 0
+     * (top ranked result) to Integer.MAX_VALUE.
+     * @param searchResults
+     * @param startResult
+     * @param endResult
+     */
     public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
 
         /* startResult and endResult might be out of the range of the actual results for this document.
