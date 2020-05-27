@@ -814,6 +814,7 @@ public class Indexer {
             return false;
         }
 
+        Themis.print("Index directory: " + __INDEX_PATH__+ "\n");
         //load vocabulary
         Themis.print(">>> Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();

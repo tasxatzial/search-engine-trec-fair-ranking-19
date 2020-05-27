@@ -125,7 +125,8 @@ public class themisEval {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
-        Themis.print("Retrieval model: " + _search.getRetrievalModel() + "\n\n");
+        Themis.print("------------------------------------------------\n");
+        evaluationWriter.write("Index directory: " + _search.getIndexDirectory() + "\n");
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
@@ -151,6 +152,7 @@ public class themisEval {
             }
 
             //perform a search
+            evaluationWriter.write("------------------------------------------------\n");
             evaluationWriter.write("Search query: " + query + "\n");
             Themis.print("Search query: " + query + "\n");
             List<Pair<Object, Double>> results = _search.search(query);
@@ -164,7 +166,7 @@ public class themisEval {
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
             evaluationWriter.write("bpref: " + bpref + "\n");
-            evaluationWriter.write("nDCG: " + ndcg + "\n\n");
+            evaluationWriter.write("nDCG: " + ndcg + "\n");
             evaluationWriter.flush();
         }
 
@@ -180,6 +182,8 @@ public class themisEval {
         double minNdcg = calculateMin(ndcgs);
         double maxNdcg = calculateMax(ndcgs);
 
+        Themis.print("------------------------------------------------\n");
+        evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
         evaluationWriter.write("Average precision:\n");
         evaluationWriter.write("Average: " + averageAvep + "\n");
@@ -192,7 +196,7 @@ public class themisEval {
         evaluationWriter.write("nDCG:\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
-        evaluationWriter.write("Max: " + maxNdcg);
+        evaluationWriter.write("Max: " + maxNdcg + "\n");
         evaluationWriter.close();
         Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();

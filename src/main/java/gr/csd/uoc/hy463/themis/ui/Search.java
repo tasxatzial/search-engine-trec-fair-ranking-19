@@ -99,6 +99,10 @@ public class Search {
         return null;
     }
 
+    public String getIndexDirectory() {
+        return _indexer.getIndexDirectory();
+    }
+
     /**
      * Searches for a query and returns a ranked list of results. The results contain at least the docId of
      * the found documents.
