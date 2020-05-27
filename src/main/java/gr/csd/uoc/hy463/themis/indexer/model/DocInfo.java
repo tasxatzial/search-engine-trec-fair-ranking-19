@@ -24,11 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.model;
 
-import javax.print.Doc;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class holds any information we might want to communicate with the

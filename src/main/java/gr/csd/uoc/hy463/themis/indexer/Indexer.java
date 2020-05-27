@@ -925,6 +925,8 @@ public class Indexer {
             return null;
         }
         List<List<DocInfo>> docIds = new ArrayList<>();
+        Map<Long, DocInfo> docInfoOffsets = new HashMap<>();
+
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
         VocabularyStruct termValue; //(df, posting pointer)
@@ -942,16 +944,22 @@ public class Indexer {
             postingPointer = termValue.get_offset();
             __POSTINGS__.seek(postingPointer);
             byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
-            __POSTINGS__.read(postings);
+            __POSTINGS__.readFully(postings);
             ByteBuffer bb = ByteBuffer.wrap(postings);
             for (int i = 0; i < termValue.get_df(); i++) {
                 documentPointer = bb.getLong(i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                __DOCUMENTS__.seek(documentPointer);
-                __DOCUMENTS__.readFully(docId);
-                docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
-                termDocInfo.add(docInfo);
-                if (!props.isEmpty()) {
-                    readDocInfo(docInfo, props, false); //seek = false
+                if (docInfoOffsets.get(documentPointer) != null) {
+                    termDocInfo.add(docInfoOffsets.get(documentPointer));
+                }
+                else {
+                    __DOCUMENTS__.seek(documentPointer);
+                    __DOCUMENTS__.readFully(docId);
+                    docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
+                    termDocInfo.add(docInfo);
+                    docInfoOffsets.put(documentPointer, docInfo);
+                    if (!props.isEmpty()) {
+                        readDocInfo(docInfo, props, false); //seek = false
+                    }
                 }
             }
             docIds.add(termDocInfo);
