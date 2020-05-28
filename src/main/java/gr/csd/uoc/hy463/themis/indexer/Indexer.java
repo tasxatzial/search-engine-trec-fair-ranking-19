@@ -1219,7 +1219,7 @@ public class Indexer {
         __POSTINGS__.read(postings);
         ByteBuffer bb = ByteBuffer.wrap(postings);
         for (int i = 0; i < df; i++) {
-            freq[i] = bb.getInt(i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
+            freq[i] = bb.getInt(i * PostingStruct.SIZE);
         }
         return freq;
     }
