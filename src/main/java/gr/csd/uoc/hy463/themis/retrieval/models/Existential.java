@@ -30,10 +30,7 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Implementation of the Existential retrieval model. Returns the documents that
@@ -53,16 +50,26 @@ public class Existential extends ARetrievalModel {
     }
 
     /* Returns a list of pairs of the relevant documents. There is no ranking of the documents */
-    protected List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
-        List<String> terms = new ArrayList<>(query.size());
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
-        List<List<DocInfo>> termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
-        for (List<DocInfo> termDocInfo : termsDocInfo) {
-            for (DocInfo docInfo : termDocInfo) {
-                results.add(new Pair<>(docInfo, 1.0));
-            }
+        fetchEssentialDocInfo(query);
+
+        //remove the duplicates
+        Set<DocInfo> resultsSet = new HashSet<>();
+        for (List<DocInfo> termDocInfo : _termsDocInfo) {
+            resultsSet.addAll(termDocInfo);
         }
+
+        for (DocInfo docInfo : resultsSet) {
+            results.add(new Pair<>(docInfo, 1.0));
+        }
+
+        updateDocInfo(results, props, startDoc, endDoc);
         return results;
     }
 }

@@ -920,12 +920,10 @@ public class Indexer {
      * @return
      * @throws IOException
      */
-    public List<List<DocInfo>> getDocInfo(List<String> terms, Set<DocInfo.PROPERTY> props) throws IOException {
+    public void updateDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, List<Map<Long, DocInfo>> docMap, Set<DocInfo.PROPERTY> props) throws IOException {
         if (!loaded()) {
-            return null;
+            return;
         }
-        List<List<DocInfo>> docIds = new ArrayList<>();
-        Map<Long, DocInfo> docInfoOffsets = new HashMap<>();
 
         List<DocInfo> termDocInfo;
         DocInfo docInfo;
@@ -934,37 +932,53 @@ public class Indexer {
         long postingPointer;
         byte[] docId = new byte[DocumentEntry.ID_SIZE];
 
-        for (String term : terms) {
-            termValue = __VOCABULARY__.get(term);
-            termDocInfo = new ArrayList<>();
-            if (termValue == null) {
-                docIds.add(termDocInfo);
+        for (int i = 0; i < terms.size(); i++) {
+            termDocInfo = termsDocInfo.get(i);
+            if (!termDocInfo.isEmpty()) {
                 continue;
             }
+            termValue = __VOCABULARY__.get(terms.get(i));
+            if (termValue == null) {
+                continue;
+            }
+            boolean found = false;
+            for (int j = 0; j < i; j++) {
+                if (terms.get(i).equals(terms.get(j))) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+
             postingPointer = termValue.get_offset();
             __POSTINGS__.seek(postingPointer);
             byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
             __POSTINGS__.readFully(postings);
             ByteBuffer bb = ByteBuffer.wrap(postings);
-            for (int i = 0; i < termValue.get_df(); i++) {
-                documentPointer = bb.getLong(i * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                if (docInfoOffsets.get(documentPointer) != null) {
-                    termDocInfo.add(docInfoOffsets.get(documentPointer));
+            for (int j = 0; j < termValue.get_df(); j++) {
+                documentPointer = bb.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
+                found = false;
+                for (Map<Long, DocInfo> longDocInfoMap : docMap) {
+                    if (longDocInfoMap.get(documentPointer) != null) {
+                        termDocInfo.add(longDocInfoMap.get(documentPointer));
+                        found = true;
+                        break;
+                    }
                 }
-                else {
+                if (!found) {
                     __DOCUMENTS__.seek(documentPointer);
                     __DOCUMENTS__.readFully(docId);
                     docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
                     termDocInfo.add(docInfo);
-                    docInfoOffsets.put(documentPointer, docInfo);
+                    docMap.get(i).put(documentPointer, docInfo);
                     if (!props.isEmpty()) {
                         readDocInfo(docInfo, props, false); //seek = false
                     }
                 }
             }
-            docIds.add(termDocInfo);
         }
-        return docIds;
     }
 
     /**

@@ -199,13 +199,12 @@ public class Search {
             DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
             Collections.sort(sortedProps);
+            Themis.print((i + 1) + " ---------------------------------------\n");
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
             }
-            if (!sortedProps.isEmpty()) {
-                Themis.print("\n");
-            }
+            Themis.print("\n");
         }
     }
 }

@@ -50,18 +50,21 @@ public class OkapiBM25 extends ARetrievalModel {
     }
 
     /* Returns a ranked list of pairs of the relevant documents */
-    protected List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<String> terms = new ArrayList<>(query.size());
         List<Pair<Object, Double>> results = new ArrayList<>();
-        List<List<DocInfo>> termsDocInfo;
         int totalArticles = _indexer.getTotalArticles();
         double avgdl = _indexer.getAvgdl();
 
         //collect the terms
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
-        //get the docInfo objects associated with each term
-        termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
+        fetchEssentialDocInfo(query);
 
         //compute the idf for each term of the query
         double[] idfs = new double[terms.size()];
@@ -72,10 +75,10 @@ public class OkapiBM25 extends ARetrievalModel {
 
         //frequencies of each term in each document
         Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
-        for (int i = 0; i < termsDocInfo.size(); i++) {
+        for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] termFreqs = _indexer.getFreq(terms.get(i));
-            for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
-                DocInfo docInfo = termsDocInfo.get(i).get(j);
+            for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
+                DocInfo docInfo = _termsDocInfo.get(i).get(j);
                 int[] docFreqs = documentsFreqs.get(docInfo);
                 if (docFreqs == null) {
                     docFreqs = new int[terms.size()];
@@ -84,7 +87,7 @@ public class OkapiBM25 extends ARetrievalModel {
                 docFreqs[i] = termFreqs[j];
             }
         }
-        
+
         //calculate the scores
         for (Map.Entry<DocInfo, int[]> docFreqs : documentsFreqs.entrySet()) {
             double documentScore = 0;
@@ -96,7 +99,12 @@ public class OkapiBM25 extends ARetrievalModel {
             }
             results.add(new Pair<>(docInfo, documentScore));
         }
+
+        //sort the results
         results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+
+        //update the props of the results that are in [startDoc, endDoc]
+        updateDocInfo(results, props, startDoc, endDoc);
 
         return results;
     }

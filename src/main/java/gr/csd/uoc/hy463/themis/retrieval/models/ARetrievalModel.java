@@ -30,10 +30,7 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This is an abstract class that each retrieval model should extend
@@ -44,19 +41,18 @@ public abstract class ARetrievalModel {
     public enum MODEL {
         BM25, VSM, EXISTENTIAL
     }
-    protected List<Pair<Object, Double>> _results;
-    protected List<QueryTerm> _query;
+    protected List<List<DocInfo>> _termsDocInfo;
+    protected List<Map<Long, DocInfo>> _docMap;
+    protected List<String> _terms;
     protected Indexer _indexer;
     protected Set<DocInfo.PROPERTY> _essentialProps;
 
     public ARetrievalModel(Indexer indexer) {
         _indexer = indexer;
-        _query = new ArrayList<>();
+        _terms = new ArrayList<>();
+        _termsDocInfo = new ArrayList<>();
+        _docMap = new ArrayList<>();
     }
-
-    /* This method is implemented by all models and returns a ranked list of pair of the relevant documents.
-    * The method is called by the public getRankedResults() function */
-    protected abstract List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
 
     /**
      * Method that evaluates the query and returns a ranked list of pairs of the
@@ -71,18 +67,15 @@ public abstract class ARetrievalModel {
      * @param docInfoProps set of properties we want to be retrieved from the documents
      * @return
      */
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
-    }
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with
-     * the ranked results. In that list the properties specified in docInfoProps are retrieved only for the
+     * the ranked results. In that list the properties specified in props are retrieved only for the
      * documents with indexes from startDoc to endDoc.
      *
      * startDoc and endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
-     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve the properties of all the documents
-     * but we don't know the actual number of the retrieved documents
+     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve all the documents related to this query
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -98,59 +91,100 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
-     * @param docInfoProps set of properties we want to be retrieved from the documents
+     * @param props set of properties we want to be retrieved from the documents
      * @return
      */
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps, int startDoc, int endDoc) throws IOException {
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException;
 
-        /* new props are all props specified by the user except the essential props */
-        Set<DocInfo.PROPERTY> newProps = new HashSet<>(docInfoProps);
-        newProps.removeAll(_essentialProps);
+    /**
+     * Creates a list of list of docInfo objects using the documents file (one list for each term of the query).
+     * The protected members _termsDocInfo and _docMap are updated when the function returns
+     * @param query
+     * @throws IOException
+     */
+    protected void fetchEssentialDocInfo(List<QueryTerm> query) throws IOException {
 
-        /* for same queries, keep only the essential props in the results that fall outside [startDoc, endDoc] */
-        if (!query.isEmpty() && hasSameQuery(query)) {
-            for (int i = 0; i < startDoc; i++) {
-                ((DocInfo) _results.get(i).getL()).clearProperties(newProps);
-            }
-            if (endDoc != Integer.MAX_VALUE) {
-                for (int i = endDoc + 1; i < _results.size(); i++) {
-                    ((DocInfo) _results.get(i).getL()).clearProperties(newProps);
+        /* collect all terms */
+        List<String> terms = new ArrayList<>(query.size());
+        for (QueryTerm term : query) {
+            terms.add(term.getTerm());
+        }
+
+        /* initialize */
+        List<List<DocInfo>> termsDocInfo = new ArrayList<>(terms.size());
+        List<Map<Long, DocInfo>> docMap = new ArrayList<>();
+        for (int i = 0; i < terms.size(); i++) {
+            termsDocInfo.add(new ArrayList<>());
+            docMap.add(new HashMap<>());
+        }
+
+        /* check whether this query has same terms as the previous query */
+        for (int i = 0; i < terms.size(); i++) {
+            for (int j = 0; j < _terms.size(); j++) {
+                if (terms.get(i).equals(_terms.get(j))) {
+                    termsDocInfo.set(i, _termsDocInfo.get(j));
+                    docMap.set(i, _docMap.get(j));
+                    break;
                 }
             }
         }
 
-        /* for different queries, retrieve the results using only the essential props */
-        else {
-            _results = getRankedResults_internal(query, _essentialProps);
-            _query = query;
+        /* to decrease memory usage, for all the terms of the previous query that do not belong to this query,
+        clear the corresponding structures */
+        for (int i = 0; i < _termsDocInfo.size(); i++) {
+            boolean found = false;
+            for (int j = 0; j < termsDocInfo.size(); j++) {
+                if (_termsDocInfo.get(i) == termsDocInfo.get(j)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                _termsDocInfo.get(i).clear();
+                _docMap.get(i).clear();
+            }
         }
 
-        /* finally update the results that fall between [startDoc, endDoc] with the new props */
-        List<DocInfo> docInfoList = new ArrayList<>();
-        for (int i = startDoc; i <= Math.min(_results.size() - 1, endDoc); i++) {
-            docInfoList.add(((DocInfo) _results.get(i).getL()));
-        }
-        _indexer.updateDocInfo(docInfoList, newProps);
-
-        return _results;
+        /* finally, fetch the essential properties so that the model can do the ranking */
+        _indexer.updateDocInfo(terms, termsDocInfo, docMap, _essentialProps);
+        _termsDocInfo = termsDocInfo;
+        _docMap = docMap;
+        _terms = terms;
     }
 
     /**
-     * Returns true only if the previous query is the same as the new query, false otherwise
-     * @param query
-     * @return
+     * Updates the ranked results that have index in [startDoc, endDoc] by fetching the specified props
+     * from the documents file
+     * @param results
+     * @param props
+     * @param startDoc
+     * @param endDoc
+     * @throws IOException
      */
-    private boolean hasSameQuery(List<QueryTerm> query) {
-        if (query.size() == _query.size()) {
-            for (int i = 0; i < query.size(); i++) {
-                if (!query.get(i).getTerm().equals(_query.get(i).getTerm())) {
-                    return false;
-                }
+    protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
+        Set<DocInfo.PROPERTY> nonEssentialProps = new HashSet<>(props);
+        Set<DocInfo.PROPERTY> finalProps = new HashSet<>(props);
+
+        //these are the all the properties that should be in the final docInfo objects of the results
+        finalProps.addAll(_essentialProps);
+
+        //these are all the properties that will be removed from the all the docInfo objects of the results
+        //that are in [startDoc, endDoc]
+        nonEssentialProps.removeAll(_essentialProps);
+
+        List<DocInfo> updatedDocInfos = new ArrayList<>();
+        for (int i = 0; i < results.size(); i++) {
+            if (i >= startDoc && i <= endDoc) {
+
+                //all docInfo in [startDoc, endDoc] will have their properties updated
+                updatedDocInfos.add((DocInfo) results.get(i).getL());
+            }
+            else {
+
+                //for the rest of them just remove the propeties that we no longer want
+                ((DocInfo) results.get(i).getL()).clearProperties(nonEssentialProps);
             }
         }
-        else {
-            return false;
-        }
-        return true;
+        _indexer.updateDocInfo(updatedDocInfos, finalProps);
     }
 }

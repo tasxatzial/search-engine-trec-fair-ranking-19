@@ -48,17 +48,20 @@ public class VSM extends ARetrievalModel {
     }
 
     /* Returns a ranked list of pairs of the relevant documents */
-    protected List<Pair<Object, Double>> getRankedResults_internal(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
+        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
         List<String> terms = new ArrayList<>(query.size());
-        List<List<DocInfo>> termsDocInfo;
         int totalArticles = _indexer.getTotalArticles();
 
         //collect the terms
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
-        //get the docInfo objects associated with each term
-        termsDocInfo = _indexer.getDocInfo(terms, docInfoProps);
+        fetchEssentialDocInfo(query);
 
         //frequencies of the terms in the query
         Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
@@ -94,11 +97,11 @@ public class VSM extends ARetrievalModel {
 
         //weights of terms for each document
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
-        for (int i = 0; i < termsDocInfo.size(); i++) {
+        for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] freqs = _indexer.getFreq(terms.get(i));
             double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
-            for (int j = 0; j < termsDocInfo.get(i).size(); j++) {
-                DocInfo docInfo = termsDocInfo.get(i).get(j);
+            for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
+                DocInfo docInfo = _termsDocInfo.get(i).get(j);
                 double[] weights = documentsWeights.get(docInfo);
                 double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
                 if (weights == null) {
@@ -122,6 +125,7 @@ public class VSM extends ARetrievalModel {
             results.add(new Pair<>(docInfo, documentScore));
         }
         results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+        updateDocInfo(results, props, startDoc, endDoc);
 
         return results;
     }
