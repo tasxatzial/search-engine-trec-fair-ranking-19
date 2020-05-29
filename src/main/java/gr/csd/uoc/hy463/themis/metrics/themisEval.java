@@ -130,7 +130,7 @@ public class themisEval {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
-        List<Double> bprefs = new ArrayList<>();
+        //List<Double> bprefs = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
@@ -157,15 +157,15 @@ public class themisEval {
             Themis.print("Search query: " + query + "\n");
             List<Pair<Object, Double>> results = _search.search(query);
 
-            //calculate average precision, bpref, nDCG
+            //calculate average precision, nDCG
             double avep = computeAveP(results, relevanceMap);
             aveps.add(avep);
-            double bpref = computeBpref(results, relevanceMap);
-            bprefs.add(bpref);
+            /*double bpref = computeBpref(results, relevanceMap);
+            bprefs.add(bpref);*/
             double ndcg = computeNdcg(results, relevanceMap);
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
-            evaluationWriter.write("bpref: " + bpref + "\n");
+            //evaluationWriter.write("bpref: " + bpref + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n");
             evaluationWriter.flush();
         }
@@ -174,9 +174,9 @@ public class themisEval {
         double minAvep = calculateMin(aveps);
         double maxAvep = calculateMax(aveps);
 
-        double averageBpref = calculateAverage(bprefs);
+        /*double averageBpref = calculateAverage(bprefs);
         double minBpref = calculateMin(bprefs);
-        double maxBpref = calculateMax(bprefs);
+        double maxBpref = calculateMax(bprefs);*/
 
         double averageNdcg = calculateAverage(ndcgs);
         double minNdcg = calculateMin(ndcgs);
@@ -189,10 +189,10 @@ public class themisEval {
         evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
-        evaluationWriter.write("bpref:\n");
+        /*evaluationWriter.write("bpref:\n");
         evaluationWriter.write("Average: " + averageBpref + "\n");
         evaluationWriter.write("Min: " + minBpref + "\n");
-        evaluationWriter.write("Max: " + maxBpref + "\n\n");
+        evaluationWriter.write("Max: " + maxBpref + "\n\n");*/
         evaluationWriter.write("nDCG:\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
@@ -219,12 +219,12 @@ public class themisEval {
                 }
             }
         }
-        avep /= nonSkippedDocuments;
+        avep /= relevantDocuments;
 
         return avep;
     }
 
-    /* calculates the bpref given a ranked list of results and a map of (docId, binary relevance value) */
+    /* calculates the bpref given a ranked list of results and a map of (docId, binary relevance value)
     private static double computeBpref(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double bpref = 0;
         int knownRelevantDocuments = 0;
@@ -236,26 +236,33 @@ public class themisEval {
                 knownRelevantDocuments++;
             }
         }
-        if (knownRelevantDocuments == 0) {
-            return 0;
-        }
         knownIrrelevantDocuments = relevanceMap.size() - knownRelevantDocuments;
 
-        for (Pair<Object, Double> result : results) {
-            String docId = ((DocInfo) result.getL()).getId();
-            Long isJudged = relevanceMap.get(docId);
-            if (isJudged != null) {
-                if (isJudged == 1) {
-                    bpref += 1 - (0.0 + irrelevantDocuments) / knownIrrelevantDocuments;
-                } else {
-                    irrelevantDocuments++;
+        if (knownIrrelevantDocuments < knownRelevantDocuments) {
+            bpref = computeBpref10(results, relevanceMap);
+        }
+        else {
+            for (Pair<Object, Double> result : results) {
+                String docId = ((DocInfo) result.getL()).getId();
+                Long isJudged = relevanceMap.get(docId);
+                if (isJudged != null) {
+                    if (isJudged == 1) {
+                        bpref += 1 - (0.0 + irrelevantDocuments) / knownIrrelevantDocuments;
+                    } else {
+                        irrelevantDocuments++;
+                    }
                 }
             }
+            bpref /= knownRelevantDocuments;
         }
-        bpref /= knownRelevantDocuments;
 
         return bpref;
     }
+
+    calculates the bpref10 given a ranked list of results and a map of (docId, binary relevance value)
+    private static double computeBpref10(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+        return 0;
+    }*/
 
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
     private static double computeNdcg(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
@@ -287,21 +294,32 @@ public class themisEval {
         if (list.isEmpty()) {
             return 0;
         }
+        int numbers = 0;
         for (Double value : list) {
-            sum += value;
+            if (value > -Double.MIN_VALUE && Double.isFinite(value)) {
+                numbers++;
+                sum += value;
+            }
         }
-        return 1.0 * sum / list.size();
+        return 1.0 * sum / numbers;
     }
 
     /* calculates the min in a list of doubles */
     private static double calculateMin(List<Double> list) {
-        double min = 0;
+        double min;
         if (list.isEmpty()) {
-            return 0;
+            return Double.NaN;
         }
-        min = list.get(0);
+        int i = 0;
+        while (i < list.size() && (list.get(i) < -Double.MIN_VALUE || !Double.isFinite(list.get(i)))) {
+            i++;
+        }
+        if (i == list.size()) {
+            return Double.NaN;
+        }
+        min = list.get(i);
         for (Double value : list) {
-            if (value < min) {
+            if (value > -Double.MIN_VALUE && Double.isFinite(value) && value < min) {
                 min = value;
             }
         }
@@ -310,13 +328,20 @@ public class themisEval {
 
     /* calculates the max in a list of doubles */
     private static double calculateMax(List<Double> list) {
-        double max = 0;
+        double max;
         if (list.isEmpty()) {
-            return 0;
+            return Double.NaN;
         }
-        max = list.get(0);
-        for (double value : list) {
-            if (value > max) {
+        int i = 0;
+        while (i < list.size() && (list.get(i) < -Double.MIN_VALUE || !Double.isFinite(list.get(i)))) {
+            i++;
+        }
+        if (i == list.size()) {
+            return Double.NaN;
+        }
+        max = list.get(i);
+        for (Double value : list) {
+            if (value > -Double.MIN_VALUE && Double.isFinite(value) && value > max) {
                 max = value;
             }
         }
