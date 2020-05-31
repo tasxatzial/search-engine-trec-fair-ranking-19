@@ -40,16 +40,10 @@ import java.util.*;
 public class VSM extends ARetrievalModel {
     public VSM(Indexer index) {
         super(index);
-
-        /* These are the props that are required so that the model knows how to rank */
-        _essentialProps = new HashSet<>(2);
-        _essentialProps.add(DocInfo.PROPERTY.WEIGHT);
-        _essentialProps.add(DocInfo.PROPERTY.MAX_TF);
     }
 
-    /* Returns a ranked list of pairs of the relevant documents */
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
+        return getRankedResults(query, props, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -59,8 +53,10 @@ public class VSM extends ARetrievalModel {
         int totalArticles = _indexer.getTotalArticles();
 
         //collect the terms
+        query = removeDuplicateTerms(query);
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
+        //get the relevant documents from the documents file
         fetchEssentialDocInfo(query);
 
         //frequencies of the terms in the query
@@ -124,7 +120,10 @@ public class VSM extends ARetrievalModel {
             documentScore /= (documentNorm * queryNorm);
             results.add(new Pair<>(docInfo, documentScore));
         }
+
         results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+
+        //update the props of the results that are in [startDoc, endDoc]
         updateDocInfo(results, props, startDoc, endDoc);
 
         return results;

@@ -24,6 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.indexer.model;
 
+import javax.print.Doc;
 import java.util.*;
 
 /**
@@ -40,7 +41,6 @@ import java.util.*;
  * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class DocInfo {
-
     public enum PROPERTY {
         TITLE,
         ABSTRACT,
@@ -56,12 +56,13 @@ public class DocInfo {
         PAGERANK, // pagerank score for 2nd phase (Value should be double)
         WEIGHT, // weight (norm) of document VSM (Value should be double)
         LENGTH,   // for OkapiBM25 (Value should be integer)
-        MAX_TF
+        MAX_TF,
     }
 
     private String id = "";         // the 40 byte id
     private long offset = 0;        // offset in documents file
-    private final Map<PROPERTY, Object> props = new HashMap<>(1);
+    private int size = 0;           // size of the document entry
+    private final Map<PROPERTY, Object> props = new HashMap<>(0);
 
     /**
      *
@@ -69,9 +70,10 @@ public class DocInfo {
      * @param offset the offset in the document file the contains all
      * information for this document
      */
-    public DocInfo(String id, long offset) {
+    public DocInfo(String id, long offset, int size) {
         this.id = id;
         this.offset = offset;
+        this.size = size;
     }
 
     /**
@@ -83,14 +85,6 @@ public class DocInfo {
      */
     public void setProperty(DocInfo.PROPERTY prop, Object value) {
         props.put(prop, value);
-    }
-
-    /**
-     * Removes an enum PROPERTY from the properties map
-     * @param prop
-     */
-    public void removeProperty(DocInfo.PROPERTY prop) {
-        props.remove(prop);
     }
 
     /**
@@ -112,14 +106,26 @@ public class DocInfo {
         return offset;
     }
 
+    public int getSize() {
+        return size;
+    }
+
     public Set<PROPERTY> getProps() {
-        return new HashSet<>(props.keySet());
+        return props.keySet();
+    }
+
+    public void clearProperty(DocInfo.PROPERTY prop) {
+        props.remove(prop);
     }
 
     public void clearProperties(Set<DocInfo.PROPERTY> removeProps) {
         for (DocInfo.PROPERTY prop : removeProps) {
             props.remove(prop);
         }
+    }
+
+    public boolean hasProperty(DocInfo.PROPERTY prop) {
+        return props.containsKey(prop);
     }
 
     @Override

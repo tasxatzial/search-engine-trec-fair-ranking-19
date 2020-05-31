@@ -43,20 +43,17 @@ import java.util.*;
 public class Existential extends ARetrievalModel {
     public Existential(Indexer index) {
         super(index);
-
-        /* These are the props that are required so that the model knows how to rank. We don't need
-        * any props for this model */
-        _essentialProps = new HashSet<>(0);
     }
 
-    /* Returns a list of pairs of the relevant documents. There is no ranking of the documents */
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
+        return getRankedResults(query, props, 0, Integer.MAX_VALUE);
     }
 
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
+
+        query = removeDuplicateTerms(query);
         fetchEssentialDocInfo(query);
 
         //remove the duplicates
@@ -65,11 +62,14 @@ public class Existential extends ARetrievalModel {
             resultsSet.addAll(termDocInfo);
         }
 
+        //create the results list
         for (DocInfo docInfo : resultsSet) {
             results.add(new Pair<>(docInfo, 1.0));
         }
 
+        //update the props of the results that are in [startDoc, endDoc]
         updateDocInfo(results, props, startDoc, endDoc);
+
         return results;
     }
 }

@@ -104,8 +104,8 @@ public class Search {
     }
 
     /**
-     * Searches for a query and returns a ranked list of results. The results contain at least the docId of
-     * the found documents.
+     * Searches for a query and returns a ranked list of results. The results contain the essential properties
+     * specified by the current retrieval model.
      * @param query
      * @return
      * @throws IOException
@@ -115,29 +115,27 @@ public class Search {
     }
 
     /**
-     * Searches for a query and returns a ranked list of results. The results contain at least the document
-     * properties specified by docInfoProps.
+     * Searches for a query and returns a ranked list of results. The results contain the document
+     * properties specified by props + the essential properties specified by the current retrieval model.
      * @param query
-     * @param docInfoProps The document properties that we want to retrieve
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return search(query, docInfoProps, 0, Integer.MAX_VALUE);
+    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props) throws IOException {
+        return search(query, props, 0, Integer.MAX_VALUE);
     }
 
     /**
-     * Searches for a query using the specified model and returns a ranked list of results. The results in the range
-     * [startResult, endResult] contain at least the document properties specified by docInfoProps.
+     * Searches for a query and returns a ranked list of results. The results in the range
+     * [startResult, endResult] contain the document properties specified by props + the essential properties
+     * specified by the current retrieval model. All other results contain only the essential properties.
      * @param query
-     * @param docInfoProps The document properties that we want to retrieve
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> docInfoProps,
-                                             int startResult, int endResult) throws IOException {
+    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props, int startResult, int endResult) throws IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
 
@@ -147,28 +145,53 @@ public class Search {
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 
         /* perform a search */
-        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, docInfoProps, startResult, endResult);
+        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, props, startResult, endResult);
 
         return results;
     }
 
     /**
-     * Prints all results from searchResults (descending order based on their score)
+     * Prints a list of results in decreasing ranking order. The results show all properties that have been
+     * retrieved for each document.
      * @param searchResults
      */
     public void printResults(List<Pair<Object, Double>> searchResults) {
-        printResults(searchResults, 0, Integer.MAX_VALUE);
+        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getEssentialProps();
+        allprops.addAll(ARetrievalModel.getNonEssentialProps());
+        printResults(searchResults, allprops, 0, Integer.MAX_VALUE);
     }
 
     /**
-     * Prints all results from searchResults that have ranks in [startResult, endResult]
-     * (descending order based on their score). startResult and endResult range should be from 0
-     * (top ranked result) to Integer.MAX_VALUE.
+     * Prints a list of results in decreasing ranking order. Only the results from ranked position startResult
+     * to endResult are displayed. All properties that have been retrieved for each document are displayed.
      * @param searchResults
-     * @param startResult
-     * @param endResult
+     * @param startResult From 0 to Integer.MAX_VALUE
+     * @param endResult From 0 to Integer.MAX_VALUE
      */
     public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
+        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getEssentialProps();
+        allprops.addAll(ARetrievalModel.getNonEssentialProps());
+        printResults(searchResults, allprops, startResult, endResult);
+    }
+
+    /**
+     * Prints a list of results in decreasing ranking order. The results display only the properties
+     * specified by props (if they exist)
+     * @param searchResults
+     */
+    public void printResults(List<Pair<Object, Double>> searchResults, Set<DocInfo.PROPERTY> props) {
+        printResults(searchResults, props, 0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Prints a list of results in decreasing ranking order from ranked position startResult to endResult.
+     * Only the results from ranked position startResult to endResult are displayed.
+     * Only the the properties specified by props are displayed (if they exist)
+     * @param searchResults
+     * @param startResult From 0 to Integer.MAX_VALUE
+     * @param endResult From 0 to Integer.MAX_VALUE
+     */
+    public void printResults(List<Pair<Object, Double>> searchResults, Set<DocInfo.PROPERTY> props, int startResult, int endResult) {
 
         /* startResult and endResult might be out of the range of the actual results for this document.
         therefore we need to find the proper indexes of the first and last displayed result */
@@ -197,12 +220,15 @@ public class Search {
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
             DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
-            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(docInfo.getProps());
+            Set<DocInfo.PROPERTY> docInfoProps = docInfo.getProps();
+            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(props);
             Collections.sort(sortedProps);
             Themis.print((i + 1) + " ---------------------------------------\n");
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
-                Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+                if (docInfoProps.contains(docInfoProp)) {
+                    Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
+                }
             }
             Themis.print("\n");
         }

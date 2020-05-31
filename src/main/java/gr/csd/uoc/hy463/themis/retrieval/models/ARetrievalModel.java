@@ -41,17 +41,36 @@ public abstract class ARetrievalModel {
     public enum MODEL {
         BM25, VSM, EXISTENTIAL
     }
+
     protected List<List<DocInfo>> _termsDocInfo;
     protected List<Map<Long, DocInfo>> _docMap;
     protected List<String> _terms;
     protected Indexer _indexer;
-    protected Set<DocInfo.PROPERTY> _essentialProps;
-
     public ARetrievalModel(Indexer indexer) {
         _indexer = indexer;
         _terms = new ArrayList<>();
         _termsDocInfo = new ArrayList<>();
         _docMap = new ArrayList<>();
+    }
+
+    public static Set<DocInfo.PROPERTY> getNonEssentialProps() {
+        Set<DocInfo.PROPERTY> nonEssentialProps = new HashSet<>();
+        nonEssentialProps.add(DocInfo.PROPERTY.TITLE);
+        nonEssentialProps.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+        nonEssentialProps.add(DocInfo.PROPERTY.JOURNAL_NAME);
+        nonEssentialProps.add(DocInfo.PROPERTY.AUTHORS_IDS);
+        nonEssentialProps.add(DocInfo.PROPERTY.YEAR);
+        return nonEssentialProps;
+    }
+
+    public static Set<DocInfo.PROPERTY> getEssentialProps() {
+        Set<DocInfo.PROPERTY> essentialProps = new HashSet<>();
+        essentialProps.add(DocInfo.PROPERTY.PAGERANK);
+        essentialProps.add(DocInfo.PROPERTY.WEIGHT);
+        essentialProps.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        essentialProps.add(DocInfo.PROPERTY.MAX_TF);
+        essentialProps.add(DocInfo.PROPERTY.LENGTH);
+        return essentialProps;
     }
 
     /**
@@ -64,10 +83,9 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query set of query terms
-     * @param docInfoProps set of properties we want to be retrieved from the documents
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with
@@ -91,14 +109,14 @@ public abstract class ARetrievalModel {
      * The list must be in descending order according to the score
      *
      * @param query list of query terms
-     * @param props set of properties we want to be retrieved from the documents
      * @return
      */
     public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException;
 
     /**
      * Creates a list of list of docInfo objects using the documents file (one list for each term of the query).
-     * The protected members _termsDocInfo and _docMap are updated when the function returns
+     * Also it creates a map of document pointers to docInfo objects.
+     * Both of them (_termsDocInfo and _docMap) will have been updated when the function returns.
      * @param query
      * @throws IOException
      */
@@ -106,11 +124,11 @@ public abstract class ARetrievalModel {
 
         /* collect all terms */
         List<String> terms = new ArrayList<>(query.size());
-        for (QueryTerm term : query) {
-            terms.add(term.getTerm());
+        for (QueryTerm queryTerm : query) {
+            terms.add(queryTerm.getTerm());
         }
 
-        /* initialize */
+        /* initialize structures */
         List<List<DocInfo>> termsDocInfo = new ArrayList<>(terms.size());
         List<Map<Long, DocInfo>> docMap = new ArrayList<>();
         for (int i = 0; i < terms.size(); i++) {
@@ -129,12 +147,11 @@ public abstract class ARetrievalModel {
             }
         }
 
-        /* to decrease memory usage, for all the terms of the previous query that do not belong to this query,
-        clear the corresponding structures */
+        /* for all the terms of the previous query that do not belong to this query, clear the corresponding structures */
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             boolean found = false;
-            for (int j = 0; j < termsDocInfo.size(); j++) {
-                if (_termsDocInfo.get(i) == termsDocInfo.get(j)) {
+            for (List<DocInfo> docInfos : termsDocInfo) {
+                if (_termsDocInfo.get(i) == docInfos) {
                     found = true;
                     break;
                 }
@@ -146,7 +163,16 @@ public abstract class ARetrievalModel {
         }
 
         /* finally, fetch the essential properties so that the model can do the ranking */
-        _indexer.updateDocInfo(terms, termsDocInfo, docMap, _essentialProps);
+        if (this instanceof VSM) {
+            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.VSM);
+        }
+        else if (this instanceof Existential) {
+            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.EXISTENTIAL);
+        }
+        else if (this instanceof OkapiBM25) {
+            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.BM25);
+        }
+
         _termsDocInfo = termsDocInfo;
         _docMap = docMap;
         _terms = terms;
@@ -156,35 +182,77 @@ public abstract class ARetrievalModel {
      * Updates the ranked results that have index in [startDoc, endDoc] by fetching the specified props
      * from the documents file
      * @param results
-     * @param props
      * @param startDoc
      * @param endDoc
      * @throws IOException
      */
     protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
-        Set<DocInfo.PROPERTY> nonEssentialProps = new HashSet<>(props);
-        Set<DocInfo.PROPERTY> finalProps = new HashSet<>(props);
 
-        //these are the all the properties that should be in the final docInfo objects of the results
-        finalProps.addAll(_essentialProps);
+        /* compare the properties that have been specified to the essential properties for the specific model
+        and find out whether there are any new properties that should be fetched */
+        Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
+        if (this instanceof VSM || this instanceof OkapiBM25) {
+            newProps.addAll(getEssentialProps());
+        }
 
-        //these are all the properties that will be removed from the all the docInfo objects of the results
-        //that are in [startDoc, endDoc]
-        nonEssentialProps.removeAll(_essentialProps);
+        /* compare all docInfo properties to the properties that have been specified and find whether
+        there are properties that should be removed */
+        Set<DocInfo.PROPERTY> removeProps = getEssentialProps();
+        removeProps.addAll(getNonEssentialProps());
+        if (this instanceof VSM || this instanceof OkapiBM25) {
+            removeProps.removeAll(getEssentialProps());
+        }
 
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
-            if (i >= startDoc && i <= endDoc) {
+            DocInfo docInfo = (DocInfo) results.get(i).getL();
 
-                //all docInfo in [startDoc, endDoc] will have their properties updated
-                updatedDocInfos.add((DocInfo) results.get(i).getL());
+            /* clear the properties of the results not in [startDoc, endDoc] */
+            if (i < startDoc || i > endDoc) {
+                if (!removeProps.isEmpty()) {
+                    docInfo.clearProperties(removeProps);
+                }
             }
             else {
 
-                //for the rest of them just remove the propeties that we no longer want
-                ((DocInfo) results.get(i).getL()).clearProperties(nonEssentialProps);
+                /* clear the properties of the results in [startDoc, endDoc] */
+                for (DocInfo.PROPERTY prop : docInfo.getProps()) {
+                    if (!newProps.contains(prop)) {
+                        docInfo.clearProperty(prop);
+                    }
+                }
+
+                /* and check whether we need to grab any new properties */
+                for (DocInfo.PROPERTY prop : props) {
+                    if (!docInfo.hasProperty(prop)) {
+                        updatedDocInfos.add(docInfo);
+                        break;
+                    }
+                }
             }
         }
-        _indexer.updateDocInfo(updatedDocInfos, finalProps);
+        _indexer.updateDocInfo(updatedDocInfos, newProps);
+    }
+
+    /**
+     * Returns a new query with the duplicate terms removed
+     * @param query
+     * @return
+     */
+    protected List<QueryTerm> removeDuplicateTerms(List<QueryTerm> query) {
+        List<QueryTerm> newQuery = new ArrayList<>();
+        for (int i = 0; i < query.size(); i++) {
+            boolean found = false;
+            for (int j = 0; j < i; j++) {
+                if (query.get(j).getTerm().equals(query.get(i).getTerm())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                newQuery.add(query.get(i));
+            }
+        }
+        return newQuery;
     }
 }

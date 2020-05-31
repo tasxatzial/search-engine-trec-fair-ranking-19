@@ -43,15 +43,10 @@ public class OkapiBM25 extends ARetrievalModel {
 
     public OkapiBM25(Indexer index) {
         super(index);
-
-        /* These are the props that are required so that the model knows how to rank */
-        _essentialProps = new HashSet<>(1);
-        _essentialProps.add(DocInfo.PROPERTY.LENGTH);
     }
 
-    /* Returns a ranked list of pairs of the relevant documents */
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> docInfoProps) throws IOException {
-        return getRankedResults(query, docInfoProps, 0, Integer.MAX_VALUE);
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
+        return getRankedResults(query, props, 0, Integer.MAX_VALUE);
     }
 
     @Override
@@ -62,8 +57,10 @@ public class OkapiBM25 extends ARetrievalModel {
         double avgdl = _indexer.getAvgdl();
 
         //collect the terms
+        query = removeDuplicateTerms(query);
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
+        //get the relevant documents from the documents file
         fetchEssentialDocInfo(query);
 
         //compute the idf for each term of the query

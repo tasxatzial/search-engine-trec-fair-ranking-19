@@ -73,9 +73,13 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
+            List<Pair<Object, Double>> results;
             search = new Search();
-            themisEval eval = new themisEval(search);
-            eval.evaluateVSM();
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            props.add(DocInfo.PROPERTY.TITLE);
+            results = search.search("mal tirap", props);
+            results = search.search("tirap", props, 0, 10);
+            search.printResults(results,0, 51);
         }
     }
 
@@ -304,15 +308,7 @@ public class Themis {
         public void run() {
             _task = TASK.SEARCH;
             Set<DocInfo.PROPERTY> props = new HashSet<>();
-            props.add(DocInfo.PROPERTY.PAGERANK);
-            props.add(DocInfo.PROPERTY.WEIGHT);
-            props.add(DocInfo.PROPERTY.LENGTH);
-            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
             props.add(DocInfo.PROPERTY.TITLE);
-            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-            props.add(DocInfo.PROPERTY.MAX_TF);
 
             List<Pair<Object, Double>> results;
             long startTime = System.nanoTime();

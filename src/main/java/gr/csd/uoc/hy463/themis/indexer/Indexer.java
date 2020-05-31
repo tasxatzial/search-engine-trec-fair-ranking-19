@@ -576,6 +576,7 @@ public class Indexer {
      *
      * For each entry it stores in the following order:
      * DOCUMENT_ID (40 ASCII chars => 40 bytes) |
+     * Document size (int => 4 bytes) |
      * PageRank Score (double => 8 bytes) |
      * The weight (norm) of Document (double => 8 bytes) |
      * The max tf in the Document (int => 4 bytes) |
@@ -654,8 +655,13 @@ public class Indexer {
         docEntryLength += DocumentEntry.WEIGHT_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.LENGTH_SIZE +
                 DocumentEntry.PAGERANK_SIZE + DocumentEntry.AVG_AUTHOR_RANK_SIZE;
 
+        /* size of this entry */
+        docEntryLength += DocumentEntry.SIZE_SIZE;
+        byte[] docSize = ByteBuffer.allocate(DocumentEntry.SIZE_SIZE).putInt(docEntryLength).array();
+
         /* write first the fixed size fields */
         out.write(id);
+        out.write(docSize);
         out.write(pageRank);
         out.write(weight);
         out.write(maxTf);
@@ -726,7 +732,7 @@ public class Indexer {
         int maxTf = 0; //maximum tf in each document
 
         //offsets required for reading/writing the weight and max frequency to the documents file
-        int offset1 = DocumentEntry.ID_SIZE + DocumentEntry.PAGERANK_SIZE;
+        int offset1 = DocumentEntry.ID_SIZE + DocumentEntry.SIZE_OFFSET + DocumentEntry.PAGERANK_SIZE;
         int offset2 = offset1 + DocumentEntry.WEIGHT_SIZE;
         int offset3 = offset2 + DocumentEntry.MAX_TF_SIZE;
 
@@ -760,8 +766,8 @@ public class Indexer {
             documentsReader.read(documentEntry);
             byte[] wnew = ByteBuffer.allocate(8).putDouble(weight).array();
             byte[] tfnew = ByteBuffer.allocate(4).putInt(maxTf).array();
-            System.arraycopy(wnew, 0, documentEntry, offset1, offset2 - offset1);
-            System.arraycopy(tfnew, 0, documentEntry, offset2, offset3 - offset2);
+            System.arraycopy(wnew, 0, documentEntry, DocumentEntry.WEIGHT_OFFSET, offset2 - offset1);
+            System.arraycopy(tfnew, 0, documentEntry, DocumentEntry.MAX_TF_OFFSET, offset3 - offset2);
             documentsWriter.write(documentEntry);
         }
 
@@ -815,7 +821,6 @@ public class Indexer {
         }
 
         Themis.print("Index directory: " + __INDEX_PATH__+ "\n");
-        //load vocabulary
         Themis.print(">>> Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
@@ -827,7 +832,6 @@ public class Indexer {
             fields = line.split(" ");
             __VOCABULARY__.put(fields[0], new VocabularyStruct(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
         }
-
         vocabularyReader.close();
         Themis.print("DONE\n");
 
@@ -909,18 +913,18 @@ public class Indexer {
     }
 
     /**
-     * Basic method for querying functionality. Given the list of terms in the
-     * query, returns a List of Lists of DocInfo objects, where each
-     * DocInfo object objects holds the DocInfo representation of the
-     * docs that the corresponding term of the query appears in. Only the document properties
-     * specified by the props are included in the representation.
-     *
-     * @param terms
-     * @param props
+     * Basic method for querying functionality. Given the list of terms in the query, returns a List of
+     * Lists of DocInfo objects, where each DocInfo object objects holds the DocInfo representation of the
+     * docs that the corresponding term of the query appears in.
+     * @param terms The terms of the query (after pre-processing)
+     * @param termsDocInfo An initial list of lists of DocInfo objects
+     * @param docMap An initial map of document offsets to DocInfo objects. The DocInfo objects must contain
+     *               the same properties as the objects in the termsDocInfo list
+     * @param model The retrieval model type
      * @return
      * @throws IOException
      */
-    public void updateDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, List<Map<Long, DocInfo>> docMap, Set<DocInfo.PROPERTY> props) throws IOException {
+    public void getEssentialDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, List<Map<Long, DocInfo>> docMap, ARetrievalModel.MODEL model) throws IOException {
         if (!loaded()) {
             return;
         }
@@ -930,36 +934,46 @@ public class Indexer {
         VocabularyStruct termValue; //(df, posting pointer)
         long documentPointer;
         long postingPointer;
-        byte[] docId = new byte[DocumentEntry.ID_SIZE];
+        byte[] essentialFields;
+
+        /* we'll retrieve different document fields based on the specified retrieval model */
+        if (model == ARetrievalModel.MODEL.VSM || model == ARetrievalModel.MODEL.BM25) {
+            essentialFields = new byte[DocumentEntry.ID_SIZE + DocumentEntry.SIZE_SIZE + DocumentEntry.PAGERANK_SIZE +
+                    DocumentEntry.WEIGHT_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.LENGTH_SIZE +
+                    DocumentEntry.AVG_AUTHOR_RANK_SIZE];
+        }
+        else {
+            essentialFields = new byte[DocumentEntry.ID_SIZE + DocumentEntry.SIZE_SIZE];
+        }
 
         for (int i = 0; i < terms.size(); i++) {
             termDocInfo = termsDocInfo.get(i);
+
+            /* if the list od DocInfo objects for this term is not empty, it means that it has already
+            been fetched in a previous search */
             if (!termDocInfo.isEmpty()) {
                 continue;
             }
+
+            /* go to the next term if this term does not appear in the vocabulary */
             termValue = __VOCABULARY__.get(terms.get(i));
             if (termValue == null) {
                 continue;
             }
-            boolean found = false;
-            for (int j = 0; j < i; j++) {
-                if (terms.get(i).equals(terms.get(j))) {
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                continue;
-            }
 
+            /* go to the postings file and grab all postings for this term at once */
             postingPointer = termValue.get_offset();
             __POSTINGS__.seek(postingPointer);
             byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
             __POSTINGS__.readFully(postings);
-            ByteBuffer bb = ByteBuffer.wrap(postings);
+            ByteBuffer postingBuffer = ByteBuffer.wrap(postings);
+
             for (int j = 0; j < termValue.get_df(); j++) {
-                documentPointer = bb.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                found = false;
+                documentPointer = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
+
+                /* if the pointer to the documents file exists in the map, then we don't need to fetch
+                the document properties again */
+                boolean found = false;
                 for (Map<Long, DocInfo> longDocInfoMap : docMap) {
                     if (longDocInfoMap.get(documentPointer) != null) {
                         termDocInfo.add(longDocInfoMap.get(documentPointer));
@@ -967,170 +981,107 @@ public class Indexer {
                         break;
                     }
                 }
+
+                /* if the pointer to the documents file does not exist in the map, we need to read the
+                documents file and grab the essential properties according to the specified retrieval model */
                 if (!found) {
                     __DOCUMENTS__.seek(documentPointer);
-                    __DOCUMENTS__.readFully(docId);
-                    docInfo = new DocInfo(new String(docId, "ASCII"), documentPointer);
+                    __DOCUMENTS__.readFully(essentialFields);
+                    ByteBuffer essentialFieldsBuf = ByteBuffer.wrap(essentialFields);
+                    String docId = new String(essentialFields, 0, DocumentEntry.ID_SIZE, "ASCII");
+                    int docSize = essentialFieldsBuf.getInt(DocumentEntry.SIZE_OFFSET);
+                    docInfo = new DocInfo(docId, documentPointer, docSize);
+                    if (model == ARetrievalModel.MODEL.VSM || model == ARetrievalModel.MODEL.BM25) {
+                        double pagerank = essentialFieldsBuf.getDouble(DocumentEntry.PAGERANK_OFFSET);
+                        double weight = essentialFieldsBuf.getDouble(DocumentEntry.WEIGHT_OFFSET);
+                        int maxTf = essentialFieldsBuf.getInt(DocumentEntry.MAX_TF_OFFSET);
+                        int length = essentialFieldsBuf.getInt(DocumentEntry.LENGTH_OFFSET);
+                        double authorRank = essentialFieldsBuf.getDouble(DocumentEntry.AVG_AUTHOR_RANK_OFFSET);
+                        docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);
+                        docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
+                        docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
+                        docInfo.setProperty(DocInfo.PROPERTY.LENGTH, length);
+                        docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
+                    }
                     termDocInfo.add(docInfo);
                     docMap.get(i).put(documentPointer, docInfo);
-                    if (!props.isEmpty()) {
-                        readDocInfo(docInfo, props, false); //seek = false
-                    }
                 }
             }
         }
     }
 
     /**
-     * Updates a list of docInfo objects. The updated objects have all properties specified by newProps
-     * @param newProps
+     * Updates a list of docInfo objects. The updated objects will have in addition to their properties,
+     * the properties specified by props.
      * @throws IOException
      */
-    public void updateDocInfo(List<DocInfo> termDocsInfo, Set<DocInfo.PROPERTY> newProps)
-            throws IOException {
+    public void updateDocInfo(List<DocInfo> termDocsInfo, Set<DocInfo.PROPERTY> props) throws IOException {
         if (!loaded()) {
             return;
         }
 
-        Set<DocInfo.PROPERTY> oldProps;
-        Set<DocInfo.PROPERTY> addProps;
-        Set<DocInfo.PROPERTY> removeProps;
+        int fieldsOffset = DocumentEntry.PAGERANK_OFFSET;
+        int weightOffset = DocumentEntry.WEIGHT_OFFSET - fieldsOffset;
+        int maxTfOffset = DocumentEntry.MAX_TF_OFFSET - fieldsOffset;
+        int lengthOffset = DocumentEntry.LENGTH_OFFSET - fieldsOffset;
+        int authorRankOffset = DocumentEntry.AVG_AUTHOR_RANK_OFFSET - fieldsOffset;
+        int yearOffset = DocumentEntry.YEAR_OFFSET - fieldsOffset;
+        int titleSizeOffset = DocumentEntry.TITLE_SIZE_OFFSET - fieldsOffset;
+        int titleOffset = DocumentEntry.TITLE_OFFSET - fieldsOffset;
+        int authorNamesSizeOffset = DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET - fieldsOffset;
+        int authorIdsSizeOffset = DocumentEntry.AUTHOR_IDS_SIZE_OFFSET - fieldsOffset;
+        int journalNameSizeOffset = DocumentEntry.JOURNAL_NAME_SIZE_OFFSET - fieldsOffset;
         for (DocInfo docInfo : termDocsInfo) {
-            oldProps = docInfo.getProps();
-
-            /* the new properties that the docInfo object does not already have */
-            addProps = new HashSet<>(newProps);
-            addProps.removeAll(oldProps);
-
-            /* the properties that the docInfo object already has and will be removed */
-            removeProps = new HashSet<>(oldProps);
-            removeProps.removeAll(newProps);
-
-            /* update the docInfo properties */
-            docInfo.clearProperties(removeProps);
-            if (!addProps.isEmpty()) {
-                readDocInfo(docInfo, addProps, true); //seek = true
+            long documentPointer = docInfo.getOffset();
+            int docSize = docInfo.getSize();
+            byte[] fields = new byte[docSize - fieldsOffset];
+            __DOCUMENTS__.seek(documentPointer + fieldsOffset);
+            __DOCUMENTS__.readFully(fields);
+            ByteBuffer fieldsBuf = ByteBuffer.wrap(fields);
+            if (props.contains(DocInfo.PROPERTY.PAGERANK)) {
+                double pagerank = fieldsBuf.getDouble(0);
+                docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);
             }
-        }
-    }
-
-    /* Adds to docInfo the document properties specified by props. Seek should be true when updating docInfos */
-    private void readDocInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, boolean seek) throws IOException {
-        boolean hasPagerank = props.contains(DocInfo.PROPERTY.PAGERANK);
-        boolean hasWeight = props.contains(DocInfo.PROPERTY.WEIGHT);
-        boolean hasMaxTf = props.contains(DocInfo.PROPERTY.MAX_TF);
-        boolean hasLength = props.contains(DocInfo.PROPERTY.LENGTH);
-        boolean hasAvgAuthorRank = props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-        boolean hasYear = props.contains(DocInfo.PROPERTY.YEAR);
-        boolean hasTitle = props.contains(DocInfo.PROPERTY.TITLE);
-        boolean hasAuthorNames = props.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
-        boolean hasAuthorIds = props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
-        boolean hasJournalName = props.contains(DocInfo.PROPERTY.JOURNAL_NAME);
-        long documentPointer = docInfo.getOffset();
-
-        if (seek) {
-            __DOCUMENTS__.seek(documentPointer + DocumentEntry.ID_SIZE);
-        }
-        if (hasPagerank) {
-            docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, __DOCUMENTS__.readDouble());
-        }
-        if (hasWeight) {
-            if (!hasPagerank) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.WEIGHT_OFFSET);
+            if (props.contains(DocInfo.PROPERTY.WEIGHT)) {
+                double weight = fieldsBuf.getDouble(weightOffset);
+                docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
             }
-            docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, __DOCUMENTS__.readDouble());
-        }
-        if (hasMaxTf) {
-            if (!hasWeight) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.MAX_TF_OFFSET);
+            if (props.contains(DocInfo.PROPERTY.MAX_TF)) {
+                int maxTf = fieldsBuf.getInt(maxTfOffset);
+                docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
             }
-            docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, __DOCUMENTS__.readInt());
-        }
-        if (hasLength) {
-            if (!hasMaxTf) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.LENGTH_OFFSET);
+            if (props.contains(DocInfo.PROPERTY.LENGTH)) {
+                int length = fieldsBuf.getInt(lengthOffset);
+                docInfo.setProperty(DocInfo.PROPERTY.LENGTH, length);
             }
-            docInfo.setProperty(DocInfo.PROPERTY.LENGTH, __DOCUMENTS__.readInt());
-        }
-        if (hasAvgAuthorRank) {
-            if (!hasLength) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.AVG_AUTHOR_RANK_OFFSET);
+            if (props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
+                double authorRank = fieldsBuf.getDouble(authorRankOffset);
+                docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
             }
-            docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, __DOCUMENTS__.readDouble());
-        }
-        if (hasYear) {
-            if (!hasAvgAuthorRank) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.YEAR_OFFSET);
+            if (props.contains(DocInfo.PROPERTY.YEAR)) {
+                short year = fieldsBuf.getShort(yearOffset);
+                docInfo.setProperty(DocInfo.PROPERTY.YEAR, year);
             }
-            docInfo.setProperty(DocInfo.PROPERTY.YEAR, __DOCUMENTS__.readShort());
-        }
-        int titleLength = 0;
-        int authorNamesLength = 0;
-        int authorIdsLength = 0;
-        int journalNameLength = 0;
-
-        if (!hasTitle && !hasAuthorNames && !hasAuthorIds && !hasJournalName) {
-            return;
-        }
-        if (!hasYear) {
-            __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_SIZE_OFFSET);
-        }
-
-        if (hasJournalName) {
-            titleLength = __DOCUMENTS__.readInt();
-            authorNamesLength = __DOCUMENTS__.readInt();
-            authorIdsLength = __DOCUMENTS__.readInt();
-            journalNameLength = __DOCUMENTS__.readShort();
-        }
-        else if (hasAuthorIds) {
-            titleLength = __DOCUMENTS__.readInt();
-            authorNamesLength = __DOCUMENTS__.readInt();
-            authorIdsLength = __DOCUMENTS__.readInt();
-        }
-        else if (hasAuthorNames) {
-            titleLength = __DOCUMENTS__.readInt();
-            authorNamesLength = __DOCUMENTS__.readInt();
-        }
-        else {
-            titleLength = __DOCUMENTS__.readInt();
-        }
-
-        if (hasTitle) {
-            if (!hasJournalName) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET);
+            int titleSize = fieldsBuf.getInt(titleSizeOffset);
+            int authorNamesSize = fieldsBuf.getInt(authorNamesSizeOffset);
+            int authorIdsSize = fieldsBuf.getInt(authorIdsSizeOffset);
+            short journalNameSize = fieldsBuf.getShort(journalNameSizeOffset);
+            if (props.contains(DocInfo.PROPERTY.TITLE)) {
+                String title = new String(fields, titleOffset, titleSize, "UTF-8");
+                docInfo.setProperty(DocInfo.PROPERTY.TITLE, title);
             }
-            byte[] title = new byte[titleLength];
-            __DOCUMENTS__.readFully(title);
-            docInfo.setProperty(DocInfo.PROPERTY.TITLE, new String(title, "UTF-8"));
-        }
-
-        if (hasAuthorNames) {
-            if (!hasTitle) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength);
+            if (props.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
+                String authorNames = new String(fields, titleOffset + titleSize, authorNamesSize, "UTF-8");
+                docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
             }
-            byte[] authorNames = new byte[authorNamesLength];
-            __DOCUMENTS__.readFully(authorNames);
-            docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, new String(authorNames, "UTF-8"));
-        }
-
-        if (hasAuthorIds) {
-            if (!hasAuthorNames) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
-                        authorNamesLength);
+            if (props.contains(DocInfo.PROPERTY.AUTHORS_IDS)) {
+                String authorIds = new String(fields, titleOffset + titleSize + authorNamesSize, authorIdsSize, "UTF-8");
+                docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIds);
             }
-            byte[] authorIds = new byte[authorIdsLength];
-            __DOCUMENTS__.readFully(authorIds);
-            docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, new String(authorIds, "ASCII"));
-        }
-
-        if (hasJournalName) {
-            if (!hasAuthorIds) {
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.TITLE_OFFSET + titleLength +
-                        authorNamesLength + authorIdsLength);
+            if (props.contains(DocInfo.PROPERTY.JOURNAL_NAME)) {
+                String journalName = new String(fields, titleOffset + titleSize + authorNamesSize + authorIdsSize, journalNameSize, "UTF-8");
+                docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, journalName);
             }
-            byte[] journalName = new byte[journalNameLength];
-            __DOCUMENTS__.readFully(journalName);
-            docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, new String(journalName, "UTF-8"));
         }
     }
 
