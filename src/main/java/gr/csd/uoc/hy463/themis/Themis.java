@@ -10,6 +10,7 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.print.Doc;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -73,13 +74,23 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            List<Pair<Object, Double>> results;
             search = new Search();
+            List<Pair<Object, Double>> results;
             Set<DocInfo.PROPERTY> props = new HashSet<>();
             props.add(DocInfo.PROPERTY.TITLE);
-            results = search.search("mal tirap", props);
-            results = search.search("tirap", props, 0, 10);
-            search.printResults(results,0, 51);
+            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+            props.add(DocInfo.PROPERTY.YEAR);
+            props.add(DocInfo.PROPERTY.WEIGHT);
+            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+            props.add(DocInfo.PROPERTY.MAX_TF);
+            props.add(DocInfo.PROPERTY.LENGTH);
+            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+            props.add(DocInfo.PROPERTY.PAGERANK);
+
+            results = search.search("supernatural");
+            results = search.search("supernatural", props);
+            search.printResults(results, props,0, 12);
         }
     }
 
@@ -309,16 +320,25 @@ public class Themis {
             _task = TASK.SEARCH;
             Set<DocInfo.PROPERTY> props = new HashSet<>();
             props.add(DocInfo.PROPERTY.TITLE);
+            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+            props.add(DocInfo.PROPERTY.YEAR);
+            props.add(DocInfo.PROPERTY.WEIGHT);
+            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+            props.add(DocInfo.PROPERTY.MAX_TF);
+            props.add(DocInfo.PROPERTY.LENGTH);
+            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+            props.add(DocInfo.PROPERTY.PAGERANK);
 
             List<Pair<Object, Double>> results;
             long startTime = System.nanoTime();
             String query = view.get_searchField().getText();
             print("Searching for: " + query + " ... ");
             try {
-                results = search.search(view.get_searchField().getText());
+                results = search.search(view.get_searchField().getText(), props);
                 print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
-                search.printResults(results, 0, 50);
+                search.printResults(results,0, 19);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");

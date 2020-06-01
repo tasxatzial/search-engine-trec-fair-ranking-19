@@ -111,7 +111,7 @@ public class DocInfo {
     }
 
     public Set<PROPERTY> getProps() {
-        return props.keySet();
+        return new HashSet<>(props.keySet());
     }
 
     public void clearProperty(DocInfo.PROPERTY prop) {

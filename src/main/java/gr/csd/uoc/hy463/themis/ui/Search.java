@@ -129,6 +129,8 @@ public class Search {
      * Searches for a query and returns a ranked list of results. The results in the range
      * [startResult, endResult] contain the document properties specified by props + the essential properties
      * specified by the current retrieval model. All other results contain only the essential properties.
+     * startResult, endResult should be set to different values other than 0, Integer.MAX_VALUE only when we
+     * want a small number of results.
      * @param query
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
@@ -156,8 +158,9 @@ public class Search {
      * @param searchResults
      */
     public void printResults(List<Pair<Object, Double>> searchResults) {
-        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getEssentialProps();
-        allprops.addAll(ARetrievalModel.getNonEssentialProps());
+        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getOkapiProps();
+        allprops.addAll(ARetrievalModel.getVSMProps());
+        allprops.addAll(ARetrievalModel.getMonModelProps());
         printResults(searchResults, allprops, 0, Integer.MAX_VALUE);
     }
 
@@ -169,8 +172,9 @@ public class Search {
      * @param endResult From 0 to Integer.MAX_VALUE
      */
     public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
-        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getEssentialProps();
-        allprops.addAll(ARetrievalModel.getNonEssentialProps());
+        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getOkapiProps();
+        allprops.addAll(ARetrievalModel.getVSMProps());
+        allprops.addAll(ARetrievalModel.getMonModelProps());
         printResults(searchResults, allprops, startResult, endResult);
     }
 

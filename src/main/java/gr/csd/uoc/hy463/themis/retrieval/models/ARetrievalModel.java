@@ -46,6 +46,7 @@ public abstract class ARetrievalModel {
     protected List<Map<Long, DocInfo>> _docMap;
     protected List<String> _terms;
     protected Indexer _indexer;
+
     public ARetrievalModel(Indexer indexer) {
         _indexer = indexer;
         _terms = new ArrayList<>();
@@ -53,24 +54,29 @@ public abstract class ARetrievalModel {
         _docMap = new ArrayList<>();
     }
 
-    public static Set<DocInfo.PROPERTY> getNonEssentialProps() {
-        Set<DocInfo.PROPERTY> nonEssentialProps = new HashSet<>();
-        nonEssentialProps.add(DocInfo.PROPERTY.TITLE);
-        nonEssentialProps.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-        nonEssentialProps.add(DocInfo.PROPERTY.JOURNAL_NAME);
-        nonEssentialProps.add(DocInfo.PROPERTY.AUTHORS_IDS);
-        nonEssentialProps.add(DocInfo.PROPERTY.YEAR);
-        return nonEssentialProps;
+    public static Set<DocInfo.PROPERTY> getVSMProps() {
+        Set<DocInfo.PROPERTY> props = new HashSet<>();
+        props.add(DocInfo.PROPERTY.WEIGHT);
+        props.add(DocInfo.PROPERTY.MAX_TF);
+        return props;
     }
 
-    public static Set<DocInfo.PROPERTY> getEssentialProps() {
-        Set<DocInfo.PROPERTY> essentialProps = new HashSet<>();
-        essentialProps.add(DocInfo.PROPERTY.PAGERANK);
-        essentialProps.add(DocInfo.PROPERTY.WEIGHT);
-        essentialProps.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-        essentialProps.add(DocInfo.PROPERTY.MAX_TF);
-        essentialProps.add(DocInfo.PROPERTY.LENGTH);
-        return essentialProps;
+    public static Set<DocInfo.PROPERTY> getOkapiProps() {
+        Set<DocInfo.PROPERTY> props = new HashSet<>();
+        props.add(DocInfo.PROPERTY.LENGTH);
+        return props;
+    }
+
+    public static Set<DocInfo.PROPERTY> getMonModelProps() {
+        Set<DocInfo.PROPERTY> props = new HashSet<>();
+        props.add(DocInfo.PROPERTY.TITLE);
+        props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+        props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+        props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+        props.add(DocInfo.PROPERTY.YEAR);
+        props.add(DocInfo.PROPERTY.PAGERANK);
+        props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        return props;
     }
 
     /**
@@ -93,7 +99,9 @@ public abstract class ARetrievalModel {
      * documents with indexes from startDoc to endDoc.
      *
      * startDoc and endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
-     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve all the documents related to this query
+     * startDoc should be set to 0 and endDoc should be set to Integer.MAX_VALUE if we want to retrieve all
+     * documents related to this query. Using different values for any of them is encouraged only when we want
+     * to see a small number of results.
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -114,13 +122,16 @@ public abstract class ARetrievalModel {
     public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException;
 
     /**
-     * Creates a list of list of docInfo objects using the documents file (one list for each term of the query).
+     * Reads the documents file and creates a list of list of docInfo objects (one list for each term of the query).
      * Also it creates a map of document pointers to docInfo objects.
      * Both of them (_termsDocInfo and _docMap) will have been updated when the function returns.
      * @param query
+     * @param props
+     * @param startDoc
+     * @param endDoc
      * @throws IOException
      */
-    protected void fetchEssentialDocInfo(List<QueryTerm> query) throws IOException {
+    protected void fetchEssentialDocInfo(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
 
         /* collect all terms */
         List<String> terms = new ArrayList<>(query.size());
@@ -162,16 +173,30 @@ public abstract class ARetrievalModel {
             }
         }
 
-        /* finally, fetch the essential properties so that the model can do the ranking */
-        if (this instanceof VSM) {
-            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.VSM);
+        /* if we want paginated results, both the okapi and VSM models should fetch only their
+        essential properties for each result so that they can do the ranking. At this point none of those
+        models should retrieve any other property: There is no point using more memory to store
+        any properties that the user does not want to see */
+        Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
+        if (startDoc == 0 && endDoc == Integer.MAX_VALUE) {
+            if (this instanceof VSM) {
+                newProps.addAll(getVSMProps());
+            }
+            else if (this instanceof OkapiBM25) {
+                newProps.addAll(getOkapiProps());
+            }
         }
-        else if (this instanceof Existential) {
-            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.EXISTENTIAL);
+        else {
+            if (this instanceof VSM) {
+                newProps = getVSMProps();
+            }
+            else if (this instanceof OkapiBM25) {
+                newProps = getOkapiProps();
+            }
         }
-        else if (this instanceof OkapiBM25) {
-            _indexer.getEssentialDocInfo(terms, termsDocInfo, docMap, MODEL.BM25);
-        }
+
+        /* finally fetch the properties */
+        _indexer.getDocInfo(terms, termsDocInfo, docMap, newProps);
 
         _termsDocInfo = termsDocInfo;
         _docMap = docMap;
@@ -188,21 +213,28 @@ public abstract class ARetrievalModel {
      */
     protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
 
-        /* compare the properties that have been specified to the essential properties for the specific model
-        and find out whether there are any new properties that should be fetched */
+        /* add to the specified props the essential properties of each model */
         Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
-        if (this instanceof VSM || this instanceof OkapiBM25) {
-            newProps.addAll(getEssentialProps());
+        if (this instanceof VSM) {
+            newProps.addAll(getVSMProps());
+        }
+        else if (this instanceof OkapiBM25) {
+            newProps.addAll(getOkapiProps());
         }
 
-        /* compare all docInfo properties to the properties that have been specified and find whether
-        there are properties that should be removed */
-        Set<DocInfo.PROPERTY> removeProps = getEssentialProps();
-        removeProps.addAll(getNonEssentialProps());
-        if (this instanceof VSM || this instanceof OkapiBM25) {
-            removeProps.removeAll(getEssentialProps());
+        /* find all the properties that should be removed but keep the essential properties of each model */
+        Set<DocInfo.PROPERTY> removeProps = new HashSet<>();
+        removeProps.addAll(getVSMProps());
+        removeProps.addAll(getMonModelProps());
+        removeProps.addAll(getOkapiProps());
+        if (this instanceof VSM) {
+            removeProps.removeAll(getVSMProps());
+        }
+        else if (this instanceof OkapiBM25) {
+            removeProps.removeAll(getOkapiProps());
         }
 
+        /* update all docInfo items of the results accordingly */
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
             DocInfo docInfo = (DocInfo) results.get(i).getL();

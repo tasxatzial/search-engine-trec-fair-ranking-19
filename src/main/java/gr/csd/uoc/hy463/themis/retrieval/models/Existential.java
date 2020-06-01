@@ -54,7 +54,7 @@ public class Existential extends ARetrievalModel {
         List<Pair<Object, Double>> results = new ArrayList<>();
 
         query = removeDuplicateTerms(query);
-        fetchEssentialDocInfo(query);
+        fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
         //remove the duplicates
         Set<DocInfo> resultsSet = new HashSet<>();

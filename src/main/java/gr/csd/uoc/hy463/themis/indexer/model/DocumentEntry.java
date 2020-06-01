@@ -5,8 +5,8 @@ package gr.csd.uoc.hy463.themis.indexer.model;
  * of the documents file and also during search.
  */
 public class DocumentEntry {
-    public static int ID_SIZE = 40;
     public static int SIZE_SIZE = 4;
+    public static int ID_SIZE = 40;
     public static int PAGERANK_SIZE = 8;
     public static int WEIGHT_SIZE = 8;
     public static int MAX_TF_SIZE = 4;
@@ -22,8 +22,8 @@ public class DocumentEntry {
     //author ids -> variable size
     //journal name -> variable size
 
-    public static int ID_OFFSET = 0;
-    public static int SIZE_OFFSET = 40;
+    public static int SIZE_OFFSET = 0;
+    public static int ID_OFFSET = 4;
     public static int PAGERANK_OFFSET = 44;
     public static int WEIGHT_OFFSET = 52;
     public static int MAX_TF_OFFSET = 60;

@@ -61,7 +61,7 @@ public class OkapiBM25 extends ARetrievalModel {
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //get the relevant documents from the documents file
-        fetchEssentialDocInfo(query);
+        fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
         //compute the idf for each term of the query
         double[] idfs = new double[terms.size()];

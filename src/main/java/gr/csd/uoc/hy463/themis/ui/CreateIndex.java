@@ -27,6 +27,8 @@ package gr.csd.uoc.hy463.themis.ui;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -53,4 +55,5 @@ public class CreateIndex {
     public boolean isIndexDirEmpty() {
         return _indexer.isIndexDirEmpty();
     }
+
 }

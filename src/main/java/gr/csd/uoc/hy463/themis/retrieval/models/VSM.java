@@ -57,7 +57,7 @@ public class VSM extends ARetrievalModel {
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //get the relevant documents from the documents file
-        fetchEssentialDocInfo(query);
+        fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
         //frequencies of the terms in the query
         Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
