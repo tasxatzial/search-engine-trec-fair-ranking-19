@@ -7,12 +7,11 @@ import java.util.regex.Pattern;
 
 /**
  * Class that can be used for applying the following operations on a term:
- * Stemming & StopWord check | Dash replacement/removal.
+ * Stemming & StopWord removal
+ *
+ * We can also use to split a query into terms before performing a search
  */
 public class ProcessText {
-
-    //dashes
-    private static Pattern anyDash = Pattern.compile("[―−—–‑‐]+");
 
     /**
      * Applies stopword/stemming on a term.
@@ -59,16 +58,5 @@ public class ProcessText {
             }
         }
         return terms;
-    }
-
-    /**
-     * Removes leading/trailing dashes from a term and replaces all other dashes
-     * with the minus sign (-).
-     * @param term
-     * @return
-     */
-    public static String editDashes(String term) {
-        term = anyDash.matcher(term).replaceAll("-");
-        return term;
     }
 }

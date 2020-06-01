@@ -94,20 +94,16 @@ public class S2TextualEntryTermFrequencies {
     private static String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:
-                return "\u0020.:,[]()\"?“”\u00A0!{}∼~<>›‹_\u0091\u0092″•·・‡†‟„¶|\\¿;»«§¡˚©™®¸‚…：＂／〔〕【】《》（）＜＞\n\t\r\f\u2003\u202F\u2009\u2002\u2005\u200A\u2006\u200B\u2008";
-                //removed '’´`′，،‘*×∗^+/%±=&#@$
+                return "\u0020.:,[]-―−—–‑‐‒─⎯⁻\"?“”◆!{}()+<>›'‹_″‟„¶|\\¿;»«§¡¸±：×^＂*@・˚•·∼°⁺◦，⋅ªº␣�≥⋯≡／∕∣ⓡ£€ⅰ⁃╉＜＞（）【】《》〈〉〔〕≪≫「」╅│｜－？＋✔✓←↑→↓↔⇑⇒⇔⇤①②③④⑤⑥⑦⑧⑨⑩…‡†‗™©®~$#%&/=∗。、‚׳‘’‛´`′⁄▾▵┙␥〈〉⋆⊥⊤♦♀♂●∞∙♣◆☆▪□■▶►▲▼▸‖～［］\n\t\r\f\u00AD\uF020\u008D\u00A0\uF020\u2003\u202F\u2009\u2002\u2005\u200A\u2006\u200B\u2008\u2004\u2000\u008E\u3000\uF0E0\uF07D\uF07A\uF076\uF073\uF072\uF070\uF06E\uF06D\uF06C\uF064\uF062\uF061\uF05B\uF034\uF025\uF02D\uE0D5\uE004\u0084\u0094\u0093\u0097\u0085\u0091\u0092\uE011\uFFFB\uF8E7\uF0D8\uF0A7\uF074\uF0E1\uF0F1\uF0E2\uF0B5\uF0B3\uF0B4\uF079\uF07E\uF0A0\uF0A8\uF0AB\uF0AD\uF0B5\uF078\uF077\uF071\uF06F\uF06B\uF067\uF0A2\uF065\uF063\uF053\uF047\uF044\uF03C\uF02A\uF000\uF0A3\uF0E8\uF0EB\uF0F7\uF0D6\uF0B7\uF0B9\uF0BA\uF0BD\uF0BE\u200E\uE003\uE009\u2028\u0082\u2007\uFEFF\u0096\u0099⃝◇◮║➔➢➤✉☁✣✭✩✴✳✿➝✦✸❛❖✞♯◌◊⌜♮❚♠❯☞┚⌈➀➁➂➃➄△≈∥\uF075‵※『と⁎₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹\u2FFF⩾⦁⋄✰⪡⪢\uF080\uF081\uF082\uF083\uF084\uF085\uF086\uF087\uF088\uF089";
+            //
             case AUTHORS_NAMES:
-                return "\u0020（）．･;,“”«».*()#·\n\r";
-                //removed '‘’，&
+                return "\u0020（），･·;,-―−—–‑‐&@“”„、ᆞ⋅‧•†‡‹↑'׳′´`’‘ʿ．.©\"‟«»*∗()#\n\r\u00AD\u200E\u2009";
             case VENUE:
-                return "\u0020™®?*=\\/!|\";[]():,.\n\r";
-                //removed ’'&+
+                return "\u0020-–™®?*=#&\\/!|\";[]():'´+,’.@\n\r\u00AD";
             case JOURNAL_NAME:
-                return "\u0020[](),.:/\"\n\r";
-                //removed '&#
+                return "\u0020-[]()&“”,?.:+/*'’ʿ´;@!\"\n\r\u00AD";
             case ENTITIES:
-                return "\u0020:,;_!^\"<>[]./()\n\r";
-                //removed ’&#'*
+                return "\u0020-–:,;_!^\"<>[]()./’'*&@\n\r";
             default:
                 return "\u0020\n\r";
         }
