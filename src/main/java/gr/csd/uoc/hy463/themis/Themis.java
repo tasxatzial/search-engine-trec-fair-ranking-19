@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import javax.print.Doc;
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -91,6 +91,7 @@ public class Themis {
             results = search.search("supernatural");
             results = search.search("supernatural", props);
             search.printResults(results, props,0, 12);
+
         }
     }
 

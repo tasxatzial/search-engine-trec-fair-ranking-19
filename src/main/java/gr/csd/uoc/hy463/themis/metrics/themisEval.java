@@ -28,7 +28,6 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -133,6 +132,7 @@ public class themisEval {
         List<Double> aveps = new ArrayList<>();
         //List<Double> bprefs = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
+        List<Pair<String, Double>> queryTime = new ArrayList<>();
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
             try {
@@ -156,7 +156,14 @@ public class themisEval {
             evaluationWriter.write("------------------------------------------------\n");
             evaluationWriter.write("Search query: " + query + "\n");
             Themis.print("Search query: " + query + "\n");
+            long startTime = System.nanoTime();
             List<Pair<Object, Double>> results = _search.search(query);
+            long endTime = System.nanoTime();
+
+            //calculate the time needed
+            Double timeSecs = Math.round((endTime - startTime) / 1e7) / 100.0;
+            queryTime.add(new Pair<>(query, timeSecs));
+            evaluationWriter.write("Time: " + timeSecs + "s\n");
 
             //calculate average precision, nDCG
             double avep = computeAveP(results, relevanceMap);
@@ -183,6 +190,10 @@ public class themisEval {
         double minNdcg = calculateMin(ndcgs);
         double maxNdcg = calculateMax(ndcgs);
 
+        Pair<String, Double> minTime = calculateMinTime(queryTime);
+        Pair<String, Double> maxTime = calculateMaxTime(queryTime);
+        double averageTime = calculateAverageTime(queryTime);
+
         Themis.print("------------------------------------------------\n");
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
@@ -197,7 +208,11 @@ public class themisEval {
         evaluationWriter.write("nDCG:\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
-        evaluationWriter.write("Max: " + maxNdcg + "\n");
+        evaluationWriter.write("Max: " + maxNdcg + "\n\n");
+        evaluationWriter.write("Time:\n");
+        evaluationWriter.write("Average: " + Math.round(averageTime * 100) / 100 + "s\n");
+        evaluationWriter.write("Min: " + minTime.getR() + "s for query: " + minTime.getL() + "\n");
+        evaluationWriter.write("Max: " + maxTime.getR() + "s for query: " + maxTime.getL() + "\n");
         evaluationWriter.close();
         Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
@@ -347,5 +362,45 @@ public class themisEval {
             }
         }
         return max;
+    }
+
+    /* returns the minimum search time and the corresponding query as a pair */
+    private static Pair<String, Double> calculateMaxTime(List<Pair<String, Double>> list) {
+        if (list.isEmpty()) {
+            return new Pair(0, "");
+        }
+        Pair<String, Double> max = list.get(0);
+        for (Pair<String, Double> pair : list) {
+            if (pair.getR() > max.getR()) {
+                max = pair;
+            }
+        }
+        return max;
+    }
+
+    /* returns the maximum search time and the corresponding query as a pair */
+    private static Pair<String, Double> calculateMinTime(List<Pair<String, Double>> list) {
+        if (list.isEmpty()) {
+            return new Pair(0, "");
+        }
+        Pair<String, Double> min = list.get(0);
+        for (Pair<String, Double> pair : list) {
+            if (pair.getR() < min.getR()) {
+                min = pair;
+            }
+        }
+        return min;
+    }
+
+    /* returns the average search time */
+    private static double calculateAverageTime(List<Pair<String, Double>> list) {
+        if (list.isEmpty()) {
+            return 0;
+        }
+        double time = 0;
+        for (Pair<String, Double> stringDoublePair : list) {
+            time += stringDoublePair.getR();
+        }
+        return time / list.size();
     }
 }
