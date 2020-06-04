@@ -38,7 +38,6 @@ import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -46,8 +45,6 @@ import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.print.Doc;
 
 /**
  * Our basic indexer class. This class is responsible for two tasks:
@@ -88,7 +85,7 @@ public class Indexer {
     private RandomAccessFile __DOCUMENTS__ = null;
 
     // A list of buffers, each one is used for a different segment of the documents file
-    List<ByteBuffer> __DOCUMENTS_BUFFERS__ = null;
+    DocumentBuffers __DOCUMENTS_BUFFERS__ = null;
 
     // A byte array that will hold a document entry
     byte[] __DOC_BYTE_ARRAY__;
@@ -205,6 +202,13 @@ public class Indexer {
             StopWords.Initialize();
         }
 
+        int documentsSplitSize = Integer.MAX_VALUE; // maximum buffer size
+        List<Long> documentsBufferOffsets = new ArrayList<>();
+        documentsBufferOffsets.add(0L);
+
+        long totalDocumentsSize = 0;
+        int articleSize = 0;
+
         long startTime = System.nanoTime();
         Themis.print(">>> Start indexing\n");
 
@@ -281,13 +285,19 @@ public class Indexer {
                     index.add(entryWords, docOffset, termFreqWriter);
                     prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
-                    if ((int) (docOffset - prevDocOffset) > maxDocSize) {
-                        maxDocSize = (int) (docOffset - prevDocOffset);
+                    articleSize = (int) (docOffset - prevDocOffset);
+                    if (articleSize > documentsSplitSize - totalDocumentsSize) {
+                        documentsBufferOffsets.add(prevDocOffset);
+                        totalDocumentsSize = articleSize;
                     }
-                    docLengthWriter.write((int) (docOffset - prevDocOffset) + "\n");
+                    else {
+                        totalDocumentsSize += articleSize;
+                    }
 
-                    //print the map of field frequencies for this article
-                    //System.out.println(entryWords);
+                    if (articleSize > maxDocSize) {
+                        maxDocSize = articleSize;
+                    }
+                    docLengthWriter.write(articleSize + "\n");
 
                     totalArticles++;
                     if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
@@ -305,6 +315,8 @@ public class Indexer {
             }
         }
 
+        documentsBufferOffsets.add(docOffset);
+
         /* dump remaining structures */
         if (totalArticles != 0 && totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
             partialIndexes.remove(partialIndexes.size() - 1);
@@ -321,6 +333,14 @@ public class Indexer {
         /* calculate avgdl for Okapi BM25 */
         double avgdl = (0.0 + totalArticleLength) / totalArticles;
 
+        StringBuilder docBufferString = new StringBuilder();
+        for (int i = 0; i < documentsBufferOffsets.size() - 1; i++) {
+            docBufferString.append(documentsBufferOffsets.get(i)).append(",");
+        }
+        if (!documentsBufferOffsets.isEmpty()) {
+            docBufferString.append(documentsBufferOffsets.get(documentsBufferOffsets.size() - 1));
+        }
+
         /* save any info related to this index */
         __META_INDEX_INFO__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
         __META_INDEX_INFO__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
@@ -328,6 +348,8 @@ public class Indexer {
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
         __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocSize));
+        __META_INDEX_INFO__.put("doc_split_offsets", docBufferString.toString());
+
         BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
@@ -866,22 +888,14 @@ public class Indexer {
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
 
         //open documents
-        __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
-        FileChannel documentsChannel = __DOCUMENTS__.getChannel();
-        __DOCUMENTS_BUFFERS__ = new ArrayList<>();
-        long documentsSize = documentsChannel.size();
-        long offset = 0;
-        while (documentsSize > Integer.MAX_VALUE) {
-            ByteBuffer buffer = documentsChannel.map(FileChannel.MapMode.READ_ONLY, offset, Integer.MAX_VALUE);
-            offset += Integer.MAX_VALUE;
-            documentsSize -= Integer.MAX_VALUE;
-            __DOCUMENTS_BUFFERS__.add(buffer);
+        String[] documentsBuffersOffsets_S = __META_INDEX_INFO__.get("doc_split_offsets").split(",");
+        List<Long> documentsBuffersOffsets = new ArrayList<>();
+        for (String documentsBuffersOffsets_ : documentsBuffersOffsets_S) {
+            documentsBuffersOffsets.add(Long.parseLong(documentsBuffersOffsets_));
         }
-        if (documentsSize > 0) {
-            ByteBuffer buffer = documentsChannel.map(FileChannel.MapMode.READ_ONLY, offset, documentsSize);
-            __DOCUMENTS_BUFFERS__.add(buffer);
-        }
+        __DOCUMENTS_BUFFERS__ = new DocumentBuffers(documentsBuffersOffsets, __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__);
         __DOC_BYTE_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
+
         Themis.print("DONE\n");
 
         //check for stopword, stemming options
@@ -912,10 +926,12 @@ public class Indexer {
             __DOCUMENTS__.close();
             __DOCUMENTS__ = null;
         }
+        if (__DOCUMENTS_BUFFERS__ != null) {
+            __DOCUMENTS_BUFFERS__.close();
+        }
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
         __DOC_BYTE_ARRAY__ = null;
-        __DOCUMENTS_BUFFERS__ = null;
     }
 
     /**
@@ -989,10 +1005,7 @@ public class Indexer {
             ByteBuffer postingBuffer = ByteBuffer.wrap(postings);
             for (int j = 0; j < termValue.get_df(); j++) {
                 long documentPointer = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                int bufferIndex = (int) (documentPointer / Integer.MAX_VALUE);
-                int bufferOffset = (int) (documentPointer % Integer.MAX_VALUE);
-                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.get(bufferIndex);
-                buffer.position(bufferOffset);
+                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.getBuffer(documentPointer);
                 int docSize = buffer.getInt();
                 if (hasVarFields) {
                     buffer.get(__DOC_BYTE_ARRAY__, 0, docSize - DocumentEntry.SIZE_SIZE);
@@ -1030,10 +1043,7 @@ public class Indexer {
             addProps.removeAll(docInfo.getProps());
             if (!addProps.isEmpty()) {
                 long documentPointer = docInfo.getOffset();
-                int bufferIndex = (int) (documentPointer / Integer.MAX_VALUE);
-                int bufferOffset = (int) (documentPointer % Integer.MAX_VALUE);
-                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.get(bufferIndex);
-                buffer.position(bufferOffset);
+                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.getBuffer(documentPointer);
                 int docSize = buffer.getInt();
                 if (hasVarFields) {
                     buffer.get(__DOC_BYTE_ARRAY__, 0, docSize - DocumentEntry.SIZE_SIZE);
@@ -1104,7 +1114,7 @@ public class Indexer {
      */
     public boolean loaded() {
         return __VOCABULARY__ != null && __POSTINGS__ != null
-                && __DOCUMENTS__ != null && __META_INDEX_INFO__ != null;
+                && __DOCUMENTS_BUFFERS__ != null && __META_INDEX_INFO__ != null;
     }
 
     /**
