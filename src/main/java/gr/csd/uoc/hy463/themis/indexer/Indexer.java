@@ -38,6 +38,7 @@ import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -85,6 +86,12 @@ public class Indexer {
     private HashMap<String, VocabularyStruct> __VOCABULARY__ = null;
     private RandomAccessFile __POSTINGS__ = null;
     private RandomAccessFile __DOCUMENTS__ = null;
+
+    // A list of buffers, each one is used for a different segment of the documents file
+    List<ByteBuffer> __DOCUMENTS_BUFFERS__ = null;
+
+    // A byte array that will hold a document entry
+    byte[] __DOC_BYTE_ARRAY__;
 
     // This map holds any information related with the indexed collection
     // and should be serialized when the index process has finished. Such
@@ -213,6 +220,7 @@ public class Indexer {
         long totalArticleLength = 0;
         long docOffset = 0;
         long prevDocOffset;
+        int maxDocSize = 0;
         __META_INDEX_INFO__ = new HashMap<>();
         S2TextualEntryTermFrequencies wordFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__);
 
@@ -273,6 +281,9 @@ public class Indexer {
                     index.add(entryWords, docOffset, termFreqWriter);
                     prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
+                    if ((int) (docOffset - prevDocOffset) > maxDocSize) {
+                        maxDocSize = (int) (docOffset - prevDocOffset);
+                    }
                     docLengthWriter.write((int) (docOffset - prevDocOffset) + "\n");
 
                     //print the map of field frequencies for this article
@@ -316,6 +327,7 @@ public class Indexer {
         __META_INDEX_INFO__.put("articles", String.valueOf(totalArticles));
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
+        __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocSize));
         BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
@@ -849,10 +861,27 @@ public class Indexer {
         meta.close();
         Themis.print("DONE\n");
 
-        //open postings, documents
+        //open postings
         Themis.print(">>> Opening documents, postings files...");
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
+
+        //open documents
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
+        FileChannel documentsChannel = __DOCUMENTS__.getChannel();
+        __DOCUMENTS_BUFFERS__ = new ArrayList<>();
+        long documentsSize = documentsChannel.size();
+        long offset = 0;
+        while (documentsSize > Integer.MAX_VALUE) {
+            ByteBuffer buffer = documentsChannel.map(FileChannel.MapMode.READ_ONLY, offset, Integer.MAX_VALUE);
+            offset += Integer.MAX_VALUE;
+            documentsSize -= Integer.MAX_VALUE;
+            __DOCUMENTS_BUFFERS__.add(buffer);
+        }
+        if (documentsSize > 0) {
+            ByteBuffer buffer = documentsChannel.map(FileChannel.MapMode.READ_ONLY, offset, documentsSize);
+            __DOCUMENTS_BUFFERS__.add(buffer);
+        }
+        __DOC_BYTE_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
         Themis.print("DONE\n");
 
         //check for stopword, stemming options
@@ -885,6 +914,8 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
+        __DOC_BYTE_ARRAY__ = null;
+        __DOCUMENTS_BUFFERS__ = null;
     }
 
     /**
@@ -920,27 +951,22 @@ public class Indexer {
      * docs that the corresponding term of the query appears in.
      * @param terms The terms of the query (after pre-processing)
      * @param termsDocInfo An initial list of lists of DocInfo objects
-     * @param docMap An initial map of document offsets to DocInfo objects
      * @return
      * @throws IOException
      */
-    public void getDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, List<Map<Long, DocInfo>> docMap,
-                           Set<DocInfo.PROPERTY> props) throws IOException {
+    public void getDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, Set<DocInfo.PROPERTY> props) throws IOException {
         if (!loaded()) {
             return;
         }
 
-        List<DocInfo> termDocInfo;
-        VocabularyStruct termValue; //(df, posting pointer)
-        long documentPointer;
-        long postingPointer;
         int fixedSize = DocumentEntry.ID_SIZE + DocumentEntry.PAGERANK_SIZE + DocumentEntry.WEIGHT_SIZE +
-                DocumentEntry.LENGTH_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.AVG_AUTHOR_RANK_SIZE +
-                DocumentEntry.YEAR_SIZE;
-        byte[] fixedSizeArr = new byte[fixedSize];
+                DocumentEntry.LENGTH_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.YEAR_SIZE +
+                DocumentEntry.AVG_AUTHOR_RANK_SIZE;
+        boolean hasVarFields = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
+                props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
 
         for (int i = 0; i < terms.size(); i++) {
-            termDocInfo = termsDocInfo.get(i);
+            List<DocInfo> termDocInfo = termsDocInfo.get(i);
 
             /* if we have already a result of docInfos for this term, just update the properties of each
             docInfo object */
@@ -950,53 +976,36 @@ public class Indexer {
             }
 
             /* go to the next term if this term does not appear in the vocabulary */
-            termValue = __VOCABULARY__.get(terms.get(i));
+            VocabularyStruct termValue = __VOCABULARY__.get(terms.get(i));
             if (termValue == null) {
                 continue;
             }
 
             /* go to the postings file and grab all postings for this term at once */
-            postingPointer = termValue.get_offset();
+            long postingPointer = termValue.get_offset();
             __POSTINGS__.seek(postingPointer);
             byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
             __POSTINGS__.readFully(postings);
             ByteBuffer postingBuffer = ByteBuffer.wrap(postings);
-
             for (int j = 0; j < termValue.get_df(); j++) {
-                documentPointer = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-
-                /* check if the pointer to the documents file exists in the map */
-                DocInfo docInfo = null;
-                for (Map<Long, DocInfo> longDocInfoMap : docMap) {
-                    docInfo = longDocInfoMap.get(documentPointer);
-                    if (docInfo != null) {
-                        termDocInfo.add(docInfo);
-                        break;
-                    }
+                long documentPointer = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
+                int bufferIndex = (int) (documentPointer / Integer.MAX_VALUE);
+                int bufferOffset = (int) (documentPointer % Integer.MAX_VALUE);
+                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.get(bufferIndex);
+                buffer.position(bufferOffset);
+                int docSize = buffer.getInt();
+                if (hasVarFields) {
+                    buffer.get(__DOC_BYTE_ARRAY__, 0, docSize - DocumentEntry.SIZE_SIZE);
                 }
-
-                /* if the pointer to the documents file does not exist in the map, we need to read the documents file */
-                if (docInfo == null) {
-                    __DOCUMENTS__.seek(documentPointer);
-                    int docSize = __DOCUMENTS__.readInt();
-                    long offset = DocumentEntry.ID_OFFSET;
-                    byte[] fields;
-                    if (props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.JOURNAL_NAME) ||
-                            props.contains(DocInfo.PROPERTY.AUTHORS_IDS) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
-                        fields = new byte[(int) (docSize - offset)];
-                    }
-                    else {
-                        fields = fixedSizeArr;
-                    }
-                    __DOCUMENTS__.readFully(fields);
-                    String docId = new String(fields, 0, DocumentEntry.ID_SIZE, "ASCII");
-                    docInfo = new DocInfo(docId, documentPointer, docSize);
-                    if (!props.isEmpty()) {
-                        fetchInfo(fields, docInfo, props, offset);
-                    }
-                    termDocInfo.add(docInfo);
-                    docMap.get(i).put(documentPointer, docInfo);
+                else {
+                    buffer.get(__DOC_BYTE_ARRAY__, 0, fixedSize);
                 }
+                String docId = new String(__DOC_BYTE_ARRAY__, 0, DocumentEntry.ID_SIZE, "ASCII");
+                DocInfo docInfo = new DocInfo(docId, documentPointer);
+                if (!props.isEmpty()) {
+                    fetchInfo(docInfo, props, DocumentEntry.ID_OFFSET, hasVarFields);
+                }
+                termDocInfo.add(docInfo);
             }
         }
     }
@@ -1011,78 +1020,78 @@ public class Indexer {
         if (props.isEmpty()) {
             return;
         }
-        int fixedSize = DocumentEntry.PAGERANK_SIZE + DocumentEntry.WEIGHT_SIZE + DocumentEntry.LENGTH_SIZE +
-                DocumentEntry.MAX_TF_SIZE + DocumentEntry.AVG_AUTHOR_RANK_SIZE + DocumentEntry.YEAR_SIZE;
-        byte[] fixedSizeArr = new byte[fixedSize];
+        int fixedSize = DocumentEntry.ID_SIZE + DocumentEntry.PAGERANK_SIZE + DocumentEntry.WEIGHT_SIZE +
+                DocumentEntry.LENGTH_SIZE + DocumentEntry.MAX_TF_SIZE + DocumentEntry.YEAR_SIZE +
+                DocumentEntry.AVG_AUTHOR_RANK_SIZE;
+        boolean hasVarFields = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
+                props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
         for (DocInfo docInfo : docInfos) {
             Set<DocInfo.PROPERTY> addProps = new HashSet<>(props);
             addProps.removeAll(docInfo.getProps());
             if (!addProps.isEmpty()) {
                 long documentPointer = docInfo.getOffset();
-                int docSize = docInfo.getSize();
-                byte[] fields;
-                long offset = DocumentEntry.PAGERANK_OFFSET;
-                __DOCUMENTS__.seek(documentPointer + DocumentEntry.PAGERANK_OFFSET);
-                if (addProps.contains(DocInfo.PROPERTY.TITLE) || addProps.contains(DocInfo.PROPERTY.JOURNAL_NAME) ||
-                        addProps.contains(DocInfo.PROPERTY.AUTHORS_IDS) || addProps.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
-                    fields = new byte[(int) (docSize - offset)];
+                int bufferIndex = (int) (documentPointer / Integer.MAX_VALUE);
+                int bufferOffset = (int) (documentPointer % Integer.MAX_VALUE);
+                ByteBuffer buffer = __DOCUMENTS_BUFFERS__.get(bufferIndex);
+                buffer.position(bufferOffset);
+                int docSize = buffer.getInt();
+                if (hasVarFields) {
+                    buffer.get(__DOC_BYTE_ARRAY__, 0, docSize - DocumentEntry.SIZE_SIZE);
                 }
                 else {
-                    fields = fixedSizeArr;
+                    buffer.get(__DOC_BYTE_ARRAY__, 0, fixedSize);
                 }
-                __DOCUMENTS__.readFully(fields);
-                fetchInfo(fields, docInfo, addProps, offset);
+                fetchInfo(docInfo, addProps, DocumentEntry.ID_OFFSET, hasVarFields);
             }
         }
     }
 
     /* Reads the fields byte array and adds to the docInfo object the properties specified by props */
-    private void fetchInfo(byte[] fields, DocInfo docInfo, Set<DocInfo.PROPERTY> props, long offset) throws UnsupportedEncodingException {
-        ByteBuffer fieldsBuf = ByteBuffer.wrap(fields);
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.PAGERANK) && props.contains(DocInfo.PROPERTY.PAGERANK)) {
-            double pagerank = fieldsBuf.getDouble((int) (DocumentEntry.PAGERANK_OFFSET - offset));
+    private void fetchInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, long offset, boolean hasVarFields) throws UnsupportedEncodingException {
+        ByteBuffer __DOC_BYTE_BUFFER__ = ByteBuffer.wrap(__DOC_BYTE_ARRAY__);
+        if (props.contains(DocInfo.PROPERTY.PAGERANK)) {
+            double pagerank = __DOC_BYTE_BUFFER__.getDouble((int) (DocumentEntry.PAGERANK_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);
         }
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.WEIGHT) && props.contains(DocInfo.PROPERTY.WEIGHT)) {
-            double weight = fieldsBuf.getDouble((int) (DocumentEntry.WEIGHT_OFFSET - offset));
+        if (props.contains(DocInfo.PROPERTY.WEIGHT)) {
+            double weight = __DOC_BYTE_BUFFER__.getDouble((int) (DocumentEntry.WEIGHT_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
         }
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.MAX_TF) && props.contains(DocInfo.PROPERTY.MAX_TF)) {
-            int maxTf = fieldsBuf.getInt((int) (DocumentEntry.MAX_TF_OFFSET - offset));
+        if (props.contains(DocInfo.PROPERTY.MAX_TF)) {
+            int maxTf = __DOC_BYTE_BUFFER__.getInt((int) (DocumentEntry.MAX_TF_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
         }
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.LENGTH) && props.contains(DocInfo.PROPERTY.LENGTH)) {
-            int length = fieldsBuf.getInt((int) (DocumentEntry.LENGTH_OFFSET - offset));
+        if (props.contains(DocInfo.PROPERTY.LENGTH)) {
+            int length = __DOC_BYTE_BUFFER__.getInt((int) (DocumentEntry.LENGTH_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.LENGTH, length);
         }
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK) && props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
-            double authorRank = fieldsBuf.getDouble((int) (DocumentEntry.AVG_AUTHOR_RANK_OFFSET - offset));
+        if (props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
+            double authorRank = __DOC_BYTE_BUFFER__.getDouble((int) (DocumentEntry.AVG_AUTHOR_RANK_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
         }
-        if (!docInfo.hasProperty(DocInfo.PROPERTY.YEAR) && props.contains(DocInfo.PROPERTY.YEAR)) {
-            short year = fieldsBuf.getShort((int) (DocumentEntry.YEAR_OFFSET - offset));
+        if (props.contains(DocInfo.PROPERTY.YEAR)) {
+            short year = __DOC_BYTE_BUFFER__.getShort((int) (DocumentEntry.YEAR_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.YEAR, year);
         }
-        if (props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
-                props.contains(DocInfo.PROPERTY.AUTHORS_IDS) || props.contains(DocInfo.PROPERTY.JOURNAL_NAME)) {
-            int titleSize = fieldsBuf.getInt((int) (DocumentEntry.TITLE_SIZE_OFFSET - offset));
-            int authorNamesSize = fieldsBuf.getInt((int) (DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET - offset));
-            int authorIdsSize = fieldsBuf.getInt((int) (DocumentEntry.AUTHOR_IDS_SIZE_OFFSET - offset));
-            short journalNameSize = fieldsBuf.getShort((int) (DocumentEntry.JOURNAL_NAME_SIZE_OFFSET - offset));
-            if (!docInfo.hasProperty(DocInfo.PROPERTY.TITLE) && props.contains(DocInfo.PROPERTY.TITLE)) {
-                String title = new String(fields, (int) (DocumentEntry.TITLE_OFFSET - offset), titleSize, "UTF-8");
+        if (hasVarFields) {
+            int titleSize = __DOC_BYTE_BUFFER__.getInt((int) (DocumentEntry.TITLE_SIZE_OFFSET - offset));
+            int authorNamesSize = __DOC_BYTE_BUFFER__.getInt((int) (DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET - offset));
+            int authorIdsSize = __DOC_BYTE_BUFFER__.getInt((int) (DocumentEntry.AUTHOR_IDS_SIZE_OFFSET - offset));
+            short journalNameSize = __DOC_BYTE_BUFFER__.getShort((int) (DocumentEntry.JOURNAL_NAME_SIZE_OFFSET - offset));
+            if (props.contains(DocInfo.PROPERTY.TITLE)) {
+                String title = new String(__DOC_BYTE_BUFFER__.array(), (int) (DocumentEntry.TITLE_OFFSET - offset), titleSize, "UTF-8");
                 docInfo.setProperty(DocInfo.PROPERTY.TITLE, title);
             }
-            if (!docInfo.hasProperty(DocInfo.PROPERTY.AUTHORS_NAMES) && props.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
-                String authorNames = new String(fields, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize), authorNamesSize, "UTF-8");
+            if (props.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
+                String authorNames = new String(__DOC_BYTE_ARRAY__, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize), authorNamesSize, "UTF-8");
                 docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
             }
-            if (!docInfo.hasProperty(DocInfo.PROPERTY.AUTHORS_IDS) && props.contains(DocInfo.PROPERTY.AUTHORS_IDS)) {
-                String authorIds = new String(fields, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize + authorNamesSize), authorIdsSize, "UTF-8");
+            if (props.contains(DocInfo.PROPERTY.AUTHORS_IDS)) {
+                String authorIds = new String(__DOC_BYTE_ARRAY__, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize + authorNamesSize), authorIdsSize, "UTF-8");
                 docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIds);
             }
-            if (!docInfo.hasProperty(DocInfo.PROPERTY.JOURNAL_NAME) && props.contains(DocInfo.PROPERTY.JOURNAL_NAME)) {
-                String journalName = new String(fields, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize + authorNamesSize + authorIdsSize), journalNameSize, "UTF-8");
+            if (props.contains(DocInfo.PROPERTY.JOURNAL_NAME)) {
+                String journalName = new String(__DOC_BYTE_ARRAY__, (int) (DocumentEntry.TITLE_OFFSET - offset + titleSize + authorNamesSize + authorIdsSize), journalNameSize, "UTF-8");
                 docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, journalName);
             }
         }

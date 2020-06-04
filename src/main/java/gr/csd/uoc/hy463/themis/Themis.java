@@ -77,21 +77,20 @@ public class Themis {
             search = new Search();
             List<Pair<Object, Double>> results;
             Set<DocInfo.PROPERTY> props = new HashSet<>();
-            props.add(DocInfo.PROPERTY.TITLE);
-            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-            props.add(DocInfo.PROPERTY.YEAR);
-            props.add(DocInfo.PROPERTY.WEIGHT);
-            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+
             props.add(DocInfo.PROPERTY.MAX_TF);
             props.add(DocInfo.PROPERTY.LENGTH);
+            props.add(DocInfo.PROPERTY.YEAR);
+            props.add(DocInfo.PROPERTY.WEIGHT);
             props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
             props.add(DocInfo.PROPERTY.PAGERANK);
 
-            results = search.search("supernatural");
-            results = search.search("supernatural", props);
-            search.printResults(results, props,0, 12);
+            Set<DocInfo.PROPERTY> props1 = new HashSet<>();
+            props1.add(DocInfo.PROPERTY.TITLE);
 
+            results = search.search("supernatural", props1);
+            results = search.search("supernatural", props, 0, 10);
+            search.printResults(results, 0, 12);
         }
     }
 
@@ -319,24 +318,12 @@ public class Themis {
         @Override
         public void run() {
             _task = TASK.SEARCH;
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-            props.add(DocInfo.PROPERTY.TITLE);
-            props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-            props.add(DocInfo.PROPERTY.YEAR);
-            props.add(DocInfo.PROPERTY.WEIGHT);
-            props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-            props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-            props.add(DocInfo.PROPERTY.MAX_TF);
-            props.add(DocInfo.PROPERTY.LENGTH);
-            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-            props.add(DocInfo.PROPERTY.PAGERANK);
-
             List<Pair<Object, Double>> results;
             long startTime = System.nanoTime();
             String query = view.get_searchField().getText();
             print("Searching for: " + query + " ... ");
             try {
-                results = search.search(view.get_searchField().getText(), props);
+                results = search.search(view.get_searchField().getText());
                 print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results,0, 19);

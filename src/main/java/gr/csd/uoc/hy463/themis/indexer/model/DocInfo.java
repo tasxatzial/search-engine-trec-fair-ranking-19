@@ -61,7 +61,6 @@ public class DocInfo {
 
     private String id = "";         // the 40 byte id
     private long offset = 0;        // offset in documents file
-    private int size = 0;           // size of the document entry
     private final Map<PROPERTY, Object> props = new HashMap<>(0);
 
     /**
@@ -70,10 +69,9 @@ public class DocInfo {
      * @param offset the offset in the document file the contains all
      * information for this document
      */
-    public DocInfo(String id, long offset, int size) {
+    public DocInfo(String id, long offset) {
         this.id = id;
         this.offset = offset;
-        this.size = size;
     }
 
     /**
@@ -104,10 +102,6 @@ public class DocInfo {
 
     public long getOffset() {
         return offset;
-    }
-
-    public int getSize() {
-        return size;
     }
 
     public Set<PROPERTY> getProps() {

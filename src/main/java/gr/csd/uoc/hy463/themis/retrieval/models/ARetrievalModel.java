@@ -43,7 +43,6 @@ public abstract class ARetrievalModel {
     }
 
     protected List<List<DocInfo>> _termsDocInfo;
-    protected List<Map<Long, DocInfo>> _docMap;
     protected List<String> _terms;
     protected Indexer _indexer;
 
@@ -51,7 +50,6 @@ public abstract class ARetrievalModel {
         _indexer = indexer;
         _terms = new ArrayList<>();
         _termsDocInfo = new ArrayList<>();
-        _docMap = new ArrayList<>();
     }
 
     public static Set<DocInfo.PROPERTY> getVSMProps() {
@@ -123,8 +121,7 @@ public abstract class ARetrievalModel {
 
     /**
      * Reads the documents file and creates a list of list of docInfo objects (one list for each term of the query).
-     * Also it creates a map of document pointers to docInfo objects.
-     * Both of them (_termsDocInfo and _docMap) will have been updated when the function returns.
+     * The list will have been updated when the function returns.
      * @param query
      * @param props
      * @param startDoc
@@ -141,10 +138,8 @@ public abstract class ARetrievalModel {
 
         /* initialize structures */
         List<List<DocInfo>> termsDocInfo = new ArrayList<>(terms.size());
-        List<Map<Long, DocInfo>> docMap = new ArrayList<>();
         for (int i = 0; i < terms.size(); i++) {
             termsDocInfo.add(new ArrayList<>());
-            docMap.add(new HashMap<>());
         }
 
         /* check whether this query has same terms as the previous query */
@@ -152,7 +147,6 @@ public abstract class ARetrievalModel {
             for (int j = 0; j < _terms.size(); j++) {
                 if (terms.get(i).equals(_terms.get(j))) {
                     termsDocInfo.set(i, _termsDocInfo.get(j));
-                    docMap.set(i, _docMap.get(j));
                     break;
                 }
             }
@@ -169,7 +163,6 @@ public abstract class ARetrievalModel {
             }
             if (!found) {
                 _termsDocInfo.get(i).clear();
-                _docMap.get(i).clear();
             }
         }
 
@@ -196,10 +189,9 @@ public abstract class ARetrievalModel {
         }
 
         /* finally fetch the properties */
-        _indexer.getDocInfo(terms, termsDocInfo, docMap, newProps);
+        _indexer.getDocInfo(terms, termsDocInfo, newProps);
 
         _termsDocInfo = termsDocInfo;
-        _docMap = docMap;
         _terms = terms;
     }
 
@@ -254,13 +246,8 @@ public abstract class ARetrievalModel {
                     }
                 }
 
-                /* and check whether we need to grab any new properties */
-                for (DocInfo.PROPERTY prop : props) {
-                    if (!docInfo.hasProperty(prop)) {
-                        updatedDocInfos.add(docInfo);
-                        break;
-                    }
-                }
+                /* and grab any new properties */
+                updatedDocInfos.add(docInfo);
             }
         }
         _indexer.updateDocInfo(updatedDocInfos, newProps);
