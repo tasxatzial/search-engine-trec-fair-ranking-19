@@ -28,6 +28,8 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
@@ -47,6 +49,7 @@ import java.util.*;
 public class Search {
     private Indexer _indexer;
     private ARetrievalModel _model;
+    private QueryExpansion _expansionModel;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -86,6 +89,16 @@ public class Search {
         }
     }
 
+    public void setExpansionModelGlove() throws IOException {
+        if (!(_expansionModel instanceof Glove)) {
+            _expansionModel = new Glove();
+        }
+    }
+
+    private void resetExpansionModel() {
+        _expansionModel = null;
+    }
+
     public ARetrievalModel.MODEL getRetrievalModel() {
         if (_model instanceof OkapiBM25) {
             return ARetrievalModel.MODEL.BM25;
@@ -97,6 +110,15 @@ public class Search {
             return ARetrievalModel.MODEL.EXISTENTIAL;
         }
         return null;
+    }
+
+    public QueryExpansion.DICTIONARY getQueryExpansionModel() {
+        if (_expansionModel instanceof Glove) {
+            return QueryExpansion.DICTIONARY.GLOVE;
+        }
+        else {
+            return QueryExpansion.DICTIONARY.NONE;
+        }
     }
 
     public String getIndexDirectory() {
@@ -140,9 +162,8 @@ public class Search {
     public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props, int startResult, int endResult) throws IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
-
-        /* create the list of query terms */
-        List<String> terms = ProcessText.editQuery(query, useStopwords, useStemmer);
+        String expandedQuery = (_expansionModel != null) ? _expansionModel.expandQuery(query) : query;
+        List<String> terms = ProcessText.editQuery(expandedQuery, useStopwords, useStemmer);
         List<QueryTerm> queryTerms = new ArrayList<>();
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 

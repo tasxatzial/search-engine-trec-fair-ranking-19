@@ -57,7 +57,7 @@ public class GloveExample {
         // For this example just get the two nearest words
         Collection<String> stringList = model.wordsNearest("information", 2);
         System.out.println(stringList);
-        stringList = model.wordsNearest("retrieval", 2);
+        stringList = model.wordsNearest("tsdfsdfsdf", 2);
         System.out.println(stringList);
     }
 }

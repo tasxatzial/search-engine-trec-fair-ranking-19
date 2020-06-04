@@ -47,15 +47,29 @@ public class ProcessText {
      * @return
      */
     public static List<String> editQuery(String query, boolean useStopwords, boolean useStemmer) {
+        List<String> terms = new ArrayList<>();
+        List<String> splitQuery = split(query);
+        for (String s : splitQuery) {
+            String term = applyStopwordsStemming(s, useStopwords, useStemmer);
+            if (term != null) {
+                terms.add(term);
+            }
+        }
+        return terms;
+    }
+
+    /**
+     * Splits a query into tokens
+     * @param query
+     * @return
+     */
+    public static List<String> split(String query) {
         String tokens = "\u0020“”/\"-.\uff0c[]()?+#，";
         StringTokenizer tokenizer = new StringTokenizer(query, tokens);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
-            token = applyStopwordsStemming(token, useStopwords, useStemmer);
-            if (token != null) {
-                terms.add(token);
-            }
+            terms.add(token);
         }
         return terms;
     }

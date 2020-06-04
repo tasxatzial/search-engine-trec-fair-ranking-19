@@ -127,6 +127,7 @@ public class themisEval {
         Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
         Themis.print("------------------------------------------------\n");
         evaluationWriter.write("Index directory: " + _search.getIndexDirectory() + "\n");
+        evaluationWriter.write("Query expansion model: " + _search.getQueryExpansionModel() + "\n");
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();

@@ -1,7 +1,9 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.examples.GloveExample;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
+import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
@@ -74,7 +76,7 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            search = new Search();
+            /*search = new Search();
             List<Pair<Object, Double>> results;
             Set<DocInfo.PROPERTY> props = new HashSet<>();
 
@@ -90,7 +92,15 @@ public class Themis {
 
             results = search.search("supernatural", props1);
             results = search.search("supernatural", props, 0, 10);
-            search.printResults(results, 0, 12);
+            search.printResults(results, 0, 12);*/
+            try {
+                search = new Search();
+                search.setExpansionModelGlove();
+                List<Pair<Object, Double>> results = search.search("mal");
+                search.printResults(results, 0, 12);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
