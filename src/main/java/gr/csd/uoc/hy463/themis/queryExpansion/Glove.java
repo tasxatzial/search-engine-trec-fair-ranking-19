@@ -44,9 +44,8 @@ public class Glove extends QueryExpansion {
             for (Object o : nearestArray) {
                 sb.append(o.toString()).append(" ");
             }
-            sb.append(s);
+            sb.append(s).append(" ");
         }
-
         return sb.toString();
     }
 }
