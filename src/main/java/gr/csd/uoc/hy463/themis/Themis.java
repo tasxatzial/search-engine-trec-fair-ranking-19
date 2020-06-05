@@ -76,31 +76,11 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            /*search = new Search();
-            List<Pair<Object, Double>> results;
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-
-            props.add(DocInfo.PROPERTY.MAX_TF);
-            props.add(DocInfo.PROPERTY.LENGTH);
-            props.add(DocInfo.PROPERTY.YEAR);
-            props.add(DocInfo.PROPERTY.WEIGHT);
-            props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
-            props.add(DocInfo.PROPERTY.PAGERANK);
-
-            Set<DocInfo.PROPERTY> props1 = new HashSet<>();
-            props1.add(DocInfo.PROPERTY.TITLE);
-
-            results = search.search("supernatural", props1);
-            results = search.search("supernatural", props, 0, 10);
-            search.printResults(results, 0, 12);*/
-            try {
-                search = new Search();
-                search.setExpansionModelGlove();
-                List<Pair<Object, Double>> results = search.search("mal");
-                search.printResults(results, 0, 12);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            search = new Search();
+            themisEval eval = new themisEval(search);
+            search.search("1");
+            eval.evaluateVSM();
+            eval.evaluateBM25();
         }
     }
 
