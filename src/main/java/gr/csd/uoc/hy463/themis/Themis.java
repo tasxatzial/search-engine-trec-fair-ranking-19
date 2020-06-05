@@ -79,6 +79,7 @@ public class Themis {
             search = new Search();
             themisEval eval = new themisEval(search);
             search.search("1");
+            search.setExpansionModelGlove();
             eval.evaluateVSM();
             eval.evaluateBM25();
         }

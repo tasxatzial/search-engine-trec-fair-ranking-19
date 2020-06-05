@@ -120,7 +120,6 @@ public class VSM extends ARetrievalModel {
             documentScore /= (documentNorm * queryNorm);
             results.add(new Pair<>(docInfo, documentScore));
         }
-
         results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
 
         //update the props of the results that are in [startDoc, endDoc]

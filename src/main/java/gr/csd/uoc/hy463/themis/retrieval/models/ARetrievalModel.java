@@ -205,16 +205,25 @@ public abstract class ARetrievalModel {
      */
     protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
 
-        /* add to the specified props the essential properties of each model */
-        Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
+        /* the total props that each docInfo should have including the essential props of this model */
+        Set<DocInfo.PROPERTY> totalProps = new HashSet<>(props);
         if (this instanceof VSM) {
-            newProps.addAll(getVSMProps());
+            totalProps.addAll(getVSMProps());
         }
         else if (this instanceof OkapiBM25) {
-            newProps.addAll(getOkapiProps());
+            totalProps.addAll(getOkapiProps());
         }
 
-        /* find all the properties that should be removed but keep the essential properties of each model */
+        /* the props that each docInfo should have that are not the essential props of this model */
+        Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
+        if (this instanceof VSM) {
+            extraProps.removeAll(getVSMProps());
+        }
+        else if (this instanceof OkapiBM25) {
+            extraProps.removeAll(getOkapiProps());
+        }
+
+        /* the props that are not essential properties of this model */
         Set<DocInfo.PROPERTY> removeProps = new HashSet<>();
         removeProps.addAll(getVSMProps());
         removeProps.addAll(getMonModelProps());
@@ -241,16 +250,23 @@ public abstract class ARetrievalModel {
 
                 /* clear the properties of the results in [startDoc, endDoc] */
                 for (DocInfo.PROPERTY prop : docInfo.getProps()) {
-                    if (!newProps.contains(prop)) {
+                    if (!totalProps.contains(prop)) {
                         docInfo.clearProperty(prop);
                     }
                 }
 
-                /* and grab any new properties */
-                updatedDocInfos.add(docInfo);
+                /* collect all docInfo for which we need to add new properties */
+                for (DocInfo.PROPERTY prop : extraProps) {
+                    if (!docInfo.hasProperty(prop)) {
+                        updatedDocInfos.add(docInfo);
+                        break;
+                    }
+                }
             }
         }
-        _indexer.updateDocInfo(updatedDocInfos, newProps);
+
+        /* update the collected docInfo */
+        _indexer.updateDocInfo(updatedDocInfos, totalProps);
     }
 
     /**
