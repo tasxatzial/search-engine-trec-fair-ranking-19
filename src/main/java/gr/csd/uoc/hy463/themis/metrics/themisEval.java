@@ -298,7 +298,7 @@ public class themisEval {
                 }
             }
         }
-        for (int i = 1; i <= Math.min(relevantDocuments, nonSkippedDocuments); i++) {
+        for (int i = 1; i <= relevantDocuments; i++) {
             idcg += Math.log(2) / Math.log(i + 1);
         }
 
