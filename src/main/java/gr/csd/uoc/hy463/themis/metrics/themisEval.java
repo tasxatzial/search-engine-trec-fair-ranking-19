@@ -134,6 +134,7 @@ public class themisEval {
         //List<Double> bprefs = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
         List<Pair<String, Double>> queryTime = new ArrayList<>();
+        double totalTime = 0;
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
             try {
@@ -162,16 +163,19 @@ public class themisEval {
             long endTime = System.nanoTime();
 
             //calculate the time needed
-            Double timeSecs = Math.round((endTime - startTime) / 1e7) / 100.0;
-            queryTime.add(new Pair<>(query, timeSecs));
-            evaluationWriter.write("Time: " + timeSecs + "s\n");
+            double timeMSecs = Math.round((endTime - startTime) / 1e6);
+            totalTime += timeMSecs;
+            queryTime.add(new Pair<>(query, timeMSecs));
+            evaluationWriter.write("Time: " + timeMSecs + " ms\n");
 
             //calculate average precision, nDCG
             double avep = computeAveP(results, relevanceMap);
+            avep = (Double.isNaN(avep)) ? Double.NaN : Math.round(avep * 100) / 100.0;
             aveps.add(avep);
             /*double bpref = computeBpref(results, relevanceMap);
             bprefs.add(bpref);*/
             double ndcg = computeNdcg(results, relevanceMap);
+            ndcg = (Double.isNaN(ndcg)) ? Double.NaN : Math.round(ndcg * 100) / 100.0;
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
             //evaluationWriter.write("bpref: " + bpref + "\n");
@@ -199,7 +203,7 @@ public class themisEval {
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
         evaluationWriter.write("Average precision:\n");
-        evaluationWriter.write("Average: " + averageAvep + "\n");
+        evaluationWriter.write("Average: " + Math.round(averageAvep * 100) / 100.0 + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
         /*evaluationWriter.write("bpref:\n");
@@ -207,13 +211,14 @@ public class themisEval {
         evaluationWriter.write("Min: " + minBpref + "\n");
         evaluationWriter.write("Max: " + maxBpref + "\n\n");*/
         evaluationWriter.write("nDCG:\n");
-        evaluationWriter.write("Average: " + averageNdcg + "\n");
+        evaluationWriter.write("Average: " + Math.round(averageNdcg * 100) / 100.0 + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n\n");
         evaluationWriter.write("Time:\n");
-        evaluationWriter.write("Average: " + Math.round(averageTime * 100) / 100 + "s\n");
-        evaluationWriter.write("Min: " + minTime.getR() + "s for query: " + minTime.getL() + "\n");
-        evaluationWriter.write("Max: " + maxTime.getR() + "s for query: " + maxTime.getL() + "\n");
+        evaluationWriter.write("Total: " + Math.round(totalTime) / 1000 + " s\n");
+        evaluationWriter.write("Average: " + Math.round(averageTime) + " ms\n");
+        evaluationWriter.write("Min: " + minTime.getR() + " ms for query: " + minTime.getL() + "\n");
+        evaluationWriter.write("Max: " + maxTime.getR() + " ms for query: " + maxTime.getL() + "\n");
         evaluationWriter.close();
         Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
