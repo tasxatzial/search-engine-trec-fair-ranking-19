@@ -28,6 +28,8 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +52,6 @@ public class themisEval {
     public themisEval(Search search) throws IOException {
         _search = search;
         __CONFIG__ = new Config();
-        __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
     }
 
     /**
@@ -60,7 +61,6 @@ public class themisEval {
     public boolean hasJudgements() {
         File file = new File(__JUDGEMENTS_FILENAME__);
         if (!file.exists()) {
-            __LOGGER__.error("No judgements file found!");
             return false;
         }
         return true;
@@ -74,60 +74,82 @@ public class themisEval {
     public boolean hasEvaluation(String filename) {
         File file = new File(filename);
         if (file.exists()) {
-            __LOGGER__.error("Evaluation file already exists!");
             return true;
         }
         return false;
     }
 
     /**
-     * Runs the VSM evaluator
+     * Sets the search model to the specified model and the query expansion dictionary to the specified
+     * dictionary. Also opens the appropriate files for writing the results of the evaluation.
+     * @param model
+     * @param dictionary
+     * @throws IOException
      */
-    public void evaluateVSM() throws IOException {
+    public void evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
+        __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
         if (!hasJudgements()) {
-            __LOGGER__.error("VSM evaluation failed");
-            Themis.print("No judgements file found! Evaluation failed\n");
+            if (dictionary == QueryExpansion.DICTIONARY.NONE) {
+                __LOGGER__.error("No judgements file found! " + model + " evaluation failed");
+                Themis.print("No judgements file found! " + model + " evaluation failed\n");
+            }
+            else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+                __LOGGER__.error("No judgements file found! " + model + "/Glove evaluation failed");
+                Themis.print("No judgements file found! " + model + "/Glove evaluation failed\n");
+            }
             return;
         }
-        String evaluationFilename = __CONFIG__.getVSMEvaluationFilename();
+        String evaluationFilename = null;
+        if (dictionary == QueryExpansion.DICTIONARY.NONE) {
+            if (model == ARetrievalModel.MODEL.VSM) {
+                evaluationFilename = __CONFIG__.getVSMEvaluationFilename();
+            }
+            else if (model == ARetrievalModel.MODEL.BM25) {
+                evaluationFilename = __CONFIG__.getBM25EvaluationFilename();
+            }
+        }
+        else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+            if (model == ARetrievalModel.MODEL.VSM) {
+                evaluationFilename = __CONFIG__.getVSMGloveEvaluationFilename();
+            }
+            else if (model == ARetrievalModel.MODEL.BM25) {
+                evaluationFilename = __CONFIG__.getBM25GloveEvaluationFilename();
+            }
+        }
         if (hasEvaluation(evaluationFilename)) {
-            __LOGGER__.error("VSM evaluation failed");
-            Themis.print("VSM evaluation file already exists! Evaluation failed\n");
+            if (dictionary == QueryExpansion.DICTIONARY.NONE) {
+                __LOGGER__.error(model + " evaluation file already exists! Evaluation failed");
+                Themis.print(model + " evaluation file already exists! Evaluation failed\n");
+            }
+            else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+                __LOGGER__.error(model + "/Glove evaluation file already exists! Evaluation failed");
+                Themis.print(model + "/Glove evaluation file already exists! Evaluation failed\n");
+            }
             return;
+        }
+        if (model == ARetrievalModel.MODEL.VSM) {
+            _search.setModelVSM();
+        }
+        else if (model == ARetrievalModel.MODEL.BM25) {
+            _search.setModelBM25();
+        }
+        if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+            _search.setExpansionModelGlove();
+        }
+        else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
+            _search.resetExpansionModel();
         }
         __EVALUATION_FILENAME__ = evaluationFilename;
-        _search.setModelVSM();
         evaluate();
     }
 
-    /**
-     * Runs the BM25 evaluator
-     */
-    public void evaluateBM25() throws IOException {
-        if (!hasJudgements()) {
-            __LOGGER__.error("BM25 evaluation failed");
-            Themis.print("No judgements file found! Evaluation failed\n");
-            return;
-        }
-        String evaluationFilename = __CONFIG__.getBM25EvaluationFilename();
-        if (hasEvaluation(evaluationFilename)) {
-            __LOGGER__.error("BM25 evaluation failed");
-            Themis.print("BM25 evaluation file already exists! Evaluation failed\n");
-            return;
-        }
-        __EVALUATION_FILENAME__ = evaluationFilename;
-        _search.setModelBM25();
-        evaluate();
-    }
-
-    /* the common evaluation function */
+    /* the evaluation function */
     private void evaluate() throws IOException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
         Themis.print("------------------------------------------------\n");
         evaluationWriter.write("Index directory: " + _search.getIndexDirectory() + "\n");
-        evaluationWriter.write("Query expansion: " + _search.getQueryExpansionModel() + "\n");
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();

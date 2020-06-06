@@ -49,7 +49,7 @@ import java.util.*;
 public class Search {
     private Indexer _indexer;
     private ARetrievalModel _model;
-    private QueryExpansion _expansionModel;
+    private QueryExpansion _queryExpansion;
 
     public Search() throws IOException {
         _indexer = new Indexer();
@@ -90,13 +90,13 @@ public class Search {
     }
 
     public void setExpansionModelGlove() throws IOException {
-        if (!(_expansionModel instanceof Glove)) {
-            _expansionModel = new Glove();
+        if (!(_queryExpansion instanceof Glove)) {
+            _queryExpansion = new Glove();
         }
     }
 
     public void resetExpansionModel() {
-        _expansionModel = null;
+        _queryExpansion = null;
     }
 
     public ARetrievalModel.MODEL getRetrievalModel() {
@@ -112,13 +112,11 @@ public class Search {
         return null;
     }
 
-    public QueryExpansion.DICTIONARY getQueryExpansionModel() {
-        if (_expansionModel instanceof Glove) {
+    public QueryExpansion.DICTIONARY getQueryExpansion() {
+        if (_queryExpansion instanceof Glove) {
             return QueryExpansion.DICTIONARY.GLOVE;
         }
-        else {
-            return QueryExpansion.DICTIONARY.NONE;
-        }
+        return QueryExpansion.DICTIONARY.NONE;
     }
 
     public String getIndexDirectory() {
@@ -162,7 +160,7 @@ public class Search {
     public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props, int startResult, int endResult) throws IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
-        String expandedQuery = (_expansionModel != null) ? _expansionModel.expandQuery(query) : query;
+        String expandedQuery = (_queryExpansion != null) ? _queryExpansion.expandQuery(query) : query;
         List<String> terms = ProcessText.editQuery(expandedQuery, useStopwords, useStemmer);
         List<QueryTerm> queryTerms = new ArrayList<>();
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));

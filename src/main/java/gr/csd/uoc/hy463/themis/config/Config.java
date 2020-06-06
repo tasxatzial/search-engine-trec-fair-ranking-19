@@ -259,6 +259,22 @@ public class Config {
     }
 
     /**
+     * Returns the path to the filename of the VSM/Glove evaluation results
+     * @return
+     */
+    public String getVSMGloveEvaluationFilename() {
+        return __PROP__.getProperty("EVALUATION_VSM_GLOVE_FILENAME");
+    }
+
+    /**
+     * Returns the path to the filename of the BM25/Glove evaluation results
+     * @return
+     */
+    public String getBM25GloveEvaluationFilename() {
+        return __PROP__.getProperty("EVALUATION_BM25_GLOVE_FILENAME");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return

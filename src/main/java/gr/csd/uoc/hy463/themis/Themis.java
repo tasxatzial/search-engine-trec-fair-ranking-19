@@ -81,10 +81,6 @@ public class Themis {
         else { //non GUI version
             search = new Search();
             themisEval eval = new themisEval(search);
-            search.search("1");
-            search.setExpansionModelGlove();
-            eval.evaluateVSM();
-            eval.evaluateBM25();
         }
     }
 
@@ -245,17 +241,7 @@ public class Themis {
                 return;
             }
             try {
-                if (_dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-                    search.setExpansionModelGlove();
-                }
-                else if (_dictionary == QueryExpansion.DICTIONARY.NONE) {
-                    search.resetExpansionModel();
-                }
-                if (_model == ARetrievalModel.MODEL.VSM) {
-                    evaluator.evaluateVSM();
-                } else if (_model == ARetrievalModel.MODEL.BM25) {
-                    evaluator.evaluateBM25();
-                }
+                evaluator.evaluateInit(_model, _dictionary);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");
