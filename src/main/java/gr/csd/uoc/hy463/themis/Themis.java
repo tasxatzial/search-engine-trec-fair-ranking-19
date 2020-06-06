@@ -4,6 +4,7 @@ import gr.csd.uoc.hy463.themis.examples.GloveExample;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
@@ -72,6 +73,8 @@ public class Themis {
             view.get_loadIndex().addActionListener(new loadIndexListener());
             view.get_evaluateBM25().addActionListener(new evaluateBM25Listener());
             view.get_evaluateVSM().addActionListener(new evaluateVSMListener());
+            view.get_evaluateVSMGlove().addActionListener(new evaluateVSMGloveListener());
+            view.get_evaluateBM25Glove().addActionListener(new evaluateBM25GloveListener());
 
             view.setVisible(true);
         }
@@ -161,7 +164,21 @@ public class Themis {
                 return;
             }
             view.initIndexView();
-            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM);
+            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+            Thread runnableEvaluateVSM = new Thread(evaluateVSM);
+            runnableEvaluateVSM.start();
+        }
+    }
+
+    /* The listener for the "evaluate VSM/Glove" menu item */
+    private static class evaluateVSMGloveListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initIndexView();
+            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
         }
@@ -175,7 +192,21 @@ public class Themis {
                 return;
             }
             view.initIndexView();
-            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25);
+            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.NONE);
+            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
+            runnableEvaluateBM25.start();
+        }
+    }
+
+    /* The listener for the "evaluate BM25/Glove" menu item */
+    private static class evaluateBM25GloveListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initIndexView();
+            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE);
             Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
             runnableEvaluateBM25.start();
         }
@@ -183,9 +214,11 @@ public class Themis {
 
     private static class Evaluate_runnable implements Runnable {
         private ARetrievalModel.MODEL _model;
+        private QueryExpansion.DICTIONARY _dictionary;
 
-        public Evaluate_runnable(ARetrievalModel.MODEL model) {
+        public Evaluate_runnable(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
             _model = model;
+            _dictionary = dictionary;
         }
 
         @Override
@@ -212,6 +245,12 @@ public class Themis {
                 return;
             }
             try {
+                if (_dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+                    search.setExpansionModelGlove();
+                }
+                else if (_dictionary == QueryExpansion.DICTIONARY.NONE) {
+                    search.resetExpansionModel();
+                }
                 if (_model == ARetrievalModel.MODEL.VSM) {
                     evaluator.evaluateVSM();
                 } else if (_model == ARetrievalModel.MODEL.BM25) {

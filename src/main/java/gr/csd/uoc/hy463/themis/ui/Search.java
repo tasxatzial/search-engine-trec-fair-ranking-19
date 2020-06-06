@@ -95,7 +95,7 @@ public class Search {
         }
     }
 
-    private void resetExpansionModel() {
+    public void resetExpansionModel() {
         _expansionModel = null;
     }
 

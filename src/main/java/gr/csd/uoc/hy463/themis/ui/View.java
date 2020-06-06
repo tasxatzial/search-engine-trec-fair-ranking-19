@@ -21,8 +21,14 @@ public class View extends JFrame {
     /* The "evaluate VSM" menu item */
     private JMenuItem _evaluateVSM;
 
+    /* The "evaluate VSM/Glove" menu item */
+    private JMenuItem _evaluateVSMGlove;
+
     /* The "evaluate BM25" menu item */
     private JMenuItem _evaluateBM25;
+
+    /* The "evaluate BM25/Glove" menu item */
+    private JMenuItem _evaluateBM25Glove;
 
     /* The font of any text except the menu/title items */
     private Font _textFont;
@@ -73,10 +79,14 @@ public class View extends JFrame {
 
         /* evaluate menu */
         JMenuItem evaluate = new JMenu("Evaluate");
-        _evaluateVSM = new JMenuItem("Evaluate VSM");
-        _evaluateBM25 = new JMenuItem("Evaluate BM25");
+        _evaluateVSM = new JMenuItem("VSM");
+        _evaluateBM25 = new JMenuItem("BM25");
+        _evaluateVSMGlove = new JMenuItem("VSM/Glove");
+        _evaluateBM25Glove = new JMenuItem("BM25/Glove");
         evaluate.add(_evaluateVSM);
         evaluate.add(_evaluateBM25);
+        evaluate.add(_evaluateVSMGlove);
+        evaluate.add(_evaluateBM25Glove);
 
         /* main menu bar */
         _menu = new JMenuBar();
@@ -286,6 +296,22 @@ public class View extends JFrame {
      */
     public JMenuItem get_evaluateBM25() {
         return _evaluateBM25;
+    }
+
+    /**
+     * Returns the "evaluate VSM/Glove" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateVSMGlove() {
+        return _evaluateVSMGlove;
+    }
+
+    /**
+     * Returns the "evaluate BM25/Glove" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateBM25Glove() {
+        return _evaluateBM25Glove;
     }
 
     /**
