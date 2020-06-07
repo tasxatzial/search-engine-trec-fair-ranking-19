@@ -116,16 +116,6 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
-            // Read sources. A JSONArray
-            JSONArray citationsArray = (JSONArray) jsonObject.get("outCitations");
-            List<String> citations = new ArrayList<>();
-            if(citationsArray !=null ) {
-                citationsArray.forEach(citation -> {
-                    citations.add(citation.toString());
-                });
-            }
-            entry.setCitations(citations);
-
             // Get journal for example
             String journalCheck = (String) jsonObject.get("journalName");
             String journal = journalCheck != null ? journalCheck : "";
@@ -191,16 +181,24 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
-            // Read sources. A JSONArray
-            JSONArray citationsArray = (JSONArray) jsonObject.get("outCitations");
-            List<String> citations = new ArrayList<>();
-            if(citationsArray !=null ) {
-                citationsArray.forEach(citation -> {
-                    citations.add(citation.toString());
+            // Read out citations. A JSONArray
+            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
+            List<String> outCitations = new ArrayList<>();
+            if(outCitationsArray != null) {
+                outCitationsArray.forEach(citation -> {
+                    outCitations.add(citation.toString());
                 });
             }
-            entry.setCitations(citations);
+            entry.setOutCitations(outCitations);
 
+            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
+            List<String> inCitations = new ArrayList<>();
+            if(inCitationsArray != null) {
+                inCitationsArray.forEach(citation -> {
+                    inCitations.add(citation.toString());
+                });
+            }
+            entry.setInCitations(inCitations);
         } catch (ParseException e) {
             __LOGGER__.error(e.getMessage());
         }

@@ -48,7 +48,8 @@ public class S2TextualEntry {
     private String __VENUE__ = null;
     private String __JOURNAL_NAME__ = null;
     private List<String> __SOURCES__ = null;
-    private List<String> __CITATIONS__ = null;
+    private List<String> __IN_CITATIONS__ = null;
+    private List<String> __OUT_CITATIONS__ = null;
 
     public String getId() {
         return __ID__;
@@ -130,12 +131,20 @@ public class S2TextualEntry {
         this.__SOURCES__ = sources;
     }
 
-    public List<String> getCitations() {
-        return __CITATIONS__;
+    public List<String> getInCitations() {
+        return __IN_CITATIONS__;
     }
 
-    public void setCitations(List<String> citations) {
-        this.__CITATIONS__ = citations;
+    public List<String> getOutCitations() {
+        return __OUT_CITATIONS__;
+    }
+
+    public void setInCitations(List<String> citations) {
+        this.__IN_CITATIONS__ = citations;
+    }
+
+    public void setOutCitations(List<String> citations) {
+        this.__OUT_CITATIONS__ = citations;
     }
 
     /**
@@ -219,11 +228,26 @@ public class S2TextualEntry {
             sb.append("Year: ").append(__YEAR__).append("\n");
         }
 
-        if (__CITATIONS__ != null) {
+        if (__IN_CITATIONS__ != null) {
             boolean first = true;
 
-            sb.append("Citations IDs:");
-            for (String citation : __CITATIONS__) {
+            sb.append("In Citations IDs:");
+            for (String citation : __IN_CITATIONS__) {
+                if (!first) {
+                    sb.append(",");
+                } else {
+                    first = false;
+                }
+                sb.append(citation); // get the name
+            }
+            sb.append("\n");
+        }
+
+        if (__OUT_CITATIONS__ != null) {
+            boolean first = true;
+
+            sb.append("Out Citations IDs:");
+            for (String citation : __OUT_CITATIONS__) {
                 if (!first) {
                     sb.append(",");
                 } else {
