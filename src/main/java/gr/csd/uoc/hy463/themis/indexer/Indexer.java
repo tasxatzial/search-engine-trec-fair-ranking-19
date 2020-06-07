@@ -89,6 +89,7 @@ public class Indexer {
 
     // A byte array that will hold a document entry
     byte[] __DOC_BYTE_ARRAY__;
+    ByteBuffer __DOC_BYTE_BUFFER__;
 
     // This map holds any information related with the indexed collection
     // and should be serialized when the index process has finished. Such
@@ -895,7 +896,7 @@ public class Indexer {
         }
         __DOCUMENTS_BUFFERS__ = new DocumentBuffers(documentsBuffersOffsets, __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__);
         __DOC_BYTE_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
-
+        __DOC_BYTE_BUFFER__ = ByteBuffer.wrap(__DOC_BYTE_ARRAY__);
         Themis.print("DONE\n");
 
         //check for stopword, stemming options
@@ -932,6 +933,7 @@ public class Indexer {
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
         __DOC_BYTE_ARRAY__ = null;
+        __DOC_BYTE_BUFFER__ = null;
     }
 
     /**
@@ -980,7 +982,6 @@ public class Indexer {
                 DocumentEntry.AVG_AUTHOR_RANK_SIZE;
         boolean hasVarFields = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
                 props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
-
         for (int i = 0; i < terms.size(); i++) {
             List<DocInfo> termDocInfo = termsDocInfo.get(i);
 
@@ -1039,9 +1040,9 @@ public class Indexer {
         boolean hasVarFields = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
                 props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS);
         for (DocInfo docInfo : docInfos) {
-            Set<DocInfo.PROPERTY> addProps = new HashSet<>(props);
-            addProps.removeAll(docInfo.getProps());
-            if (!addProps.isEmpty()) {
+            Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
+            extraProps.removeAll(docInfo.getProps());
+            if (!extraProps.isEmpty()) {
                 long documentPointer = docInfo.getOffset();
                 ByteBuffer buffer = __DOCUMENTS_BUFFERS__.getBuffer(documentPointer);
                 int docSize = buffer.getInt();
@@ -1051,14 +1052,13 @@ public class Indexer {
                 else {
                     buffer.get(__DOC_BYTE_ARRAY__, 0, fixedSize);
                 }
-                fetchInfo(docInfo, addProps, DocumentEntry.ID_OFFSET, hasVarFields);
+                fetchInfo(docInfo, extraProps, DocumentEntry.ID_OFFSET, hasVarFields);
             }
         }
     }
 
     /* Reads the fields byte array and adds to the docInfo object the properties specified by props */
     private void fetchInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, long offset, boolean hasVarFields) throws UnsupportedEncodingException {
-        ByteBuffer __DOC_BYTE_BUFFER__ = ByteBuffer.wrap(__DOC_BYTE_ARRAY__);
         if (props.contains(DocInfo.PROPERTY.PAGERANK)) {
             double pagerank = __DOC_BYTE_BUFFER__.getDouble((int) (DocumentEntry.PAGERANK_OFFSET - offset));
             docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);

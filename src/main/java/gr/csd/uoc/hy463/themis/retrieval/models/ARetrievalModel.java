@@ -152,11 +152,11 @@ public abstract class ARetrievalModel {
             }
         }
 
-        /* for all the terms of the previous query that do not belong to this query, clear the corresponding structures */
+        /* remove the docInfo from all the terms of the previous query that do not appear in this query */
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             boolean found = false;
-            for (List<DocInfo> docInfos : termsDocInfo) {
-                if (_termsDocInfo.get(i) == docInfos) {
+            for (int j = 0; j < termsDocInfo.size(); j++) {
+                if (_termsDocInfo.get(i) == termsDocInfo.get(j)) {
                     found = true;
                     break;
                 }
@@ -167,9 +167,8 @@ public abstract class ARetrievalModel {
         }
 
         /* if we want paginated results, both the okapi and VSM models should fetch only their
-        essential properties for each result so that they can do the ranking. At this point none of those
-        models should retrieve any other property: There is no point using more memory to store
-        any properties that the user does not want to see */
+        essential properties for each result so that they can do the ranking. The rest of the properties
+        will be fetched after the ranking is determined */
         Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
         if (startDoc == 0 && endDoc == Integer.MAX_VALUE) {
             if (this instanceof VSM) {
@@ -205,7 +204,7 @@ public abstract class ARetrievalModel {
      */
     protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
 
-        /* the total props that each docInfo should have including the essential props of this model */
+        /* the total properties that each docInfo should have including the essential properties of this model */
         Set<DocInfo.PROPERTY> totalProps = new HashSet<>(props);
         if (this instanceof VSM) {
             totalProps.addAll(getVSMProps());
@@ -214,7 +213,7 @@ public abstract class ARetrievalModel {
             totalProps.addAll(getOkapiProps());
         }
 
-        /* the props that each docInfo should have that are not the essential props of this model */
+        /* the properties that each docInfo should have that are not the essential properties of this model */
         Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
         if (this instanceof VSM) {
             extraProps.removeAll(getVSMProps());
@@ -223,7 +222,7 @@ public abstract class ARetrievalModel {
             extraProps.removeAll(getOkapiProps());
         }
 
-        /* the props that are not essential properties of this model */
+        /* the properties that are not essential properties of this model */
         Set<DocInfo.PROPERTY> removeProps = new HashSet<>();
         removeProps.addAll(getVSMProps());
         removeProps.addAll(getMonModelProps());
@@ -239,14 +238,7 @@ public abstract class ARetrievalModel {
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
             DocInfo docInfo = (DocInfo) results.get(i).getL();
-
-            /* clear the properties of the results not in [startDoc, endDoc] */
-            if (i < startDoc || i > endDoc) {
-                if (!removeProps.isEmpty()) {
-                    docInfo.clearProperties(removeProps);
-                }
-            }
-            else {
+            if (i >= startDoc && i <= endDoc) {
 
                 /* clear the properties of the results in [startDoc, endDoc] */
                 for (DocInfo.PROPERTY prop : docInfo.getProps()) {
@@ -263,10 +255,13 @@ public abstract class ARetrievalModel {
                     }
                 }
             }
+            else {
+                docInfo.clearProperties(removeProps);
+            }
         }
 
-        /* update the collected docInfo */
-        _indexer.updateDocInfo(updatedDocInfos, totalProps);
+        /* add the extra properties to the collected docInfo */
+        _indexer.updateDocInfo(updatedDocInfos, extraProps);
     }
 
     /**

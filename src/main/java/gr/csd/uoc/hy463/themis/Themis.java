@@ -79,8 +79,7 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            search = new Search();
-            themisEval eval = new themisEval(search);
+
         }
     }
 
