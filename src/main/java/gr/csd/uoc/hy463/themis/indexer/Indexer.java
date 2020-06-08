@@ -363,7 +363,7 @@ public class Indexer {
         mergeVocabularies(partialIndexes);
 
         /* update VSM weights and delete doc_size and tf files */
-        updateVSMweights(totalArticles);
+        updateVSMweights();
 
         /* merge the postings and delete them */
         mergePostings(partialIndexes);
@@ -734,7 +734,7 @@ public class Indexer {
 
     /* Calculates and updates the VSM weights and the max tf for each document entry. Reads the
      * frequencies file doc_tf and the documents size file doc_length */
-    public void updateVSMweights(int totalArticles) throws IOException {
+    public void updateVSMweights() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
 
@@ -765,8 +765,8 @@ public class Indexer {
 
         int[] tfs; //the TFs for each document
         double weight; //the weight of each document
-        int docSize; //size of each entry in the document file
         int maxTf = 0; //maximum tf in each document
+        int totalArticles = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
 
         //offsets required for reading/writing the weight and max frequency to the documents file
         int offset1 = DocumentEntry.ID_SIZE + DocumentEntry.SIZE_OFFSET + DocumentEntry.PAGERANK_SIZE;
@@ -778,6 +778,7 @@ public class Indexer {
             split = line.split(" ");
             if (split.length == 1) {
                 weight = 0;
+                maxTf = 0;
             }
             else {
                 tfs = new int[split.length / 2];
@@ -798,7 +799,7 @@ public class Indexer {
             }
 
             //update the documents file
-            docSize = Integer.parseInt(docSizeReader.readLine());
+            int docSize = Integer.parseInt(docSizeReader.readLine());
             byte[] documentEntry = new byte[docSize];
             documentsReader.read(documentEntry);
             byte[] wnew = ByteBuffer.allocate(8).putDouble(weight).array();
