@@ -361,12 +361,31 @@ public class Indexer {
 
         /* merge the vocabularies and delete them */
         mergeVocabularies(partialIndexes);
+        try {
+            for (Integer partialIndex : partialIndexes) {
+                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
+                deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
+            }
+        } catch (IOException e) {
+            Themis.print("Error deleting partial vocabularies\n");
+        }
 
         /* update VSM weights and delete doc_size and tf files */
         updateVSMweights();
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
 
-        /* merge the postings and delete them */
+        /* merge the postings and delete them, also delete the term_df file */
         mergePostings(partialIndexes);
+        try {
+            for (Integer partialIndex : partialIndexes) {
+                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
+                deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
+            }
+        } catch (IOException e) {
+            Themis.print("Error deleting partial postings\n");
+        }
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
 
         /* delete the tmp index */
         try {
@@ -379,13 +398,11 @@ public class Indexer {
         return false;
     }
 
-    /* Merges the partial vocabularies and creates a new single vocabulary. The partial vocabularies are then
-     * deleted */
+    /* Merges the partial vocabularies and creates a new single vocabulary */
     private void mergeVocabularies(List<Integer> partialIndexes) throws IOException {
-        // Use the indexes with the ids stored in the array.
 
-        /* If there is only one partial index, no merging is needed for the vocabularies. Just move them
-        in INDEX_PATH. If there are > 1 partial indexes, merge only the vocabularies and delete them */
+        /* If there is only one partial index, move the vocabulary file in INDEX_PATH else merge the partial
+        vocabularies */
         long startTime =  System.nanoTime();
         Themis.print(">>> Start Merging of partial vocabularies\n");
         if (partialIndexes.size() == 1) {
@@ -397,14 +414,6 @@ public class Indexer {
             combinePartialVocabularies(partialIndexes);
         }
         Themis.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
-        try {
-            for (Integer partialIndex : partialIndexes) {
-                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
-                deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
-            }
-        } catch (IOException e) {
-            Themis.print("Error deleting partial vocabularies\n");
-        }
     }
 
     /* Merges the partial vocabularies when there are more than 1 partial indexes.
@@ -536,13 +545,10 @@ public class Indexer {
         return offset;
     }
 
-    /* Method that merges the partial postings and creates a new single posting file. The partial postings
-     * are then deleted */
+    /* Method that merges the partial postings and creates a new single posting file */
     public void mergePostings(List<Integer> partialIndexes) throws IOException {
-        // Use the indexes with the ids stored in the array.
 
-        /* If there is only one partial index, no merging is needed for the postings. Just move them
-        in INDEX_PATH. If there are > 1 partial indexes, merge only the postings and delete them */
+        /* If there is only one partial index, move the posting file in INDEX_PATH else merge the partial postings */
         long startTime =  System.nanoTime();
         Themis.print(">>> Start Merging of partial postings\n");
         if (partialIndexes.size() == 1) {
@@ -554,18 +560,10 @@ public class Indexer {
             combinePartialPostings(partialIndexes);
         }
         Themis.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
-        try {
-            for (Integer partialIndex : partialIndexes) {
-                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
-                deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
-            }
-        } catch (IOException e) {
-            Themis.print("Error deleting partial vocabularies\n");
-        }
     }
 
     /* Merges the partial postings when there are more than 1 partial indexes.
-    Writes the merged posting file and deletes the term_df file */
+    Writes the merged posting file */
     private void combinePartialPostings(List<Integer> partialIndexes) throws IOException {
 
         /* the partial postings */
@@ -732,8 +730,8 @@ public class Indexer {
         return Files.deleteIfExists(indexPath.toPath());
     }
 
-    /* Calculates and updates the VSM weights and the max tf for each document entry. Reads the
-     * frequencies file doc_tf and the documents size file doc_length */
+    /* Reads the frequencies file doc_tf and the documents size file doc_length and calculates the
+    VSM weights and the max tf for each document entry. It then updates the documents file */
     public void updateVSMweights() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
@@ -814,10 +812,6 @@ public class Indexer {
         docSizeReader.close();
         documentsReader.close();
         documentsWriter.close();
-
-        /* delete files */
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
 
         Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
