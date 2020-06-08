@@ -893,21 +893,6 @@ public class Indexer {
         meta.close();
         Themis.print("DONE\n");
 
-        //open postings
-        Themis.print(">>> Opening documents, postings files...");
-        __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
-
-        //open documents
-        String[] documentsBuffersOffsets_S = __META_INDEX_INFO__.get("doc_split_offsets").split(",");
-        List<Long> documentsBuffersOffsets = new ArrayList<>();
-        for (String documentsBuffersOffsets_ : documentsBuffersOffsets_S) {
-            documentsBuffersOffsets.add(Long.parseLong(documentsBuffersOffsets_));
-        }
-        __DOCUMENTS_BUFFERS__ = new DocumentBuffers(documentsBuffersOffsets, __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__);
-        __DOC_BYTE_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
-        __DOC_BYTE_BUFFER__ = ByteBuffer.wrap(__DOC_BYTE_ARRAY__);
-        Themis.print("DONE\n");
-
         //check for stopword, stemming options
         if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"))) {
             Themis.print("Stopwords is enabled\n");
@@ -923,6 +908,22 @@ public class Indexer {
         else {
             Themis.print("Stemming is disabled\n");
         }
+
+        //open postings
+        Themis.print(">>> Opening documents, postings files...");
+        __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
+
+        //open documents
+        String[] documentsBuffersOffsets_S = __META_INDEX_INFO__.get("doc_split_offsets").split(",");
+        List<Long> documentsBuffersOffsets = new ArrayList<>();
+        for (String documentsBuffersOffsets_ : documentsBuffersOffsets_S) {
+            documentsBuffersOffsets.add(Long.parseLong(documentsBuffersOffsets_));
+        }
+        __DOCUMENTS_BUFFERS__ = new DocumentBuffers(documentsBuffersOffsets, __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__);
+        __DOC_BYTE_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
+        __DOC_BYTE_BUFFER__ = ByteBuffer.wrap(__DOC_BYTE_ARRAY__);
+        Themis.print("DONE\n");
+
         return true;
     }
 
