@@ -111,7 +111,6 @@ public class Index {
     public boolean dump() throws IOException {
         __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
         Collections.sort(__INDEX_KEYS_SORTED__);
-        Themis.print("Dumping in: " + __INDEX_TMP_PATH__ + "/" + id + "/ ...");
         String vocabularyName;
         String postingsName;
         vocabularyName = __INDEX_TMP_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
@@ -120,7 +119,6 @@ public class Index {
         Files.createDirectories(Paths.get(postingsName).getParent());
         dumpVocabulary(vocabularyName);
         dumpPostings(postingsName);
-        Themis.print(" DONE\n");
         return true;
     }
 

@@ -265,7 +265,7 @@ public class Indexer {
         // for each file in path
         for (File file : corpus) {
             if (file.isFile()) {
-                Themis.print("Processing file: " + file + "\n");
+                Themis.print("Parsing file: " + file + "\n");
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
 
@@ -363,7 +363,7 @@ public class Indexer {
         }
         meta.close();
 
-        Themis.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Partial indexes created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
 
         /* merge the partial vocabularies and delete them */
         mergeVocabularies(partialIndexes);
@@ -746,8 +746,7 @@ public class Indexer {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
 
-        /* load the vocabulary file except the offsets */
-        Themis.print("Loading vocabulary terms...");
+        /* load the vocabulary terms */
         BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
         Map<String, Integer> vocabulary = new HashMap<>();
@@ -758,7 +757,6 @@ public class Indexer {
             vocabulary.put(split[0], Integer.parseInt(split[1]));
         }
         vocabularyReader.close();
-        Themis.print("DONE\n");
 
         /* open the required files: documents, doc_tf, doc_size */
         BufferedOutputStream documentsWriter = new BufferedOutputStream(new FileOutputStream

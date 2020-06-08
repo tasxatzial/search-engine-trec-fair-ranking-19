@@ -43,10 +43,13 @@ public class Pagerank {
      */
     public void citationsPagerank() throws IOException {
         String graphPath = __INDEX_PATH__ + "/graph";
+        long startTime = System.nanoTime();
+        Themis.print(">>> Calculating citations pagerank scores\n");
         dumpCitations(graphPath);
         List<PagerankNode> graph = initCitationsGraph(graphPath);
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
+        Themis.print("Pagerank scores calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
 
     /* Creates a temp file 'graph' in the Index directory. Line N of this file corresponds to the Nth document
@@ -93,7 +96,7 @@ public class Pagerank {
         /* parse the dataset and write the appropriate info to the 'graph' file */
         for (File file : corpus) {
             if (file.isFile()) {
-                Themis.print("Processing file: " + file + "\n");
+                Themis.print("Parsing file: " + file + "\n");
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
                 while ((json = currentDataFile.readLine()) != null) {
@@ -166,7 +169,7 @@ public class Pagerank {
         boolean converged = false;
         int iteration = 1;
         while (!converged) {
-            
+            Themis.print("Pagerank iteration: " + iteration + "\n");
             // calculate the scores
             for (PagerankNode node : graph) {
                 node.calculateScore();
