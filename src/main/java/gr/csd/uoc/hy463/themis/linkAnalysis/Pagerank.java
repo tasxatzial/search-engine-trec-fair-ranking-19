@@ -5,6 +5,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
+import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -23,18 +24,19 @@ public class Pagerank {
     }
 
     /**
-     * Computes the pagerank score of the citations
+     * Computes the pagerank scores based on the citations
      * @throws IOException
      */
     public void computeCitationsPagerank() throws IOException {
-        dumpCitations();
-
+        String graphName = __INDEX_PATH__ + "/graph";
+        dumpCitations(graphName);
+        initCitationGraph(graphName);
     }
 
     /* Creates a temp file 'graph' in the Index directory. Line N of this file corresponds to the Nth document
     that was parsed and it has the number of its Out citations followed by a list of integer ids that correspond to
-    the ids of its In citations. Also a document with id N in this file corresponds to line N */
-    private void dumpCitations() throws IOException {
+    the ids of its In citations. Also a document that has id N in this file corresponds to line N */
+    private void dumpCitations(String graphName) throws IOException {
         File folder = new File(__DATASET_PATH__);
         File[] files = folder.listFiles();
         if (files == null) {
@@ -55,7 +57,7 @@ public class Pagerank {
 
         /* for each document write: number of Out citations followed by a list of integer ids
         that correspond to the In citations */
-        BufferedWriter graphWriter = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/graph"));
+        BufferedWriter graphWriter = new BufferedWriter(new FileWriter(graphName));
 
         /* read the documents file and create the map of string id -> int id */
         byte[] sizeB = new byte[4]; //size of a document entry
@@ -100,7 +102,39 @@ public class Pagerank {
         }
         graphWriter.close();
         citationsIdsMap.clear(); // can be garbage collected
+    }
 
+    /* initialize the citations pagerank graph and its nodes */
+    private void initCitationGraph(String graphName) throws IOException {
+        BufferedReader graphReader = new BufferedReader(new FileReader(graphName));
+        Map<Integer, PagerankNode> graph = new HashMap<>();
+        String line;
+        int intId = 1;
 
+        /* Create the graph, a map of int id -> nodes */
+        while ((line = graphReader.readLine()) != null) {
+            String[] split = line.split(" ");
+            int outNum = Integer.parseInt(split[0]);
+            int inNum = split.length - 1;
+            PagerankNode node = new PagerankNode(intId);
+            node.initializeInNodes(inNum);
+            node.setOutNodes(outNum);
+            graph.put(intId, node);
+            intId++;
+        }
+        graphReader.close();
+
+        /* read the 'graph' file and add the nodes that correspond to the In citations in each node of the graph */
+        intId = 1;
+        graphReader = new BufferedReader(new FileReader(graphName));
+        while ((line = graphReader.readLine()) != null) {
+            String[] split = line.split(" ");
+            PagerankNode node = graph.get(intId);
+            for (int i = 1; i < split.length; i++) {
+                node.addInNode(graph.get(Integer.parseInt(split[i])));
+            }
+            intId++;
+        }
+        graphReader.close();
     }
 }
