@@ -116,6 +116,26 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
+            // Read out citations. A JSONArray
+            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
+            List<String> outCitations = new ArrayList<>();
+            if(outCitationsArray != null) {
+                outCitationsArray.forEach(citation -> {
+                    outCitations.add(citation.toString());
+                });
+            }
+            entry.setOutCitations(outCitations);
+
+            // Read in citations. A JSONArray
+            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
+            List<String> inCitations = new ArrayList<>();
+            if(inCitationsArray != null) {
+                inCitationsArray.forEach(citation -> {
+                    inCitations.add(citation.toString());
+                });
+            }
+            entry.setInCitations(inCitations);
+
             // Get journal for example
             String journalCheck = (String) jsonObject.get("journalName");
             String journal = journalCheck != null ? journalCheck : "";
@@ -141,64 +161,6 @@ public class S2JsonEntryReader {
             String venue = venueCheck != null ? venueCheck : "";
             entry.setVenue(venue);
 
-        } catch (ParseException e) {
-            __LOGGER__.error(e.getMessage());
-        }
-
-        return entry;
-    }
-
-    // Method that reads all textual information from an entry
-    public static S2GraphEntry readGraphEntry(String jsonToRead) {
-        S2GraphEntry entry = new S2GraphEntry();
-        JSONParser parser = new JSONParser();
-        try {
-            Object obj = parser.parse(jsonToRead);
-
-            // This should be a JSON object.
-            JSONObject jsonObject = (JSONObject) obj;
-
-            // Get the id for example
-            String id = (String) jsonObject.get("id");
-            entry.setId(id);
-
-            // Read authors. A JSONArray
-            JSONArray authorsList = (JSONArray) jsonObject.get("authors");
-            List<String> authors = new ArrayList<>();
-            if (authorsList != null) {
-                for (int i = 0; i < authorsList.size(); i++) {
-                    JSONObject authorInfo = (JSONObject) authorsList.get(i);
-                    // Now get all the ids
-                    JSONArray idsList = (JSONArray) authorInfo.get("ids");
-                    List<String> ids = new ArrayList<>();
-                    if(idsList != null) {
-                        for (int j = 0; j < idsList.size(); j++) {
-                            String ID = (String) idsList.get(j);
-                            authors.add(ID);
-                        }
-                    }
-                }
-            }
-            entry.setAuthors(authors);
-
-            // Read out citations. A JSONArray
-            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
-            List<String> outCitations = new ArrayList<>();
-            if(outCitationsArray != null) {
-                outCitationsArray.forEach(citation -> {
-                    outCitations.add(citation.toString());
-                });
-            }
-            entry.setOutCitations(outCitations);
-
-            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
-            List<String> inCitations = new ArrayList<>();
-            if(inCitationsArray != null) {
-                inCitationsArray.forEach(citation -> {
-                    inCitations.add(citation.toString());
-                });
-            }
-            entry.setInCitations(inCitations);
         } catch (ParseException e) {
             __LOGGER__.error(e.getMessage());
         }
@@ -282,9 +244,5 @@ public class S2JsonEntryReader {
 
         System.out.println(json);
         System.out.println(S2JsonEntryReader.readTextualEntry(json));
-        System.out.println(S2JsonEntryReader.readGraphEntry(json));
-
-
     }
-
 }

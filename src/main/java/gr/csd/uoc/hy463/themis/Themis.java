@@ -1,9 +1,7 @@
 package gr.csd.uoc.hy463.themis;
 
-import gr.csd.uoc.hy463.themis.examples.GloveExample;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
-import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
@@ -13,13 +11,10 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.print.Doc;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
