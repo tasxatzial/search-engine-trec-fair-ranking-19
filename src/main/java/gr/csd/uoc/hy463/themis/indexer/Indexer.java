@@ -217,11 +217,17 @@ public class Indexer {
         long documentOffset = 0;
         int maxDocumentSize = 0;
 
+        // all files in dataset PATH
         File folder = new File(path);
         File[] files = folder.listFiles();
         if (files == null) {
             return true;
         }
+
+        // sort the files so that we parse them in a specific order
+        List<File> corpus = new ArrayList<>(files.length);
+        corpus.addAll(Arrays.asList(files));
+        Collections.sort(corpus);
 
         /* initialize the class that calculates the map of frequencies of a term in a document entry */
         S2TextualEntryTermFrequencies wordFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__);
@@ -256,7 +262,7 @@ public class Indexer {
         partialIndexes.add(id);
 
         // for each file in path
-        for (File file : files) {
+        for (File file : corpus) {
             if (file.isFile()) {
                 Themis.print("Processing file: " + file + "\n");
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
