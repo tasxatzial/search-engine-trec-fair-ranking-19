@@ -6,17 +6,12 @@ import java.util.*;
  * Node used for computing the pagerank scores
  */
 public class PagerankNode {
-    private int id;
     private static double dumpingFactor = 0.85;
     private double prevScore = 0;
     private double score = 0;
     private int outNodes = 0;
     private List<PagerankNode> inNodes;
 
-    public PagerankNode(int id) {
-        this.id = id;
-    }
-    
     /**
      * Initializes the In Nodes to an empty array list that has initial capacity num
      * @param num
@@ -25,14 +20,6 @@ public class PagerankNode {
         inNodes = new ArrayList<>(num);
     }
 
-    /**
-     * Returns the id of this Node
-     * @return
-     */
-    public int getId() {
-        return id;
-    }
-    
     /**
      * Returns the previous score
      * @return
