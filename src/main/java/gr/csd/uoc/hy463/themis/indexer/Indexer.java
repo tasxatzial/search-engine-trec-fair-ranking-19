@@ -33,6 +33,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Tex
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.utils.*;
 
@@ -375,7 +376,7 @@ public class Indexer {
             Themis.print("Error deleting partial vocabularies\n");
         }
 
-        /* calculate VSM weights and delete doc_size and tf files */
+        /* calculate VSM weights, update the documents file, and delete doc_size and tf files */
         updateVSMweights();
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
@@ -391,6 +392,10 @@ public class Indexer {
             Themis.print("Error deleting partial postings\n");
         }
         deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
+
+        /* compute the citations pagerank scores and update the documents file */
+        Pagerank pagerank = new Pagerank();
+        pagerank.computeCitationsPagerank();
 
         /* finally delete the tmp index */
         try {
@@ -819,6 +824,10 @@ public class Indexer {
         documentsWriter.close();
 
         Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+    }
+
+    private void computeCitationsPagerank() {
+
     }
 
     /**
