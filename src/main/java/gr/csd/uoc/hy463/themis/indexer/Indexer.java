@@ -196,6 +196,9 @@ public class Indexer {
             return false;
         }
 
+        long startTime = System.nanoTime();
+        Themis.print(">>> Start indexing\n");
+
         if (__CONFIG__.getUseStemmer()) {
             Stemmer.Initialize();
         }
@@ -203,46 +206,33 @@ public class Indexer {
             StopWords.Initialize();
         }
 
-        int documentsSplitSize = Integer.MAX_VALUE; // maximum buffer size
+        // the buffer offsets to the documents file
         List<Long> documentsBufferOffsets = new ArrayList<>();
         documentsBufferOffsets.add(0L);
 
+        int documentsMaxBufferSize = Integer.MAX_VALUE;
         long totalDocumentsSize = 0;
-        int articleSize = 0;
-
-        long startTime = System.nanoTime();
-        Themis.print(">>> Start indexing\n");
+        int totalArticles = 0;
+        long totalDocumentLength = 0;
+        long docOffset = 0;
+        int maxDocumentSize = 0;
 
         File folder = new File(path);
-        File[] files = folder.listFiles();         // Holds  all files in path
+        File[] files = folder.listFiles();
         if (files == null) {
             return true;
         }
 
-        String json;
-        S2TextualEntry entry;
-        int totalArticles = 0;
-        long totalArticleLength = 0;
-        long docOffset = 0;
-        long prevDocOffset;
-        int maxDocSize = 0;
-        __META_INDEX_INFO__ = new HashMap<>();
+        /* initialize the class that calculates the map of frequencies of a term in a document entry */
         S2TextualEntryTermFrequencies wordFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__);
-
-        /* Field frequencies of each term in a json entry */
-        Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords;
-
-        /* the dataset file that is being parsed */
-        BufferedReader currentDataFile;
 
         /* create index folders */
         Files.createDirectories(Paths.get(__INDEX_PATH__));
         Files.createDirectories(Paths.get(__INDEX_TMP_PATH__));
 
         /* The documents file for writing the article info */
-        String documentsName =  __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
         BufferedOutputStream documentsOut = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(documentsName, "rw").getFD()));
+                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw").getFD()));
 
         /* Temp file that has the size of each document entry in bytes. Needed for fast
         access to the each document entry when an update of its info is required,
@@ -256,23 +246,21 @@ public class Indexer {
         BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
-        Index index = new Index(__CONFIG__);
-        int id = 1;
-        // set id of index
-        index.setID(id);
-
-        // We use a arraylist as a queue for our partial indexes
+        // Use a linked list to keep the partial indexes ids
         List<Integer> partialIndexes = new LinkedList<>();
 
-        // Add id to queue
+        // initialize a partial index
+        Index index = new Index(__CONFIG__);
+        int id = 1;
+        index.setID(id);
         partialIndexes.add(id);
 
         // for each file in path
         for (File file : files) {
             if (file.isFile()) {
                 Themis.print("Processing file: " + file + "\n");
-                currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-
+                BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+                String json;
                 // for each scientific article in file
                 while ((json = currentDataFile.readLine()) != null) {
                     // Extract all textual info
@@ -280,25 +268,25 @@ public class Indexer {
                     // config.getPartialIndexSize store all information to
                     // approapriate structures in memory to Index class else dump
                     // to files in appropriate directory id and increase partialIndexes
-                    entry = S2JsonEntryReader.readTextualEntry(json);
-                    entryWords = wordFrequencies.createWordsMap(entry);
-                    totalArticleLength += entryWords.size();
+                    S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
+                    Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords = wordFrequencies.createWordsMap(entry);
+                    totalDocumentLength += entryWords.size();
                     index.add(entryWords, docOffset, termFreqWriter);
-                    prevDocOffset = docOffset;
+                    long prevDocOffset = docOffset;
                     docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
-                    articleSize = (int) (docOffset - prevDocOffset);
-                    if (articleSize > documentsSplitSize - totalDocumentsSize) {
+                    int documentSize = (int) (docOffset - prevDocOffset);
+                    if (documentSize > documentsMaxBufferSize - totalDocumentsSize) {
                         documentsBufferOffsets.add(prevDocOffset);
-                        totalDocumentsSize = articleSize;
+                        totalDocumentsSize = documentSize;
                     }
                     else {
-                        totalDocumentsSize += articleSize;
+                        totalDocumentsSize += documentSize;
                     }
 
-                    if (articleSize > maxDocSize) {
-                        maxDocSize = articleSize;
+                    if (documentSize > maxDocumentSize) {
+                        maxDocumentSize = documentSize;
                     }
-                    docLengthWriter.write(articleSize + "\n");
+                    docLengthWriter.write(documentSize + "\n");
 
                     totalArticles++;
                     if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
@@ -316,6 +304,7 @@ public class Indexer {
             }
         }
 
+        //docOffset at this point should be equal to the size of the documents file
         documentsBufferOffsets.add(docOffset);
 
         /* dump remaining structures */
@@ -332,8 +321,9 @@ public class Indexer {
         docLengthWriter.close();
 
         /* calculate avgdl for Okapi BM25 */
-        double avgdl = (0.0 + totalArticleLength) / totalArticles;
+        double avgdl = (0.0 + totalDocumentLength) / totalArticles;
 
+        /* combine the buffer offsets to the documents file into a string */
         StringBuilder docBufferString = new StringBuilder();
         for (int i = 0; i < documentsBufferOffsets.size() - 1; i++) {
             docBufferString.append(documentsBufferOffsets.get(i)).append(",");
@@ -343,14 +333,14 @@ public class Indexer {
         }
 
         /* save any info related to this index */
+        __META_INDEX_INFO__ = new HashMap<>();
         __META_INDEX_INFO__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
         __META_INDEX_INFO__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
         __META_INDEX_INFO__.put("articles", String.valueOf(totalArticles));
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("index_path", __INDEX_PATH__);
-        __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocSize));
+        __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocumentSize));
         __META_INDEX_INFO__.put("doc_split_offsets", docBufferString.toString());
-
         BufferedWriter meta = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             meta.write(pair.getKey() + "=" + pair.getValue() + "\n");
@@ -359,7 +349,7 @@ public class Indexer {
 
         Themis.print("Partial index created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
 
-        /* merge the vocabularies and delete them */
+        /* merge the partial vocabularies and delete them */
         mergeVocabularies(partialIndexes);
         try {
             for (Integer partialIndex : partialIndexes) {
@@ -370,7 +360,7 @@ public class Indexer {
             Themis.print("Error deleting partial vocabularies\n");
         }
 
-        /* update VSM weights and delete doc_size and tf files */
+        /* calculate VSM weights and delete doc_size and tf files */
         updateVSMweights();
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
@@ -387,7 +377,7 @@ public class Indexer {
         }
         deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
 
-        /* delete the tmp index */
+        /* finally delete the tmp index */
         try {
             deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
         } catch (IOException e) {
