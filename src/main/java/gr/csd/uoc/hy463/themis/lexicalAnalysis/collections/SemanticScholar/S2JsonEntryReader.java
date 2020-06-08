@@ -36,9 +36,6 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Class responsible for reading textual entries from the json description of
@@ -116,26 +113,6 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
-            // Read out citations. A JSONArray
-            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
-            List<String> outCitations = new ArrayList<>();
-            if(outCitationsArray != null) {
-                outCitationsArray.forEach(citation -> {
-                    outCitations.add(citation.toString());
-                });
-            }
-            entry.setOutCitations(outCitations);
-
-            // Read in citations. A JSONArray
-            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
-            List<String> inCitations = new ArrayList<>();
-            if(inCitationsArray != null) {
-                inCitationsArray.forEach(citation -> {
-                    inCitations.add(citation.toString());
-                });
-            }
-            entry.setInCitations(inCitations);
-
             // Get journal for example
             String journalCheck = (String) jsonObject.get("journalName");
             String journal = journalCheck != null ? journalCheck : "";
@@ -144,7 +121,7 @@ public class S2JsonEntryReader {
             // Read sources. A JSONArray
             JSONArray sourcesArray = (JSONArray) jsonObject.get("sources");
             List<String> sources = new ArrayList<>();
-            if(sourcesArray !=null ) {
+            if(sourcesArray != null) {
                 sourcesArray.forEach(source -> {
                     sources.add(source.toString());
                 });
@@ -161,6 +138,45 @@ public class S2JsonEntryReader {
             String venue = venueCheck != null ? venueCheck : "";
             entry.setVenue(venue);
 
+        } catch (ParseException e) {
+            __LOGGER__.error(e.getMessage());
+        }
+
+        return entry;
+    }
+
+    // Method that reads all citation related information from an entry
+    public static S2CitationsGraphEntry readCitationsGraphEntry(String jsonToRead) {
+        S2CitationsGraphEntry entry = new S2CitationsGraphEntry();
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(jsonToRead);
+
+            // This should be a JSON object.
+            JSONObject jsonObject = (JSONObject) obj;
+
+            // Get the id for example
+            String id = (String) jsonObject.get("id");
+            entry.setId(id);
+
+            // Read out citations. A JSONArray
+            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
+            List<String> outCitations = new ArrayList<>();
+            if(outCitationsArray != null) {
+                outCitationsArray.forEach(citation -> {
+                    outCitations.add(citation.toString());
+                });
+            }
+            entry.setOutCitations(outCitations);
+
+            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
+            List<String> inCitations = new ArrayList<>();
+            if(inCitationsArray != null) {
+                inCitationsArray.forEach(citation -> {
+                    inCitations.add(citation.toString());
+                });
+            }
+            entry.setInCitations(inCitations);
         } catch (ParseException e) {
             __LOGGER__.error(e.getMessage());
         }
@@ -244,5 +260,6 @@ public class S2JsonEntryReader {
 
         System.out.println(json);
         System.out.println(S2JsonEntryReader.readTextualEntry(json));
+        System.out.println(S2JsonEntryReader.readCitationsGraphEntry(json));
     }
 }
