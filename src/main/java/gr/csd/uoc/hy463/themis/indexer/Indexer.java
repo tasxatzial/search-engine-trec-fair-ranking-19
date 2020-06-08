@@ -214,7 +214,7 @@ public class Indexer {
         long totalDocumentsSize = 0;
         int totalArticles = 0;
         long totalDocumentLength = 0;
-        long docOffset = 0;
+        long documentOffset = 0;
         int maxDocumentSize = 0;
 
         File folder = new File(path);
@@ -261,20 +261,28 @@ public class Indexer {
                 Themis.print("Processing file: " + file + "\n");
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
+
                 // for each scientific article in file
                 while ((json = currentDataFile.readLine()) != null) {
+
                     // Extract all textual info
-                    // if indexed articles for this index less than
-                    // config.getPartialIndexSize store all information to
-                    // approapriate structures in memory to Index class else dump
-                    // to files in appropriate directory id and increase partialIndexes
                     S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
+
+                    // create the map of entry field frequencies for each term
                     Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords = wordFrequencies.createWordsMap(entry);
+
+                    // update total document length (total number of terms)
                     totalDocumentLength += entryWords.size();
-                    index.add(entryWords, docOffset, termFreqWriter);
-                    long prevDocOffset = docOffset;
-                    docOffset = dumpDocuments(documentsOut, entry, entryWords.size(), docOffset);
-                    int documentSize = (int) (docOffset - prevDocOffset);
+
+                    // update the partial index as needed
+                    index.add(entryWords, documentOffset, termFreqWriter);
+
+                    // update the documents file as needed
+                    long prevDocOffset = documentOffset;
+                    documentOffset = dumpDocuments(documentsOut, entry, entryWords.size(), documentOffset);
+
+                    // calculate the buffer offsets to the documents file
+                    int documentSize = (int) (documentOffset - prevDocOffset);
                     if (documentSize > documentsMaxBufferSize - totalDocumentsSize) {
                         documentsBufferOffsets.add(prevDocOffset);
                         totalDocumentsSize = documentSize;
@@ -283,20 +291,21 @@ public class Indexer {
                         totalDocumentsSize += documentSize;
                     }
 
+                    // calculate the maximum size of an entry in the document file
                     if (documentSize > maxDocumentSize) {
                         maxDocumentSize = documentSize;
                     }
+
+                    // write the size of the current document file entry
                     docLengthWriter.write(documentSize + "\n");
 
+                    // check a dump of the current partial index is needed
                     totalArticles++;
                     if (totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
                         index.dump();   // dump partial index to appropriate subdirectory
-                        // Create a new index
-                        // Increase partial indexes and dump files to appropriate directory
                         id++;
                         index = new Index(__CONFIG__);
                         index.setID(id);
-                        // Add id to queue
                         partialIndexes.add(id);
                     }
                 }
@@ -304,10 +313,10 @@ public class Indexer {
             }
         }
 
-        //docOffset at this point should be equal to the size of the documents file
-        documentsBufferOffsets.add(docOffset);
+        // docOffset at this point should be equal to the size of the documents file
+        documentsBufferOffsets.add(documentOffset);
 
-        /* dump remaining structures */
+        /* dump the last partial index if needed */
         if (totalArticles != 0 && totalArticles % __CONFIG__.getPartialIndexSize() == 0) {
             partialIndexes.remove(partialIndexes.size() - 1);
             id--;
