@@ -376,9 +376,8 @@ public class Indexer {
             Themis.print("Error deleting partial vocabularies\n");
         }
 
-        /* calculate VSM weights, update the documents file, and delete doc_size and tf files */
+        /* calculate VSM weights, update the documents file, and delete doc_tf file */
         updateVSMweights();
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
 
         /* merge the postings and delete them, also delete the term_df file */
@@ -393,9 +392,10 @@ public class Indexer {
         }
         deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
 
-        /* compute the citations pagerank scores and update the documents file */
+        /* compute the citations pagerank scores, update the documents file, and delete the doc_size file */
         Pagerank pagerank = new Pagerank();
         pagerank.citationsPagerank();
+        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_size"));
 
         /* finally delete the tmp index */
         try {

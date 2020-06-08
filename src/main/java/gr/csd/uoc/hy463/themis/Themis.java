@@ -1,6 +1,7 @@
 package gr.csd.uoc.hy463.themis;
 
 
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
@@ -16,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
@@ -76,8 +79,7 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-            Pagerank pagerank = new Pagerank();
-            pagerank.citationsPagerank();
+
         }
     }
 
@@ -330,13 +332,15 @@ public class Themis {
     private static class Search_runnable implements Runnable {
         @Override
         public void run() {
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            props.add(DocInfo.PROPERTY.PAGERANK);
             _task = TASK.SEARCH;
             List<Pair<Object, Double>> results;
             long startTime = System.nanoTime();
             String query = view.get_searchField().getText();
             print("Searching for: " + query + " ... ");
             try {
-                results = search.search(view.get_searchField().getText());
+                results = search.search(view.get_searchField().getText(), props);
                 print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results,0, 19);

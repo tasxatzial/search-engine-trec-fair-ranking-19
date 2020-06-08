@@ -5,7 +5,6 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2CitationsGraphEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
 
 import java.io.*;
@@ -16,6 +15,7 @@ import java.util.*;
 public class Pagerank {
     private String __DATASET_PATH__;
     private String __INDEX_PATH__;
+    private String __INDEX_TMP_PATH__;
     private String __DOCUMENTS_FILENAME__;
     private Map<String, String> __META_INDEX_INFO__;
 
@@ -24,6 +24,7 @@ public class Pagerank {
         __DATASET_PATH__ = config.getDatasetPath();
         __INDEX_PATH__ = config.getIndexPath();
         __DOCUMENTS_FILENAME__ = config.getDocumentsFileName();
+        __INDEX_TMP_PATH__ = config.getIndexTmpPath();
         __META_INDEX_INFO__ = new HashMap<>();
         String __META_FILENAME__ = config.getMetaFileName();
 
@@ -45,6 +46,7 @@ public class Pagerank {
         dumpCitations(graphPath);
         List<PagerankNode> graph = initCitationsGraph(graphPath);
         computeCitationsPagerank(graph);
+        writeCitationsScores(graph);
     }
 
     /* Creates a temp file 'graph' in the Index directory. Line N of this file corresponds to the Nth document
@@ -186,5 +188,30 @@ public class Pagerank {
 
             iteration++;
         }
+    }
+
+    /* writes the scores to the documents file */
+    private void writeCitationsScores(List<PagerankNode> graph) throws IOException {
+        BufferedOutputStream documentsWriter = new BufferedOutputStream(new FileOutputStream
+                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw").getFD()));
+        BufferedInputStream documentsReader = new BufferedInputStream(new FileInputStream
+                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r").getFD()));
+        BufferedReader docSizeReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(__INDEX_TMP_PATH__ + "/doc_size"), "ASCII"));
+
+        byte[] scoreArray = new byte[DocumentEntry.PAGERANK_SIZE];
+        ByteBuffer scoreBuf = ByteBuffer.wrap(scoreArray);
+        for (int i = 0; i < graph.size(); i++) {
+            int docSize = Integer.parseInt(docSizeReader.readLine());
+            byte[] documentEntry = new byte[docSize];
+            documentsReader.read(documentEntry);
+            double score = Math.floor(graph.get(i).getScore() * 1000) / 1000;
+            scoreBuf.putDouble(0, score);
+            System.arraycopy(scoreArray, 0, documentEntry, DocumentEntry.PAGERANK_OFFSET, scoreArray.length);
+            documentsWriter.write(documentEntry);
+        }
+        documentsReader.close();
+        documentsWriter.close();
+        docSizeReader.close();
     }
 }
