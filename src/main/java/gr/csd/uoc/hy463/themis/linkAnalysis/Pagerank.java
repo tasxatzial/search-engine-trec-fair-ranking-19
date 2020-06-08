@@ -27,10 +27,11 @@ public class Pagerank {
      * Computes the pagerank scores based on the citations
      * @throws IOException
      */
-    public void computeCitationsPagerank() throws IOException {
+    public void citationsPagerank() throws IOException {
         String graphName = __INDEX_PATH__ + "/graph";
         dumpCitations(graphName);
-        initCitationGraph(graphName);
+        Map<Integer, PagerankNode> graph = initCitationsGraph(graphName);
+        computeCitationsPagerank(graph);
     }
 
     /* Creates a temp file 'graph' in the Index directory. Line N of this file corresponds to the Nth document
@@ -105,7 +106,7 @@ public class Pagerank {
     }
 
     /* initialize the citations pagerank graph and its nodes */
-    private void initCitationGraph(String graphName) throws IOException {
+    private Map<Integer, PagerankNode> initCitationsGraph(String graphName) throws IOException {
         BufferedReader graphReader = new BufferedReader(new FileReader(graphName));
         Map<Integer, PagerankNode> graph = new HashMap<>();
         String line;
@@ -136,5 +137,42 @@ public class Pagerank {
             intId++;
         }
         graphReader.close();
+
+        return graph;
+    }
+
+    /* computes the citations pagerank scores */
+    private void computeCitationsPagerank(Map<Integer, PagerankNode> graph) {
+
+        // initialize pagerank scores
+        for (PagerankNode node : graph.values()) {
+            node.setPrevScore(1.0);
+        }
+
+        boolean converged = false;
+        int iteration = 1;
+        while (!converged) {
+            
+            // calculate the scores
+            for (PagerankNode node : graph.values()) {
+                node.calculateScore();
+            }
+
+            // check for convergence
+            converged = true;
+            for (PagerankNode node : graph.values()) {
+                if (Math.abs(node.getPrevScore() - node.getScore()) > 0.001) {
+                    converged = false;
+                    break;
+                }
+            }
+
+            // update the previous scores (sets it to the current score)
+            for (PagerankNode node : graph.values()) {
+                node.updatePrevScore();
+            }
+
+            iteration++;
+        }
     }
 }

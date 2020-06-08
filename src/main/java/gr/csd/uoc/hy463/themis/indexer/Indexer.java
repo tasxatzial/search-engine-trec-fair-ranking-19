@@ -395,7 +395,7 @@ public class Indexer {
 
         /* compute the citations pagerank scores and update the documents file */
         Pagerank pagerank = new Pagerank();
-        pagerank.computeCitationsPagerank();
+        pagerank.citationsPagerank();
 
         /* finally delete the tmp index */
         try {
