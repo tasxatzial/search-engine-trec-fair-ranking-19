@@ -79,7 +79,8 @@ public class Themis {
             view.setVisible(true);
         }
         else { //non GUI version
-
+            Pagerank pagerank = new Pagerank();
+            pagerank.citationsPagerank();
         }
     }
 
