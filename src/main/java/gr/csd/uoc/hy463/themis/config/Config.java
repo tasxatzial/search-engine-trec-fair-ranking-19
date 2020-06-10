@@ -120,6 +120,15 @@ public class Config {
     }
 
     /**
+     * Returns the filename of documents meta index
+     *
+     * @return
+     */
+    public String getDocumentsMetaFileName() {
+        return __PROP__.getProperty("DOCUMENTS_META_FILENAME");
+    }
+
+    /**
      * Returns the filename of meta index, holding meta information about the
      * index
      *

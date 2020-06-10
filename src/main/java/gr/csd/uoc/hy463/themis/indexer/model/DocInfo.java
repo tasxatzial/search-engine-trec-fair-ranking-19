@@ -60,18 +60,18 @@ public class DocInfo {
     }
 
     private String id = "";         // the 40 byte id
-    private long offset = 0;        // offset in documents file
+    private long metaOffset = 0;        // offset in documents file
     private final Map<PROPERTY, Object> props = new HashMap<>(0);
 
     /**
      *
      * @param id the id of a document
-     * @param offset the offset in the document file the contains all
+     * @param metaOffset the offset in the document file the contains all
      * information for this document
      */
-    public DocInfo(String id, long offset) {
+    public DocInfo(String id, long metaOffset) {
         this.id = id;
-        this.offset = offset;
+        this.metaOffset = metaOffset;
     }
 
     /**
@@ -100,8 +100,8 @@ public class DocInfo {
         return id;
     }
 
-    public long getOffset() {
-        return offset;
+    public long getMetaOffset() {
+        return metaOffset;
     }
 
     public Set<PROPERTY> getProps() {
