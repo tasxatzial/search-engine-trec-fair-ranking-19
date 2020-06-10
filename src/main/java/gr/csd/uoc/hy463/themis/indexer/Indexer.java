@@ -26,6 +26,9 @@ package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -93,7 +96,7 @@ public class Indexer {
     private RandomAccessFile __DOCUMENTS_META__ = null;
 
     // A list of buffers, each one is used for a different segment of the documents meta file
-    DocumentBuffers __DOCUMENT_META_BUFFERS__ = null;
+    DocumentMetaBuffers __DOCUMENT_META_BUFFERS__ = null;
 
     // stores all information about a document from the documents file
     byte[] __DOCUMENT_META_ARRAY__;
@@ -911,7 +914,7 @@ public class Indexer {
         __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCUMENT_META_BUFFERS__ = new DocumentBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
+        __DOCUMENT_META_BUFFERS__ = new DocumentMetaBuffers(DocumentBuffers.MODE.READ);
 
         Themis.print("DONE\n\n");
 
@@ -1014,7 +1017,7 @@ public class Indexer {
             // for each posting, grab any needed information from the documents_meta file and documents file
             for (int j = 0; j < termValue.get_df(); j++) {
                 long documentMetaOffset = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBuffer(documentMetaOffset);
+                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBufferLong(documentMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
 
                 //grab information from the documents file
@@ -1052,7 +1055,7 @@ public class Indexer {
             // grab only the properties that the docInfo object does not have
             if (!extraProps.isEmpty()) {
                 long documentMetaOffset = docInfo.getMetaOffset();
-                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBuffer(documentMetaOffset);
+                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBufferLong(documentMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
                 boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
                         props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||

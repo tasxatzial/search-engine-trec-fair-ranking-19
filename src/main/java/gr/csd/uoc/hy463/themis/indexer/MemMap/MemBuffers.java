@@ -1,6 +1,6 @@
-package gr.csd.uoc.hy463.themis.indexer;
+package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
-import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
+import gr.csd.uoc.hy463.themis.config.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,24 +11,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is responsible for implementing the memory mapped file concept
+ * Implements the memory mapped file concept.
  */
-public class DocumentBuffers {
+public abstract class MemBuffers {
     public enum MODE {
         READ, WRITE
     }
-    private List<ByteBuffer> _buffers;
-    private List<Long> _offsets;
-    private RandomAccessFile _documents;
+    protected List<ByteBuffer> _buffers;
+    protected List<Long> _offsets;
+    protected RandomAccessFile _documents;
+    protected Config _config;
+    protected String _documentsPath;
+
+    protected MemBuffers() throws IOException {
+        _config = new Config();
+    }
 
     /**
      * Creates the appropriate buffers so that the file specified by filename is treated
-     * as a memory mapped file. Use this constructor for the documents file.
-     * @param documentBufferOffsets A list of offsets to file positions
-     * @param filename The name of the file that we want to treat as a memory mapped file
+     * as a memory mapped file.
+     * @param documentBufferOffsets A list of file offsets
      * @throws IOException
      */
-    public DocumentBuffers(List<Long> documentBufferOffsets, String filename, DocumentBuffers.MODE mode) throws IOException {
+    protected void createBuffers(List<Long> documentBufferOffsets, DocumentBuffers.MODE mode) throws IOException {
         if (documentBufferOffsets.size() < 2) {
             throw new IllegalArgumentException("offsets size < 2");
         }
@@ -36,11 +41,11 @@ public class DocumentBuffers {
         _offsets = new ArrayList<>();
         FileChannel.MapMode openMode;
         if (mode == MODE.WRITE) {
-            _documents = new RandomAccessFile(filename, "rw");
+            _documents = new RandomAccessFile(_documentsPath, "rw");
             openMode = FileChannel.MapMode.READ_WRITE;
         }
         else {
-            _documents = new RandomAccessFile(filename, "r");
+            _documents = new RandomAccessFile(_documentsPath, "r");
             openMode = FileChannel.MapMode.READ_ONLY;
         }
         FileChannel documentsChannel = _documents.getChannel();
@@ -50,33 +55,7 @@ public class DocumentBuffers {
             _buffers.add(buffer);
             _offsets.add(documentBufferOffsets.get(i));
         }
-    }
-
-    /**
-     * Creates the appropriate buffers so that the file specified by filename is treated
-     * as a memory mapped file. Use this constructor for the documents meta file.
-     * @param filename
-     * @param mode
-     * @throws IOException
-     */
-    public DocumentBuffers(String filename, DocumentBuffers.MODE mode) throws IOException {
-        this(createDocumentBufferOffsets(filename), filename, mode);
-    }
-
-    private static List<Long> createDocumentBufferOffsets(String filename) {
-        int maxBufferSize = (Integer.MAX_VALUE / DocumentMetaEntry.totalSize) * DocumentMetaEntry.totalSize;
-        List<Long> documentBufferOffsets = new ArrayList<>();
-        long fileSize = new File(filename).length();
-        long size = fileSize;
-        long i = 0;
-        while (size > 0) {
-            documentBufferOffsets.add(i);
-            i += maxBufferSize;
-            size -= maxBufferSize;
-        }
-        documentBufferOffsets.add(fileSize);
-        System.out.println(documentBufferOffsets);
-        return documentBufferOffsets;
+        _offsets.add(documentBufferOffsets.get(documentBufferOffsets.size() - 1));
     }
 
     /**
@@ -85,7 +64,7 @@ public class DocumentBuffers {
      * @param offset
      * @return
      */
-    public ByteBuffer getBuffer(long offset) {
+    public ByteBuffer getBufferLong(long offset) {
         for (int i = _offsets.size() - 1; i >= 0; i--) {
             if (offset >= _offsets.get(i)) {
                 _buffers.get(i).position((int) (offset - _offsets.get(i)));
@@ -103,5 +82,40 @@ public class DocumentBuffers {
         _documents.close();
         _buffers.clear();
         _offsets.clear();
+    }
+
+    /**
+     * Returns the number of buffers that this object uses to map a file into memory
+     * @return
+     */
+    protected final int getTotalBuffers() {
+        return _buffers.size();
+    }
+
+    /**
+     * Returns the buffer that has the specified index
+     * @param index
+     * @return
+     */
+    protected final ByteBuffer getBuffer(int index) {
+        return _buffers.get(index);
+    }
+
+    /**
+     * Returns the size of the specified buffer
+     * @param buffer
+     * @return
+     */
+    protected final int getBufferSize(ByteBuffer buffer) {
+        int i = _buffers.indexOf(buffer);
+        return (int) (_offsets.get(i + 1) - _offsets.get(i));
+    }
+
+    /**
+     * Returns the size of the file that corresponds to the current memory mapped file
+     * @return
+     */
+    protected final long getDocumentsSize() {
+        return new File(_documentsPath).length();
     }
 }
