@@ -28,7 +28,6 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -92,17 +91,14 @@ public class Indexer {
     // has any information that appears in documents (except the docId)
     private RandomAccessFile __DOCUMENTS__ = null;
 
-    // has any information related to documents (weight, pagerank, etc) including the docId
-    private RandomAccessFile __DOCUMENTS_META__ = null;
-
     // A list of buffers, each one is used for a different segment of the documents meta file
-    DocumentMetaBuffers __DOCUMENT_META_BUFFERS__ = null;
+    DocumentMetaBuffers __DOCUMENTS_META_BUFFERS__ = null;
 
-    // stores all information about a document from the documents file
+    // stores all information about a document from the documents meta file
     byte[] __DOCUMENT_META_ARRAY__;
     ByteBuffer __DOCUMENT_META_BUFFER__;
 
-    // stores all meta information about a document from the documents meta file
+    // stores all information about a document from the documents file
     byte[] __DOCUMENT_ARRAY__;
     ByteBuffer __DOCUMENT_BUFFER__;
 
@@ -319,7 +315,6 @@ public class Indexer {
                     // check if a dump of the current partial index is needed
                     totalDocuments++;
                     if (totalDocuments % __CONFIG__.getPartialIndexSize() == 0) {
-                        System.out.println(documentMetaOffset);
                         index.dump();   // dump partial index to appropriate subdirectory
                         id++;
                         index = new Index(__CONFIG__);
@@ -763,10 +758,7 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open the required files: documents_meta, doc_tf */
-        BufferedOutputStream documentsMetaWriter = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "rw").getFD()));
-        BufferedInputStream documentsMetaReader = new BufferedInputStream(new FileInputStream
-                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "r").getFD()));
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(DocumentMetaBuffers.MODE.WRITE);
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
@@ -774,11 +766,8 @@ public class Indexer {
         double weight;
         int maxTf = 0;
         int totalArticles = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        byte[] metaEntry = new byte[DocumentMetaEntry.totalSize];
-        byte[] weightArray = new byte[DocumentMetaEntry.WEIGHT_SIZE];
-        byte[] tfArray = new byte[DocumentMetaEntry.MAX_TF_SIZE];
-        ByteBuffer weightBuf = ByteBuffer.wrap(weightArray);
-        ByteBuffer tfBuf = ByteBuffer.wrap(tfArray);
+        long documentMetaOffset = 0;
+        int lineNum = 0;
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
@@ -806,18 +795,19 @@ public class Indexer {
             }
 
             //update the documents_meta file
-            documentsMetaReader.read(metaEntry);
-            weightBuf.putDouble(0, weight);
-            tfBuf.putInt(0, maxTf);
-            System.arraycopy(weightArray, 0, metaEntry, DocumentMetaEntry.WEIGHT_OFFSET, DocumentMetaEntry.WEIGHT_SIZE);
-            System.arraycopy(tfArray, 0, metaEntry, DocumentMetaEntry.MAX_TF_OFFSET, DocumentMetaEntry.MAX_TF_SIZE);
-            documentsMetaWriter.write(metaEntry);
+            documentMetaOffset = lineNum * DocumentMetaEntry.totalSize + DocumentMetaEntry.WEIGHT_OFFSET;
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            buffer.putDouble(weight);
+            documentMetaOffset = lineNum * DocumentMetaEntry.totalSize + DocumentMetaEntry.MAX_TF_OFFSET;
+            buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            buffer.putInt(maxTf);
+            lineNum++;
         }
 
         /* close files */
         tfReader.close();
-        documentsMetaReader.close();
-        documentsMetaWriter.close();
+        __DOCUMENTS_META_BUFFERS__.close();
+        __DOCUMENTS_META_BUFFERS__ = null;
 
         Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
     }
@@ -909,12 +899,11 @@ public class Indexer {
 
         //open documents, documents_meta files and initialize the appropriate structures
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
-        __DOCUMENTS_META__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "r");
         __DOCUMENT_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
         __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCUMENT_META_BUFFERS__ = new DocumentMetaBuffers(DocumentBuffers.MODE.READ);
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(DocumentBuffers.MODE.READ);
 
         Themis.print("DONE\n\n");
 
@@ -931,13 +920,9 @@ public class Indexer {
             __DOCUMENTS__.close();
             __DOCUMENTS__ = null;
         }
-        if (__DOCUMENTS_META__ != null) {
-            __DOCUMENTS_META__.close();
-            __DOCUMENTS_META__ = null;
-        }
-        if (__DOCUMENT_META_BUFFERS__ != null) {
-            __DOCUMENT_META_BUFFERS__.close();
-            __DOCUMENT_META_BUFFERS__ = null;
+        if (__DOCUMENTS_META_BUFFERS__ != null) {
+            __DOCUMENTS_META_BUFFERS__.close();
+            __DOCUMENTS_META_BUFFERS__ = null;
         }
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
@@ -945,7 +930,6 @@ public class Indexer {
         __DOCUMENT_BUFFER__ = null;
         __DOCUMENT_META_ARRAY__ = null;
         __DOCUMENT_META_BUFFER__ = null;
-        __DOCUMENT_META_BUFFERS__ = null;
     }
 
     /**
@@ -1017,7 +1001,7 @@ public class Indexer {
             // for each posting, grab any needed information from the documents_meta file and documents file
             for (int j = 0; j < termValue.get_df(); j++) {
                 long documentMetaOffset = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
-                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBufferLong(documentMetaOffset);
+                ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
 
                 //grab information from the documents file
@@ -1055,8 +1039,8 @@ public class Indexer {
             // grab only the properties that the docInfo object does not have
             if (!extraProps.isEmpty()) {
                 long documentMetaOffset = docInfo.getMetaOffset();
-                ByteBuffer buffer = __DOCUMENT_META_BUFFERS__.getBufferLong(documentMetaOffset);
-                buffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
+                ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+                buffer.get(__DOCUMENT_META_ARRAY__);
                 boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
                         props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
                         props.contains(DocInfo.PROPERTY.YEAR);
@@ -1128,7 +1112,7 @@ public class Indexer {
      */
     public boolean loaded() {
         return __VOCABULARY__ != null && __POSTINGS__ != null && __DOCUMENTS__ != null
-                && __DOCUMENTS_META__ != null && __META_INDEX_INFO__ != null;
+                 && __DOCUMENTS_META_BUFFERS__ != null && __META_INDEX_INFO__ != null;
     }
 
     /**
@@ -1203,7 +1187,7 @@ public class Indexer {
         int[] freq = new int[df];
         __POSTINGS__.seek(vocabularyValue.get_offset());
         byte[] postings = new byte[df * PostingStruct.SIZE];
-        __POSTINGS__.read(postings);
+        __POSTINGS__.readFully(postings);
         ByteBuffer bb = ByteBuffer.wrap(postings);
         for (int i = 0; i < df; i++) {
             freq[i] = bb.getInt(i * PostingStruct.SIZE);

@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2CitationsGraphEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -15,18 +16,14 @@ import java.util.*;
 public class Pagerank {
     private String __DATASET_PATH__;
     private String __INDEX_PATH__;
-    private String __DOCUMENTS_META_FILENAME__;
-    private String __GRAPH_TMP_PATH__;
+    private DocumentMetaBuffers __DOCUMENTS_META_BUFFERS__;
     private Map<String, String> __META_INDEX_INFO__;
 
     public Pagerank() throws IOException {
         Config config = new Config();
-        __DATASET_PATH__ = config.getDatasetPath();
         __INDEX_PATH__ = config.getIndexPath();
-        __DOCUMENTS_META_FILENAME__ = config.getDocumentsMetaFileName();
+        __DATASET_PATH__ = config.getDatasetPath();
         __META_INDEX_INFO__ = new HashMap<>();
-        __GRAPH_TMP_PATH__ = __INDEX_PATH__ + "/graph";
-
         String __META_FILENAME__ = config.getMetaFileName();
         BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
         String[] split;
@@ -44,22 +41,29 @@ public class Pagerank {
     public void citationsPagerank() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating citations pagerank scores\n");
-        dumpCitations();
-        List<PagerankNode> graph = initCitationsGraph();
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(DocumentMetaBuffers.MODE.WRITE);
+        String graphFileName = __INDEX_PATH__ + "/graph";
+        dumpCitations(graphFileName);
+        List<PagerankNode> graph = initCitationsGraph(graphFileName);
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
         Themis.print("Pagerank scores calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        __DOCUMENTS_META_BUFFERS__.close();
+        __DOCUMENTS_META_BUFFERS__ = null;
     }
 
     /* Creates a temp file 'graph' in the Index directory. Entry N of this file corresponds to the Nth document
     that was parsed and it contains the number of its Out citations followed by a list of integer Ids that correspond to
     the Ids of its In citations. A document that has Id N in this file corresponds to entry N (starting from 0) */
-    private void dumpCitations() throws IOException {
+    private void dumpCitations(String graphFileName) throws IOException {
         File folder = new File(__DATASET_PATH__);
         File[] files = folder.listFiles();
         if (files == null) {
             return;
         }
+
+        int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        byte[] docIdArray = new byte[DocumentMetaEntry.ID_SIZE];
 
         /* This is a temporary file that stores for each document the number of Out citations
         and the Ids of the In citations. Each entry in the file consists of:
@@ -67,11 +71,7 @@ public class Pagerank {
         number of Out citations (int) |
         In citation Id 1 (int) | in citation Id 2 (int) ... */
         BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(__GRAPH_TMP_PATH__, "rw").getFD()));
-
-        // open documents files
-        BufferedInputStream documentsMetaReader = new BufferedInputStream(new FileInputStream
-                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "r").getFD()));
+                (new RandomAccessFile(graphFileName, "rw").getFD()));
 
         // sort the files so that we parse them in a specific order
         List<File> corpus = new ArrayList<>(files.length);
@@ -81,18 +81,16 @@ public class Pagerank {
         // document string Id -> int Id
         Map<String, Integer> citationsIdsMap = new HashMap<>();
 
-        /* read the documents file and create the map of string id -> int id */
-        byte[] metaEntry = new byte[DocumentMetaEntry.totalSize]; //size of a document entry
-        ByteBuffer metaEntryBuf = ByteBuffer.wrap(metaEntry);
-
-        int read;
+        /* read the documents_meta file and create the map of string id -> int id */
         int intId = 0;
-        while ((read = documentsMetaReader.read(metaEntry)) != -1) {
-            String stringId = new String(metaEntry, DocumentMetaEntry.ID_OFFSET, DocumentMetaEntry.ID_SIZE, "ASCII");
+        while (intId < totalDocuments) {
+            long documentMetaOffset = intId * DocumentMetaEntry.totalSize;
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            buffer.get(docIdArray);
+            String stringId = new String(docIdArray, 0, DocumentMetaEntry.ID_SIZE, "ASCII");
             citationsIdsMap.put(stringId, intId);
             intId++;
         }
-        documentsMetaReader.close();
 
         /* parse the dataset and write the required data to the 'graph' file */
         for (File file : corpus) {
@@ -139,14 +137,14 @@ public class Pagerank {
     }
 
     /* initialize the citations pagerank graph and its nodes */
-    private List<PagerankNode> initCitationsGraph() throws IOException {
+    private List<PagerankNode> initCitationsGraph(String graphFileName) throws IOException {
         BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream
-                (new RandomAccessFile(__GRAPH_TMP_PATH__, "r").getFD()));
-        int articlesNum = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        List<PagerankNode> graph = new ArrayList<>(articlesNum);
+                (new RandomAccessFile(graphFileName, "r").getFD()));
+        int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        List<PagerankNode> graph = new ArrayList<>(totalDocuments);
 
         /* Create the graph -> a list of nodes */
-        for (int i = 0; i < articlesNum; i++) {
+        for (int i = 0; i < totalDocuments; i++) {
             graph.add(new PagerankNode());
         }
 
@@ -154,7 +152,7 @@ public class Pagerank {
         ByteBuffer numBuf = ByteBuffer.wrap(num);
 
         /* read the 'graph' file and update the In citations of each node of the graph */
-        for (int i = 0; i < articlesNum; i++) {
+        for (int i = 0; i < totalDocuments; i++) {
             PagerankNode node = graph.get(i);
             graphReader.read(num);
             int size = numBuf.getInt(0);
@@ -172,7 +170,7 @@ public class Pagerank {
         }
 
         graphReader.close();
-        Files.deleteIfExists(new File(__GRAPH_TMP_PATH__).toPath());
+        Files.deleteIfExists(new File(graphFileName).toPath());
 
         return graph;
     }
@@ -214,24 +212,13 @@ public class Pagerank {
     }
 
     /* writes the scores to the documents_meta file */
-    private void writeCitationsScores(List<PagerankNode> graph) throws IOException {
-        BufferedOutputStream documentsMetaWriter = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "rw").getFD()));
-        BufferedInputStream documentsMetaReader = new BufferedInputStream(new FileInputStream
-                (new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "r").getFD()));
-
-        byte[] scoreArray = new byte[DocumentMetaEntry.PAGERANK_SIZE];
-        ByteBuffer scoreBuf = ByteBuffer.wrap(scoreArray);
-        byte[] metaEntry = new byte[DocumentMetaEntry.totalSize];
-
-        for (int i = 0; i < graph.size(); i++) {
-            documentsMetaReader.read(metaEntry);
-            double score = Math.floor(graph.get(i).getScore() * 1000) / 1000;
-            scoreBuf.putDouble(0, score);
-            System.arraycopy(scoreArray, 0, metaEntry, DocumentMetaEntry.PAGERANK_OFFSET, scoreArray.length);
-            documentsMetaWriter.write(metaEntry);
+    private void writeCitationsScores(List<PagerankNode> graph) {
+        int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        for (int i = 0; i < totalDocuments; i++) {
+            long documentMetaOffset = i * DocumentMetaEntry.totalSize + DocumentMetaEntry.PAGERANK_OFFSET;
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            double score = Math.floor(graph.get(i).getScore() * 10000) / 10000;
+            buffer.putDouble(score);
         }
-        documentsMetaReader.close();
-        documentsMetaWriter.close();
     }
 }
