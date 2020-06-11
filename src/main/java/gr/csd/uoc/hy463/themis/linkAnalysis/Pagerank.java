@@ -18,12 +18,13 @@ public class Pagerank {
     private String __INDEX_PATH__;
     private DocumentMetaBuffers __DOCUMENTS_META_BUFFERS__;
     private Map<String, String> __META_INDEX_INFO__;
+    private Config __CONFIG__;
 
-    public Pagerank() throws IOException {
-        Config config = new Config();
+    public Pagerank(Config config) throws IOException {
         __INDEX_PATH__ = config.getIndexPath();
         __DATASET_PATH__ = config.getDatasetPath();
         __META_INDEX_INFO__ = new HashMap<>();
+        __CONFIG__ = config;
         String __META_FILENAME__ = config.getMetaFileName();
         BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
         String[] split;
@@ -41,7 +42,7 @@ public class Pagerank {
     public void citationsPagerank() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating citations pagerank scores\n");
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(DocumentMetaBuffers.MODE.WRITE);
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
         String graphFileName = __INDEX_PATH__ + "/graph";
         dumpCitations(graphFileName);
         List<PagerankNode> graph = initCitationsGraph(graphFileName);

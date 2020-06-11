@@ -1,11 +1,13 @@
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.utils.CloseDirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +25,8 @@ public abstract class MemBuffers {
     protected Config _config;
     protected String _documentsPath;
 
-    protected MemBuffers() throws IOException {
-        _config = new Config();
+    protected MemBuffers(Config config) {
+        _config = config;
     }
 
     /**
@@ -50,12 +52,13 @@ public abstract class MemBuffers {
         }
         FileChannel documentsChannel = _documents.getChannel();
         for (int i = 0; i < documentBufferOffsets.size() - 1; i++) {
-            ByteBuffer buffer = documentsChannel.map(openMode, documentBufferOffsets.get(i),
-                    documentBufferOffsets.get(i + 1) - documentBufferOffsets.get(i));
+            MappedByteBuffer buffer = documentsChannel.map(openMode, documentBufferOffsets.get(i),
+                    documentBufferOffsets.get(i + 1) - documentBufferOffsets.get(i)).load();
             _buffers.add(buffer);
             _offsets.add(documentBufferOffsets.get(i));
         }
         _offsets.add(documentBufferOffsets.get(documentBufferOffsets.size() - 1));
+        documentsChannel.close();
     }
 
     /**
@@ -79,8 +82,10 @@ public abstract class MemBuffers {
      * @throws IOException
      */
     public void close() throws IOException {
+        for (int i = 0; i < _buffers.size(); i++) {
+            CloseDirectBuffer.closeDirectBuffer(_buffers.get(i));
+        }
         _documents.close();
-        _buffers.clear();
         _offsets.clear();
     }
 
