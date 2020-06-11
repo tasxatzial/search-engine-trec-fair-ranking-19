@@ -78,13 +78,14 @@ public class Pagerank {
 
         /* read the documents_meta file and create the map of string id -> int id */
         int intId = 0;
+        long offset = 0;
         while (intId < totalDocuments) {
-            long documentMetaOffset = intId * DocumentMetaEntry.totalSize;
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset);
             buffer.get(docIdArray);
             String stringId = new String(docIdArray, 0, DocumentMetaEntry.ID_SIZE, "ASCII");
             citationsIdsMap.put(stringId, intId);
             intId++;
+            offset += DocumentMetaEntry.totalSize;
         }
 
         /* parse the dataset and write the required data to the 'graph' file */
@@ -216,7 +217,7 @@ public class Pagerank {
     private void writeCitationsScores(List<PagerankNode> graph) {
         int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
         for (int i = 0; i < totalDocuments; i++) {
-            long documentMetaOffset = i * DocumentMetaEntry.totalSize + DocumentMetaEntry.PAGERANK_OFFSET;
+            long documentMetaOffset = (long) i * DocumentMetaEntry.totalSize + DocumentMetaEntry.PAGERANK_OFFSET;
             ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
             double score = Math.floor(graph.get(i).getScore() * 10000) / 10000;
             buffer.putDouble(score);

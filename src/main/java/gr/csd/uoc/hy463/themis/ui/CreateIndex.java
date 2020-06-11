@@ -55,5 +55,4 @@ public class CreateIndex {
     public boolean isIndexDirEmpty() {
         return _indexer.isIndexDirEmpty();
     }
-
 }

@@ -56,6 +56,7 @@ public abstract class MemBuffers {
                     documentBufferOffsets.get(i + 1) - documentBufferOffsets.get(i)).load();
             _buffers.add(buffer);
             _offsets.add(documentBufferOffsets.get(i));
+
         }
         _offsets.add(documentBufferOffsets.get(documentBufferOffsets.size() - 1));
         documentsChannel.close();
