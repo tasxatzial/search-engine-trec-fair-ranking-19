@@ -41,6 +41,7 @@ public class Pagerank {
         List<PagerankNode> graph = initCitationsGraph(graphFileName);
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
+        Files.deleteIfExists(new File(graphFileName).toPath());
         Themis.print("Pagerank scores calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
         __DOCUMENTS_META_BUFFERS__.close();
         __DOCUMENTS_META_BUFFERS__ = null;
@@ -164,7 +165,6 @@ public class Pagerank {
         }
 
         graphReader.close();
-        Files.deleteIfExists(new File(graphFileName).toPath());
 
         return graph;
     }
