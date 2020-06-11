@@ -9,14 +9,14 @@ public class PagerankNode {
     private double prevScore = 0;
     private double score = 0;
     private int outNodes = 0;
-    private List<PagerankNode> inNodes;
+    private PagerankNode[] inNodes;
 
     /**
-     * Initializes the In Nodes to an empty array list that has initial capacity num
+     * Initializes the In Nodes to an array that has capacity num
      * @param num
      */
     public void initializeInNodes(int num) {
-        inNodes = new ArrayList<>(num);
+        inNodes = new PagerankNode[num];
     }
 
     /**
@@ -49,8 +49,8 @@ public class PagerankNode {
      */
     public double calcInScore() {
         double inScore = 0;
-        for (PagerankNode inNode : inNodes) {
-            inScore += inNode.getPrevScore() / inNode.getOutNodes();
+        for (int i = 0; i < inNodes.length; i++) {
+            inScore += inNodes[i].getPrevScore() / inNodes[i].getOutNodes();
         }
         return inScore;
     }
@@ -71,11 +71,11 @@ public class PagerankNode {
     }
 
     /**
-     * Adds a node to the list of In Nodes
+     * Adds a node to the array of In Nodes at the specified index
      * @param node
      */
-    public void addInNode(PagerankNode node) {
-        inNodes.add(node);
+    public void addInNode(int index, PagerankNode node) {
+        inNodes[index] = node;
     }
 
     /**

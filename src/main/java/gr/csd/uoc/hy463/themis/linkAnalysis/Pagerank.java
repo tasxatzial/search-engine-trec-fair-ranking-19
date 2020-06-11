@@ -159,7 +159,7 @@ public class Pagerank {
             node.initializeInNodes(inCitationsNum);
             for (int j = 0; j < inCitationsNum; j++) {
                 int inCitation = citationDataBuf.getInt(4 * j + 4);
-                node.addInNode(graph.get(inCitation));
+                node.addInNode(j, graph.get(inCitation));
             }
         }
 
