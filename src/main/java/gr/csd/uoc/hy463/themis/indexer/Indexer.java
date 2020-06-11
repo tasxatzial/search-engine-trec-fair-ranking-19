@@ -866,14 +866,7 @@ public class Indexer {
 
         //load index meta file
         Themis.print(">>> Loading meta index file...");
-        BufferedReader indexMetaReader = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
-        __META_INDEX_INFO__ = new HashMap<>();
-        String[] split;
-        while((line = indexMetaReader.readLine()) != null) {
-            split = line.split("=");
-            __META_INDEX_INFO__.put(split[0], split[1]);
-        }
-        indexMetaReader.close();
+        __META_INDEX_INFO__ = loadMeta(__INDEX_PATH__ + "/" + __META_FILENAME__);
         Themis.print("DONE\n");
 
         //check for stopword, stemming
@@ -906,6 +899,25 @@ public class Indexer {
         Themis.print("DONE\n\n");
 
         return true;
+    }
+
+    /**
+     * Returns a Map of the index meta information as found in the specified filename
+     * @param filename
+     * @return
+     * @throws IOException
+     */
+    public static Map<String, String> loadMeta(String filename) throws IOException {
+        BufferedReader indexMetaReader = new BufferedReader(new FileReader(filename));
+        Map<String, String> meta = new HashMap<>();
+        String[] split;
+        String line;
+        while((line = indexMetaReader.readLine()) != null) {
+            split = line.split("=");
+            meta.put(split[0], split[1]);
+        }
+        indexMetaReader.close();
+        return meta;
     }
 
     /* Unloads an index from memory */

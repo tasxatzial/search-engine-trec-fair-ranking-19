@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2CitationsGraphEntry;
@@ -21,18 +22,10 @@ public class Pagerank {
     private Config __CONFIG__;
 
     public Pagerank(Config config) throws IOException {
+        __CONFIG__ = config;
         __INDEX_PATH__ = config.getIndexPath();
         __DATASET_PATH__ = config.getDatasetPath();
-        __META_INDEX_INFO__ = new HashMap<>();
-        __CONFIG__ = config;
-        String __META_FILENAME__ = config.getMetaFileName();
-        BufferedReader meta = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
-        String[] split;
-        String line;
-        while((line = meta.readLine()) != null) {
-            split = line.split("=");
-            __META_INDEX_INFO__.put(split[0], split[1]);
-        }
+        __META_INDEX_INFO__ = Indexer.loadMeta(__INDEX_PATH__ + "/" + config.getMetaFileName());
     }
 
     /**
