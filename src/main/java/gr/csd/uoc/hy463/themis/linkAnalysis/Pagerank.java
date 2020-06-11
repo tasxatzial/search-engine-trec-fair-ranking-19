@@ -178,34 +178,41 @@ public class Pagerank {
 
     /* computes the citations pagerank scores */
     private void computeCitationsPagerank(List<PagerankNode> graph) {
+        double dampingFactor = 0.85;
+        double graphSize = graph.size();
 
-        // initialize pagerank scores
+        // initialize scores
         for (PagerankNode node : graph) {
-            node.setPrevScore(1.0);
+            node.setPrevScore(1 / graphSize);
         }
 
-        boolean converged = false;
+        boolean maybeConverged = false;
         int iteration = 1;
-        while (!converged) {
+        while (!maybeConverged) {
             Themis.print("Pagerank iteration: " + iteration + "\n");
 
             // calculate the scores
+            double norm = 0;
             for (PagerankNode node : graph) {
-                node.calculateScore();
+                double score = node.calcInScore() + (1 - dampingFactor) / graphSize;
+                node.setScore(score);
+                norm += score;
             }
 
-            // check for convergence
-            converged = true;
+            // normalize and check for convergence
+            maybeConverged = true;
             for (PagerankNode node : graph) {
-                if (Math.abs(node.getPrevScore() - node.getScore()) > 0.001) {
-                    converged = false;
-                    break;
+                node.setScore(node.getScore() / norm);
+                if (maybeConverged && Math.abs(node.getPrevScore() - node.getScore()) > 0.001) {
+                    maybeConverged = false;
                 }
             }
 
             // update the previous scores (set it to the current score)
-            for (PagerankNode node : graph) {
-                node.updatePrevScore();
+            if (!maybeConverged) {
+                for (PagerankNode node : graph) {
+                    node.updatePrevScore();
+                }
             }
 
             iteration++;

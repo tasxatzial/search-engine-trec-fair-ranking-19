@@ -6,7 +6,6 @@ import java.util.*;
  * Node used for computing the pagerank scores
  */
 public class PagerankNode {
-    private static double dumpingFactor = 0.85;
     private double prevScore = 0;
     private double score = 0;
     private int outNodes = 0;
@@ -45,15 +44,23 @@ public class PagerankNode {
     }
 
     /**
-     * Computes the current score
+     * Returns a score of the node based on the In Nodes and number of Out Nodes of each In Node.
+     * The formula for this score is: sum(InNode / #OutNodes(InNode))
      */
-    public void calculateScore() {
-        score = 0;
+    public double calcInScore() {
+        double inScore = 0;
         for (PagerankNode inNode : inNodes) {
-            score += inNode.getPrevScore() / inNode.getOutNodes();
+            inScore += inNode.getPrevScore() / inNode.getOutNodes();
         }
-        score *= dumpingFactor;
-        score += (1 - dumpingFactor);
+        return inScore;
+    }
+
+    /**
+     * Sets the current score to the specified score
+     * @param newScore
+     */
+    public void setScore(double newScore) {
+        score = newScore;
     }
 
     /**
