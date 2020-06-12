@@ -31,6 +31,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
+import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -155,8 +156,8 @@ public class themisEval {
         List<Double> aveps = new ArrayList<>();
         //List<Double> bprefs = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
-        List<Pair<String, Double>> queryTime = new ArrayList<>();
-        double totalTime = 0;
+        List<Pair<String, Time>> queryTime = new ArrayList<>();
+        Time totalTime = new Time(0);
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
             try {
@@ -185,19 +186,19 @@ public class themisEval {
             long endTime = System.nanoTime();
 
             //calculate the time needed
-            double timeMSecs = Math.round((endTime - startTime) / 1e6);
-            totalTime += timeMSecs;
-            queryTime.add(new Pair<>(query, timeMSecs));
-            evaluationWriter.write("Time: " + timeMSecs + " ms\n");
+            Time time = new Time(endTime - startTime);
+            totalTime.addTime(time);
+            queryTime.add(new Pair<>(query, time));
+            evaluationWriter.write("Time: " + time + "\n");
 
             //calculate average precision, nDCG
             double avep = computeAveP(results, relevanceMap);
-            avep = (Double.isNaN(avep)) ? Double.NaN : Math.round(avep * 100) / 100.0;
+            avep = (Double.isNaN(avep)) ? Double.NaN : avep;
             aveps.add(avep);
             /*double bpref = computeBpref(results, relevanceMap);
             bprefs.add(bpref);*/
             double ndcg = computeNdcg(results, relevanceMap);
-            ndcg = (Double.isNaN(ndcg)) ? Double.NaN : Math.round(ndcg * 100) / 100.0;
+            ndcg = (Double.isNaN(ndcg)) ? Double.NaN : ndcg;
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
             //evaluationWriter.write("bpref: " + bpref + "\n");
@@ -217,15 +218,15 @@ public class themisEval {
         double minNdcg = calculateMin(ndcgs);
         double maxNdcg = calculateMax(ndcgs);
 
-        Pair<String, Double> minTime = calculateMinTime(queryTime);
-        Pair<String, Double> maxTime = calculateMaxTime(queryTime);
-        double averageTime = calculateAverageTime(queryTime);
+        Pair<String, Time> minTime = calculateMinTime(queryTime);
+        Pair<String, Time> maxTime = calculateMaxTime(queryTime);
+        Time averageTime = calculateAverageTime(queryTime);
 
         Themis.print("------------------------------------------------\n");
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
         evaluationWriter.write("Average precision:\n");
-        evaluationWriter.write("Average: " + Math.round(averageAvep * 100) / 100.0 + "\n");
+        evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
         /*evaluationWriter.write("bpref:\n");
@@ -233,14 +234,14 @@ public class themisEval {
         evaluationWriter.write("Min: " + minBpref + "\n");
         evaluationWriter.write("Max: " + maxBpref + "\n\n");*/
         evaluationWriter.write("nDCG:\n");
-        evaluationWriter.write("Average: " + Math.round(averageNdcg * 100) / 100.0 + "\n");
+        evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n\n");
         evaluationWriter.write("Time:\n");
-        evaluationWriter.write("Total: " + Math.round(totalTime) / 1000 + " s\n");
-        evaluationWriter.write("Average: " + Math.round(averageTime) + " ms\n");
-        evaluationWriter.write("Min: " + minTime.getR() + " ms for query: " + minTime.getL() + "\n");
-        evaluationWriter.write("Max: " + maxTime.getR() + " ms for query: " + maxTime.getL() + "\n");
+        evaluationWriter.write("Total: " + totalTime + "\n");
+        evaluationWriter.write("Average: " + averageTime + "\n");
+        evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
+        evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n");
         evaluationWriter.close();
         Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
@@ -393,13 +394,13 @@ public class themisEval {
     }
 
     /* returns the minimum search time and the corresponding query as a pair */
-    private static Pair<String, Double> calculateMaxTime(List<Pair<String, Double>> list) {
+    private static Pair<String, Time> calculateMaxTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
-            return new Pair(0, "");
+            return new Pair("", new Time(0));
         }
-        Pair<String, Double> max = list.get(0);
-        for (Pair<String, Double> pair : list) {
-            if (pair.getR() > max.getR()) {
+        Pair<String, Time> max = list.get(0);
+        for (Pair<String, Time> pair : list) {
+            if (pair.getR().getValue() > max.getR().getValue()) {
                 max = pair;
             }
         }
@@ -407,13 +408,13 @@ public class themisEval {
     }
 
     /* returns the maximum search time and the corresponding query as a pair */
-    private static Pair<String, Double> calculateMinTime(List<Pair<String, Double>> list) {
+    private static Pair<String, Time> calculateMinTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
-            return new Pair(0, "");
+            return new Pair("", new Time(0));
         }
-        Pair<String, Double> min = list.get(0);
-        for (Pair<String, Double> pair : list) {
-            if (pair.getR() < min.getR()) {
+        Pair<String, Time> min = list.get(0);
+        for (Pair<String, Time> pair : list) {
+            if (pair.getR().getValue() < min.getR().getValue()) {
                 min = pair;
             }
         }
@@ -421,14 +422,14 @@ public class themisEval {
     }
 
     /* returns the average search time */
-    private static double calculateAverageTime(List<Pair<String, Double>> list) {
+    private static Time calculateAverageTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
-            return 0;
+            return new Time(0);
         }
-        double time = 0;
-        for (Pair<String, Double> stringDoublePair : list) {
-            time += stringDoublePair.getR();
+        Time time = new Time(0);
+        for (Pair<String, Time> stringDoublePair : list) {
+            time.addTime(stringDoublePair.getR());
         }
-        return time / list.size();
+        return new Time(time.getValue() / list.size());
     }
 }

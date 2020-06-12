@@ -34,6 +34,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Jso
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
@@ -358,7 +359,7 @@ public class Indexer {
         }
         indexMetaWriter.close();
 
-        Themis.print("Partial indexes created in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
 
         /* merge the partial vocabularies and delete them */
         mergeVocabularies(partialIndexes);
@@ -417,7 +418,7 @@ public class Indexer {
         } else {
             combinePartialVocabularies(partialIndexes);
         }
-        Themis.print("Partial vocabularies merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Partial vocabularies merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
     /* Merges the partial vocabularies when there are more than 1 partial indexes.
@@ -561,7 +562,7 @@ public class Indexer {
         } else {
             combinePartialPostings(partialIndexes);
         }
-        Themis.print("Partial postings merged in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Partial postings merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
     /* Merges the partial postings when there are more than 1 partial indexes. Writes the merged posting file */
@@ -783,7 +784,7 @@ public class Indexer {
         __DOCUMENTS_META_BUFFERS__.close();
         __DOCUMENTS_META_BUFFERS__ = null;
 
-        Themis.print("VSM weights calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("VSM weights calculated in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
     /**
@@ -917,8 +918,10 @@ public class Indexer {
      * @throws IOException
      */
     public void deleteIndex() throws IOException {
+        Themis.print("Deleting previous index...");
         deleteDir(new File(__INDEX_PATH__ + "/"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
+        Themis.print("DONE\n");
     }
 
     /**

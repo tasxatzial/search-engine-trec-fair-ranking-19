@@ -6,15 +6,14 @@ import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
+import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -335,7 +334,7 @@ public class Themis {
             print("Searching for: " + query + " ... ");
             try {
                 results = search.search(view.get_searchField().getText());
-                print("DONE\nSearch time: " + Math.round((System.nanoTime() - startTime) / 1e4) / 100.0 + " ms\n");
+                print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results,0, 19);
             } catch (IOException ex) {

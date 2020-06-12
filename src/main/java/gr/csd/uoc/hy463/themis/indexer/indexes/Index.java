@@ -47,7 +47,7 @@ import org.apache.logging.log4j.Logger;
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class Index {
-    public long postingTime = 0;
+
     // Partial indexes have an id > 0 and corresponding idx files are stored in
     // INDEX_PATH/id while for a full index, idx files are stored in INDEX_PATH
     // e.g., the first partial index files are saved to INDEX_PATH/1/

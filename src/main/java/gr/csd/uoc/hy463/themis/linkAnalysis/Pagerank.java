@@ -8,6 +8,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2CitationsGraphEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
+import gr.csd.uoc.hy463.themis.utils.Time;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -42,7 +43,7 @@ public class Pagerank {
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
         Files.deleteIfExists(new File(graphFileName).toPath());
-        Themis.print("Pagerank scores calculated in: " + Math.round((System.nanoTime() - startTime) / 1e7) / 100.0 + " sec\n");
+        Themis.print("Pagerank scores calculated in " + new Time(System.nanoTime() - startTime) + "\n");
         __DOCUMENTS_META_BUFFERS__.close();
         __DOCUMENTS_META_BUFFERS__ = null;
     }
@@ -219,8 +220,7 @@ public class Pagerank {
         long offset = 0;
         for (int i = 0; i < totalDocuments; i++) {
             ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
-            double score = Math.floor(graph.get(i).getScore() * 10000) / 10000;
-            buffer.putDouble(score);
+            buffer.putDouble(graph.get(i).getScore());
             offset += DocumentMetaEntry.totalSize;
         }
     }
