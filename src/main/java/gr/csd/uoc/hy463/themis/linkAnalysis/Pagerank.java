@@ -214,13 +214,19 @@ public class Pagerank {
         }
     }
 
-    /* writes the scores to the documents_meta file */
+    /* writes the citation scores to the documents_meta file */
     private void writeCitationsScores(List<PagerankNode> graph) {
         int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
         long offset = 0;
+        double maxScore = 0;
+        for (int i = 0; i < totalDocuments; i++) {
+            if (graph.get(i).getScore() > maxScore) {
+                maxScore = graph.get(i).getScore();
+            }
+        }
         for (int i = 0; i < totalDocuments; i++) {
             ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
-            buffer.putDouble(graph.get(i).getScore());
+            buffer.putDouble(graph.get(i).getScore() / maxScore);
             offset += DocumentMetaEntry.totalSize;
         }
     }
