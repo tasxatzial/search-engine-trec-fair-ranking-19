@@ -47,7 +47,7 @@ import org.apache.logging.log4j.Logger;
  * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class Index {
-
+    public long postingTime = 0;
     // Partial indexes have an id > 0 and corresponding idx files are stored in
     // INDEX_PATH/id while for a full index, idx files are stored in INDEX_PATH
     // e.g., the first partial index files are saved to INDEX_PATH/1/
@@ -111,10 +111,8 @@ public class Index {
     public boolean dump() throws IOException {
         __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
         Collections.sort(__INDEX_KEYS_SORTED__);
-        String vocabularyName;
-        String postingsName;
-        vocabularyName = __INDEX_TMP_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
-        postingsName = __INDEX_TMP_PATH__ + "/" + id + "/" + __POSTINGS_FILENAME__;
+        String vocabularyName = __INDEX_TMP_PATH__ + "/" + id + "/" + __VOCABULARY_FILENAME__;
+        String postingsName = __INDEX_TMP_PATH__ + "/" + id + "/" + __POSTINGS_FILENAME__;
         Files.createDirectories(Paths.get(vocabularyName).getParent());
         Files.createDirectories(Paths.get(postingsName).getParent());
         dumpVocabulary(vocabularyName);
@@ -136,14 +134,16 @@ public class Index {
     }
 
     /**
-     * Adds the map of term frequencies of a textual entry to the partial index.
+     * Adds the map of term frequencies of a textual entry to the partial index. Returns
+     * a string consisting of <term, tf> pairs.
      *
      * @param entryWords The map of term frequencies
      * @param docOffset The offset to the document files
+     * @return
      * @throws IOException
      */
-    public void add(Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords, long docOffset,
-                    BufferedWriter tfWriter) throws IOException {
+    public String add(Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords, long docOffset) {
+        StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, List<Pair<DocInfo.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
@@ -160,39 +160,41 @@ public class Index {
                 indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
                 __INDEX__.put(key, indexStruct);
             }
-            tfWriter.write(key + " " + tf + " ");
+            sb.append(key).append(' ').append(tf).append(' ');
         }
-        tfWriter.write("\n");
+        sb.append('\n');
+        return sb.toString();
     }
 
     /* Dumps the appropriate info from a partial index memory struct to the
     appropriate partial vocabulary file */
     private void dumpVocabulary(String filename) throws IOException {
-        BufferedWriter file = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(filename), "UTF-8"));
+        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"));
         long offset = 0;
         for (String term : __INDEX_KEYS_SORTED__) {
-            file.write(term + " " + __INDEX__.get(term).get_df() + " " + offset + "\n");
-            offset += __INDEX__.get(term).get_postings().size() * PostingStruct.SIZE;
+            int df = __INDEX__.get(term).get_df();
+            vocabularyWriter.write(term + ' ' + df + ' ' + offset + '\n');
+            offset += df * PostingStruct.SIZE;
         }
-        file.close();
+        vocabularyWriter.close();
     }
 
     /* Dumps the appropriate info from a partial index memory struct to the
     appropriate partial postings file */
     private void dumpPostings(String filename) throws IOException {
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(filename, "rw").getFD()));
-        byte[] tf;
-        byte[] offset;
+        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(filename, "rw").getFD()));
         for (String term : __INDEX_KEYS_SORTED__) {
-            for (PostingStruct postings : __INDEX__.get(term).get_postings()) {
-                tf = ByteBuffer.allocate(4).putInt(postings.get_tf()).array();
-                offset = ByteBuffer.allocate(8).putLong(postings.get_docPointer()).array();
-                out.write(tf);
-                out.write(offset);
+            List<PostingStruct> postings = __INDEX__.get(term).get_postings();
+            byte[] postingsArray = new byte[postings.size() * PostingStruct.SIZE];
+            ByteBuffer postingsBuf = ByteBuffer.wrap(postingsArray);
+            int offset = 0;
+            for (PostingStruct posting : postings) {
+                postingsBuf.putInt(offset, posting.get_tf());
+                postingsBuf.putLong(offset + PostingStruct.POINTER_OFFSET, posting.get_docPointer());
+                offset += PostingStruct.SIZE;
             }
+            postingsWriter.write(postingsArray);
         }
-        out.close();
+        postingsWriter.close();
     }
 }

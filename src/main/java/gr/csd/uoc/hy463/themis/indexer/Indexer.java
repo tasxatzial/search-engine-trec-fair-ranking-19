@@ -38,6 +38,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.utils.*;
+import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -223,12 +224,9 @@ public class Indexer {
             StopWords.Initialize();
         }
 
-        // the buffer offsets to the documents file
-        /*List<Long> documentsBufferOffsets = new ArrayList<>();
-        documentsBufferOffsets.add(0L);
+        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
+        __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
-        int documentsMaxBufferSize = Integer.MAX_VALUE;
-        long totalDocumentsSize = 0;*/
         int totalDocuments = 0;
         long totalDocumentLength = 0;
         long documentOffset = 0;
@@ -295,22 +293,25 @@ public class Indexer {
                     // create the map of entry field frequencies for each term
                     Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords = wordFrequencies.createWordsMap(entry);
 
-                    // update total document length (total number of terms)
+                    // update document length (number of terms)
                     totalDocumentLength += entryWords.size();
 
-                    // update the partial index as needed
-                    index.add(entryWords, documentMetaOffset, termFreqWriter);
+                    // update the partial index
+                    String termFreqs = index.add(entryWords, documentMetaOffset);
 
-                    // update the documents file as needed
+                    // update the doc_tf file
+                    termFreqWriter.write(termFreqs);
+
+                    // update the documents file
                     long prevDocumentOffset = documentOffset;
                     documentOffset = dumpDocuments(documentsOutStream, entry, documentOffset);
 
                     int documentSize = (int) (documentOffset - prevDocumentOffset);
 
-                    // update the document meta file as needed
+                    // update the documents_meta file
                     documentMetaOffset = dumpDocumentsMeta(documentsMetaOutStream, entry, entryWords.size(), documentSize, documentMetaOffset, prevDocumentOffset);
 
-                    // calculate the maximum size of an entry in the document file
+                    // calculate the maximum size of an entry in the documents file
                     if (documentSize > maxDocumentSize) {
                         maxDocumentSize = documentSize;
                     }
@@ -508,12 +509,9 @@ public class Indexer {
 
     /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
     private PartialVocabularyStruct getNextVocabularyEntry(BufferedReader vocabularyReader, int indexId) throws IOException {
-        String line;
-        String[] fields;
-
-        line = vocabularyReader.readLine();
+        String line = vocabularyReader.readLine();
         if (line != null) {
-            fields = line.split(" ");
+            String[] fields = line.split(" ");
             return new PartialVocabularyStruct(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]), indexId);
         }
         return null;
@@ -521,7 +519,7 @@ public class Indexer {
 
     /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
     vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
-    all (partial index id, df) for each term to a file that will be used during the merging of postings */
+    all (partial index id, df) for each term to term_df file that will be used during the merging of postings */
     private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter,
                                 BufferedWriter termDfWriter, long offset) throws IOException {
         int df = 0;
@@ -530,17 +528,19 @@ public class Indexer {
         //posting file always in the same order.
         equalTerms.sort(PartialVocabularyStruct.idComparator);
 
-        //calculate final DF
+        //calculate final DF and write the (partial index id, df) for this term
+        StringBuilder sb = new StringBuilder();
         for (PartialVocabularyStruct equalTerm : equalTerms) {
             df += equalTerm.get_df();
-            termDfWriter.write(equalTerm.get_indexId() + " " + equalTerm.get_df() + " ");
+            sb.append(equalTerm.get_indexId()).append(' ').append(equalTerm.get_df()).append(' ');
         }
-        termDfWriter.write("\n");
+        sb.append('\n');
+        termDfWriter.write(sb.toString());
 
-        //finally write a new entry in the final vocabulary file
-        vocabularyWriter.write(equalTerms.get(0).get_term() + " " + df + " " + offset + "\n");
+        //write a new entry in the final vocabulary file
+        vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + offset + '\n');
 
-        //and calculate the offset of the next term
+        //calculate the posting offset of the next term
         offset += df * PostingStruct.SIZE;
 
         equalTerms.clear();
@@ -577,7 +577,7 @@ public class Indexer {
 
         /* the final posting file */
         String postingName = __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
-        BufferedOutputStream postingOut = new BufferedOutputStream(new FileOutputStream
+        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream
                 (new RandomAccessFile(postingName, "rw").getFD()));
 
         /* the file with the (partial index id, df) for each term */
@@ -587,13 +587,12 @@ public class Indexer {
         /* read each line of the file that has the (partial index id, df). Each line corresponds to
         the same line in the final vocabulary file, thus both lines refer to the same term */
         String line;
-        String[] split;
-        while ((line = termDfReader.readLine()) != null){
-            split = line.split(" ");
-            for (int i = 0; i < split.length; i+=2) {
-                byte[] postings = new byte[Integer.parseInt(split[i + 1])  * PostingStruct.SIZE];
-                postingsStream[Integer.parseInt(split[i])].read(postings); //read into postings byte array
-                postingOut.write(postings);  //and write to final postings file
+        while ((line = termDfReader.readLine()) != null) {
+            List<String> split = SpaceSplit.splitString(line);
+            for (int i = 0; i < split.size(); i+=2) {
+                byte[] postings = new byte[Integer.parseInt(split.get(i + 1)) * PostingStruct.SIZE];
+                postingsStream[Integer.parseInt(split.get(i))].read(postings); //read into postings byte array
+                postingsWriter.write(postings);  //and write to final postings file
             }
         }
 
@@ -601,7 +600,7 @@ public class Indexer {
         for (BufferedInputStream bufferedInputStream : postingsStream) {
             bufferedInputStream.close();
         }
-        postingOut.close();
+        postingsWriter.close();
         termDfReader.close();
     }
 
@@ -623,29 +622,18 @@ public class Indexer {
      * For now 0 is added as PageRank, weight, max tf, average author rank */
     private long dumpDocumentsMeta(BufferedOutputStream out, S2TextualEntry textualEntry, int entryLength,
                                    int entrySize, long documentMetaOffset, long documentOffset) throws IOException {
-        int totalSize = DocumentMetaEntry.WEIGHT_SIZE + DocumentMetaEntry.MAX_TF_SIZE + DocumentMetaEntry.LENGTH_SIZE +
-                DocumentMetaEntry.PAGERANK_SIZE + DocumentMetaEntry.AVG_AUTHOR_RANK_SIZE + DocumentMetaEntry.ID_SIZE +
-                DocumentMetaEntry.DOCUMENT_SIZE_SIZE + DocumentMetaEntry.DOCUMENT_OFFSET_SIZE;
+        __DOCUMENT_META_BUFFER__.put(textualEntry.getId().getBytes("ASCII"));
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.WEIGHT_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.LENGTH_OFFSET, entryLength);
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.PAGERANK_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET, entrySize);
+        __DOCUMENT_META_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentOffset);
+        __DOCUMENT_META_BUFFER__.position(0);
+        out.write(__DOCUMENT_META_ARRAY__);
 
-        byte[] id = textualEntry.getId().getBytes("ASCII");
-        byte[] weight = ByteBuffer.allocate(DocumentMetaEntry.WEIGHT_SIZE).putDouble(0).array();
-        byte[] maxTf = ByteBuffer.allocate(DocumentMetaEntry.MAX_TF_SIZE).putInt(0).array();
-        byte[] length = ByteBuffer.allocate(DocumentMetaEntry.LENGTH_SIZE).putInt(entryLength).array();
-        byte[] pageRank = ByteBuffer.allocate(DocumentMetaEntry.PAGERANK_SIZE).putDouble(0).array();
-        byte[] avgAuthorRank = ByteBuffer.allocate(DocumentMetaEntry.AVG_AUTHOR_RANK_SIZE).putDouble(0).array();
-        byte[] size = ByteBuffer.allocate(DocumentMetaEntry.DOCUMENT_SIZE_SIZE).putInt(entrySize).array();
-        byte[] offset = ByteBuffer.allocate(DocumentMetaEntry.DOCUMENT_OFFSET_SIZE).putLong(documentOffset).array();
-
-        out.write(id);
-        out.write(weight);
-        out.write(maxTf);
-        out.write(length);
-        out.write(pageRank);
-        out.write(avgAuthorRank);
-        out.write(size);
-        out.write(offset);
-
-        return totalSize + documentMetaOffset;
+        return DocumentMetaEntry.totalSize + documentMetaOffset;
     }
 
     /* DOCUMENTS FILE => documents.idx (Random Access File)
@@ -687,8 +675,8 @@ public class Indexer {
             sb_authorNames.append(authors.get(i).getL());
             sb_authorIds.append(authors.get(i).getR());
             if (i != authors.size() - 1) {
-                sb_authorNames.append(",");
-                sb_authorIds.append(",");
+                sb_authorNames.append(',');
+                sb_authorIds.append(',');
             }
         }
 
@@ -740,7 +728,7 @@ public class Indexer {
 
     /* Reads the frequencies file doc_tf and calculates the
     VSM weights and the max tf for each document entry. It then updates the documents_meta file */
-    private void updateVSMweights() throws IOException {
+    public void updateVSMweights() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
 
@@ -761,46 +749,33 @@ public class Indexer {
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
-        int[] tfs;
-        double weight;
-        int maxTf = 0;
         int totalArticles = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        long documentMetaOffset = 0;
-        long lineNum = 0;
+        double log2 = Math.log(2);
+        double logArticles = Math.log(totalArticles);
+        long offset = 0;
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
-            split = line.split(" ");
-            if (split.length == 1) {
-                weight = 0;
-                maxTf = 0;
-            }
-            else {
-                tfs = new int[split.length / 2];
-                maxTf = 0;
-                for (int i = 0; i < split.length; i += 2) {
-                    tfs[i / 2] = Integer.parseInt(split[i + 1]);
-                    if (tfs[i / 2] > maxTf) {
-                        maxTf = tfs[i / 2];
-                    }
+            List<String> splitList = SpaceSplit.splitString(line);
+            double weight = 0;
+            int maxTf = 0;
+            for (int i = 0; i < splitList.size(); i += 2) {
+                int df = vocabulary.get(splitList.get(i));
+                int tf = Integer.parseInt(splitList.get(i + 1));
+                if (tf > maxTf) {
+                    maxTf = tf;
                 }
-                weight = 0;
-                for (int i = 0; i < split.length; i += 2) {
-                    double x = (0.0 + tfs[i / 2]) / maxTf * Math.log((0.0 + totalArticles) /
-                            vocabulary.get(split[i])) / Math.log(2);
-                    weight += x * x;
-                }
-                weight = Math.sqrt(weight);
+                double x = tf * (logArticles - Math.log(df));
+                weight += x * x;
             }
+            weight = Math.sqrt(weight) / (maxTf * log2);
 
             //update the documents_meta file
-            documentMetaOffset = lineNum * DocumentMetaEntry.totalSize + DocumentMetaEntry.WEIGHT_OFFSET;
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.WEIGHT_OFFSET);
             buffer.putDouble(weight);
-            documentMetaOffset = lineNum * DocumentMetaEntry.totalSize + DocumentMetaEntry.MAX_TF_OFFSET;
-            buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.MAX_TF_OFFSET);
             buffer.putInt(maxTf);
-            lineNum++;
+            offset += DocumentMetaEntry.totalSize;
         }
 
         /* close files */
@@ -892,12 +867,11 @@ public class Indexer {
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
         __DOCUMENT_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
         __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentBuffers.MODE.READ);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentBuffers.MODE.READ);
 
         Themis.print("DONE\n\n");
-
         return true;
     }
 
@@ -936,10 +910,6 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         __META_INDEX_INFO__ = null;
-        __DOCUMENT_ARRAY__ = null;
-        __DOCUMENT_BUFFER__ = null;
-        __DOCUMENT_META_ARRAY__ = null;
-        __DOCUMENT_META_BUFFER__ = null;
     }
 
     /**
@@ -1007,8 +977,9 @@ public class Indexer {
             ByteBuffer postingBuffer = ByteBuffer.wrap(postings);
 
             // for each posting, grab any needed information from the documents_meta file and documents file
+            int postingOffset = 0;
             for (int j = 0; j < termValue.get_df(); j++) {
-                long documentMetaOffset = postingBuffer.getLong(j * PostingStruct.SIZE + PostingStruct.TF_SIZE);
+                long documentMetaOffset = postingBuffer.getLong(postingOffset + PostingStruct.TF_SIZE);
                 ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
 
@@ -1025,6 +996,7 @@ public class Indexer {
                     fetchInfo(docInfo, props, gotoDocuments);
                 }
                 termDocInfo.add(docInfo);
+                postingOffset += PostingStruct.SIZE;
             }
         }
     }

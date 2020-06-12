@@ -9,7 +9,9 @@ public class PostingStruct {
     private int _tf;
     private long _docPointer;
     public static int TF_SIZE = 4;
+    public static int TF_OFFSET = 0;
     public static int POINTER_SIZE = 8;
+    public static int POINTER_OFFSET = 4;
     public static int SIZE = TF_SIZE + POINTER_SIZE;
 
     public PostingStruct(int tf, long docPointer) {

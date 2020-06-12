@@ -13,7 +13,7 @@ public class DocumentMetaEntry {
     public static int DOCUMENT_SIZE_SIZE = 4;
     public static int DOCUMENT_OFFSET_SIZE = 8;
 
-    public static int totalSize = ID_SIZE + WEIGHT_SIZE + MAX_TF_SIZE + LENGTH_SIZE+
+    public static int totalSize = ID_SIZE + WEIGHT_SIZE + MAX_TF_SIZE + LENGTH_SIZE +
             PAGERANK_SIZE + AVG_AUTHOR_RANK_SIZE + DOCUMENT_SIZE_SIZE + DOCUMENT_OFFSET_SIZE;
 
     public static int ID_OFFSET = 0;

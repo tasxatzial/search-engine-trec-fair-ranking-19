@@ -216,11 +216,12 @@ public class Pagerank {
     /* writes the scores to the documents_meta file */
     private void writeCitationsScores(List<PagerankNode> graph) {
         int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        long offset = 0;
         for (int i = 0; i < totalDocuments; i++) {
-            long documentMetaOffset = (long) i * DocumentMetaEntry.totalSize + DocumentMetaEntry.PAGERANK_OFFSET;
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
             double score = Math.floor(graph.get(i).getScore() * 10000) / 10000;
             buffer.putDouble(score);
+            offset += DocumentMetaEntry.totalSize;
         }
     }
 }

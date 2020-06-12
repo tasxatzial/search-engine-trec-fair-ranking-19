@@ -7,12 +7,14 @@ import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
