@@ -388,7 +388,7 @@ public class Indexer {
         deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
 
         /* compute the citations pagerank scores, update the documents file */
-        Pagerank pagerank = new Pagerank(__CONFIG__);
+        Pagerank pagerank = new Pagerank();
         pagerank.citationsPagerank();
 
         /* finally delete the tmp index */

@@ -22,11 +22,11 @@ public class Pagerank {
     private Map<String, String> __META_INDEX_INFO__;
     private Config __CONFIG__;
 
-    public Pagerank(Config config) throws IOException {
-        __CONFIG__ = config;
-        __INDEX_PATH__ = config.getIndexPath();
-        __DATASET_PATH__ = config.getDatasetPath();
-        __META_INDEX_INFO__ = Indexer.loadMeta(__INDEX_PATH__ + "/" + config.getMetaFileName());
+    public Pagerank() throws IOException {
+        __CONFIG__ = new Config();
+        __INDEX_PATH__ = __CONFIG__.getIndexPath();
+        __DATASET_PATH__ = __CONFIG__.getDatasetPath();
+        __META_INDEX_INFO__ = Indexer.loadMeta(__INDEX_PATH__ + "/" + __CONFIG__.getMetaFileName());
     }
 
     /**
@@ -39,7 +39,7 @@ public class Pagerank {
         __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
         String graphFileName = __INDEX_PATH__ + "/graph";
         dumpCitations(graphFileName);
-        List<PagerankNode> graph = initCitationsGraph(graphFileName);
+        PagerankNode[] graph = initCitationsGraph(graphFileName);
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
         Files.deleteIfExists(new File(graphFileName).toPath());
@@ -100,7 +100,12 @@ public class Pagerank {
 
                     //out citations
                     List<String> outCitations = entry.getOutCitations();
-                    int numOutCitations = outCitations.size();
+                    int numOutCitations = 0;
+                    for (String citation : outCitations) {
+                        if (citationsIdsMap.get(citation) != null) {
+                            numOutCitations++;
+                        }
+                    }
 
                     //in citations
                     List<String> inCitations = entry.getInCitations();
@@ -116,10 +121,12 @@ public class Pagerank {
                     ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
                     citationDataBuf.putInt(0, 4 * (1 + numInCitations));
                     citationDataBuf.putInt(4, numOutCitations);
-                    for (int i = 0; i < numInCitations; i++) {
-                        Integer citation = citationsIdsMap.get(inCitations.get(i));
+                    int j = 0;
+                    for (String inCitation : inCitations) {
+                        Integer citation = citationsIdsMap.get(inCitation);
                         if (citation != null) {
-                            citationDataBuf.putInt(4 * i + 8, citation);
+                            citationDataBuf.putInt(4 * j + 8, citation);
+                            j++;
                         }
                     }
 
@@ -134,15 +141,15 @@ public class Pagerank {
     }
 
     /* initialize the citations pagerank graph and its nodes */
-    private List<PagerankNode> initCitationsGraph(String graphFileName) throws IOException {
+    private PagerankNode[] initCitationsGraph(String graphFileName) throws IOException {
         BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream
                 (new RandomAccessFile(graphFileName, "r").getFD()));
         int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        List<PagerankNode> graph = new ArrayList<>(totalDocuments);
+        PagerankNode[] graph = new PagerankNode[totalDocuments];
 
         /* Create the graph -> a list of nodes */
         for (int i = 0; i < totalDocuments; i++) {
-            graph.add(new PagerankNode());
+            graph[i] = new PagerankNode();
         }
 
         byte[] num = new byte[4];
@@ -150,7 +157,7 @@ public class Pagerank {
 
         /* read the 'graph' file and update the In citations of each node of the graph */
         for (int i = 0; i < totalDocuments; i++) {
-            PagerankNode node = graph.get(i);
+            PagerankNode node = graph[i];
             graphReader.read(num);
             int size = numBuf.getInt(0);
             byte[] citationData = new byte[size];
@@ -162,52 +169,78 @@ public class Pagerank {
             node.initializeInNodes(inCitationsNum);
             for (int j = 0; j < inCitationsNum; j++) {
                 int inCitation = citationDataBuf.getInt(4 * j + 4);
-                node.addInNode(j, graph.get(inCitation));
+                node.getInNodes()[j] = graph[inCitation];
             }
         }
-
         graphReader.close();
-
         return graph;
     }
 
     /* computes the citations pagerank scores */
-    private void computeCitationsPagerank(List<PagerankNode> graph) {
+    private void computeCitationsPagerank(PagerankNode[] graph) {
         double dampingFactor = 0.85;
-        double graphSize = graph.size();
 
-        // initialize scores
+        // initialize scores, count number of sink nodes
+        int sinksNum = 0;
         for (PagerankNode node : graph) {
-            node.setPrevScore(1 / graphSize);
+            if (node.getOutNodes() == 0) {
+                sinksNum++;
+            }
+            node.setPrevScore(1.0 / graph.length);
+        }
+
+        /* put sink nodes in a separate array */
+        PagerankNode[] sinks = new PagerankNode[sinksNum];
+        int i = 0;
+        for (PagerankNode node : graph) {
+            if (node.getOutNodes() == 0) {
+                sinks[i++] = node;
+            }
         }
 
         boolean maybeConverged = false;
         int iteration = 1;
+        double teleportScore = (1 - dampingFactor) / graph.length;
         while (!maybeConverged) {
             Themis.print("Pagerank iteration: " + iteration + "\n");
 
-            // calculate the scores
-            double norm = 0;
-            for (PagerankNode node : graph) {
-                double score = node.calcInScore() + (1 - dampingFactor) / graphSize;
+            /* collect the scores from all sink nodes, these should be distributed to every other node */
+            double sinksScore = 0;
+            for (PagerankNode sink : sinks) {
+                sinksScore += sink.getPrevScore();
+            }
+            sinksScore /= (graph.length - 1);
+
+            /* iterate over all nodes */
+            for (PagerankNode pagerankNode : graph) {
+                double score;
+                PagerankNode node = pagerankNode;
+
+                /* initially the new score for the current node comes from the total score of the sink nodes.
+                 * However when the current node is a sink, we should not take into account its own score */
+                if (node.getOutNodes() == 0) {
+                    score = sinksScore - node.getPrevScore() / (graph.length - 1);
+                } else {
+                    score = sinksScore;
+                }
+
+                /* we also need to add to the new score the contributions of the In nodes of the current node */
+                PagerankNode[] inNodes = node.getInNodes();
+                for (int k = 0; k < inNodes.length; k++) {
+                    score += inNodes[k].getPrevScore() / inNodes[k].getOutNodes();
+                }
+
+                score = score * dampingFactor + teleportScore;
                 node.setScore(score);
-                norm += score;
             }
 
-            // normalize and check for convergence
+            // check for convergence
             maybeConverged = true;
             for (PagerankNode node : graph) {
-                node.setScore(node.getScore() / norm);
-                if (maybeConverged && Math.abs(node.getPrevScore() - node.getScore()) > 0.001) {
+                if (maybeConverged && Math.abs(node.getPrevScore() - node.getScore()) > 0.0001) {
                     maybeConverged = false;
                 }
-            }
-
-            // update the previous scores (set it to the current score)
-            if (!maybeConverged) {
-                for (PagerankNode node : graph) {
-                    node.updatePrevScore();
-                }
+                node.setPrevScore(node.getScore());
             }
 
             iteration++;
@@ -215,18 +248,20 @@ public class Pagerank {
     }
 
     /* writes the citation scores to the documents_meta file */
-    private void writeCitationsScores(List<PagerankNode> graph) {
+    private void writeCitationsScores(PagerankNode[] graph) {
         int totalDocuments = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
         long offset = 0;
         double maxScore = 0;
+
+        //find the max score so that we can normalize all scores before writing them to file
         for (int i = 0; i < totalDocuments; i++) {
-            if (graph.get(i).getScore() > maxScore) {
-                maxScore = graph.get(i).getScore();
+            if (graph[i].getScore() > maxScore) {
+                maxScore = graph[i].getScore();
             }
         }
         for (int i = 0; i < totalDocuments; i++) {
             ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
-            buffer.putDouble(graph.get(i).getScore() / maxScore);
+            buffer.putDouble(graph[i].getScore() / maxScore);
             offset += DocumentMetaEntry.totalSize;
         }
     }

@@ -1,7 +1,5 @@
 package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
 
-import java.util.*;
-
 /**
  * Node used for computing the pagerank scores
  */
@@ -44,38 +42,11 @@ public class PagerankNode {
     }
 
     /**
-     * Returns a score of the node based on the In Nodes and number of Out Nodes of each In Node.
-     * The formula for this score is: sum(InNode / #OutNodes(InNode))
-     */
-    public double calcInScore() {
-        double inScore = 0;
-        for (int i = 0; i < inNodes.length; i++) {
-            inScore += inNodes[i].getPrevScore() / inNodes[i].getOutNodes();
-        }
-        return inScore;
-    }
-
-    /**
      * Sets the current score to the specified score
      * @param newScore
      */
     public void setScore(double newScore) {
         score = newScore;
-    }
-
-    /**
-     * Sets the previous score equal to the current score
-     */
-    public void updatePrevScore() {
-        prevScore = score;
-    }
-
-    /**
-     * Adds a node to the array of In Nodes at the specified index
-     * @param node
-     */
-    public void addInNode(int index, PagerankNode node) {
-        inNodes[index] = node;
     }
 
     /**
@@ -91,5 +62,13 @@ public class PagerankNode {
      */
     public void setOutNodes(int num) {
         outNodes = num;
+    }
+
+    /**
+     * Returns the array of In Nodes
+     * @return
+     */
+    public PagerankNode[] getInNodes() {
+        return inNodes;
     }
 }
