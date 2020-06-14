@@ -51,7 +51,7 @@ public class Search {
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
 
-    public Search() throws IOException {
+    public Search() throws Exception {
         _indexer = new Indexer();
         ARetrievalModel.MODEL retrievalModel = _indexer.getDefaultRetrievalModel();
         switch (retrievalModel) {
@@ -64,7 +64,9 @@ public class Search {
             default:
                 _model = new Existential(_indexer);
         }
-        _indexer.load();
+        if (!_indexer.load()) {
+            throw new Exception("Unable to load index");
+        }
     }
 
     public void unloadIndex() throws IOException {

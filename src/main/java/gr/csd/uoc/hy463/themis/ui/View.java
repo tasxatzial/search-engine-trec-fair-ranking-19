@@ -174,12 +174,22 @@ public class View extends JFrame {
             _resultsPane = null;
         }
         _searchButton = new JButton("Search");
+        _searchButton.setEnabled(false);
         _searchField = new JTextField();
         _searchField.setFont(_textFont);
         _mainPane.add(_searchField);
         _mainPane.add(_searchButton);
         initResults();
         setSearchViewBounds();
+    }
+
+    /**
+     * Enables the search button
+     */
+    public void enableSearchButton() {
+        if (_searchButton != null) {
+            _searchButton.setEnabled(true);
+        }
     }
 
     /**

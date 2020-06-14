@@ -131,6 +131,9 @@ public class Themis {
                 Thread runnableLoad = new Thread(new LoadIndex_runnable());
                 runnableLoad.start();
             }
+            else {
+                view.enableSearchButton();
+            }
         }
     }
 
@@ -219,7 +222,7 @@ public class Themis {
                 createIndex = null;
                 try {
                     search = new Search();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     __LOGGER__.error(e.getMessage());
                     print("Failed to initialize search\n");
                     _task = null;
@@ -316,11 +319,14 @@ public class Themis {
             createIndex = null;
             try {
                 search = new Search();
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize\n");
+                print("Failed to initialize search\n");
             } finally {
                 _task = null;
+                if (search != null) {
+                    view.enableSearchButton();
+                }
             }
         }
     }
