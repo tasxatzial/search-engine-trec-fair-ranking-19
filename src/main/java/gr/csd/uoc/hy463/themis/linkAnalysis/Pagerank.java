@@ -35,15 +35,18 @@ public class Pagerank {
      */
     public void citationsPagerank() throws IOException {
         long startTime = System.nanoTime();
-        Themis.print(">>> Calculating citations pagerank scores\n");
+        Themis.print(">>> Calculating Pagerank\n> Constructing graph...\n");
         __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
         String graphFileName = __INDEX_PATH__ + "/graph";
         dumpCitations(graphFileName);
         PagerankNode[] graph = initCitationsGraph(graphFileName);
+        Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
+        startTime = System.nanoTime();
+        Themis.print("> Iterating...\n");
         computeCitationsPagerank(graph);
         writeCitationsScores(graph);
+        Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
         Files.deleteIfExists(new File(graphFileName).toPath());
-        Themis.print("Pagerank scores calculated in " + new Time(System.nanoTime() - startTime) + "\n");
         __DOCUMENTS_META_BUFFERS__.close();
         __DOCUMENTS_META_BUFFERS__ = null;
     }
@@ -202,7 +205,10 @@ public class Pagerank {
         int iteration = 1;
         double teleportScore = (1 - dampingFactor) / graph.length;
         while (!maybeConverged) {
-            Themis.print("Pagerank iteration: " + iteration + "\n");
+            if (iteration % 20 == 1) {
+                Themis.print("\n");
+            }
+            Themis.print(iteration + " ");
 
             /* collect the scores from all sink nodes, these should be distributed to every other node */
             double sinksScore = 0;
@@ -245,6 +251,7 @@ public class Pagerank {
 
             iteration++;
         }
+        Themis.print("\n");
     }
 
     /* writes the citation scores to the documents_meta file */
