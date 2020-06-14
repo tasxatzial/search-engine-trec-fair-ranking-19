@@ -139,7 +139,7 @@ public class Config {
     }
 
     /**
-     * Returns the default retrieval model (VSM/BM25)
+     * Returns the default retrieval model
      *
      * @return
      */
@@ -172,6 +172,22 @@ public class Config {
      */
     public double getPagerankAuthorsWeight() {
         return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHOR_WEIGHT"));
+    }
+
+    /**
+     * Returns the threshold that determines when the pagerank scores have converged
+     * @return
+     */
+    public double getPagerankThreshold() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_THRESHOLD"));
+    }
+
+    /**
+     * Returns the pagerank damping factor
+     * @return
+     */
+    public double getPagerankDampingFactor() {
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_DAMPING_FACTOR"));
     }
 
     /**
