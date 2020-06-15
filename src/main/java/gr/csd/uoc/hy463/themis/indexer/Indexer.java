@@ -822,10 +822,10 @@ public class Indexer {
             return false;
         }
 
-        Themis.print("Index directory: " + __INDEX_PATH__+ "\n");
+        Themis.print(">>> Index directory: " + __INDEX_PATH__+ "\n");
 
         //load vocabulary file
-        Themis.print(">>> Loading vocabulary...");
+        Themis.print("Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
         String[] fields;
@@ -840,27 +840,19 @@ public class Indexer {
         Themis.print("DONE\n");
 
         //load index meta file
-        Themis.print(">>> Loading meta index file...");
+        Themis.print("Loading meta index file...");
         __META_INDEX_INFO__ = loadMeta(__INDEX_PATH__ + "/" + __META_FILENAME__);
         Themis.print("DONE\n");
 
         //check for stopword, stemming
         if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"))) {
-            Themis.print("Stopwords is enabled\n");
             StopWords.Initialize();
         }
-        else {
-            Themis.print("Stopwords is disabled\n");
-        }
         if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"))) {
-            Themis.print("Stemming is enabled\n");
             Stemmer.Initialize();
         }
-        else {
-            Themis.print("Stemming is disabled\n");
-        }
 
-        Themis.print(">>> Opening documents, postings files...");
+        Themis.print("Opening documents, postings files...");
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
 
         //open documents, documents_meta files and initialize the appropriate structures
@@ -871,7 +863,7 @@ public class Indexer {
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
-        Themis.print("DONE\n\n");
+        Themis.print("DONE\n");
         return true;
     }
 

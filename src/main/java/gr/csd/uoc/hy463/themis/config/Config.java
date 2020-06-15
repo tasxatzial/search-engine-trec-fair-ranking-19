@@ -171,7 +171,7 @@ public class Config {
      * @return
      */
     public double getPagerankAuthorsWeight() {
-        return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHOR_WEIGHT"));
+        return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHORS_WEIGHT"));
     }
 
     /**

@@ -89,6 +89,7 @@ public class themisEval {
      */
     public void evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
         __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
+        String __INDEX_PATH__ = __CONFIG__.getIndexPath();
         if (!hasJudgements()) {
             if (dictionary == QueryExpansion.DICTIONARY.NONE) {
                 __LOGGER__.error("No judgements file found! " + model + " evaluation failed");
@@ -103,18 +104,18 @@ public class themisEval {
         String evaluationFilename = null;
         if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             if (model == ARetrievalModel.MODEL.VSM) {
-                evaluationFilename = __CONFIG__.getVSMEvaluationFilename();
+                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getVSMEvaluationFilename();
             }
             else if (model == ARetrievalModel.MODEL.BM25) {
-                evaluationFilename = __CONFIG__.getBM25EvaluationFilename();
+                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getBM25EvaluationFilename();
             }
         }
         else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
             if (model == ARetrievalModel.MODEL.VSM) {
-                evaluationFilename = __CONFIG__.getVSMGloveEvaluationFilename();
+                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getVSMGloveEvaluationFilename();
             }
             else if (model == ARetrievalModel.MODEL.BM25) {
-                evaluationFilename = __CONFIG__.getBM25GloveEvaluationFilename();
+                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getBM25GloveEvaluationFilename();
             }
         }
         if (hasEvaluation(evaluationFilename)) {
@@ -148,13 +149,16 @@ public class themisEval {
     private void evaluate() throws IOException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
-        Themis.print("Saving results in " + __EVALUATION_FILENAME__ + "\n");
         Themis.print("------------------------------------------------\n");
-        evaluationWriter.write("Index directory: " + _search.getIndexDirectory() + "\n");
+        Themis.print(">>> Saving results in " + __EVALUATION_FILENAME__ + "\n\n");
+        evaluationWriter.write(">>> Using options:\n");
+        evaluationWriter.write("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
+        evaluationWriter.write("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
+        evaluationWriter.write("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");
+        evaluationWriter.write("------------------------------------------------\n");
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
-        //List<Double> bprefs = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
         List<Pair<String, Time>> queryTime = new ArrayList<>();
         Time totalTime = new Time(0);
@@ -178,9 +182,8 @@ public class themisEval {
             }
 
             //perform a search
-            evaluationWriter.write("------------------------------------------------\n");
-            evaluationWriter.write("Search query: " + query + "\n");
-            Themis.print("Search query: " + query + "\n");
+            evaluationWriter.write(">>> Search query: " + query + "\n");
+            Themis.print(">>> Search query: " + query + "\n");
             long startTime = System.nanoTime();
             List<Pair<Object, Double>> results = _search.search(query);
             long endTime = System.nanoTime();
@@ -195,13 +198,10 @@ public class themisEval {
             double avep = computeAveP(results, relevanceMap);
             avep = (Double.isNaN(avep)) ? Double.NaN : avep;
             aveps.add(avep);
-            /*double bpref = computeBpref(results, relevanceMap);
-            bprefs.add(bpref);*/
             double ndcg = computeNdcg(results, relevanceMap);
             ndcg = (Double.isNaN(ndcg)) ? Double.NaN : ndcg;
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
-            //evaluationWriter.write("bpref: " + bpref + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n");
             evaluationWriter.flush();
         }
@@ -209,10 +209,6 @@ public class themisEval {
         double averageAvep = calculateAverage(aveps);
         double minAvep = calculateMin(aveps);
         double maxAvep = calculateMax(aveps);
-
-        /*double averageBpref = calculateAverage(bprefs);
-        double minBpref = calculateMin(bprefs);
-        double maxBpref = calculateMax(bprefs);*/
 
         double averageNdcg = calculateAverage(ndcgs);
         double minNdcg = calculateMin(ndcgs);
@@ -222,17 +218,13 @@ public class themisEval {
         Pair<String, Time> maxTime = calculateMaxTime(queryTime);
         Time averageTime = calculateAverageTime(queryTime);
 
-        Themis.print("------------------------------------------------\n");
+        Themis.print("\n>>> End of evaluation\n");
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
         evaluationWriter.write("Average precision:\n");
         evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
-        /*evaluationWriter.write("bpref:\n");
-        evaluationWriter.write("Average: " + averageBpref + "\n");
-        evaluationWriter.write("Min: " + minBpref + "\n");
-        evaluationWriter.write("Max: " + maxBpref + "\n\n");*/
         evaluationWriter.write("nDCG:\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
@@ -243,7 +235,6 @@ public class themisEval {
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
         evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n");
         evaluationWriter.close();
-        Themis.print("Evaluation results saved in " + __EVALUATION_FILENAME__ + "\n");
         judgementsReader.close();
     }
 
@@ -427,8 +418,8 @@ public class themisEval {
             return new Time(0);
         }
         Time time = new Time(0);
-        for (Pair<String, Time> stringDoublePair : list) {
-            time.addTime(stringDoublePair.getR());
+        for (Pair<String, Time> pair : list) {
+            time.addTime(pair.getR());
         }
         return new Time(time.getValue() / list.size());
     }

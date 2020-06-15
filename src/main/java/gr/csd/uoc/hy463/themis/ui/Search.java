@@ -121,10 +121,6 @@ public class Search {
         return QueryExpansion.DICTIONARY.NONE;
     }
 
-    public String getIndexDirectory() {
-        return _indexer.getIndexDirectory();
-    }
-
     /**
      * Searches for a query and returns a ranked list of results. The results contain the essential properties
      * specified by the current retrieval model.
