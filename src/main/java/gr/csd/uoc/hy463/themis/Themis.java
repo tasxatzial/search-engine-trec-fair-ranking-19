@@ -219,7 +219,7 @@ public class Themis {
             _task = TASK.EVALUATE;
             if (search == null) {
                 createIndex = null;
-                try {
+                try { //todo: close files
                     search = new Search();
                 } catch (Exception e) {
                     __LOGGER__.error(e.getMessage());
@@ -229,7 +229,7 @@ public class Themis {
                 }
             }
             themisEval evaluator;
-            try {
+            try { //todo: close files
                 evaluator = new themisEval(search);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
@@ -237,7 +237,7 @@ public class Themis {
                 _task = null;
                 return;
             }
-            try {
+            try { //todo: close files
                 evaluator.evaluateInit(_model, _dictionary);
             } catch (IOException e) {
                 __LOGGER__.error(e.getMessage());
@@ -252,7 +252,7 @@ public class Themis {
         @Override
         public void run() {
             _task = TASK.CREATE_INDEX;
-            try {
+            try { //todo: close files
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -289,7 +289,7 @@ public class Themis {
                     return;
                 }
             }
-            try {
+            try { //todo: close files
                 createIndex.createIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -316,7 +316,7 @@ public class Themis {
                 return;
             }
             createIndex = null;
-            try {
+            try { //todo: close files
                 search = new Search();
             } catch (Exception ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -338,7 +338,7 @@ public class Themis {
             long startTime = System.nanoTime();
             String query = view.get_searchField().getText();
             print("Searching for: " + query + " ... ");
-            try {
+            try { //todo: close files
                 results = search.search(view.get_searchField().getText());
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
