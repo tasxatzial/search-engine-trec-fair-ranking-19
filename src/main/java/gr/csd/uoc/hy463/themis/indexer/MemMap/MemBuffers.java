@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.utils.CloseDirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
