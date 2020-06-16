@@ -67,7 +67,7 @@ public class OkapiBM25 extends ARetrievalModel {
         double[] idfs = new double[terms.size()];
         int[] dfs = _indexer.getDf(terms);
         for (int i = 0; i < terms.size(); i++) {
-            idfs[i] = Math.log((totalArticles - dfs[i] + 0.5) / (dfs[i] + 0.5));
+            idfs[i] = Math.log((1.0 + totalArticles) / dfs[i]);
         }
 
         //frequencies of each term in each document
@@ -93,7 +93,7 @@ public class OkapiBM25 extends ARetrievalModel {
             DocInfo docInfo = docFreqs.getKey();
             int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.LENGTH);
             for (int i = 0; i < terms.size(); i++) {
-                documentScore += idfs[i] * freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl));
+                documentScore += idfs[i] * (freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl)) + 1);
             }
             if (documentScore > maxScore) {
                 maxScore = documentScore;
