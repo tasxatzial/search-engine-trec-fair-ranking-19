@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.utils;
 
 /**
- * Used for converting times of type long to hr, min, sec, msec
+ * Used for printing a time period (long number) in a human readable format.
  */
 public class Time {
     private long _longValue;
@@ -11,8 +11,7 @@ public class Time {
     }
 
     /**
-     * Returns a string representation of this Time. The string might not represent the exact
-     * time due to rounding.
+     * Returns a string representation that is an approximation of this Time
      * @return
      */
     public String toString() {
@@ -30,11 +29,13 @@ public class Time {
             double secs = toSec(fromMin(mins) - fromMin(intMins));
             return intMins + "m " + roundToDecimal(secs, 0) + "s";
         }
+        if (msec > toMsec(fromSec(10))) {
+            double secs = toSec(_longValue);
+            return roundToDecimal(secs, 1) + "s";
+        }
         if (msec > toMsec(fromSec(1))) {
             double secs = toSec(_longValue);
-            double intSecs = countSec(_longValue);
-            double msecs = toMsec(fromSec(secs) - fromSec(intSecs));
-            return intSecs + "s " + roundToDecimal(msecs, 0) + "ms";
+            return roundToDecimal(secs, 2) + "s";
         }
         if (msec > 10) {
             return roundToDecimal(msec, 0) + "ms";
