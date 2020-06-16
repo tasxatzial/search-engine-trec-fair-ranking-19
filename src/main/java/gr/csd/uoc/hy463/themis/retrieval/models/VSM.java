@@ -95,7 +95,7 @@ public class VSM extends ARetrievalModel {
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] freqs = _indexer.getFreq(terms.get(i));
-            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
+            double idf = Math.log(totalArticles / (1.0 + dfs[i])) / Math.log(2);
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = _termsDocInfo.get(i).get(j);
                 double[] weights = documentsWeights.get(docInfo);
@@ -109,6 +109,7 @@ public class VSM extends ARetrievalModel {
         }
 
         //calculate the scores
+        double maxScore = 0;
         for (Map.Entry<DocInfo, double[]> docWeights : documentsWeights.entrySet()) {
             double documentScore = 0;
             double[] weights = docWeights.getValue();
@@ -118,11 +119,21 @@ public class VSM extends ARetrievalModel {
                 documentScore += queryWeights[i] * weights[i];
             }
             documentScore /= (documentNorm * queryNorm);
+            if (documentScore > maxScore) {
+                maxScore = documentScore;
+            }
             results.add(new Pair<>(docInfo, documentScore));
         }
-        results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
 
-        //update the props of the results that are in [startDoc, endDoc]
+        //normalize to [0, 1]
+        for (Pair<Object, Double> result : results) {
+            result.setR(result.getR() / maxScore);
+        }
+
+        //sort based on pagerank score and this model score
+        sort(results);
+
+        //update the properties of these results that are in [startDoc, endDoc]
         updateDocInfo(results, props, startDoc, endDoc);
 
         return results;

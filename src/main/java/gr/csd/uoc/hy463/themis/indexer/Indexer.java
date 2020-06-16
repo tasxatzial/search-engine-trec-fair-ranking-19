@@ -1170,24 +1170,6 @@ public class Indexer {
     }
 
     /**
-     * Returns the current retrieval model
-     * @return
-     */
-    public ARetrievalModel.MODEL getDefaultRetrievalModel() {
-        String modelName = __CONFIG__.getRetrievalModel();
-        if (modelName.equals("BM25")) {
-            return ARetrievalModel.MODEL.BM25;
-        }
-        else if (modelName.equals("VSM")) {
-            return ARetrievalModel.MODEL.VSM;
-        }
-        else if (modelName.equals("Existential")) {
-            return ARetrievalModel.MODEL.EXISTENTIAL;
-        }
-        return null;
-    }
-
-    /**
      * Returns true if stopwords is enabled for this index. Returns null if meta index info file is not loaded.
      * @return
      */
@@ -1211,5 +1193,13 @@ public class Indexer {
             __LOGGER__.error("Meta index info file is not loaded!");
             return null;
         }
+    }
+
+    /**
+     * Returns the configuration file this indexer uses
+     * @return
+     */
+    public Config getConfig() {
+        return __CONFIG__;
     }
 }

@@ -86,6 +86,7 @@ public class OkapiBM25 extends ARetrievalModel {
         }
 
         //calculate the scores
+        double maxScore = 0;
         for (Map.Entry<DocInfo, int[]> docFreqs : documentsFreqs.entrySet()) {
             double documentScore = 0;
             int[] freqs = docFreqs.getValue();
@@ -94,13 +95,21 @@ public class OkapiBM25 extends ARetrievalModel {
             for (int i = 0; i < terms.size(); i++) {
                 documentScore += idfs[i] * freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl));
             }
+            if (documentScore > maxScore) {
+                maxScore = documentScore;
+            }
             results.add(new Pair<>(docInfo, documentScore));
         }
 
-        //sort the results
-        results.sort((o1, o2) -> o2.getR().compareTo(o1.getR()));
+        //normalize to [0, 1]
+        for (Pair<Object, Double> result : results) {
+            result.setR(result.getR() / maxScore);
+        }
 
-        //update the props of the results that are in [startDoc, endDoc]
+        //sort based on pagerank score and this model score
+        sort(results);
+
+        //update the properties of these results that are in [startDoc, endDoc]
         updateDocInfo(results, props, startDoc, endDoc);
 
         return results;

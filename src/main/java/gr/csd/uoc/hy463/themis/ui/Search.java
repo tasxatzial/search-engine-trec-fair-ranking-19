@@ -53,17 +53,18 @@ public class Search {
 
     public Search() throws Exception {
         _indexer = new Indexer();
-        ARetrievalModel.MODEL retrievalModel = _indexer.getDefaultRetrievalModel();
-        switch (retrievalModel) {
-            case BM25:
+        switch (_indexer.getConfig().getRetrievalModel()) {
+            case "BM25":
                 _model = new OkapiBM25(_indexer);
                 break;
-            case VSM:
+            case "VSM":
                 _model = new VSM(_indexer);
                 break;
-            default:
+            case "Existential":
                 _model = new Existential(_indexer);
+                break;
         }
+
         if (!_indexer.load()) {
             throw new Exception("Unable to load index");
         }
@@ -99,26 +100,6 @@ public class Search {
 
     public void resetExpansionModel() {
         _queryExpansion = null;
-    }
-
-    public ARetrievalModel.MODEL getRetrievalModel() {
-        if (_model instanceof OkapiBM25) {
-            return ARetrievalModel.MODEL.BM25;
-        }
-        else if (_model instanceof VSM) {
-            return ARetrievalModel.MODEL.VSM;
-        }
-        else if (_model instanceof Existential) {
-            return ARetrievalModel.MODEL.EXISTENTIAL;
-        }
-        return null;
-    }
-
-    public QueryExpansion.DICTIONARY getQueryExpansion() {
-        if (_queryExpansion instanceof Glove) {
-            return QueryExpansion.DICTIONARY.GLOVE;
-        }
-        return QueryExpansion.DICTIONARY.NONE;
     }
 
     /**

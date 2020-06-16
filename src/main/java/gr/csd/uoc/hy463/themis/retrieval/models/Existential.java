@@ -67,7 +67,7 @@ public class Existential extends ARetrievalModel {
             results.add(new Pair<>(docInfo, 1.0));
         }
 
-        //update the props of the results that are in [startDoc, endDoc]
+        //update the properties of these results that are in [startDoc, endDoc]
         updateDocInfo(results, props, startDoc, endDoc);
 
         return results;

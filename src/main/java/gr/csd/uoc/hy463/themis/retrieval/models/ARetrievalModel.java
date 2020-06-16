@@ -56,12 +56,14 @@ public abstract class ARetrievalModel {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
         props.add(DocInfo.PROPERTY.WEIGHT);
         props.add(DocInfo.PROPERTY.MAX_TF);
+        props.add(DocInfo.PROPERTY.PAGERANK);
         return props;
     }
 
     public static Set<DocInfo.PROPERTY> getOkapiProps() {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
         props.add(DocInfo.PROPERTY.LENGTH);
+        props.add(DocInfo.PROPERTY.PAGERANK);
         return props;
     }
 
@@ -72,7 +74,6 @@ public abstract class ARetrievalModel {
         props.add(DocInfo.PROPERTY.JOURNAL_NAME);
         props.add(DocInfo.PROPERTY.AUTHORS_IDS);
         props.add(DocInfo.PROPERTY.YEAR);
-        props.add(DocInfo.PROPERTY.PAGERANK);
         props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
         return props;
     }
@@ -262,6 +263,35 @@ public abstract class ARetrievalModel {
 
         /* add the extra properties to the collected docInfo */
         _indexer.updateDocInfo(updatedDocInfos, extraProps);
+    }
+
+    /**
+     * Sorts the specified results based on the pagerank scores of the citations and the score of this
+     * model. The scores should be normalized to [0, 1]
+     * @param results
+     */
+    protected void sort(List<Pair<Object, Double>> results) {
+        double pagerankCitationsWeight = _indexer.getConfig().getPagerankPublicationsWeight();
+        double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
+
+        results.sort((o1, o2) -> {
+            double o1ModelScore = o1.getR();
+            DocInfo o1DocInfo = (DocInfo) o1.getL();
+            double o1PagerankCitationsScore = (double) o1DocInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
+            double o1Score = o1ModelScore * modelWeight + o1PagerankCitationsScore * pagerankCitationsWeight;
+            double o2ModelScore = o2.getR();
+            DocInfo o2DocInfo = (DocInfo) o2.getL();
+            double o2PagerankCitationsScore = (double) o2DocInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
+            double o2Score = o2ModelScore * modelWeight + o2PagerankCitationsScore * pagerankCitationsWeight;
+
+            if (o2Score > o1Score) {
+                return 1;
+            }
+            if (o2Score < o1Score) {
+                return -1;
+            }
+            return 0;
+        });
     }
 
     /**
