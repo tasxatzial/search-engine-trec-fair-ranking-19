@@ -194,30 +194,20 @@ public class Search {
      * @param endResult From 0 to Integer.MAX_VALUE
      */
     public void printResults(List<Pair<Object, Double>> searchResults, Set<DocInfo.PROPERTY> props, int startResult, int endResult) {
-
-        /* startResult and endResult might be out of the range of the actual results for this document.
-        therefore we need to find the proper indexes of the first and last displayed result */
-        int firstDisplayedResult;
-        int lastDisplayedResult;
-        if (startResult > searchResults.size() - 1) {
-            firstDisplayedResult = 0;
-            lastDisplayedResult = 0;
-        }
-        else if (endResult > searchResults.size() - 1) {
-            firstDisplayedResult = startResult;
-            lastDisplayedResult = searchResults.size() - 1;
-        }
-        else {
-            firstDisplayedResult = startResult;
-            lastDisplayedResult = endResult;
-        }
-
-        if (!searchResults.isEmpty()) {
-            Themis.print("Displaying results " + (firstDisplayedResult + 1) + " to " + (lastDisplayedResult + 1) + "\n\n");
-        }
-        else {
+        if (searchResults.isEmpty()) {
             return;
         }
+
+        /* startResult and endResult might be out of the range of the actual results.
+        therefore we need to find the proper indexes of the first and last displayed result */
+        int firstDisplayedResult = Math.max(startResult, 0);
+        int lastDisplayedResult = Math.min(endResult, searchResults.size() - 1);
+        if (firstDisplayedResult > lastDisplayedResult) {
+            Themis.print("No results found in the specified range\n");
+            return;
+        }
+
+        Themis.print("Displaying results " + firstDisplayedResult + " to " + lastDisplayedResult + "\n\n");
 
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
@@ -225,7 +215,7 @@ public class Search {
             Set<DocInfo.PROPERTY> docInfoProps = docInfo.getProps();
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(props);
             Collections.sort(sortedProps);
-            Themis.print((i + 1) + " ---------------------------------------\n");
+            Themis.print(i + " ---------------------------------------\n");
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 if (docInfoProps.contains(docInfoProp)) {

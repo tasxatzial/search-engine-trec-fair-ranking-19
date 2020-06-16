@@ -343,7 +343,7 @@ public class Themis {
                 results = search.search(view.get_searchField().getText());
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
-                search.printResults(results,0, 19);
+                search.printResults(results,0, 9);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
