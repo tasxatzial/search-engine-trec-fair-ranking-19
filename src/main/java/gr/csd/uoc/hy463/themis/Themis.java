@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,14 +51,14 @@ public class Themis {
             /* resized window listeners */
             view.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
-                    view.setIndexViewBounds();
+                    view.setOnlyResultsBounds();
                     view.setTitleAreaBounds();
                     view.setSearchViewBounds();
                 }
             });
 
             /* maximized window listeners */
-            view.addWindowStateListener(e -> view.setIndexViewBounds());
+            view.addWindowStateListener(e -> view.setOnlyResultsBounds());
             view.addWindowStateListener(e -> view.setTitleAreaBounds());
             view.addWindowStateListener(e -> view.setSearchViewBounds());
 
@@ -112,7 +111,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Thread runnableCreate = new Thread(new CreateIndex_runnable());
             runnableCreate.start();
         }
@@ -144,7 +143,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Thread runnableLoad = new Thread(new LoadIndex_runnable());
             runnableLoad.start();
         }
@@ -157,7 +156,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
@@ -171,7 +170,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
@@ -185,7 +184,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.NONE);
             Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
             runnableEvaluateBM25.start();
@@ -199,7 +198,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            view.initIndexView();
+            view.initOnlyResultsView();
             Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE);
             Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
             runnableEvaluateBM25.start();

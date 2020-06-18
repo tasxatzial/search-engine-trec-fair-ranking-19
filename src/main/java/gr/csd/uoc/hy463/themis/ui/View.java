@@ -6,6 +6,12 @@ import java.io.IOException;
 
 public class View extends JFrame {
 
+    /* true when we see the search bar and button */
+    private boolean searchInitialized = false;
+
+    /* true when we see only a text area */
+    private boolean onlyResultsInitialized = false;
+
     /* The main menu bar */
     private JMenuBar _menu;
 
@@ -30,9 +36,6 @@ public class View extends JFrame {
     /* The "evaluate BM25/Glove" menu item */
     private JMenuItem _evaluateBM25Glove;
 
-    /* The font of any text except the menu/title items */
-    private Font _textFont;
-
     /* Title area (top) */
     private JLabel _titleArea;
 
@@ -55,8 +58,7 @@ public class View extends JFrame {
         initMenu();
         pack();
         setTitle("Themis search engine v0.1");
-        setSize(800, 600); //initial frame size
-        _textFont = new Font("SansSerif", Font.PLAIN, 16);
+        setSize(1000, 800); //initial frame size
         _mainPane = new JLayeredPane();
         initTitleArea();
         getContentPane().add(_mainPane);
@@ -64,6 +66,9 @@ public class View extends JFrame {
 
     /* Initializes the menu bar */
     private void initMenu() {
+        Font font = new Font("SansSerif", Font.PLAIN, 14);
+        UIManager.put("MenuItem.font", font);
+        UIManager.put("Menu.font", font);
 
         /* index menu */
         JMenu index = new JMenu("Index");
@@ -100,10 +105,66 @@ public class View extends JFrame {
     /* Creates the title label */
     private void initTitleArea() {
         _titleArea = new JLabel("Themis");
-        _titleArea.setFont(new Font("SansSerif", Font.PLAIN, 24));
+        _titleArea.setFont(new Font("SansSerif", Font.PLAIN, 20));
         _titleArea.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
         setTitleAreaBounds();
         _mainPane.add(_titleArea);
+    }
+
+    /* Initializes the area that shows the results of create/load index or search */
+    private void initResultsArea() {
+        if (searchInitialized || onlyResultsInitialized) {
+            return;
+        }
+        _resultsArea = new JTextArea();
+        _resultsArea.setEditable(false);
+        _resultsArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        _resultsPane = new JScrollPane(_resultsArea);
+        _mainPane.add(_resultsPane);
+    }
+
+    /**
+     * Modifies the view when the "create index", "load index", "evaluate VSM", "evaluate BM25" menu items
+     * are clicked.
+     */
+    public void initOnlyResultsView() {
+        if (onlyResultsInitialized) {
+            clearResultsArea();
+            return;
+        }
+        if (searchInitialized) {
+            _mainPane.remove(_searchButton);
+            _mainPane.remove(_searchField);
+            _mainPane.remove(_resultsPane);
+            searchInitialized = false;
+        }
+        initResultsArea();
+        onlyResultsInitialized = true;
+        setOnlyResultsBounds();
+    }
+
+    /**
+     * Modifies the view when the "query collection" menu item is clicked.
+     */
+    public void initSearchView() {
+        if (searchInitialized) {
+            clearResultsArea();
+            return;
+        }
+        if (onlyResultsInitialized) {
+            _mainPane.remove(_resultsPane);
+            onlyResultsInitialized = false;
+        }
+        _searchButton = new JButton("Search");
+        _searchButton.setEnabled(false);
+        _searchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        _searchField = new JTextField();
+        _searchField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        _mainPane.add(_searchField);
+        _mainPane.add(_searchButton);
+        initResultsArea();
+        searchInitialized = true;
+        setSearchViewBounds();
     }
 
     /**
@@ -120,32 +181,11 @@ public class View extends JFrame {
     }
 
     /**
-     * Modifies the view when the "create index", "load index", "evaluate VSM", "evaluate BM25" menu items
-     * are clicked.
-     */
-    public void initIndexView() {
-        if (_searchField != null) {
-            _mainPane.remove(_searchField);
-            _searchField = null;
-        }
-        if (_searchButton != null) {
-            _mainPane.remove(_searchButton);
-            _searchButton = null;
-        }
-        if (_resultsArea != null) {
-            _mainPane.remove(_resultsArea);
-            _resultsArea = null;
-        }
-        initResults();
-        setIndexViewBounds();
-    }
-
-    /**
      * Sets the proper bounds of the results area when the "create index", "load index", "evaluate VSM",
      * "evaluate BM25" menu items are clicked.
      */
-    public void setIndexViewBounds() {
-        if (_resultsPane == null) {
+    public void setOnlyResultsBounds() {
+        if (!onlyResultsInitialized) {
             return;
         }
         Dimension frameDim = getBounds().getSize();
@@ -158,29 +198,33 @@ public class View extends JFrame {
     }
 
     /**
-     * Modifies the view when the "query collection" menu item is clicked.
+     * Sets the proper bounds of the search results area
      */
-    public void initSearchView() {
-        if (_searchField != null) {
-            _mainPane.remove(_searchField);
-            _searchField = null;
+    public void setSearchViewBounds() {
+        if (!searchInitialized) {
+            return;
         }
-        if (_searchButton != null) {
-            _mainPane.remove(_searchButton);
-            _searchButton = null;
-        }
-        if (_resultsPane != null) {
-            _mainPane.remove(_resultsPane);
-            _resultsPane = null;
-        }
-        _searchButton = new JButton("Search");
-        _searchButton.setEnabled(false);
-        _searchField = new JTextField();
-        _searchField.setFont(_textFont);
-        _mainPane.add(_searchField);
-        _mainPane.add(_searchButton);
-        initResults();
-        setSearchViewBounds();
+        Dimension frameDim = getBounds().getSize();
+
+        int searchButtonWidth = 150;
+        int searchButtonHeight = 40;
+        int searchButtonX = 0;
+        int searchButtonY = _titleArea.getHeight();
+
+        int resultsPaneWidth = frameDim.width - getInsets().left - getInsets().right;
+        int resultsPaneHeight = frameDim.height - getInsets().top - getInsets().bottom -
+                _titleArea.getHeight() - _menu.getHeight() - searchButtonHeight;
+        int resultsPaneX = 0;
+        int resultsPaneY = searchButtonHeight + _titleArea.getHeight();
+
+        int searchFieldWidth = frameDim.width - getInsets().left - getInsets().right - searchButtonWidth;
+        int searchFieldHeight = searchButtonHeight;
+        int searchFieldX = searchButtonWidth;
+        int searchFieldY = _titleArea.getHeight();
+
+        _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+        _searchButton.setBounds(searchButtonX, searchButtonY, searchButtonWidth, searchButtonHeight);
+        _searchField.setBounds(searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight);
     }
 
     /**
@@ -191,45 +235,7 @@ public class View extends JFrame {
             _searchButton.setEnabled(true);
         }
     }
-
-    /**
-     * Sets the proper bounds of the search results area
-     */
-    public void setSearchViewBounds() {
-        if (_resultsPane == null || _searchButton == null || _searchField == null) {
-            return;
-        }
-        Dimension frameDim = getBounds().getSize();
-        int searchButtonWidth = 150;
-        int searchButtonHeight = 40;
-        int searchButtonX = 0;
-        int searchButtonY = _titleArea.getHeight();
-        int searchFieldWidth = frameDim.width - getInsets().left - getInsets().right - searchButtonWidth;
-        int searchFieldHeight = searchButtonHeight;
-        int searchFieldX = searchButtonWidth;
-        int searchFieldY = _titleArea.getHeight();
-        int resultsPaneWidth = frameDim.width - getInsets().left - getInsets().right;
-        int resultsPaneHeight = frameDim.height - getInsets().top - getInsets().bottom -
-                _titleArea.getHeight() - _menu.getHeight() - searchButtonHeight;
-        int resultsPaneX = 0;
-        int resultsPaneY = searchButtonHeight + _titleArea.getHeight();
-        _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
-        _searchButton.setBounds(searchButtonX, searchButtonY, searchButtonWidth, searchButtonHeight);
-        _searchField.setBounds(searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight);
-    }
-
-    /* Initializes the area that shows the results of create/load index or search */
-    private void initResults() {
-        if (_resultsPane != null) {
-            _mainPane.remove(_resultsPane);
-        }
-        _resultsArea = new JTextArea();
-        _resultsArea.setEditable(false);
-        _resultsArea.setFont(_textFont);
-        _resultsPane = new JScrollPane(_resultsArea);
-        _mainPane.add(_resultsPane);
-    }
-
+    
     /**
      * Clears the results of clear/load index, search
      */
