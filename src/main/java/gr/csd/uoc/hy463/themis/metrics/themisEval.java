@@ -129,18 +129,8 @@ public class themisEval {
             }
             return;
         }
-        if (model == ARetrievalModel.MODEL.VSM) {
-            _search.setModelVSM();
-        }
-        else if (model == ARetrievalModel.MODEL.BM25) {
-            _search.setModelBM25();
-        }
-        if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-            _search.setExpansionModelGlove();
-        }
-        else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
-            _search.resetExpansionModel();
-        }
+        _search.setRetrievalModel(model);
+        _search.setExpansionModel(dictionary);
         __EVALUATION_FILENAME__ = evaluationFilename;
         evaluate();
     }

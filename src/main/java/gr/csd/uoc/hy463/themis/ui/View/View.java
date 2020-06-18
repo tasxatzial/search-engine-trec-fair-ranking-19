@@ -1,4 +1,6 @@
-package gr.csd.uoc.hy463.themis.ui;
+package gr.csd.uoc.hy463.themis.ui.View;
+
+import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,6 +56,12 @@ public class View extends JFrame {
     /* the search input area in search view */
     private JTextField _searchField;
 
+    /* the "retrieval model" menu */
+    private JMenu _retrievalModel;
+
+    /* the "document properties" menu */
+    private JMenu _documentProperties;
+
     public View() {
         initMenu();
         pack();
@@ -69,6 +77,8 @@ public class View extends JFrame {
         Font font = new Font("SansSerif", Font.PLAIN, 14);
         UIManager.put("MenuItem.font", font);
         UIManager.put("Menu.font", font);
+        UIManager.put("CheckBoxMenuItem.font", font);
+        UIManager.put("RadioButtonMenuItem.font", font);
 
         /* index menu */
         JMenu index = new JMenu("Index");
@@ -80,7 +90,42 @@ public class View extends JFrame {
         /* search menu */
         JMenu search = new JMenu("Search");
         _queryCollection = new JMenuItem("Query collection");
+
+        _retrievalModel = new JMenu("Retrieval model");
+        ButtonGroup group = new ButtonGroup();
+        MenuRadioButton modelBoolean = new MenuRadioButton("Boolean");
+        MenuRadioButton modelVSM = new MenuRadioButton("VSM");
+        MenuRadioButton modelBM25 = new MenuRadioButton("BM25+");
+        group.add(modelBoolean);
+        group.add(modelVSM);
+        group.add(modelBM25);
+        _retrievalModel.add(modelBoolean);
+        _retrievalModel.add(modelVSM);
+        _retrievalModel.add(modelBM25);
+
+        _documentProperties = new JMenu("Document properties");
+        MenuCheckbox title = new MenuCheckbox("Title");
+        MenuCheckbox authors = new MenuCheckbox("Authors");
+        MenuCheckbox authorIds = new MenuCheckbox("Author ids");
+        MenuCheckbox journal = new MenuCheckbox("Journal");
+        MenuCheckbox year = new MenuCheckbox("Year");
+        MenuCheckbox pagerank = new MenuCheckbox("Pagerank");
+        MenuCheckbox weight = new MenuCheckbox("Weight");
+        MenuCheckbox length = new MenuCheckbox("Length");
+        MenuCheckbox maxTF = new MenuCheckbox("Max term frequency");
+        _documentProperties.add(title);
+        _documentProperties.add(authors);
+        _documentProperties.add(authorIds);
+        _documentProperties.add(journal);
+        _documentProperties.add(year);
+        _documentProperties.add(pagerank);
+        _documentProperties.add(weight);
+        _documentProperties.add(length);
+        _documentProperties.add(maxTF);
+
         search.add(_queryCollection);
+        search.add(_retrievalModel);
+        search.add(_documentProperties);
 
         /* evaluate menu */
         JMenuItem evaluate = new JMenu("Evaluate");
@@ -344,5 +389,34 @@ public class View extends JFrame {
      */
     public JTextField get_searchField() {
         return _searchField;
+    }
+
+    /**
+     * Returns the "retrieval model" menu
+     * @return
+     */
+    public JMenu get_retrievalModel() {
+        return _retrievalModel;
+    }
+
+    /**
+     * Returns the "document properties" menu
+     * @return
+     */
+    public JMenu get_documentProperties() {
+        return _documentProperties;
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the specified retrieval model
+     * @param model
+     */
+    public void checkRetrievalModel(ARetrievalModel.MODEL model) {
+        for (int i = 0; i < _retrievalModel.getItemCount(); i++) {
+            if (((MenuRadioButton) _retrievalModel.getItem(i)).get_model() == model) {
+                _retrievalModel.getItem(i).setSelected(true);
+                break;
+            }
+        }
     }
 }

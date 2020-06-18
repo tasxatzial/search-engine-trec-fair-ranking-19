@@ -1,11 +1,14 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.ui.View;
+import gr.csd.uoc.hy463.themis.ui.View.MenuRadioButton;
+import gr.csd.uoc.hy463.themis.ui.View.View;
+import gr.csd.uoc.hy463.themis.ui.View.MenuCheckbox;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
@@ -324,6 +329,7 @@ public class Themis {
             } finally {
                 _task = null;
                 if (search != null) {
+                    view.checkRetrievalModel(search.get_model());
                     view.enableSearchButton();
                 }
             }
@@ -335,14 +341,33 @@ public class Themis {
         public void run() {
             _task = TASK.SEARCH;
             List<Pair<Object, Double>> results;
-            long startTime = System.nanoTime();
+
+            //set the document properties we want to retrieve
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            JMenu documentProperties = view.get_documentProperties();
+            for (int i = 0; i < documentProperties.getItemCount(); i++) {
+                if (documentProperties.getItem(i).isSelected()) {
+                    props.add(((MenuCheckbox) documentProperties.getItem(i)).get_prop());
+                }
+            }
+            search.setDocumentProperties(props);
+
+            //set the retrieval model
+            JMenu retrievalModel = view.get_retrievalModel();
+            for (int i = 0; i < retrievalModel.getItemCount(); i++) {
+                if (retrievalModel.getItem(i).isSelected()) {
+                    search.setRetrievalModel(((MenuRadioButton) retrievalModel.getItem(i)).get_model());
+                }
+            }
+
             String query = view.get_searchField().getText();
+            long startTime = System.nanoTime();
             print("Searching for: " + query + " ... ");
             try { //todo: close files
-                results = search.search(view.get_searchField().getText());
+                results = search.search(view.get_searchField().getText(), 0, 9);
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
-                search.printResults(results,0, 9);
+                search.printResults(results, 0, 9);
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");

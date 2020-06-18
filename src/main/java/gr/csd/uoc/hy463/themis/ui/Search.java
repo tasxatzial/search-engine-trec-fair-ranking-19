@@ -50,6 +50,7 @@ public class Search {
     private Indexer _indexer;
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
+    private Set<DocInfo.PROPERTY> _props;
 
     public Search() throws Exception {
         _indexer = new Indexer();
@@ -60,7 +61,7 @@ public class Search {
             case "VSM":
                 _model = new VSM(_indexer);
                 break;
-            case "Existential":
+            default:
                 _model = new Existential(_indexer);
                 break;
         }
@@ -68,66 +69,83 @@ public class Search {
         if (!_indexer.load()) {
             throw new Exception("Unable to load index");
         }
-    }
-
-    public void unloadIndex() throws IOException {
-        _indexer.unload();
-    }
-
-    public void setModelVSM() {
-        if (!(_model instanceof VSM)) {
-            _model = new VSM(_indexer);
-        }
-    }
-
-    public void setModelBM25() {
-        if (!(_model instanceof OkapiBM25)) {
-            _model = new OkapiBM25(_indexer);
-        }
-    }
-
-    public void setModelExistential() {
-        if (!(_model instanceof Existential)) {
-            _model = new Existential(_indexer);
-        }
-    }
-
-    public void setExpansionModelGlove() throws IOException {
-        if (!(_queryExpansion instanceof Glove)) {
-            _queryExpansion = new Glove();
-        }
-    }
-
-    public void resetExpansionModel() {
+        _props = new HashSet<>();
         _queryExpansion = null;
     }
 
     /**
-     * Searches for a query and returns a ranked list of results. The results contain the essential properties
-     * specified by the current retrieval model.
+     * Unloads an index from memory
+     * @throws IOException
+     */
+    public void unloadIndex() throws IOException {
+        _indexer.unload();
+    }
+
+    /**
+     * Sets the retrieval model to the specified model
+     * @param model
+     */
+    public void setRetrievalModel(ARetrievalModel.MODEL model) {
+        if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
+            _model = new VSM(_indexer);
+        }
+        else if (model == ARetrievalModel.MODEL.BM25 && !(_model instanceof OkapiBM25)) {
+            _model = new OkapiBM25(_indexer);
+        }
+        else if (!(_model instanceof Existential)) {
+            _model = new Existential(_indexer);
+        }
+    }
+
+    /**
+     * Returns the current retrieval model
+     * @return
+     */
+    public ARetrievalModel.MODEL get_model() {
+        if (_model instanceof VSM) {
+            return ARetrievalModel.MODEL.VSM;
+        }
+        if (_model instanceof OkapiBM25) {
+            return ARetrievalModel.MODEL.BM25;
+        }
+        return ARetrievalModel.MODEL.EXISTENTIAL;
+    }
+
+    /**
+     * Sets the query expansion dictionary to the specified dictionary
+     * @param dictionary
+     * @throws IOException
+     */
+    public void setExpansionModel(QueryExpansion.DICTIONARY dictionary) throws IOException {
+        if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
+            _queryExpansion = new Glove();
+        }
+        else {
+            _queryExpansion = null;
+        }
+    }
+
+    /**
+     * Sets the retrieved document properties to the specified props
+     * @param props
+     */
+    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) {
+        _props = props;
+    }
+
+    /**
+     * Searches for a query and returns a ranked list of results.
      * @param query
      * @return
      * @throws IOException
      */
     public List<Pair<Object, Double>> search(String query) throws IOException {
-        return search(query, new HashSet<>(), 0, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Searches for a query and returns a ranked list of results. The results contain the document
-     * properties specified by props + the essential properties specified by the current retrieval model.
-     * @param query
-     * @return
-     * @throws IOException
-     */
-    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props) throws IOException {
-        return search(query, props, 0, Integer.MAX_VALUE);
+        return search(query, 0, Integer.MAX_VALUE);
     }
 
     /**
      * Searches for a query and returns a ranked list of results. The results in the range
-     * [startResult, endResult] contain the document properties specified by props + the essential properties
-     * specified by the current retrieval model. All other results contain only the essential properties.
+     * [startResult, endResult] contain the document properties set by setDocumentProperties().
      * startResult, endResult should be set to different values other than 0, Integer.MAX_VALUE only when we
      * want a small number of results.
      * @param query
@@ -136,7 +154,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, Set<DocInfo.PROPERTY> props, int startResult, int endResult) throws IOException {
+    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
         String expandedQuery = (_queryExpansion != null) ? _queryExpansion.expandQuery(query) : query;
@@ -145,55 +163,27 @@ public class Search {
         terms.forEach(t -> queryTerms.add(new QueryTerm(t, 1.0)));
 
         /* perform a search */
-        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, props, startResult, endResult);
+        List<Pair<Object, Double>> results = _model.getRankedResults(queryTerms, _props, startResult, endResult);
 
         return results;
     }
 
     /**
-     * Prints a list of results in decreasing ranking order. The results show all properties that have been
-     * retrieved for each document.
+     * Prints a list of results in decreasing ranking order.
      * @param searchResults
      */
     public void printResults(List<Pair<Object, Double>> searchResults) {
-        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getOkapiProps();
-        allprops.addAll(ARetrievalModel.getVSMProps());
-        allprops.addAll(ARetrievalModel.getMonModelProps());
-        printResults(searchResults, allprops, 0, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Prints a list of results in decreasing ranking order. Only the results from ranked position startResult
-     * to endResult are displayed. All properties that have been retrieved for each document are displayed.
-     * @param searchResults
-     * @param startResult From 0 to Integer.MAX_VALUE
-     * @param endResult From 0 to Integer.MAX_VALUE
-     */
-    public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
-        Set<DocInfo.PROPERTY> allprops = ARetrievalModel.getOkapiProps();
-        allprops.addAll(ARetrievalModel.getVSMProps());
-        allprops.addAll(ARetrievalModel.getMonModelProps());
-        printResults(searchResults, allprops, startResult, endResult);
-    }
-
-    /**
-     * Prints a list of results in decreasing ranking order. The results display only the properties
-     * specified by props (if they exist)
-     * @param searchResults
-     */
-    public void printResults(List<Pair<Object, Double>> searchResults, Set<DocInfo.PROPERTY> props) {
-        printResults(searchResults, props, 0, Integer.MAX_VALUE);
+        printResults(searchResults, 0, Integer.MAX_VALUE);
     }
 
     /**
      * Prints a list of results in decreasing ranking order from ranked position startResult to endResult.
      * Only the results from ranked position startResult to endResult are displayed.
-     * Only the the properties specified by props are displayed (if they exist)
      * @param searchResults
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      */
-    public void printResults(List<Pair<Object, Double>> searchResults, Set<DocInfo.PROPERTY> props, int startResult, int endResult) {
+    public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
         if (searchResults.isEmpty()) {
             return;
         }
@@ -212,13 +202,12 @@ public class Search {
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
             DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
-            Set<DocInfo.PROPERTY> docInfoProps = docInfo.getProps();
-            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(props);
+            List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");
             Themis.print("DOC_ID: " + docInfo.getId() + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
-                if (docInfoProps.contains(docInfoProp)) {
+                if (docInfo.hasProperty(docInfoProp)) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");
                 }
             }
