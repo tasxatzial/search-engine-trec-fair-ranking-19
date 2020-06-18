@@ -43,6 +43,10 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Runs the evaluation for the specified retrieval model and query expansion dictionary that are
+ * specified in the constructor
+ */
 public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private Search _search;
@@ -50,9 +54,12 @@ public class themisEval {
     private String __JUDGEMENTS_FILENAME__;
     private String __EVALUATION_FILENAME__;
 
-    public themisEval(Search search) throws IOException {
+    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
         _search = search;
         __CONFIG__ = new Config();
+        if (evaluateInit(model, dictionary)) {
+            evaluate();
+        }
     }
 
     /**
@@ -80,68 +87,38 @@ public class themisEval {
         return false;
     }
 
-    /**
-     * Sets the search model to the specified model and the query expansion dictionary to the specified
-     * dictionary. Also opens the appropriate files for writing the results of the evaluation.
-     * @param model
-     * @param dictionary
-     * @throws IOException
-     */
-    public void evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
+     /* Sets the search model to the specified model, the query expansion dictionary to the specified
+     * dictionary, and the retrieved document properties to an empty set.
+     * Also sets the file name of the evaluation results based on the specified model and dictionary */
+    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
         __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
         String __INDEX_PATH__ = __CONFIG__.getIndexPath();
         if (!hasJudgements()) {
-            if (dictionary == QueryExpansion.DICTIONARY.NONE) {
-                __LOGGER__.error("No judgements file found! " + model + " evaluation failed");
-                Themis.print("No judgements file found! " + model + " evaluation failed\n");
-            }
-            else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-                __LOGGER__.error("No judgements file found! " + model + "/Glove evaluation failed");
-                Themis.print("No judgements file found! " + model + "/Glove evaluation failed\n");
-            }
-            return;
+            __LOGGER__.error("No judgements file found! Evaluation failed");
+            Themis.print("No judgements file found! Evaluation failed\n");
+            return false;
         }
-        String evaluationFilename = null;
-        if (dictionary == QueryExpansion.DICTIONARY.NONE) {
-            if (model == ARetrievalModel.MODEL.VSM) {
-                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getVSMEvaluationFilename();
-            }
-            else if (model == ARetrievalModel.MODEL.BM25) {
-                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getBM25EvaluationFilename();
-            }
-        }
-        else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-            if (model == ARetrievalModel.MODEL.VSM) {
-                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getVSMGloveEvaluationFilename();
-            }
-            else if (model == ARetrievalModel.MODEL.BM25) {
-                evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getBM25GloveEvaluationFilename();
-            }
-        }
+        String evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getEvaluationFilename();
         if (hasEvaluation(evaluationFilename)) {
-            if (dictionary == QueryExpansion.DICTIONARY.NONE) {
-                __LOGGER__.error(model + " evaluation file already exists! Evaluation failed");
-                Themis.print(model + " evaluation file already exists! Evaluation failed\n");
-            }
-            else if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-                __LOGGER__.error(model + "/Glove evaluation file already exists! Evaluation failed");
-                Themis.print(model + "/Glove evaluation file already exists! Evaluation failed\n");
-            }
-            return;
+            __LOGGER__.error("Evaluation file already exists! Evaluation failed");
+            Themis.print("Evaluation file already exists! Evaluation failed\n");
+            return false;
         }
         _search.setRetrievalModel(model);
-        _search.setExpansionModel(dictionary);
+        _search.setExpansionDictionary(dictionary);
+        _search.setDocumentProperties(new HashSet<>());
         __EVALUATION_FILENAME__ = evaluationFilename;
-        evaluate();
+        return true;
     }
 
-    /* the evaluation function */
+    /* Runs the evaluation based on the configured parameters */
     private void evaluate() throws IOException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
-        Themis.print("------------------------------------------------\n");
         Themis.print(">>> Saving results in " + __EVALUATION_FILENAME__ + "\n\n");
         evaluationWriter.write(">>> Using options:\n");
+        evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
+        evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         evaluationWriter.write("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
         evaluationWriter.write("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
         evaluationWriter.write("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");

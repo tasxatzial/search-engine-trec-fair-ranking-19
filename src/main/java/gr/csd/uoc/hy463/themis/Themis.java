@@ -233,18 +233,9 @@ public class Themis {
                     return;
                 }
             }
-            themisEval evaluator;
             try { //todo: close files
-                evaluator = new themisEval(search);
-            } catch (IOException e) {
-                __LOGGER__.error(e.getMessage());
-                print("Failed to initialize evaluator\n");
-                _task = null;
-                return;
-            }
-            try { //todo: close files
-                evaluator.evaluateInit(_model, _dictionary);
-            } catch (IOException e) {
+                new themisEval(search, _model, _dictionary);
+            } catch (Exception e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");
             } finally {
@@ -329,7 +320,7 @@ public class Themis {
             } finally {
                 _task = null;
                 if (search != null) {
-                    view.checkRetrievalModel(search.get_model());
+                    view.checkRetrievalModel(search.getRetrievalmodel());
                     view.enableSearchButton();
                 }
             }

@@ -268,35 +268,11 @@ public class Config {
     }
 
     /**
-     * Returns the path to the filename of the VSM evaluation results
+     * Returns the path to the filename of the evaluation results
      * @return
      */
-    public String getVSMEvaluationFilename() {
-        return __PROP__.getProperty("EVALUATION_VSM_FILENAME");
-    }
-
-    /**
-     * Returns the path to the filename of the BM25 evaluation results
-     * @return
-     */
-    public String getBM25EvaluationFilename() {
-        return __PROP__.getProperty("EVALUATION_BM25_FILENAME");
-    }
-
-    /**
-     * Returns the path to the filename of the VSM/Glove evaluation results
-     * @return
-     */
-    public String getVSMGloveEvaluationFilename() {
-        return __PROP__.getProperty("EVALUATION_VSM_GLOVE_FILENAME");
-    }
-
-    /**
-     * Returns the path to the filename of the BM25/Glove evaluation results
-     * @return
-     */
-    public String getBM25GloveEvaluationFilename() {
-        return __PROP__.getProperty("EVALUATION_BM25_GLOVE_FILENAME");
+    public String getEvaluationFilename() {
+        return __PROP__.getProperty("EVALUATION_FILENAME");
     }
 
     /**

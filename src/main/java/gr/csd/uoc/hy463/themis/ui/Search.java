@@ -101,7 +101,7 @@ public class Search {
      * Returns the current retrieval model
      * @return
      */
-    public ARetrievalModel.MODEL get_model() {
+    public ARetrievalModel.MODEL getRetrievalmodel() {
         if (_model instanceof VSM) {
             return ARetrievalModel.MODEL.VSM;
         }
@@ -116,13 +116,24 @@ public class Search {
      * @param dictionary
      * @throws IOException
      */
-    public void setExpansionModel(QueryExpansion.DICTIONARY dictionary) throws IOException {
+    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException {
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove();
         }
         else {
             _queryExpansion = null;
         }
+    }
+
+    /**
+     * Returns the current query expansion dictionary
+     * @return
+     */
+    public QueryExpansion.DICTIONARY getExpansionDictionary() {
+        if (_queryExpansion instanceof Glove) {
+            return QueryExpansion.DICTIONARY.GLOVE;
+        }
+        return QueryExpansion.DICTIONARY.NONE;
     }
 
     /**
