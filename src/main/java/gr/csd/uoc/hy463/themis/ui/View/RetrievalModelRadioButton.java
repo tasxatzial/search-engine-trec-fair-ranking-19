@@ -7,10 +7,10 @@ import javax.swing.*;
 /**
  * Used for associating a search retrieval model to a menu item.
  */
-public class MenuRadioButton extends JRadioButtonMenuItem {
-    ARetrievalModel.MODEL _model;
+public class RetrievalModelRadioButton extends JRadioButtonMenuItem {
+    private ARetrievalModel.MODEL _model;
 
-    public MenuRadioButton(String name) {
+    public RetrievalModelRadioButton(String name) {
         super(name);
         switch (name) {
             case "Boolean":

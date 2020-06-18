@@ -6,9 +6,10 @@ import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.ui.View.MenuRadioButton;
+import gr.csd.uoc.hy463.themis.ui.View.ExpansionDictionaryRadioButton;
+import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
-import gr.csd.uoc.hy463.themis.ui.View.MenuCheckbox;
+import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -321,6 +322,7 @@ public class Themis {
                 _task = null;
                 if (search != null) {
                     view.checkRetrievalModel(search.getRetrievalmodel());
+                    view.checkExpansionDictionary(search.getExpansionDictionary());
                     view.enableSearchButton();
                 }
             }
@@ -333,12 +335,28 @@ public class Themis {
             _task = TASK.SEARCH;
             List<Pair<Object, Double>> results;
 
+            //set the query expansion dictionary
+            JMenu expansionDictionary = view.get_expansionDictionary();
+            for (int i = 0; i < expansionDictionary.getItemCount(); i++) {
+                if (expansionDictionary.getItem(i).isSelected()) {
+                    try {
+                        search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).get_dictionary());
+                    } catch (Exception e) {
+                        __LOGGER__.error(e.getMessage());
+                        print("Failed to load expansion dictionary");
+                        _task = null;
+                        return;
+                    }
+                    break;
+                }
+            }
+
             //set the document properties we want to retrieve
             Set<DocInfo.PROPERTY> props = new HashSet<>();
             JMenu documentProperties = view.get_documentProperties();
             for (int i = 0; i < documentProperties.getItemCount(); i++) {
                 if (documentProperties.getItem(i).isSelected()) {
-                    props.add(((MenuCheckbox) documentProperties.getItem(i)).get_prop());
+                    props.add(((DocInfoRadioButton) documentProperties.getItem(i)).get_prop());
                 }
             }
             search.setDocumentProperties(props);
@@ -347,7 +365,8 @@ public class Themis {
             JMenu retrievalModel = view.get_retrievalModel();
             for (int i = 0; i < retrievalModel.getItemCount(); i++) {
                 if (retrievalModel.getItem(i).isSelected()) {
-                    search.setRetrievalModel(((MenuRadioButton) retrievalModel.getItem(i)).get_model());
+                    search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).get_model());
+                    break;
                 }
             }
 

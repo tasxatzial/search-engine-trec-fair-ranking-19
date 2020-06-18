@@ -9,10 +9,10 @@ import java.awt.event.MouseEvent;
  * Used for associating a document property to a menu item.
  * o
  */
-public class MenuCheckbox extends JCheckBoxMenuItem {
-    DocInfo.PROPERTY _prop;
+public class DocInfoRadioButton extends JCheckBoxMenuItem {
+    private DocInfo.PROPERTY _prop;
 
-    public MenuCheckbox(String name) {
+    public DocInfoRadioButton(String name) {
         super(name);
         switch (name) {
             case "Title":

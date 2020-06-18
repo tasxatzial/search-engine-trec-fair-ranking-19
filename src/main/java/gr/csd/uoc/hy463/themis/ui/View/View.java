@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.ui.View;
 
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 
 import javax.swing.*;
@@ -62,6 +63,9 @@ public class View extends JFrame {
     /* the "document properties" menu */
     private JMenu _documentProperties;
 
+    /* the "query expansion" menu */
+    private JMenu _expansionDictionary;
+
     public View() {
         initMenu();
         pack();
@@ -93,9 +97,9 @@ public class View extends JFrame {
 
         _retrievalModel = new JMenu("Retrieval model");
         ButtonGroup group = new ButtonGroup();
-        MenuRadioButton modelBoolean = new MenuRadioButton("Boolean");
-        MenuRadioButton modelVSM = new MenuRadioButton("VSM");
-        MenuRadioButton modelBM25 = new MenuRadioButton("BM25+");
+        RetrievalModelRadioButton modelBoolean = new RetrievalModelRadioButton("Boolean");
+        RetrievalModelRadioButton modelVSM = new RetrievalModelRadioButton("VSM");
+        RetrievalModelRadioButton modelBM25 = new RetrievalModelRadioButton("BM25+");
         group.add(modelBoolean);
         group.add(modelVSM);
         group.add(modelBM25);
@@ -103,16 +107,25 @@ public class View extends JFrame {
         _retrievalModel.add(modelVSM);
         _retrievalModel.add(modelBM25);
 
+        _expansionDictionary = new JMenu("Query expansion");
+        group = new ButtonGroup();
+        ExpansionDictionaryRadioButton noneDictionary = new ExpansionDictionaryRadioButton("None");
+        ExpansionDictionaryRadioButton gloveDictionary = new ExpansionDictionaryRadioButton("Glove");
+        group.add(noneDictionary);
+        group.add(gloveDictionary);
+        _expansionDictionary.add(noneDictionary);
+        _expansionDictionary.add(gloveDictionary);
+
         _documentProperties = new JMenu("Document properties");
-        MenuCheckbox title = new MenuCheckbox("Title");
-        MenuCheckbox authors = new MenuCheckbox("Authors");
-        MenuCheckbox authorIds = new MenuCheckbox("Author ids");
-        MenuCheckbox journal = new MenuCheckbox("Journal");
-        MenuCheckbox year = new MenuCheckbox("Year");
-        MenuCheckbox pagerank = new MenuCheckbox("Pagerank");
-        MenuCheckbox weight = new MenuCheckbox("Weight");
-        MenuCheckbox length = new MenuCheckbox("Length");
-        MenuCheckbox maxTF = new MenuCheckbox("Max term frequency");
+        DocInfoRadioButton title = new DocInfoRadioButton("Title");
+        DocInfoRadioButton authors = new DocInfoRadioButton("Authors");
+        DocInfoRadioButton authorIds = new DocInfoRadioButton("Author ids");
+        DocInfoRadioButton journal = new DocInfoRadioButton("Journal");
+        DocInfoRadioButton year = new DocInfoRadioButton("Year");
+        DocInfoRadioButton pagerank = new DocInfoRadioButton("Pagerank");
+        DocInfoRadioButton weight = new DocInfoRadioButton("Weight");
+        DocInfoRadioButton length = new DocInfoRadioButton("Length");
+        DocInfoRadioButton maxTF = new DocInfoRadioButton("Max term frequency");
         _documentProperties.add(title);
         _documentProperties.add(authors);
         _documentProperties.add(authorIds);
@@ -125,6 +138,7 @@ public class View extends JFrame {
 
         search.add(_queryCollection);
         search.add(_retrievalModel);
+        search.add(_expansionDictionary);
         search.add(_documentProperties);
 
         /* evaluate menu */
@@ -408,13 +422,34 @@ public class View extends JFrame {
     }
 
     /**
+     * Returns the "query expansion" menu
+     * @return
+     */
+    public JMenu get_expansionDictionary() {
+        return _expansionDictionary;
+    }
+
+    /**
      * Checks the menu radio button that corresponds to the specified retrieval model
      * @param model
      */
     public void checkRetrievalModel(ARetrievalModel.MODEL model) {
         for (int i = 0; i < _retrievalModel.getItemCount(); i++) {
-            if (((MenuRadioButton) _retrievalModel.getItem(i)).get_model() == model) {
+            if (((RetrievalModelRadioButton) _retrievalModel.getItem(i)).get_model() == model) {
                 _retrievalModel.getItem(i).setSelected(true);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Checks the menu radio button that correspods to the specified query expansion dictionary
+     * @param dictionary
+     */
+    public void checkExpansionDictionary(QueryExpansion.DICTIONARY dictionary) {
+        for (int i = 0; i < _expansionDictionary.getItemCount(); i++) {
+            if (((ExpansionDictionaryRadioButton) _expansionDictionary.getItem(i)).get_dictionary() == dictionary) {
+                _expansionDictionary.getItem(i).setSelected(true);
                 break;
             }
         }

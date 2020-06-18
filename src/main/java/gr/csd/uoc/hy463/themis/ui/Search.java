@@ -179,12 +179,16 @@ public class Search {
 
             //get the new terms
             expandedQuery = _queryExpansion.expandQuery(processedQuery);
+            List<QueryTerm> processedExpandedQuery = new ArrayList<>();
 
-            //apply stopwords/stemming
-            expandedQuery.removeIf(processedQueryTerm -> ProcessText.editQuery(processedQueryTerm.getTerm(), useStopwords, useStemmer).isEmpty());
-
-            //remove the terms that already exist in the initial query
-            expandedQuery.removeIf(processedQueryTerm -> processedQuerySet.contains(processedQueryTerm.getTerm()));
+            //apply stopwords/stemming, discard the term if it already exists in the initial query
+            for (QueryTerm queryTerm : expandedQuery) {
+                List<String> processedTerm = ProcessText.editQuery(queryTerm.getTerm(), useStopwords, useStemmer);
+                if (!processedTerm.isEmpty() && !processedQuerySet.contains(processedTerm.get(0))) {
+                    processedExpandedQuery.add(queryTerm);
+                }
+            }
+            expandedQuery = processedExpandedQuery;
         }
         else {
             expandedQuery = new ArrayList<>();
