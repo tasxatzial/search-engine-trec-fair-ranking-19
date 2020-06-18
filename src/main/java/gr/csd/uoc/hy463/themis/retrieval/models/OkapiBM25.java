@@ -57,7 +57,6 @@ public class OkapiBM25 extends ARetrievalModel {
         double avgdl = _indexer.getAvgdl();
 
         //collect the terms
-        query = removeDuplicateTerms(query);
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //get the relevant documents from the documents file
@@ -73,7 +72,10 @@ public class OkapiBM25 extends ARetrievalModel {
         //frequencies of each term in each document
         Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
-            int[] termFreqs = _indexer.getFreq(terms.get(i));
+            int[] freqs = _indexer.getFreq(terms.get(i));
+            for (int k = 0; k < freqs.length; k++) {
+                freqs[k] *= query.get(i).getWeight(); //take query term weight into account
+            }
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = _termsDocInfo.get(i).get(j);
                 int[] docFreqs = documentsFreqs.get(docInfo);
@@ -81,7 +83,7 @@ public class OkapiBM25 extends ARetrievalModel {
                     docFreqs = new int[terms.size()];
                     documentsFreqs.put(docInfo, docFreqs);
                 }
-                docFreqs[i] = termFreqs[j];
+                docFreqs[i] = freqs[j];
             }
         }
 

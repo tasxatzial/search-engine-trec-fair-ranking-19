@@ -1,5 +1,9 @@
 package gr.csd.uoc.hy463.themis.queryExpansion;
 
+import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+
+import java.util.List;
+
 /**
  * Abstract class for all query expansion models
  */
@@ -13,5 +17,5 @@ public abstract class QueryExpansion {
      * @param query
      * @return
      */
-    public abstract String expandQuery(String query);
+    public abstract List<QueryTerm> expandQuery(List<String> query);
 }

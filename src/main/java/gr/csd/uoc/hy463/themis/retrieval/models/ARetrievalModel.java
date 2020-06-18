@@ -293,26 +293,4 @@ public abstract class ARetrievalModel {
             return 0;
         });
     }
-
-    /**
-     * Returns a new query with the duplicate terms removed
-     * @param query
-     * @return
-     */
-    protected List<QueryTerm> removeDuplicateTerms(List<QueryTerm> query) {
-        List<QueryTerm> newQuery = new ArrayList<>();
-        for (int i = 0; i < query.size(); i++) {
-            boolean found = false;
-            for (int j = 0; j < i; j++) {
-                if (query.get(j).getTerm().equals(query.get(i).getTerm())) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                newQuery.add(query.get(i));
-            }
-        }
-        return newQuery;
-    }
 }

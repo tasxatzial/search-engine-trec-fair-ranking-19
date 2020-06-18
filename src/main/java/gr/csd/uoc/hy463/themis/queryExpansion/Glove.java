@@ -3,11 +3,13 @@ package gr.csd.uoc.hy463.themis.queryExpansion;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,22 +32,21 @@ public class Glove extends QueryExpansion {
     }
 
     /**
-     * Expands a given query by adding to it the nearest 2 terms for each term of the query
+     * Expands the specified list of terms. For each term it appends the nearest 2 terms with weight 0.5.
+     * The returned list contains only the new terms.
      * @param query
      * @return
      */
-    public String expandQuery(String query) {
-        List<String> splitQuery = ProcessText.split(query);
-        StringBuilder sb = new StringBuilder();
+    public List<QueryTerm> expandQuery(List<String> query) {
+        List<QueryTerm> expandedQuery = new ArrayList<>();
 
-        for (String s : splitQuery) {
-            Collection<String> nearest = _model.wordsNearest(s, _nearest);
-            Object[] nearestArray = nearest.toArray();
+        for (String term : query) {
+            Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
+            Object[] nearestArray = nearestTerms.toArray();
             for (Object o : nearestArray) {
-                sb.append(o.toString()).append(" ");
+                expandedQuery.add(new QueryTerm(o.toString(), 0.5));
             }
-            sb.append(s).append(" ");
         }
-        return sb.toString();
+        return expandedQuery;
     }
 }

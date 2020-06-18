@@ -53,25 +53,10 @@ public class VSM extends ARetrievalModel {
         int totalArticles = _indexer.getTotalArticles();
 
         //collect the terms
-        query = removeDuplicateTerms(query);
         query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
 
         //get the relevant documents from the documents file
         fetchEssentialDocInfo(query, props, startDoc, endDoc);
-
-        //frequencies of the terms in the query
-        Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
-        for (String term : terms) {
-            queryFreqs.merge(term, 1, Integer::sum);
-        }
-
-        //max frequency of the query terms
-        int queryMaxFreq = 0;
-        for (Integer freq : queryFreqs.values()) {
-            if (freq > queryMaxFreq) {
-                queryMaxFreq = freq;
-            }
-        }
 
         //df of the terms
         int[] dfs = _indexer.getDf(terms);
@@ -79,7 +64,7 @@ public class VSM extends ARetrievalModel {
         //weights of terms in the query
         double[] queryWeights = new double[terms.size()];
         for (int i = 0; i < terms.size(); i++) {
-            double tf = (0.0 + queryFreqs.get(terms.get(i))) / queryMaxFreq;
+            double tf = query.get(i).getWeight(); //take query term weight into account
             double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
             queryWeights[i] = tf * idf;
         }
@@ -95,6 +80,9 @@ public class VSM extends ARetrievalModel {
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] freqs = _indexer.getFreq(terms.get(i));
+            for (int k = 0; k < freqs.length; k++) {
+                freqs[k] *= query.get(i).getWeight(); //take query term weight into account
+            }
             double idf = Math.log(totalArticles / (1.0 + dfs[i])) / Math.log(2);
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = _termsDocInfo.get(i).get(j);
