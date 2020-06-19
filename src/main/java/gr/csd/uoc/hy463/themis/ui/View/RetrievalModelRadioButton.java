@@ -13,7 +13,7 @@ public class RetrievalModelRadioButton extends JRadioButtonMenuItem {
     public RetrievalModelRadioButton(String name) {
         super(name);
         switch (name) {
-            case "Boolean":
+            case "Existential":
                 _model = ARetrievalModel.MODEL.EXISTENTIAL;
                 break;
             case "VSM":

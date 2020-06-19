@@ -55,7 +55,7 @@ public class Search {
     private QueryExpansion _queryExpansion;
     private Set<DocInfo.PROPERTY> _props;
 
-    public Search() throws IOException {
+    public Search() throws IOException, QueryExpansionException {
         _indexer = new Indexer();
         switch (_indexer.getConfig().getRetrievalModel()) {
             case "BM25":
@@ -73,7 +73,19 @@ public class Search {
             throw new IOException("Unable to load index");
         }
         _props = new HashSet<>();
-        _queryExpansion = null;
+        if (_indexer.getConfig().getUseQueryExpansion()) {
+            switch (_indexer.getConfig().getQueryExpansionModel()) {
+                case "Glove":
+                    _queryExpansion = new Glove();
+                    break;
+                case "extJWNL":
+                    _queryExpansion = new EXTJWNL();
+                    break;
+            }
+        }
+        else {
+            _queryExpansion = null;
+        }
     }
 
     /**

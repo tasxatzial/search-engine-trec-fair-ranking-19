@@ -276,6 +276,22 @@ public class Config {
     }
 
     /**
+     * Returns if an query expansion model will be used
+     * @return
+     */
+    public boolean getUseQueryExpansion() {
+        return Boolean.parseBoolean(__PROP__.getProperty("QUERY_EXPANSION_ENABLED"));
+    }
+
+    /**
+     * Returns the name of the query expansion model
+     * @return
+     */
+    public String getQueryExpansionModel() {
+        return __PROP__.getProperty("QUERY_EXPANSION_MODEL");
+    }
+
+    /**
      * number of max memory to use
      *
      * @return

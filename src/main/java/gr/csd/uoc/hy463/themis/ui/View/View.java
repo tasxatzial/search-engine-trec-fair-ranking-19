@@ -99,7 +99,7 @@ public class View extends JFrame {
 
         _retrievalModel = new JMenu("Retrieval model");
         ButtonGroup group = new ButtonGroup();
-        RetrievalModelRadioButton modelBoolean = new RetrievalModelRadioButton("Boolean");
+        RetrievalModelRadioButton modelBoolean = new RetrievalModelRadioButton("Existential");
         RetrievalModelRadioButton modelVSM = new RetrievalModelRadioButton("VSM");
         RetrievalModelRadioButton modelBM25 = new RetrievalModelRadioButton("BM25+");
         group.add(modelBoolean);

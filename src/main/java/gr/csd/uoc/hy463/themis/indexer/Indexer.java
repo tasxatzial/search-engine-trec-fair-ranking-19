@@ -36,7 +36,11 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Tex
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
+import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
+import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.utils.*;
 import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 
@@ -864,6 +868,15 @@ public class Indexer {
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
         Themis.print("DONE\n");
+
+        if (__CONFIG__.getUseQueryExpansion()) {
+            Themis.print("Query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
+        }
+        else {
+            Themis.print("Query expansion model: None\n");
+        }
+        Themis.print("Retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
+
         return true;
     }
 

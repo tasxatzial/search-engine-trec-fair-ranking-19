@@ -229,7 +229,7 @@ public class Themis {
                 createIndex = null;
                 try { //todo: close files
                     search = new Search();
-                } catch (IOException e) {
+                } catch (IOException | QueryExpansionException e) {
                     __LOGGER__.error(e.getMessage());
                     print("Failed to initialize search\n");
                     _task = null;
@@ -317,7 +317,7 @@ public class Themis {
             createIndex = null;
             try { //todo: close files
                 search = new Search();
-            } catch (IOException ex) {
+            } catch (IOException | QueryExpansionException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize search\n");
             } finally {
