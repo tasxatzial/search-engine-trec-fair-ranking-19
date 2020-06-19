@@ -21,14 +21,15 @@ public class Glove extends QueryExpansion {
     private int _nearest;
 
     public Glove() throws IOException {
+        Themis.print(">>> Initializing Glove...");
         Config __CONFIG__ = new Config();  // reads info from themis.config file
         File gloveModel = new File(__CONFIG__.getGloveModelFileName());
-        Themis.print(">>> Loading glove model data...");
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
-        Themis.print("DONE\n");
 
         //default is to get the nearest 2 terms for each term
         _nearest = 2;
+
+        Themis.print("DONE\n");
     }
 
     /**
@@ -37,17 +38,19 @@ public class Glove extends QueryExpansion {
      * @param query
      * @return
      */
+    @Override
     public List<List<QueryTerm>> expandQuery(List<String> query) {
+        double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
         for (String term : query) {
-            List<QueryTerm> expendedTerm = new ArrayList<>();
+            List<QueryTerm> expandedTerm = new ArrayList<>();
             Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
             Object[] nearestArray = nearestTerms.toArray();
             for (Object o : nearestArray) {
-                expendedTerm.add(new QueryTerm(o.toString(), 0.5));
+                expandedTerm.add(new QueryTerm(o.toString(), weight));
             }
-            expandedQuery.add(expendedTerm);
+            expandedQuery.add(expandedTerm);
         }
         return expandedQuery;
     }

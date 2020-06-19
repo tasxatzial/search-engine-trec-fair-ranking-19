@@ -29,7 +29,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
-//import gr.csd.uoc.hy463.themis.queryExpansion.EXTJWNL;
+import gr.csd.uoc.hy463.themis.queryExpansion.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
@@ -123,9 +123,9 @@ public class Search {
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove();
         }
-        /*else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
+        else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
             _queryExpansion = new EXTJWNL();
-        }*/
+        }
         else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             _queryExpansion = null;
         }
@@ -174,6 +174,7 @@ public class Search {
     public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
+        int maxNewTermsForEachTerm = 1; //for each term, expand the query by one extra term
         List<QueryTerm> finalQuery = new ArrayList<>();
 
         //split query into terms and apply stopwords, stemming
@@ -200,7 +201,11 @@ public class Search {
         if (_queryExpansion != null) {
             expandedQuery = _queryExpansion.expandQuery(splitQuery);
             for (List<QueryTerm> queryTerms : expandedQuery) {
+                int count = 0;
                 for (QueryTerm queryTerm : queryTerms) {
+                    if (count == maxNewTermsForEachTerm) {
+                        break;
+                    }
                     String term = queryTerm.getTerm();
                     if (useStopwords && StopWords.isStopWord(term)) {
                         continue;
@@ -210,6 +215,7 @@ public class Search {
                     }
                     if (!splitQuerySet.contains(term)) {
                         finalQuery.add(new QueryTerm(term, queryTerm.getWeight()));
+                        count++;
                     }
                 }
             }
