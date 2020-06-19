@@ -19,6 +19,9 @@ public class ExpansionDictionaryRadioButton extends JRadioButtonMenuItem {
             case "Glove":
                 _dictionary = QueryExpansion.DICTIONARY.GLOVE;
                 break;
+            case "extJWNL":
+                _dictionary = QueryExpansion.DICTIONARY.EXTJWNL;
+                break;
         }
     }
 

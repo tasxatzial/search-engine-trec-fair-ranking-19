@@ -113,10 +113,13 @@ public class View extends JFrame {
         group = new ButtonGroup();
         ExpansionDictionaryRadioButton noneDictionary = new ExpansionDictionaryRadioButton("None");
         ExpansionDictionaryRadioButton gloveDictionary = new ExpansionDictionaryRadioButton("Glove");
+        ExpansionDictionaryRadioButton extJWNLDictionary = new ExpansionDictionaryRadioButton("extJWNL");
         group.add(noneDictionary);
         group.add(gloveDictionary);
+        group.add(extJWNLDictionary);
         _expansionDictionary.add(noneDictionary);
         _expansionDictionary.add(gloveDictionary);
+        _expansionDictionary.add(extJWNLDictionary);
 
         _documentProperties = new JMenu("Document properties");
         DocInfoRadioButton title = new DocInfoRadioButton("Title");
