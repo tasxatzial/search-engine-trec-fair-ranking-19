@@ -39,6 +39,12 @@ public class View extends JFrame {
     /* The "evaluate BM25/Glove" menu item */
     private JMenuItem _evaluateBM25Glove;
 
+    /* The "evaluate VSM/JWNL" menu item */
+    private JMenuItem _evaluateVSM_JWNL;
+
+    /* The "evaluate BM25/JWNL" menu item */
+    private JMenuItem _evaluateBM25_JWNL;
+
     /* Title area (top) */
     private JLabel _titleArea;
 
@@ -152,10 +158,14 @@ public class View extends JFrame {
         _evaluateBM25 = new JMenuItem("BM25");
         _evaluateVSMGlove = new JMenuItem("VSM/Glove");
         _evaluateBM25Glove = new JMenuItem("BM25/Glove");
+        _evaluateVSM_JWNL = new JMenuItem("VSM/JWNL");
+        _evaluateBM25_JWNL = new JMenuItem("BM25/JWNL");
         evaluate.add(_evaluateVSM);
         evaluate.add(_evaluateBM25);
         evaluate.add(_evaluateVSMGlove);
         evaluate.add(_evaluateBM25Glove);
+        evaluate.add(_evaluateVSM_JWNL);
+        evaluate.add(_evaluateBM25_JWNL);
 
         /* main menu bar */
         _menu = new JMenuBar();
@@ -393,6 +403,22 @@ public class View extends JFrame {
      */
     public JMenuItem get_evaluateBM25Glove() {
         return _evaluateBM25Glove;
+    }
+
+    /**
+     * Returns the "evaluate VSM/JWNL" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateVSM_JWNL() {
+        return _evaluateVSM_JWNL;
+    }
+
+    /**
+     * Returns the "evaluate BM25/JWNL" menu item
+     * @return
+     */
+    public JMenuItem get_evaluateBM25_JWNL() {
+        return _evaluateBM25_JWNL;
     }
 
     /**

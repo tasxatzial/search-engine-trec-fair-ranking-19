@@ -13,14 +13,12 @@ import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
-import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,10 +73,12 @@ public class Themis {
             view.get_createIndex().addActionListener(new createIndexListener());
             view.get_queryCollection().addActionListener(new searchListener());
             view.get_loadIndex().addActionListener(new loadIndexListener());
-            view.get_evaluateBM25().addActionListener(new evaluateBM25Listener());
             view.get_evaluateVSM().addActionListener(new evaluateVSMListener());
             view.get_evaluateVSMGlove().addActionListener(new evaluateVSMGloveListener());
+            view.get_evaluateVSM_JWNL().addActionListener(new evaluateVSM_JWNL_Listener());
+            view.get_evaluateBM25().addActionListener(new evaluateBM25Listener());
             view.get_evaluateBM25Glove().addActionListener(new evaluateBM25GloveListener());
+            view.get_evaluateBM25_JWNL().addActionListener(new evaluateBM25_JWNL_Listener());
 
             view.setVisible(true);
         }
@@ -186,6 +186,20 @@ public class Themis {
         }
     }
 
+    /* The listener for the "evaluate VSM/JWNL" menu item */
+    private static class evaluateVSM_JWNL_Listener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initOnlyResultsView();
+            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
+            runnableEvaluateBM25.start();
+        }
+    }
+
     /* The listener for the "evaluate BM25" menu item */
     private static class evaluateBM25Listener implements ActionListener {
         @Override
@@ -209,6 +223,20 @@ public class Themis {
             }
             view.initOnlyResultsView();
             Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE);
+            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
+            runnableEvaluateBM25.start();
+        }
+    }
+
+    /* The listener for the "evaluate BM25/JWNL" menu item */
+    private static class evaluateBM25_JWNL_Listener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (_task != null) {
+                return;
+            }
+            view.initOnlyResultsView();
+            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.EXTJWNL);
             Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
             runnableEvaluateBM25.start();
         }
