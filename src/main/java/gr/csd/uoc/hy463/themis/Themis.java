@@ -73,12 +73,12 @@ public class Themis {
             view.get_createIndex().addActionListener(new createIndexListener());
             view.get_queryCollection().addActionListener(new searchListener());
             view.get_loadIndex().addActionListener(new loadIndexListener());
-            view.get_evaluateVSM().addActionListener(new evaluateVSMListener());
-            view.get_evaluateVSMGlove().addActionListener(new evaluateVSMGloveListener());
-            view.get_evaluateVSM_JWNL().addActionListener(new evaluateVSM_JWNL_Listener());
-            view.get_evaluateBM25().addActionListener(new evaluateBM25Listener());
-            view.get_evaluateBM25Glove().addActionListener(new evaluateBM25GloveListener());
-            view.get_evaluateBM25_JWNL().addActionListener(new evaluateBM25_JWNL_Listener());
+            view.get_evaluateVSM().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE));
+            view.get_evaluateVSMGlove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE));
+            view.get_evaluateVSM_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL));
+            view.get_evaluateBM25().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.NONE));
+            view.get_evaluateBM25Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE));
+            view.get_evaluateBM25_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.EXTJWNL));
 
             view.setVisible(true);
         }
@@ -158,87 +158,23 @@ public class Themis {
         }
     }
 
-    /* The listener for the "evaluate VSM" menu item */
-    private static class evaluateVSMListener implements ActionListener {
+    /* The listener for the evaluate menu items */
+    private static class evaluateListener implements ActionListener {
+        private ARetrievalModel.MODEL _model;
+        private QueryExpansion.DICTIONARY _dictionary;
+        public evaluateListener(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
+           _model = model;
+           _dictionary = dictionary;
+        }
         @Override
         public void actionPerformed(ActionEvent e) {
             if (_task != null) {
                 return;
             }
             view.initOnlyResultsView();
-            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(_model, _dictionary);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
-        }
-    }
-
-    /* The listener for the "evaluate VSM/Glove" menu item */
-    private static class evaluateVSMGloveListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            view.initOnlyResultsView();
-            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
-            Thread runnableEvaluateVSM = new Thread(evaluateVSM);
-            runnableEvaluateVSM.start();
-        }
-    }
-
-    /* The listener for the "evaluate VSM/JWNL" menu item */
-    private static class evaluateVSM_JWNL_Listener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            view.initOnlyResultsView();
-            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
-            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
-            runnableEvaluateBM25.start();
-        }
-    }
-
-    /* The listener for the "evaluate BM25" menu item */
-    private static class evaluateBM25Listener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            view.initOnlyResultsView();
-            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.NONE);
-            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
-            runnableEvaluateBM25.start();
-        }
-    }
-
-    /* The listener for the "evaluate BM25/Glove" menu item */
-    private static class evaluateBM25GloveListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            view.initOnlyResultsView();
-            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE);
-            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
-            runnableEvaluateBM25.start();
-        }
-    }
-
-    /* The listener for the "evaluate BM25/JWNL" menu item */
-    private static class evaluateBM25_JWNL_Listener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            view.initOnlyResultsView();
-            Evaluate_runnable evaluateBM25 = new Evaluate_runnable(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.EXTJWNL);
-            Thread runnableEvaluateBM25 = new Thread(evaluateBM25);
-            runnableEvaluateBM25.start();
         }
     }
 
