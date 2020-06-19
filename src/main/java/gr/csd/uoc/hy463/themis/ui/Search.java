@@ -168,38 +168,36 @@ public class Search {
     public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
-        List<QueryTerm> expandedQuery;
 
         //split query into terms and apply stopwords/stemming
         List<String> processedQuery = ProcessText.editQuery(query, useStopwords, useStemmer);
-        Set<String> processedQuerySet = new HashSet<>(processedQuery);
 
-        //apply query expansion
+        Set<String> processedQuerySet = new HashSet<>(processedQuery);
+        List<QueryTerm> processedExpandedQuery = new ArrayList<>();
+
+        //expand query
         if (_queryExpansion != null) {
 
             //get the new terms
-            expandedQuery = _queryExpansion.expandQuery(processedQuery);
-            List<QueryTerm> processedExpandedQuery = new ArrayList<>();
+            List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(processedQuery);
 
             //apply stopwords/stemming, discard the term if it already exists in the initial query
-            for (QueryTerm queryTerm : expandedQuery) {
-                List<String> processedTerm = ProcessText.editQuery(queryTerm.getTerm(), useStopwords, useStemmer);
-                if (!processedTerm.isEmpty() && !processedQuerySet.contains(processedTerm.get(0))) {
-                    processedExpandedQuery.add(queryTerm);
+            for (List<QueryTerm> queryTerms : expandedQuery) {
+                for (QueryTerm queryTerm : queryTerms) {
+                    List<String> processedTerm = ProcessText.editQuery(queryTerm.getTerm(), useStopwords, useStemmer);
+                    if (!processedTerm.isEmpty() && !processedQuerySet.contains(processedTerm.get(0))) {
+                        processedExpandedQuery.add(queryTerm);
+                    }
                 }
             }
-            expandedQuery = processedExpandedQuery;
-        }
-        else {
-            expandedQuery = new ArrayList<>();
         }
 
         //finally, add to the expanded query the terms from the initial query (duplicate terms are discarded)
         for (String term : processedQuerySet) {
-            expandedQuery.add(new QueryTerm(term, 1.0));
+            processedExpandedQuery.add(new QueryTerm(term, 1.0));
         }
 
-        return _model.getRankedResults(expandedQuery, _props, startResult, endResult);
+        return _model.getRankedResults(processedExpandedQuery, _props, startResult, endResult);
     }
 
     /**

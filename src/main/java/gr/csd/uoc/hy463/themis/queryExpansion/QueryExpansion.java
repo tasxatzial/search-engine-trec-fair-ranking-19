@@ -17,5 +17,5 @@ public abstract class QueryExpansion {
      * @param query
      * @return
      */
-    public abstract List<QueryTerm> expandQuery(List<String> query);
+    public abstract List<List<QueryTerm>> expandQuery(List<String> query);
 }

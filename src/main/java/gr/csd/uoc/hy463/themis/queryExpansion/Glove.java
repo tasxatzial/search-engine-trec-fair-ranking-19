@@ -37,15 +37,17 @@ public class Glove extends QueryExpansion {
      * @param query
      * @return
      */
-    public List<QueryTerm> expandQuery(List<String> query) {
-        List<QueryTerm> expandedQuery = new ArrayList<>();
+    public List<List<QueryTerm>> expandQuery(List<String> query) {
+        List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
         for (String term : query) {
+            List<QueryTerm> expendedTerm = new ArrayList<>();
             Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
             Object[] nearestArray = nearestTerms.toArray();
             for (Object o : nearestArray) {
-                expandedQuery.add(new QueryTerm(o.toString(), 0.5));
+                expendedTerm.add(new QueryTerm(o.toString(), 0.5));
             }
+            expandedQuery.add(expendedTerm);
         }
         return expandedQuery;
     }
