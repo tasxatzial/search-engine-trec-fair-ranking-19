@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
@@ -12,6 +13,7 @@ import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -227,7 +229,7 @@ public class Themis {
                 createIndex = null;
                 try { //todo: close files
                     search = new Search();
-                } catch (Exception e) {
+                } catch (IOException e) {
                     __LOGGER__.error(e.getMessage());
                     print("Failed to initialize search\n");
                     _task = null;
@@ -236,7 +238,7 @@ public class Themis {
             }
             try { //todo: close files
                 new themisEval(search, _model, _dictionary);
-            } catch (Exception e) {
+            } catch (IOException | QueryExpansionException e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");
             } finally {
@@ -315,7 +317,7 @@ public class Themis {
             createIndex = null;
             try { //todo: close files
                 search = new Search();
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize search\n");
             } finally {
@@ -341,7 +343,7 @@ public class Themis {
                 if (expansionDictionary.getItem(i).isSelected()) {
                     try {
                         search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).get_dictionary());
-                    } catch (Exception e) {
+                    } catch (IOException | QueryExpansionException e) {
                         __LOGGER__.error(e.getMessage());
                         print("Failed to load expansion dictionary");
                         _task = null;
@@ -378,7 +380,7 @@ public class Themis {
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results, 0, 9);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
             } finally {

@@ -29,6 +29,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.utils.Time;
@@ -54,7 +55,7 @@ public class themisEval {
     private String __JUDGEMENTS_FILENAME__;
     private String __EVALUATION_FILENAME__;
 
-    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
+    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
         _search = search;
         __CONFIG__ = new Config();
         if (evaluateInit(model, dictionary)) {
@@ -90,7 +91,7 @@ public class themisEval {
      /* Sets the search model to the specified model, the query expansion dictionary to the specified
      * dictionary, and the retrieved document properties to an empty set.
      * Also sets the file name of the evaluation results based on the specified model and dictionary */
-    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
+    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
         __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
         String __INDEX_PATH__ = __CONFIG__.getIndexPath();
         if (!hasJudgements()) {
@@ -112,7 +113,7 @@ public class themisEval {
     }
 
     /* Runs the evaluation based on the configured parameters */
-    private void evaluate() throws IOException {
+    private void evaluate() throws IOException, QueryExpansionException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print(">>> Saving results in " + __EVALUATION_FILENAME__ + "\n\n");

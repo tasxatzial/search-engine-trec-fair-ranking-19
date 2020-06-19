@@ -28,8 +28,11 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+//import gr.csd.uoc.hy463.themis.queryExpansion.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
@@ -52,7 +55,7 @@ public class Search {
     private QueryExpansion _queryExpansion;
     private Set<DocInfo.PROPERTY> _props;
 
-    public Search() throws Exception {
+    public Search() throws IOException {
         _indexer = new Indexer();
         switch (_indexer.getConfig().getRetrievalModel()) {
             case "BM25":
@@ -67,7 +70,7 @@ public class Search {
         }
 
         if (!_indexer.load()) {
-            throw new Exception("Unable to load index");
+            throw new IOException("Unable to load index");
         }
         _props = new HashSet<>();
         _queryExpansion = null;
@@ -116,10 +119,13 @@ public class Search {
      * @param dictionary
      * @throws IOException
      */
-    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException {
+    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove();
         }
+        /*else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
+            _queryExpansion = new EXTJWNL();
+        }*/
         else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             _queryExpansion = null;
         }
@@ -150,7 +156,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query) throws IOException {
+    public List<Pair<Object, Double>> search(String query) throws IOException, QueryExpansionException {
         return search(query, 0, Integer.MAX_VALUE);
     }
 
@@ -165,39 +171,51 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws IOException {
+    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
+        List<QueryTerm> finalQuery = new ArrayList<>();
 
-        //split query into terms and apply stopwords/stemming
-        List<String> processedQuery = ProcessText.editQuery(query, useStopwords, useStemmer);
+        //split query into terms and apply stopwords, stemming
+        List<String> splitQuery = ProcessText.split(query);
+        Set<String> splitQuerySet = new HashSet<>(splitQuery);
+        if (useStopwords) {
+            splitQuerySet.removeIf(StopWords::isStopWord);
+        }
+        if (useStemmer) {
+            Set<String> splitQueryStemmedSet = new HashSet<>();
+            for (String s : splitQuerySet) {
+                splitQueryStemmedSet.add(ProcessText.applyStemming(s));
+            }
+            splitQuerySet = splitQueryStemmedSet;
+        }
 
-        Set<String> processedQuerySet = new HashSet<>(processedQuery);
-        List<QueryTerm> processedExpandedQuery = new ArrayList<>();
+        //add the above result to the final query terms
+        for (String s : splitQuerySet) {
+            finalQuery.add(new QueryTerm(s, 1.0));
+        }
 
-        //expand query
+        //expand query add the results to the final query terms
+        List<List<QueryTerm>> expandedQuery;
         if (_queryExpansion != null) {
-
-            //get the new terms
-            List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(processedQuery);
-
-            //apply stopwords/stemming, discard the term if it already exists in the initial query
+            expandedQuery = _queryExpansion.expandQuery(splitQuery);
             for (List<QueryTerm> queryTerms : expandedQuery) {
                 for (QueryTerm queryTerm : queryTerms) {
-                    List<String> processedTerm = ProcessText.editQuery(queryTerm.getTerm(), useStopwords, useStemmer);
-                    if (!processedTerm.isEmpty() && !processedQuerySet.contains(processedTerm.get(0))) {
-                        processedExpandedQuery.add(queryTerm);
+                    String term = queryTerm.getTerm();
+                    if (useStopwords && StopWords.isStopWord(term)) {
+                        continue;
+                    }
+                    if (useStemmer) {
+                        term = ProcessText.applyStemming(term);
+                    }
+                    if (!splitQuerySet.contains(term)) {
+                        finalQuery.add(new QueryTerm(term, queryTerm.getWeight()));
                     }
                 }
             }
         }
 
-        //finally, add to the expanded query the terms from the initial query (duplicate terms are discarded)
-        for (String term : processedQuerySet) {
-            processedExpandedQuery.add(new QueryTerm(term, 1.0));
-        }
-
-        return _model.getRankedResults(processedExpandedQuery, _props, startResult, endResult);
+        return _model.getRankedResults(finalQuery, _props, startResult, endResult);
     }
 
     /**

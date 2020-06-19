@@ -9,7 +9,7 @@ import java.util.List;
  */
 public abstract class QueryExpansion {
     public enum DICTIONARY {
-        NONE, GLOVE
+        NONE, GLOVE, EXTJWNL
     }
 
     /**
@@ -17,5 +17,5 @@ public abstract class QueryExpansion {
      * @param query
      * @return
      */
-    public abstract List<List<QueryTerm>> expandQuery(List<String> query);
+    public abstract List<List<QueryTerm>> expandQuery(List<String> query) throws QueryExpansionException;
 }

@@ -42,20 +42,19 @@ public class ProcessText {
     }
 
     /**
-     * Splits a query into tokens and applies stopwords, stemming (if they are enabled)
-     * @param query
+     * Applies stemming if the specified term has more than 3 characters. Returns the non-stemmed term
+     * if the stemmed term has less than 3 characters.
+     * @param term
      * @return
      */
-    public static List<String> editQuery(String query, boolean useStopwords, boolean useStemmer) {
-        List<String> terms = new ArrayList<>();
-        List<String> splitQuery = split(query);
-        for (String s : splitQuery) {
-            String term = applyStopwordsStemming(s, useStopwords, useStemmer);
-            if (term != null) {
-                terms.add(term);
+    public static String applyStemming(String term) {
+        if (term.length() > 3) {
+            String stemTerm = Stemmer.Stem(term);
+            if (stemTerm.length() >= 3) {
+                return stemTerm;
             }
         }
-        return terms;
+        return term;
     }
 
     /**
