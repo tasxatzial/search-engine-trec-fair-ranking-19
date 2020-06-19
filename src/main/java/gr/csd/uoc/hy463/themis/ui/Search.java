@@ -92,7 +92,7 @@ public class Search {
         else if (model == ARetrievalModel.MODEL.BM25 && !(_model instanceof OkapiBM25)) {
             _model = new OkapiBM25(_indexer);
         }
-        else if (!(_model instanceof Existential)) {
+        else if (model == ARetrievalModel.MODEL.EXISTENTIAL && !(_model instanceof Existential)) {
             _model = new Existential(_indexer);
         }
     }
@@ -120,7 +120,7 @@ public class Search {
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove();
         }
-        else {
+        else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             _queryExpansion = null;
         }
     }
