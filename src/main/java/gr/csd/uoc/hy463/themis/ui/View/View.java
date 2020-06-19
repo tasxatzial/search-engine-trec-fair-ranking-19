@@ -67,6 +67,13 @@ public class View extends JFrame {
     private JMenu _expansionDictionary;
 
     public View() {
+        Font font = new Font("SansSerif", Font.PLAIN, 14);
+        UIManager.put("OptionPane.messageFont", font);
+        UIManager.put("OptionPane.buttonFont", font);
+        UIManager.put("MenuItem.font", font);
+        UIManager.put("Menu.font", font);
+        UIManager.put("CheckBoxMenuItem.font", font);
+        UIManager.put("RadioButtonMenuItem.font", font);
         initMenu();
         pack();
         setTitle("Themis search engine v0.1");
@@ -78,11 +85,6 @@ public class View extends JFrame {
 
     /* Initializes the menu bar */
     private void initMenu() {
-        Font font = new Font("SansSerif", Font.PLAIN, 14);
-        UIManager.put("MenuItem.font", font);
-        UIManager.put("Menu.font", font);
-        UIManager.put("CheckBoxMenuItem.font", font);
-        UIManager.put("RadioButtonMenuItem.font", font);
 
         /* index menu */
         JMenu index = new JMenu("Index");
@@ -315,6 +317,7 @@ public class View extends JFrame {
         if (message == null) {
             throw new IllegalArgumentException("task is null");
         }
+
         Object[] options = {"Yes", "No"};
         int quitDialog = JOptionPane.showOptionDialog(this, message, "Question",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
