@@ -375,7 +375,7 @@ public class Themis {
 
             String query = view.get_searchField().getText();
             long startTime = System.nanoTime();
-            print("Searching for: " + query + " ... ");
+            print(">>> Searching for: " + query + " ... ");
             try { //todo: close files
                 results = search.search(view.get_searchField().getText(), 0, 9);
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");

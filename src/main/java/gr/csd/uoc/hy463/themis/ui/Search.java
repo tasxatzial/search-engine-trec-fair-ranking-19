@@ -151,6 +151,9 @@ public class Search {
         if (_queryExpansion instanceof Glove) {
             return QueryExpansion.DICTIONARY.GLOVE;
         }
+        else if (_queryExpansion instanceof EXTJWNL) {
+            return QueryExpansion.DICTIONARY.EXTJWNL;
+        }
         return QueryExpansion.DICTIONARY.NONE;
     }
 

@@ -821,7 +821,7 @@ public class Indexer {
             return false;
         }
 
-        Themis.print(">>> Index directory: " + __INDEX_PATH__+ "\n");
+        Themis.print(">>> Loading index from " + __INDEX_PATH__ + "\n");
 
         //load vocabulary file
         Themis.print("Loading vocabulary...");
@@ -865,12 +865,12 @@ public class Indexer {
         Themis.print("DONE\n");
 
         if (__CONFIG__.getUseQueryExpansion()) {
-            Themis.print("Query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
+            Themis.print("Default query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
         }
         else {
-            Themis.print("Query expansion model: None\n");
+            Themis.print("Default query expansion model: None\n");
         }
-        Themis.print("Retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
+        Themis.print("Default retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
 
         return true;
     }
