@@ -42,6 +42,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -75,19 +76,6 @@ public class themisEval {
         return true;
     }
 
-    /**
-     * Returns true if evaluation filename exists, false otherwise
-     * @param filename
-     * @return
-     */
-    public boolean hasEvaluation(String filename) {
-        File file = new File(filename);
-        if (file.exists()) {
-            return true;
-        }
-        return false;
-    }
-
      /* Sets the search model to the specified model, the query expansion dictionary to the specified
      * dictionary, and the retrieved document properties to an empty set.
      * Also sets the file name of the evaluation results based on the specified model and dictionary */
@@ -99,16 +87,19 @@ public class themisEval {
             Themis.print("No judgements file found! Evaluation failed\n");
             return false;
         }
-        String evaluationFilename = __INDEX_PATH__ + "/" + __CONFIG__.getEvaluationFilename();
-        if (hasEvaluation(evaluationFilename)) {
-            __LOGGER__.error("Evaluation file already exists! Evaluation failed");
-            Themis.print("Evaluation file already exists! Evaluation failed\n");
-            return false;
+        String evaluationFilename = __CONFIG__.getEvaluationFilename();
+        String timestamp = Instant.now().toString().replace(':', '.');
+        if (evaluationFilename.lastIndexOf('.') != -1) {
+            evaluationFilename = evaluationFilename.substring(0, evaluationFilename.lastIndexOf('.')) + '_' +
+                    timestamp + evaluationFilename.substring(evaluationFilename.lastIndexOf('.'));
+        }
+        else {
+            evaluationFilename = evaluationFilename + '_' + timestamp;
         }
         _search.setRetrievalModel(model);
         _search.setExpansionDictionary(dictionary);
         _search.setDocumentProperties(new HashSet<>());
-        __EVALUATION_FILENAME__ = evaluationFilename;
+        __EVALUATION_FILENAME__ = __INDEX_PATH__ + "/" + evaluationFilename;
         return true;
     }
 
