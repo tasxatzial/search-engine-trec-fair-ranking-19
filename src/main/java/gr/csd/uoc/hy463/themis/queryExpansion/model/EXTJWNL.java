@@ -1,7 +1,9 @@
-package gr.csd.uoc.hy463.themis.queryExpansion;
+package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import gr.csd.uoc.hy463.themis.Themis;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
 import net.sf.extjwnl.data.IndexWord;
