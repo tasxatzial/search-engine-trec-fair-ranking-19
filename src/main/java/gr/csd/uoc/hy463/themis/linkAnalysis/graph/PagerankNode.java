@@ -4,7 +4,6 @@ package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
  * Node used for computing the pagerank scores
  */
 public class PagerankNode {
-    private double prevScore = 0;
     private double score = 0;
     private int outNodes = 0;
     private PagerankNode[] inNodes;
@@ -18,27 +17,11 @@ public class PagerankNode {
     }
 
     /**
-     * Returns the previous score
-     * @return
-     */
-    public double getPrevScore() {
-        return prevScore;
-    }
-
-    /**
      * Returns the current score
      * @return
      */
     public double getScore() {
         return score;
-    }
-
-    /**
-     * Sets the previous score to the specified score
-     * @param score
-     */
-    public void setPrevScore(double score) {
-        prevScore = score;
     }
 
     /**

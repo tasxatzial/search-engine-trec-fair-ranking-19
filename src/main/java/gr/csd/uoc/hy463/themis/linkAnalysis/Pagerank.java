@@ -183,6 +183,7 @@ public class Pagerank {
         double threshold = __CONFIG__.getPagerankThreshold();
         double dampingFactor = __CONFIG__.getPagerankDampingFactor();
         double teleportScore = (1 - dampingFactor) / graph.length;
+        double[] scores_tmp = new double[graph.length];
 
         // initialize scores, count number of sink nodes
         int sinksNum = 0;
@@ -190,7 +191,7 @@ public class Pagerank {
             if (node.getOutNodes() == 0) {
                 sinksNum++;
             }
-            node.setPrevScore(1.0 / graph.length);
+            node.setScore(1.0 / graph.length);
         }
 
         /* put sink nodes in a separate array */
@@ -213,19 +214,19 @@ public class Pagerank {
             /* collect the scores from all sink nodes, these should be distributed to every other node */
             double sinksScore = 0;
             for (PagerankNode sink : sinks) {
-                sinksScore += sink.getPrevScore();
+                sinksScore += sink.getScore();
             }
             sinksScore /= (graph.length - 1);
 
             /* iterate over all nodes */
-            for (PagerankNode pagerankNode : graph) {
+            for (int j = 0; j < graph.length; j++) {
                 double score;
-                PagerankNode node = pagerankNode;
+                PagerankNode node = graph[j];
 
                 /* initially the new score for the current node comes from the total score of the sink nodes.
                  * However when the current node is a sink, we should not take into account its own score */
                 if (node.getOutNodes() == 0) {
-                    score = sinksScore - node.getPrevScore() / (graph.length - 1);
+                    score = sinksScore - node.getScore() / (graph.length - 1);
                 } else {
                     score = sinksScore;
                 }
@@ -233,20 +234,20 @@ public class Pagerank {
                 /* we also need to add to the new score the contributions of the In nodes of the current node */
                 PagerankNode[] inNodes = node.getInNodes();
                 for (int k = 0; k < inNodes.length; k++) {
-                    score += inNodes[k].getPrevScore() / inNodes[k].getOutNodes();
+                    score += inNodes[k].getScore() / inNodes[k].getOutNodes();
                 }
 
-                score = score * dampingFactor + teleportScore;
-                node.setScore(score);
+                scores_tmp[j] = score * dampingFactor + teleportScore;
             }
 
             // check for convergence
             maybeConverged = true;
-            for (PagerankNode node : graph) {
-                if (maybeConverged && Math.abs(node.getPrevScore() - node.getScore()) > threshold) {
+            for (int j = 0; j < graph.length; j++) {
+                PagerankNode node = graph[j];
+                if (maybeConverged && Math.abs(scores_tmp[j] - node.getScore()) > threshold) {
                     maybeConverged = false;
                 }
-                node.setPrevScore(node.getScore());
+                node.setScore(scores_tmp[j]);
             }
 
             iteration++;
