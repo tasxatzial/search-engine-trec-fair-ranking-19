@@ -205,15 +205,6 @@ public abstract class ARetrievalModel {
      */
     protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
 
-        /* the total properties that each docInfo should have including the essential properties of this model */
-        Set<DocInfo.PROPERTY> totalProps = new HashSet<>(props);
-        if (this instanceof VSM) {
-            totalProps.addAll(getVSMProps());
-        }
-        else if (this instanceof OkapiBM25) {
-            totalProps.addAll(getOkapiProps());
-        }
-
         /* the properties that each docInfo should have that are not the essential properties of this model */
         Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
         if (this instanceof VSM) {
@@ -223,45 +214,16 @@ public abstract class ARetrievalModel {
             extraProps.removeAll(getOkapiProps());
         }
 
-        /* the properties that are not essential properties of this model */
-        Set<DocInfo.PROPERTY> removeProps = new HashSet<>();
-        removeProps.addAll(getVSMProps());
-        removeProps.addAll(getMonModelProps());
-        removeProps.addAll(getOkapiProps());
-        if (this instanceof VSM) {
-            removeProps.removeAll(getVSMProps());
-        }
-        else if (this instanceof OkapiBM25) {
-            removeProps.removeAll(getOkapiProps());
-        }
-
         /* update all docInfo items of the results accordingly */
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
             DocInfo docInfo = (DocInfo) results.get(i).getL();
             if (i >= startDoc && i <= endDoc) {
-
-                /* clear the properties of the results in [startDoc, endDoc] */
-                for (DocInfo.PROPERTY prop : docInfo.getProps()) {
-                    if (!totalProps.contains(prop)) {
-                        docInfo.clearProperty(prop);
-                    }
-                }
-
-                /* collect all docInfo for which we need to add new properties */
-                for (DocInfo.PROPERTY prop : extraProps) {
-                    if (!docInfo.hasProperty(prop)) {
-                        updatedDocInfos.add(docInfo);
-                        break;
-                    }
-                }
-            }
-            else {
-                docInfo.clearProperties(removeProps);
+                updatedDocInfos.add(docInfo);
             }
         }
 
-        /* add the extra properties to the collected docInfo */
+        /* finally update the collected docInfo */
         _indexer.updateDocInfo(updatedDocInfos, extraProps);
     }
 
@@ -273,24 +235,13 @@ public abstract class ARetrievalModel {
     protected void sort(List<Pair<Object, Double>> results) {
         double pagerankCitationsWeight = _indexer.getConfig().getPagerankPublicationsWeight();
         double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
+        for (Pair<Object, Double> result : results) {
+            DocInfo docInfo = (DocInfo) result.getL();
+            double modelScore = result.getR();
+            double pagerankScore = (double) docInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
+            result.setR(modelScore * modelWeight + pagerankScore * pagerankCitationsWeight);
+        }
 
-        results.sort((o1, o2) -> {
-            double o1ModelScore = o1.getR();
-            DocInfo o1DocInfo = (DocInfo) o1.getL();
-            double o1PagerankCitationsScore = (double) o1DocInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
-            double o1Score = o1ModelScore * modelWeight + o1PagerankCitationsScore * pagerankCitationsWeight;
-            double o2ModelScore = o2.getR();
-            DocInfo o2DocInfo = (DocInfo) o2.getL();
-            double o2PagerankCitationsScore = (double) o2DocInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
-            double o2Score = o2ModelScore * modelWeight + o2PagerankCitationsScore * pagerankCitationsWeight;
-
-            if (o2Score > o1Score) {
-                return 1;
-            }
-            if (o2Score < o1Score) {
-                return -1;
-            }
-            return 0;
-        });
+        results.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));
     }
 }

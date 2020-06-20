@@ -28,6 +28,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import gr.csd.uoc.hy463.themis.utils.Time;
 
 import java.io.IOException;
 import java.util.*;
@@ -70,28 +71,26 @@ public class OkapiBM25 extends ARetrievalModel {
         }
 
         //frequencies of each term in each document
-        Map<DocInfo, int[]> documentsFreqs = new HashMap<>();
+        Map<DocInfo, double[]> documentsFreqs = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] freqs = _indexer.getFreq(terms.get(i));
-            for (int k = 0; k < freqs.length; k++) {
-                freqs[k] *= query.get(i).getWeight(); //take query term weight into account
-            }
+            double weight = query.get(i).getWeight();
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = _termsDocInfo.get(i).get(j);
-                int[] docFreqs = documentsFreqs.get(docInfo);
+                double[] docFreqs = documentsFreqs.get(docInfo);
                 if (docFreqs == null) {
-                    docFreqs = new int[terms.size()];
+                    docFreqs = new double[terms.size()];
                     documentsFreqs.put(docInfo, docFreqs);
                 }
-                docFreqs[i] = freqs[j];
+                docFreqs[i] = freqs[j] * weight;
             }
         }
 
         //calculate the scores
         double maxScore = 0;
-        for (Map.Entry<DocInfo, int[]> docFreqs : documentsFreqs.entrySet()) {
+        for (Map.Entry<DocInfo, double[]> docFreqs : documentsFreqs.entrySet()) {
             double documentScore = 0;
-            int[] freqs = docFreqs.getValue();
+            double[] freqs = docFreqs.getValue();
             DocInfo docInfo = docFreqs.getKey();
             int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.LENGTH);
             for (int i = 0; i < terms.size(); i++) {

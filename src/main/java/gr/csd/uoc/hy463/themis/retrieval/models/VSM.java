@@ -65,7 +65,7 @@ public class VSM extends ARetrievalModel {
         double[] queryWeights = new double[terms.size()];
         for (int i = 0; i < terms.size(); i++) {
             double tf = query.get(i).getWeight(); //take query term weight into account
-            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i])) / Math.log(2);
+            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i]));
             queryWeights[i] = tf * idf;
         }
 
@@ -80,14 +80,12 @@ public class VSM extends ARetrievalModel {
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
             int[] freqs = _indexer.getFreq(terms.get(i));
-            for (int k = 0; k < freqs.length; k++) {
-                freqs[k] *= query.get(i).getWeight(); //take query term weight into account
-            }
-            double idf = Math.log(totalArticles / (1.0 + dfs[i])) / Math.log(2);
+            double weight = query.get(i).getWeight();
+            double idf = Math.log(totalArticles / (1.0 + dfs[i]));
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
                 DocInfo docInfo = _termsDocInfo.get(i).get(j);
                 double[] weights = documentsWeights.get(docInfo);
-                double tf = (0.0 + freqs[j]) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
+                double tf = (freqs[j] * weight) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
                 if (weights == null) {
                     weights = new double[terms.size()];
                     documentsWeights.put(docInfo, weights);

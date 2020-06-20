@@ -749,7 +749,6 @@ public class Indexer {
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
         int totalArticles = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        double log2 = Math.log(2);
         double logArticles = Math.log(totalArticles);
         long offset = 0;
 
@@ -767,7 +766,7 @@ public class Indexer {
                 double x = tf * (logArticles - Math.log(df));
                 weight += x * x;
             }
-            weight = Math.sqrt(weight) / (maxTf * log2);
+            weight = Math.sqrt(weight) / maxTf;
 
             //update the documents_meta file
             ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.WEIGHT_OFFSET);
@@ -1171,8 +1170,10 @@ public class Indexer {
         byte[] postings = new byte[df * PostingStruct.SIZE];
         __POSTINGS__.readFully(postings);
         ByteBuffer bb = ByteBuffer.wrap(postings);
+        int offset = 0;
         for (int i = 0; i < df; i++) {
-            freq[i] = bb.getInt(i * PostingStruct.SIZE);
+            freq[i] = bb.getInt(offset);
+            offset += PostingStruct.SIZE;
         }
         return freq;
     }
