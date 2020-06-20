@@ -24,6 +24,7 @@
  */
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
+import akka.dispatch.sysmsg.Suspend;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;

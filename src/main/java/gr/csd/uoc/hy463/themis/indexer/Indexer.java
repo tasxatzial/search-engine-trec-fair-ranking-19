@@ -958,6 +958,19 @@ public class Indexer {
         for (int i = 0; i < terms.size(); i++) {
             List<DocInfo> termDocInfo = termsDocInfo.get(i);
 
+            /* check whether the current term is the same as a previous term */
+            boolean found = false;
+            for (int j = 0; j < i; j++) {
+                if (terms.get(i).equals(terms.get(j))) {
+                    termsDocInfo.set(i, termsDocInfo.get(j));
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+
             //if we have already a result of docInfos for this term, just update the properties of each docInfo object
             if (!termDocInfo.isEmpty()) {
                 updateDocInfo(termDocInfo, props);

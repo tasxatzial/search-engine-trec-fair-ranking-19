@@ -58,14 +58,28 @@ public class VSM extends ARetrievalModel {
         //get the relevant documents from the documents file
         fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
-        //df of the terms
+        //frequencies of the terms in the query
+        Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
+        for (String term : terms) {
+            queryFreqs.merge(term, 1, Integer::sum);
+        }
+
+        //max frequency of the query terms
+        int queryMaxFreq = 0;
+        for (Integer freq : queryFreqs.values()) {
+            if (freq > queryMaxFreq) {
+                queryMaxFreq = freq;
+            }
+        }
+
+        //df of the terms of the query
         int[] dfs = _indexer.getDf(terms);
 
         //weights of terms in the query
         double[] queryWeights = new double[terms.size()];
         for (int i = 0; i < terms.size(); i++) {
-            double tf = query.get(i).getWeight(); //take query term weight into account
-            double idf = Math.log((0.0 + totalArticles) / (1 + dfs[i]));
+            double tf = query.get(i).getWeight() * queryFreqs.get(terms.get(i)) / queryMaxFreq;
+            double idf = Math.log(totalArticles / (1.0 + dfs[i]));
             queryWeights[i] = tf * idf;
         }
 

@@ -189,29 +189,28 @@ public class Search {
     public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
-        int maxNewTermsForEachTerm = 1; //for each term, expand the query by one extra term
+        int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
         List<QueryTerm> finalQuery = new ArrayList<>();
 
         //split query into terms and apply stopwords, stemming
         List<String> splitQuery = ProcessText.split(query);
-        Set<String> splitQuerySet = new HashSet<>(splitQuery);
         if (useStopwords) {
-            splitQuerySet.removeIf(StopWords::isStopWord);
+            splitQuery.removeIf(StopWords::isStopWord);
         }
+
         if (useStemmer) {
-            Set<String> splitQueryStemmedSet = new HashSet<>();
-            for (String s : splitQuerySet) {
-                splitQueryStemmedSet.add(ProcessText.applyStemming(s));
+            for (int i = 0; i < splitQuery.size(); i++) {
+                splitQuery.set(i, ProcessText.applyStemming(splitQuery.get(i)));
             }
-            splitQuerySet = splitQueryStemmedSet;
         }
 
         //add the above result to the final query terms
-        for (String s : splitQuerySet) {
+        for (String s : splitQuery) {
             finalQuery.add(new QueryTerm(s, 1.0));
         }
 
         //expand query add the results to the final query terms
+        Set<String> splitQuerySet = new HashSet<>(splitQuery);
         List<List<QueryTerm>> expandedQuery;
         if (_queryExpansion != null) {
             expandedQuery = _queryExpansion.expandQuery(splitQuery);
