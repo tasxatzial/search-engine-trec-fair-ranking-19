@@ -213,17 +213,26 @@ public class themisEval {
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
     private static double computeAveP(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double avep = 0;
-        int relevantDocuments = 0;
+        int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
+        int relevantDocuments = 0;
 
+        for (long relevance : relevanceMap.values()) {
+            if (relevance == 1) {
+                relevantDocuments++;
+            }
+        }
+        if (relevantDocuments == 0) {
+            return Double.NaN;
+        }
         for (Pair<Object, Double> rankedDocument : results) {
             String docId = ((DocInfo) rankedDocument.getL()).getId();
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
                 if (isJudged == 1) {
-                    relevantDocuments++;
-                    avep += (0.0 + isJudged * relevantDocuments) / nonSkippedDocuments;
+                    foundRelevantDocuments++;
+                    avep += (0.0 + isJudged * foundRelevantDocuments) / nonSkippedDocuments;
                 }
             }
         }
@@ -276,15 +285,25 @@ public class themisEval {
     private static double computeNdcg(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
         double dcg = 0;
         double idcg = 0;
+        int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
         int relevantDocuments = 0;
+
+        for (long relevance : relevanceMap.values()) {
+            if (relevance == 1) {
+                relevantDocuments++;
+            }
+        }
+        if (relevantDocuments == 0) {
+            return Double.NaN;
+        }
         for (Pair<Object, Double> result : results) {
             String docId = ((DocInfo) result.getL()).getId();
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
                 if (isJudged == 1) {
-                    relevantDocuments++;
+                    foundRelevantDocuments++;
                     dcg += Math.log(2) / Math.log(nonSkippedDocuments + 1);
                 }
             }
