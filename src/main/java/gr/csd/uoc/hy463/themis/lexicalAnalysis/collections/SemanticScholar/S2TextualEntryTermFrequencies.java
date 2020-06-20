@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.util.*;
@@ -59,13 +60,14 @@ public class S2TextualEntryTermFrequencies {
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
-            currentToken = tokenizer.nextToken();
-
-            //apply stopwords, stemming, convert to lowercase
-            currentToken = ProcessText.applyStopwordsStemming(currentToken, useStopwords, useStemmer);
-            if (currentToken != null) {
-                addToWordsMap_asIs(currentToken, prop, entryWords);
+            currentToken = tokenizer.nextToken().toLowerCase();
+            if (useStopwords && StopWords.isStopWord(currentToken)) {
+                continue;
             }
+            if (useStemmer) {
+                currentToken = ProcessText.applyStemming(currentToken);
+            }
+            addToWordsMap_asIs(currentToken, prop, entryWords);
         }
     }
 

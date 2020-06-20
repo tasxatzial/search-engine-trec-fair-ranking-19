@@ -192,12 +192,11 @@ public class Search {
         int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
         List<QueryTerm> finalQuery = new ArrayList<>();
 
-        //split query into terms and apply stopwords, stemming
+        //split query into terms, apply stopwords & stemming
         List<String> splitQuery = ProcessText.split(query);
         if (useStopwords) {
             splitQuery.removeIf(StopWords::isStopWord);
         }
-
         if (useStemmer) {
             for (int i = 0; i < splitQuery.size(); i++) {
                 splitQuery.set(i, ProcessText.applyStemming(splitQuery.get(i)));
@@ -214,13 +213,13 @@ public class Search {
         List<List<QueryTerm>> expandedQuery;
         if (_queryExpansion != null) {
             expandedQuery = _queryExpansion.expandQuery(splitQuery);
-            for (List<QueryTerm> queryTerms : expandedQuery) {
+            for (List<QueryTerm> expandedTerms : expandedQuery) {
                 int count = 0;
-                for (QueryTerm queryTerm : queryTerms) {
+                for (QueryTerm newTerm : expandedTerms) {
                     if (count == maxNewTermsForEachTerm) {
                         break;
                     }
-                    String term = queryTerm.getTerm();
+                    String term = newTerm.getTerm().toLowerCase();
                     if (useStopwords && StopWords.isStopWord(term)) {
                         continue;
                     }
@@ -228,7 +227,7 @@ public class Search {
                         term = ProcessText.applyStemming(term);
                     }
                     if (!splitQuerySet.contains(term)) {
-                        finalQuery.add(new QueryTerm(term, queryTerm.getWeight()));
+                        finalQuery.add(new QueryTerm(term, newTerm.getWeight()));
                         count++;
                     }
                 }
