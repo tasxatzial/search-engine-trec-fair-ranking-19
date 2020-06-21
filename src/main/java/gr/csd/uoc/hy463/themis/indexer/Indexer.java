@@ -217,13 +217,6 @@ public class Indexer {
         long startTime = System.nanoTime();
         Themis.print(">>> Start indexing\n");
 
-        if (__CONFIG__.getUseStemmer()) {
-            Stemmer.Initialize();
-        }
-        if (__CONFIG__.getUseStopwords()) {
-            StopWords.Initialize();
-        }
-
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
@@ -842,14 +835,6 @@ public class Indexer {
         Themis.print("Loading meta index file...");
         __META_INDEX_INFO__ = loadMeta(__INDEX_PATH__ + "/" + __META_FILENAME__);
         Themis.print("DONE\n");
-
-        //check for stopword, stemming
-        if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"))) {
-            StopWords.Initialize();
-        }
-        if (Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"))) {
-            Stemmer.Initialize();
-        }
 
         Themis.print("Opening documents, postings files...");
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
