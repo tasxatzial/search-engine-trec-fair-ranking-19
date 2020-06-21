@@ -230,7 +230,6 @@ public class View extends JFrame {
             onlyResultsInitialized = false;
         }
         _searchButton = new JButton("Search");
-        _searchButton.setEnabled(false);
         _searchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         _searchField = new JTextField();
         _searchField.setFont(new Font("SansSerif", Font.PLAIN, 16));
@@ -301,15 +300,6 @@ public class View extends JFrame {
         _searchField.setBounds(searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight);
     }
 
-    /**
-     * Enables the search button
-     */
-    public void enableSearchButton() {
-        if (_searchButton != null) {
-            _searchButton.setEnabled(true);
-        }
-    }
-    
     /**
      * Clears the results of clear/load index, search
      */

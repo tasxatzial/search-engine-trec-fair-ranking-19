@@ -139,9 +139,6 @@ public class Themis {
                 Thread runnableLoad = new Thread(new LoadIndex_runnable());
                 runnableLoad.start();
             }
-            else {
-                view.enableSearchButton();
-            }
         }
     }
 
@@ -290,7 +287,6 @@ public class Themis {
                 if (search != null) {
                     view.checkRetrievalModel(search.getRetrievalmodel());
                     view.checkExpansionDictionary(search.getExpansionDictionary());
-                    view.enableSearchButton();
                 }
             }
         }
@@ -299,6 +295,9 @@ public class Themis {
     private static class Search_runnable implements Runnable {
         @Override
         public void run() {
+            if (search == null) {
+                return;
+            }
             _task = TASK.SEARCH;
             List<Pair<Object, Double>> results;
 
