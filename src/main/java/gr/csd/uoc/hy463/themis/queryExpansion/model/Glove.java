@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -20,16 +21,18 @@ import java.util.List;
 public class Glove extends QueryExpansion {
     private WordVectors _model;
     private int _nearest;
+    private boolean _useStopwords;
 
-    public Glove() throws IOException {
+    public Glove(boolean useStopwords) throws IOException {
         Themis.print(">>> Initializing Glove...");
         Config __CONFIG__ = new Config();  // reads info from themis.config file
         File gloveModel = new File(__CONFIG__.getGloveModelFileName());
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 
-        //default is to get the nearest 2 terms for each term
-        _nearest = 2;
+        //default is to get the nearest 1 terms for each term
+        _nearest = 1;
 
+        _useStopwords = useStopwords;
         Themis.print("DONE\n");
     }
 
@@ -46,6 +49,10 @@ public class Glove extends QueryExpansion {
 
         for (String term : query) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
+            if (_useStopwords && StopWords.isStopWord(term.toLowerCase())) {
+                expandedQuery.add(expandedTerm);
+                continue;
+            }
             Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
             Object[] nearestArray = nearestTerms.toArray();
             for (Object o : nearestArray) {

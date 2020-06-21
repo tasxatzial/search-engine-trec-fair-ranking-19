@@ -76,10 +76,10 @@ public class Search {
         if (_indexer.getConfig().getUseQueryExpansion()) {
             switch (_indexer.getConfig().getQueryExpansionModel()) {
                 case "Glove":
-                    _queryExpansion = new Glove();
+                    _queryExpansion = new Glove(_indexer.useStopwords());
                     break;
                 case "extJWNL":
-                    _queryExpansion = new EXTJWNL();
+                    _queryExpansion = new EXTJWNL(_indexer.useStopwords());
                     break;
             }
         }
@@ -133,10 +133,10 @@ public class Search {
      */
     public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
-            _queryExpansion = new Glove();
+            _queryExpansion = new Glove(_indexer.useStopwords());
         }
         else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
-            _queryExpansion = new EXTJWNL();
+            _queryExpansion = new EXTJWNL(_indexer.useStopwords());
         }
         else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             _queryExpansion = null;
@@ -190,35 +190,35 @@ public class Search {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
         int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
-        List<List<QueryTerm>> expandedQuery = null;
         List<QueryTerm> finalQuery = new ArrayList<>();
 
-        //split query into terms, apply stopwords & stemming
+        //split query into terms and convert to lowercase
         List<String> splitQuery = ProcessText.split(query);
-        if (useStopwords) {
-            splitQuery.removeIf(StopWords::isStopWord);
-        }
 
-        //at this point we should also expand the query
-        if (_queryExpansion != null) {
-            expandedQuery = _queryExpansion.expandQuery(splitQuery);
-        }
-
-        //now we can apply stemming to the initial query
-        if (useStemmer) {
-            for (int i = 0; i < splitQuery.size(); i++) {
-                splitQuery.set(i, ProcessText.applyStemming(splitQuery.get(i)));
+        //apply stopwords/stemming and add terms to the final query
+        List<String> splitQueryProcessed = new ArrayList<>();
+        for (String s : splitQuery) {
+            if (useStopwords && StopWords.isStopWord(s)) {
+                splitQueryProcessed.add(s);
+                continue;
+            }
+            if (useStemmer) {
+                String stemmedTerm = ProcessText.applyStemming(s);
+                splitQueryProcessed.add(stemmedTerm);
+                finalQuery.add(new QueryTerm(stemmedTerm, 1.0));
+            } else {
+                splitQueryProcessed.add(s);
+                finalQuery.add(new QueryTerm(s, 1.0));
             }
         }
 
-        //add the above result to the final query terms
-        for (String s : splitQuery) {
-            finalQuery.add(new QueryTerm(s, 1.0));
-        }
-
-        //now process the expanded query and add the results to the final query terms
-        if (expandedQuery != null) {
+        //expand the query and add terms to the final query
+        if (_queryExpansion != null) {
+            List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery);
             for (int i = 0; i < expandedQuery.size(); i++) {
+                if (useStopwords && StopWords.isStopWord(splitQuery.get(i))) {
+                    continue;
+                }
                 List<QueryTerm> expandedTermList = expandedQuery.get(i);
                 int count = 0;
                 for (QueryTerm expandedTerm : expandedTermList) {
@@ -235,7 +235,7 @@ public class Search {
                     if (useStemmer) {
                         term = ProcessText.applyStemming(term);
                     }
-                    if (!splitQuery.get(i).equals(term)) {
+                    if (!splitQueryProcessed.get(i).equals(term)) {
                         finalQuery.add(new QueryTerm(term, expandedTerm.getWeight()));
                         count++;
                     }

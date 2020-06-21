@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.examples.GloveExample;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;

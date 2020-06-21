@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import gr.csd.uoc.hy463.themis.Themis;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -18,8 +19,9 @@ import java.util.List;
 public class EXTJWNL extends QueryExpansion {
     private MaxentTagger maxentTagger;
     private Dictionary dictionary;
+    private boolean _useStopwords;
 
-    public EXTJWNL() throws QueryExpansionException {
+    public EXTJWNL(boolean useStopwords) throws QueryExpansionException {
         Themis.print(">>> Initializing extJWNL...");
         try {
             dictionary = Dictionary.getDefaultResourceInstance();
@@ -29,6 +31,7 @@ public class EXTJWNL extends QueryExpansion {
         if (dictionary != null) {
             maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
         }
+        _useStopwords = useStopwords;
         Themis.print("DONE\n");
     }
 
@@ -53,10 +56,14 @@ public class EXTJWNL extends QueryExpansion {
         String taggedQuery = maxentTagger.tagString(queryString);
         String[] eachTag = taggedQuery.split("\\s+");
 
-        for (String s : eachTag) {
+        for (int i = 0; i < eachTag.length; i++) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
-            String term = s.split("_")[0];
-            String tag = s.split("_")[1];
+            if (_useStopwords && StopWords.isStopWord(query.get(i).toLowerCase())) {
+                expandedQuery.add(expandedTerm);
+                continue;
+            }
+            String term = eachTag[i].split("_")[0];
+            String tag = eachTag[i].split("_")[1];
             POS pos = getPos(tag);
 
             // Ignore anything that is not a noun, verb, adjective, adverb
