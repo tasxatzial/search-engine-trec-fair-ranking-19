@@ -49,43 +49,42 @@ public class VSM extends ARetrievalModel {
     @Override
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
-        List<String> terms = new ArrayList<>(query.size());
         int totalArticles = _indexer.getTotalArticles();
 
-        //collect the terms
-        query.forEach(queryTerm -> terms.add(queryTerm.getTerm()));
+        //frequencies of the terms in the query
+        Map<String, Integer> queryFrequencies = new HashMap<>(query.size());
+        for (QueryTerm queryTerm : query) {
+            queryFrequencies.merge(queryTerm.getTerm(), 1, Integer::sum);
+        }
+
+        //max frequency of the query terms
+        int queryMaxFrequency = 0;
+        for (int frequency : queryFrequencies.values()) {
+            if (frequency > queryMaxFrequency) {
+                queryMaxFrequency = frequency;
+            }
+        }
+        
+        //merge weights of the same terms
+        query = mergeTerms(query);
 
         //get the relevant documents from the documents file
         fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
-        //frequencies of the terms in the query
-        Map<String, Integer> queryFreqs = new HashMap<>(terms.size());
-        for (String term : terms) {
-            queryFreqs.merge(term, 1, Integer::sum);
-        }
-
-        //max frequency of the query terms
-        int queryMaxFreq = 0;
-        for (Integer freq : queryFreqs.values()) {
-            if (freq > queryMaxFreq) {
-                queryMaxFreq = freq;
-            }
-        }
-
         //df of the terms of the query
-        int[] dfs = _indexer.getDf(terms);
+        int[] dfs = _indexer.getDf(query);
 
         //weights of terms in the query
-        double[] queryWeights = new double[terms.size()];
-        for (int i = 0; i < terms.size(); i++) {
-            double tf = query.get(i).getWeight() * queryFreqs.get(terms.get(i)) / queryMaxFreq;
+        double[] queryWeights = new double[query.size()];
+        for (int i = 0; i < query.size(); i++) {
+            double tf = query.get(i).getWeight() / queryMaxFrequency;
             double idf = Math.log(totalArticles / (1.0 + dfs[i]));
             queryWeights[i] = tf * idf;
         }
 
         //norm of query
         double queryNorm = 0;
-        for (int i = 0; i < terms.size(); i++) {
+        for (int i = 0; i < query.size(); i++) {
             queryNorm += queryWeights[i] * queryWeights[i];
         }
         queryNorm = Math.sqrt(queryNorm);
@@ -93,7 +92,7 @@ public class VSM extends ARetrievalModel {
         //weights of terms for each document
         Map<DocInfo, double[]> documentsWeights = new HashMap<>();
         for (int i = 0; i < _termsDocInfo.size(); i++) {
-            int[] freqs = _indexer.getFreq(terms.get(i));
+            int[] freqs = _indexer.getFreq(query.get(i).getTerm());
             double weight = query.get(i).getWeight();
             double idf = Math.log(totalArticles / (1.0 + dfs[i]));
             for (int j = 0; j < _termsDocInfo.get(i).size(); j++) {
@@ -101,7 +100,7 @@ public class VSM extends ARetrievalModel {
                 double[] weights = documentsWeights.get(docInfo);
                 double tf = (freqs[j] * weight) / (int) docInfo.getProperty(DocInfo.PROPERTY.MAX_TF);
                 if (weights == null) {
-                    weights = new double[terms.size()];
+                    weights = new double[query.size()];
                     documentsWeights.put(docInfo, weights);
                 }
                 weights[i] += tf * idf;
@@ -129,6 +128,7 @@ public class VSM extends ARetrievalModel {
         for (Pair<Object, Double> result : results) {
             result.setR(result.getR() / maxScore);
         }
+
 
         //sort based on pagerank score and this model score
         sort(results);

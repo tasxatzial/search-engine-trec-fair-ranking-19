@@ -245,4 +245,33 @@ public abstract class ARetrievalModel {
 
         results.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));
     }
+
+    /**
+     * Merges the weights of the equal terms in the specified query list and returns a new list
+     * @param query
+     * @return
+     */
+    protected List<QueryTerm> mergeTerms(List<QueryTerm> query) {
+        List<QueryTerm> mergedQuery = new ArrayList<>();
+        for (int i = 0; i < query.size(); i++) {
+            QueryTerm currentTerm = query.get(i);
+            boolean found = false;
+            for (int j = 0; j < i; j++) {
+                if (currentTerm.getTerm().equals(query.get(j).getTerm())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                QueryTerm mergedTerm = new QueryTerm(currentTerm.getTerm(), currentTerm.getWeight());
+                for (int j = i + 1; j < query.size(); j++) {
+                    if (currentTerm.getTerm().equals(query.get(j).getTerm())) {
+                        mergedTerm.setWeight(mergedTerm.getWeight() + query.get(j).getWeight());
+                    }
+                }
+                mergedQuery.add(mergedTerm);
+            }
+        }
+        return mergedQuery;
+    }
 }

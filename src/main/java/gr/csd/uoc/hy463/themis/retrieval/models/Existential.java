@@ -53,6 +53,10 @@ public class Existential extends ARetrievalModel {
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
 
+        //merge weights of the same terms
+        query = mergeTerms(query);
+
+        //get the relevant documents from the documents file
         fetchEssentialDocInfo(query, props, startDoc, endDoc);
 
         //remove the duplicates

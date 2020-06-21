@@ -36,6 +36,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Tex
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
+import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.*;
 import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 
@@ -958,19 +959,6 @@ public class Indexer {
         for (int i = 0; i < terms.size(); i++) {
             List<DocInfo> termDocInfo = termsDocInfo.get(i);
 
-            /* check whether the current term is the same as a previous term */
-            boolean found = false;
-            for (int j = 0; j < i; j++) {
-                if (terms.get(i).equals(terms.get(j))) {
-                    termsDocInfo.set(i, termsDocInfo.get(j));
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                continue;
-            }
-
             //if we have already a result of docInfos for this term, just update the properties of each docInfo object
             if (!termDocInfo.isEmpty()) {
                 updateDocInfo(termDocInfo, props);
@@ -1151,14 +1139,14 @@ public class Indexer {
 
     /**
      * Returns an array of the document frequencies (df) for each term in the specified list.
-     * @param terms
+     * @param query
      * @return
      */
-    public int[] getDf(List<String> terms) {
-        int[] dfs = new int[terms.size()];
+    public int[] getDf(List<QueryTerm> query) {
+        int[] dfs = new int[query.size()];
         VocabularyStruct vocabularyValue;
-        for (int i = 0; i < terms.size(); i++) {
-            vocabularyValue = __VOCABULARY__.get(terms.get(i));
+        for (int i = 0; i < query.size(); i++) {
+            vocabularyValue = __VOCABULARY__.get(query.get(i).getTerm());
             if (vocabularyValue != null) {
                 dfs[i] = vocabularyValue.get_df();
             }
