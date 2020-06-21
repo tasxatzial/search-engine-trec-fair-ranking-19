@@ -190,6 +190,7 @@ public class Search {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
         int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
+        List<List<QueryTerm>> expandedQuery = null;
         List<QueryTerm> finalQuery = new ArrayList<>();
 
         //split query into terms, apply stopwords & stemming
@@ -197,6 +198,13 @@ public class Search {
         if (useStopwords) {
             splitQuery.removeIf(StopWords::isStopWord);
         }
+
+        //at this point we should also expand the query
+        if (_queryExpansion != null) {
+            expandedQuery = _queryExpansion.expandQuery(splitQuery);
+        }
+
+        //now we can apply stemming to the initial query
         if (useStemmer) {
             for (int i = 0; i < splitQuery.size(); i++) {
                 splitQuery.set(i, ProcessText.applyStemming(splitQuery.get(i)));
@@ -208,26 +216,27 @@ public class Search {
             finalQuery.add(new QueryTerm(s, 1.0));
         }
 
-        //expand query add the results to the final query terms
-        Set<String> splitQuerySet = new HashSet<>(splitQuery);
-        List<List<QueryTerm>> expandedQuery;
-        if (_queryExpansion != null) {
-            expandedQuery = _queryExpansion.expandQuery(splitQuery);
-            for (List<QueryTerm> expandedTerms : expandedQuery) {
+        //now process the expanded query and add the results to the final query terms
+        if (expandedQuery != null) {
+            for (int i = 0; i < expandedQuery.size(); i++) {
+                List<QueryTerm> expandedTermList = expandedQuery.get(i);
                 int count = 0;
-                for (QueryTerm newTerm : expandedTerms) {
+                for (QueryTerm expandedTerm : expandedTermList) {
                     if (count == maxNewTermsForEachTerm) {
                         break;
                     }
-                    String term = newTerm.getTerm().toLowerCase();
+                    if (expandedTerm.getTerm().split(" ").length > 1) {
+                        continue;
+                    }
+                    String term = expandedTerm.getTerm().toLowerCase();
                     if (useStopwords && StopWords.isStopWord(term)) {
                         continue;
                     }
                     if (useStemmer) {
                         term = ProcessText.applyStemming(term);
                     }
-                    if (!splitQuerySet.contains(term)) {
-                        finalQuery.add(new QueryTerm(term, newTerm.getWeight()));
+                    if (!splitQuery.get(i).equals(term)) {
+                        finalQuery.add(new QueryTerm(term, expandedTerm.getWeight()));
                         count++;
                     }
                 }

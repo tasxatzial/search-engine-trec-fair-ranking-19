@@ -64,7 +64,7 @@ public class VSM extends ARetrievalModel {
                 queryMaxFrequency = frequency;
             }
         }
-        
+
         //merge weights of the same terms
         query = mergeTerms(query);
 
