@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFrequency;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
@@ -30,8 +31,8 @@ public class S2TextualEntryTermFrequencies {
      * @param entry
      * @return
      */
-    public Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> createWordsMap(S2TextualEntry entry) {
-        Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWordsMap = new HashMap<>();
+    public Map<String, List<DocInfoFrequency>> createWordsMap(S2TextualEntry entry) {
+        Map<String, List<DocInfoFrequency>> entryWordsMap = new HashMap<>();
 
         addToWordsMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , entryWordsMap);
         addToWordsMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, entryWordsMap);
@@ -54,8 +55,7 @@ public class S2TextualEntryTermFrequencies {
     }
 
     /* Takes a string, applies stemming/stopwords, and adds the result to the map of term frequencies */
-    private void addToWordsMap(String field, DocInfo.PROPERTY prop,
-                               Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
+    private void addToWordsMap(String field, DocInfo.PROPERTY prop, Map<String, List<DocInfoFrequency>> entryWords) {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
@@ -72,22 +72,21 @@ public class S2TextualEntryTermFrequencies {
     }
 
     /* Takes a string and adds it to the map of term frequencies. Does not apply stemming or stopwords */
-    private void addToWordsMap_asIs(String currentToken, DocInfo.PROPERTY prop,
-                                    Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords) {
-        List<Pair<DocInfo.PROPERTY, Integer>> tokenValues = entryWords.get(currentToken);
-        Pair<DocInfo.PROPERTY, Integer> lastPair;
+    private void addToWordsMap_asIs(String currentToken, DocInfo.PROPERTY prop, Map<String, List<DocInfoFrequency>> entryWords) {
+        List<DocInfoFrequency> tokenValues = entryWords.get(currentToken);
+        DocInfoFrequency lastDocInfoFrequency;
         if (tokenValues != null) {
-            lastPair = tokenValues.get(tokenValues.size() - 1);
-            if (lastPair.getL() == prop) {
-                lastPair.setR(lastPair.getR() + 1);
+            lastDocInfoFrequency = tokenValues.get(tokenValues.size() - 1);
+            if (lastDocInfoFrequency.get_prop() == prop) {
+                lastDocInfoFrequency.incr_frequency();
             }
             else {
-                tokenValues.add(new Pair<>(prop, 1));
+                tokenValues.add(new DocInfoFrequency(prop));
             }
         }
         else {
             tokenValues = new ArrayList<>();
-            tokenValues.add(new Pair<>(prop, 1));
+            tokenValues.add(new DocInfoFrequency(prop));
             entryWords.put(currentToken, tokenValues);
         }
     }

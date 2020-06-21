@@ -291,7 +291,7 @@ public class Indexer {
                     S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
 
                     // create the map of entry field frequencies for each term
-                    Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords = wordFrequencies.createWordsMap(entry);
+                    Map<String, List<DocInfoFrequency>> entryWords = wordFrequencies.createWordsMap(entry);
 
                     // update document length (number of terms)
                     totalDocumentLength += entryWords.size();

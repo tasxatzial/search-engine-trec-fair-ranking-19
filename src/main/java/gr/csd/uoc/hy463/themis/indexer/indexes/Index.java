@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFrequency;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import gr.csd.uoc.hy463.themis.indexer.model.PartialIndexStruct;
 import gr.csd.uoc.hy463.themis.indexer.model.PostingStruct;
@@ -142,21 +143,21 @@ public class Index {
      * @return
      * @throws IOException
      */
-    public String add(Map<String, List<Pair<DocInfo.PROPERTY, Integer>>> entryWords, long docOffset) {
+    public String add(Map<String, List<DocInfoFrequency>> entryWords, long docOffset) {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, List<Pair<DocInfo.PROPERTY, Integer>>> entry : entryWords.entrySet()) {
+        for (Map.Entry<String, List<DocInfoFrequency>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
             PartialIndexStruct indexStruct = __INDEX__.get(key);
-            for (Pair<DocInfo.PROPERTY, Integer> pair : entry.getValue()) {
-                tf += pair.getR();
+            for (DocInfoFrequency docInfoFrequency : entry.getValue()) {
+                tf += docInfoFrequency.get_frequency();
             }
             if (indexStruct != null) {
-                indexStruct.set_df(indexStruct.get_df() + 1);
+                indexStruct.incr_df();
                 indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
             }
             else {
-                indexStruct = new PartialIndexStruct(1);
+                indexStruct = new PartialIndexStruct();
                 indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
                 __INDEX__.put(key, indexStruct);
             }

@@ -11,16 +11,17 @@ public class PartialIndexStruct {
     private int _df;
     private List<PostingStruct> _postings;
 
-    public PartialIndexStruct(int df) {
-        _df = df;
+    public PartialIndexStruct() {
+        _df = 1;
         _postings = new ArrayList<>();
-    }
-    public void set_df(int df) {
-        _df = df;
     }
 
     public int get_df() {
         return _df;
+    }
+
+    public void incr_df() {
+        _df += 1;
     }
 
     public List<PostingStruct> get_postings() {
