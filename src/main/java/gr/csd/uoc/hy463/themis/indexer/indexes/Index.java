@@ -136,21 +136,23 @@ public class Index {
 
     /**
      * Adds the map of term frequencies of a textual entry to the partial index. Returns
-     * a string consisting of <term, tf> pairs.
+     * the total number of frequencies.
      *
      * @param entryWords The map of term frequencies
      * @param docOffset The offset to the document files
      * @return
      * @throws IOException
      */
-    public String add(Map<String, List<DocInfoFrequency>> entryWords, long docOffset) {
+    public int add(Map<String, List<DocInfoFrequency>> entryWords, BufferedWriter termFreqWriter, long docOffset) throws IOException {
         StringBuilder sb = new StringBuilder();
+        int totalTf = 0;
         for (Map.Entry<String, List<DocInfoFrequency>> entry : entryWords.entrySet()) {
             int tf = 0;
             String key = entry.getKey();
             PartialIndexStruct indexStruct = __INDEX__.get(key);
             for (DocInfoFrequency docInfoFrequency : entry.getValue()) {
                 tf += docInfoFrequency.get_frequency();
+                totalTf += tf;
             }
             if (indexStruct != null) {
                 indexStruct.incr_df();
@@ -164,7 +166,8 @@ public class Index {
             sb.append(key).append(' ').append(tf).append(' ');
         }
         sb.append('\n');
-        return sb.toString();
+        termFreqWriter.write(sb.toString());
+        return totalTf;
     }
 
     /* Dumps the appropriate info from a partial index memory struct to the

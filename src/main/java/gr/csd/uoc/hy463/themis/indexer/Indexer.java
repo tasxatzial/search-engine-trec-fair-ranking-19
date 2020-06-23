@@ -287,14 +287,11 @@ public class Indexer {
                     // create the map of entry field frequencies for each term
                     Map<String, List<DocInfoFrequency>> entryWords = wordFrequencies.createWordsMap(entry);
 
-                    // update document length (number of terms)
-                    totalDocumentLength += entryWords.size();
+                    // update the partial index and the doc_tf file
+                    int documentLength = index.add(entryWords, termFreqWriter, documentMetaOffset);
 
-                    // update the partial index
-                    String termFreqs = index.add(entryWords, documentMetaOffset);
-
-                    // update the doc_tf file
-                    termFreqWriter.write(termFreqs);
+                    // update document length (number of tokens)
+                    totalDocumentLength += documentLength;
 
                     // update the documents file
                     long prevDocumentOffset = documentOffset;
@@ -303,7 +300,7 @@ public class Indexer {
                     int documentSize = (int) (documentOffset - prevDocumentOffset);
 
                     // update the documents_meta file
-                    documentMetaOffset = dumpDocumentsMeta(documentsMetaOutStream, entry, entryWords.size(), documentSize, documentMetaOffset, prevDocumentOffset);
+                    documentMetaOffset = dumpDocumentsMeta(documentsMetaOutStream, entry, documentLength, documentSize, documentMetaOffset, prevDocumentOffset);
 
                     // calculate the maximum size of an entry in the documents file
                     if (documentSize > maxDocumentSize) {
