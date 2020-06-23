@@ -45,6 +45,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -346,6 +347,7 @@ public class Indexer {
         __META_INDEX_INFO__.put("articles", String.valueOf(totalDocuments));
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocumentSize));
+        __META_INDEX_INFO__.put("timestamp", Instant.now().toString());
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             indexMetaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
         }
@@ -1184,6 +1186,19 @@ public class Indexer {
     public Boolean useStemmer() {
         if (__META_INDEX_INFO__ != null) {
             return Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return null;
+        }
+    }
+
+    /**
+     * Returns the timestamp of the loaded index
+     * @return
+     */
+    public String getIndexTimestamp() {
+        if (__META_INDEX_INFO__ != null) {
+            return __META_INDEX_INFO__.get("timestamp");
         } else {
             __LOGGER__.error("Meta index info file is not loaded!");
             return null;

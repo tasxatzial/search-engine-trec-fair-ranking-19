@@ -158,6 +158,14 @@ public class Search {
     }
 
     /**
+     * Returns the timestamp of the loaded index
+     * @return
+     */
+    public String getIndexTimestamp() {
+        return _indexer.getIndexTimestamp();
+    }
+
+    /**
      * Sets the retrieved document properties to the specified props
      * @param props
      */

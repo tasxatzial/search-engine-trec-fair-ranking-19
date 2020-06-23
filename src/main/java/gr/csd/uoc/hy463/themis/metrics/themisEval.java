@@ -108,23 +108,21 @@ public class themisEval {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print(">>> Starting evaluation\n");
-        Themis.print(">>> Saving evaluation results in " + __EVALUATION_FILENAME__ + "\n");
+        Themis.print("Saving evaluation results in " + __EVALUATION_FILENAME__ + "\n");
+        Themis.print(">>> Index timestamp: " + _search.getIndexTimestamp() + "\n");
         Themis.print(">>> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
         Themis.print("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
         Themis.print("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");
-        Themis.print("Stemmimg: " + __CONFIG__.getUseStemmer() + "\n");
-        Themis.print("Stowords: " + __CONFIG__.getUseStopwords() + "\n");
+        evaluationWriter.write(">>> Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write(">>> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         evaluationWriter.write("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
         evaluationWriter.write("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
         evaluationWriter.write("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");
-        evaluationWriter.write("Stemmimg: " + __CONFIG__.getUseStemmer() + "\n");
-        evaluationWriter.write("Stowords: " + __CONFIG__.getUseStopwords() + "\n");
 
         String line;
         JSONParser parser = new JSONParser();
