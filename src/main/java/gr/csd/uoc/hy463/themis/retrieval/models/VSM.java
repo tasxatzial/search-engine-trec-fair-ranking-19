@@ -52,14 +52,14 @@ public class VSM extends ARetrievalModel {
         int totalArticles = _indexer.getTotalArticles();
 
         //frequencies of the terms in the query
-        Map<String, Integer> queryFrequencies = new HashMap<>(query.size());
+        Map<String, Double> queryFrequencies = new HashMap<>(query.size());
         for (QueryTerm queryTerm : query) {
-            queryFrequencies.merge(queryTerm.getTerm(), 1, Integer::sum);
+            queryFrequencies.merge(queryTerm.getTerm(), queryTerm.getWeight(), Double::sum);
         }
 
         //max frequency of the query terms
-        int queryMaxFrequency = 0;
-        for (int frequency : queryFrequencies.values()) {
+        double queryMaxFrequency = 0;
+        for (double frequency : queryFrequencies.values()) {
             if (frequency > queryMaxFrequency) {
                 queryMaxFrequency = frequency;
             }
