@@ -45,8 +45,8 @@ public class Pagerank {
         startTime = System.nanoTime();
         Themis.print("> Iterating...\n");
         computeCitationsPagerank(graph);
-        writeCitationsScores(graph);
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
+        writeCitationsScores(graph);
         Files.deleteIfExists(new File(graphFileName).toPath());
         __DOCUMENTS_META_BUFFERS__.close();
         __DOCUMENTS_META_BUFFERS__ = null;

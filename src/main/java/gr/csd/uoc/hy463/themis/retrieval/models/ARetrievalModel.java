@@ -164,7 +164,7 @@ public abstract class ARetrievalModel {
                 }
             }
             if (!found) {
-                _termsDocInfo.get(i).clear();
+                _termsDocInfo.set(i, null);
             }
         }
 
@@ -213,6 +213,9 @@ public abstract class ARetrievalModel {
         }
         else if (this instanceof OkapiBM25) {
             extraProps.removeAll(getOkapiProps());
+        }
+        if (extraProps.isEmpty()) {
+            return;
         }
 
         /* update all docInfo items of the results accordingly */
