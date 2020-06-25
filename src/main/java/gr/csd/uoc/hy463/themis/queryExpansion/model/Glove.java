@@ -24,10 +24,13 @@ public class Glove extends QueryExpansion {
     private int _nearest;
     private boolean _useStopwords;
 
-    public Glove(boolean useStopwords) throws IOException {
+    public Glove(boolean useStopwords) throws IOException, QueryExpansionException {
         Themis.print(">>> Initializing Glove...");
         Config __CONFIG__ = new Config();  // reads info from themis.config file
         File gloveModel = new File(__CONFIG__.getGloveModelFileName());
+        if (!gloveModel.exists()) {
+            throw new QueryExpansionException();
+        }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 
         //default is to get the nearest 1 terms for each term
