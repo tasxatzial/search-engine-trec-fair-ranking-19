@@ -37,7 +37,6 @@ public class EXTJWNL extends QueryExpansion {
 
     /**
      * Expands the specified list of terms. For each term it appends the nearest 2 terms with weight 0.5.
-     * The returned list contains only the new terms.
      * @param query
      * @return
      */
@@ -58,12 +57,13 @@ public class EXTJWNL extends QueryExpansion {
 
         for (int i = 0; i < eachTag.length; i++) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
-            if (_useStopwords && StopWords.isStopWord(query.get(i).toLowerCase())) {
+            String term = eachTag[i].split("_")[0];
+            String tag = eachTag[i].split("_")[1];
+            expandedTerm.add(new QueryTerm(term, 1.0));
+            if (_useStopwords && StopWords.isStopWord(eachTag[i].toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;
             }
-            String term = eachTag[i].split("_")[0];
-            String tag = eachTag[i].split("_")[1];
             POS pos = getPos(tag);
 
             // Ignore anything that is not a noun, verb, adjective, adverb

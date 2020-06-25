@@ -13,7 +13,8 @@ public abstract class QueryExpansion {
     }
 
     /**
-     * Expands a given query using a query expansion dictionary
+     * Expands a given query using a query expansion dictionary. The first term in each List<QueryTerm>
+     * should be the non-expanded term.
      * @param query
      * @return
      */

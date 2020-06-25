@@ -129,7 +129,6 @@ public class VSM extends ARetrievalModel {
             result.setR(result.getR() / maxScore);
         }
 
-
         //sort based on pagerank score and this model score
         sort(results);
 

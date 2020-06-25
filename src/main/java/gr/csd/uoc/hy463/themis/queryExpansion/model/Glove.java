@@ -5,6 +5,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
+import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
@@ -49,6 +50,7 @@ public class Glove extends QueryExpansion {
 
         for (String term : query) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
+            expandedTerm.add(new QueryTerm(term, 1.0));
             if (_useStopwords && StopWords.isStopWord(term.toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;

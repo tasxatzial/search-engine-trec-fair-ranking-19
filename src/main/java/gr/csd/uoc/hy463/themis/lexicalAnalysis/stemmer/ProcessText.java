@@ -31,7 +31,7 @@ public class ProcessText {
      * @return
      */
     public static List<String> split(String query) {
-        String tokens = "\u0020“”/\"-.\uff0c[]()?+#，*";
+        String tokens = "\u0020“”/\"-.\uff0c[](),?+#，*";
         StringTokenizer tokenizer = new StringTokenizer(query, tokens);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
