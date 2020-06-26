@@ -47,6 +47,25 @@ public class S2JsonEntryReader {
 
     private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);
 
+    // Method that reads only the doc Id from an entry
+    public static S2TextualEntry readDocIdEntry(String jsonToRead) {
+        S2TextualEntry entry = new S2TextualEntry();
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(jsonToRead);
+
+            // This should be a JSON object.
+            JSONObject jsonObject = (JSONObject) obj;
+
+            // Get the id for example
+            String id = (String) jsonObject.get("id");
+            entry.setId(id);
+        } catch (ParseException e) {
+            __LOGGER__.error(e.getMessage());
+        }
+        return entry;
+    }
+
     // Method that reads all textual information from an entry
     public static S2TextualEntry readTextualEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
