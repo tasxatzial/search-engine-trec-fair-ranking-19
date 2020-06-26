@@ -345,6 +345,8 @@ public class Indexer {
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
         __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocumentSize));
         __META_INDEX_INFO__.put("timestamp", Instant.now().toString());
+        __META_INDEX_INFO__.put("pagerank_damping", String.valueOf(__CONFIG__.getPagerankDampingFactor()));
+        __META_INDEX_INFO__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
         for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
             indexMetaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
         }
