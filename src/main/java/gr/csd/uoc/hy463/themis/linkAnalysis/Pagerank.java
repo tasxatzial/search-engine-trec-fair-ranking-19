@@ -5,8 +5,8 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2CitationsGraphEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
 import gr.csd.uoc.hy463.themis.utils.Time;
 
@@ -99,7 +99,7 @@ public class Pagerank {
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
                 while ((json = currentDataFile.readLine()) != null) {
-                    S2CitationsGraphEntry entry = S2JsonEntryReader.readCitationsGraphEntry(json);
+                    S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
 
                     //out citations
                     List<String> outCitations = entry.getOutCitations();

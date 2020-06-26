@@ -146,8 +146,8 @@ public class S2JsonEntryReader {
     }
 
     // Method that reads all citation related information from an entry
-    public static S2CitationsGraphEntry readCitationsGraphEntry(String jsonToRead) {
-        S2CitationsGraphEntry entry = new S2CitationsGraphEntry();
+    public static S2TextualEntry readCitationsEntry(String jsonToRead) {
+        S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(jsonToRead);
@@ -260,6 +260,6 @@ public class S2JsonEntryReader {
 
         System.out.println(json);
         System.out.println(S2JsonEntryReader.readTextualEntry(json));
-        System.out.println(S2JsonEntryReader.readCitationsGraphEntry(json));
+        System.out.println(S2JsonEntryReader.readCitationsEntry(json));
     }
 }
