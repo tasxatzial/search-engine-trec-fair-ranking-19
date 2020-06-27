@@ -1,12 +1,12 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
-import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFrequency;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -15,15 +15,12 @@ import java.util.*;
  * <<field1, tf1> <field1, tf2> ...>
  */
 public class S2TextualEntryTermFrequencies {
-    private boolean useStemmer;
-    private boolean useStopwords;
+    private boolean _useStemmer;
+    private boolean _useStopwords;
 
-    public S2TextualEntryTermFrequencies(Config config) {
-        if (config == null) {
-            throw new IllegalArgumentException("config is null");
-        }
-        useStemmer = config.getUseStemmer();
-        useStopwords = config.getUseStopwords();
+    public S2TextualEntryTermFrequencies(boolean useStemmer, boolean useStopwords) {
+        _useStemmer = useStemmer;
+        _useStopwords = useStopwords;
     }
 
     /**
@@ -61,10 +58,10 @@ public class S2TextualEntryTermFrequencies {
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken().toLowerCase();
-            if (useStopwords && StopWords.isStopWord(currentToken)) {
+            if (_useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }
-            if (useStemmer) {
+            if (_useStemmer) {
                 currentToken = ProcessText.applyStemming(currentToken);
             }
             addToWordsMap_asIs(currentToken, prop, entryWords);
