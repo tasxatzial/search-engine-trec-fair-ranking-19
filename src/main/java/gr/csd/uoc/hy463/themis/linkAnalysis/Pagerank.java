@@ -101,46 +101,65 @@ public class Pagerank {
                 while ((json = currentDataFile.readLine()) != null) {
                     S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
 
-                    //out citations
+                    //count out citations
                     List<String> outCitations = entry.getOutCitations();
                     int numOutCitations = 0;
-                    for (String citation : outCitations) {
-                        if (citationsIdsMap.get(citation) != null) {
+                    for (int i = 0; i < outCitations.size(); i++) {
+                        if (!skipCitation(citationsIdsMap, outCitations, entry.getId(), outCitations.get(i), i)) {
                             numOutCitations++;
                         }
                     }
 
-                    //in citations
+                    //count in citations
                     List<String> inCitations = entry.getInCitations();
                     int numInCitations = 0;
-                    for (String citation : inCitations) {
-                        if (citationsIdsMap.get(citation) != null) {
+                    for (int i = 0; i <inCitations.size(); i++) {
+                        if (!skipCitation(citationsIdsMap, inCitations, entry.getId(), inCitations.get(i), i)) {
                             numInCitations++;
                         }
                     }
 
-                    //write all required the data into an array
+                    //dump citations to file
                     byte[] citationData = new byte[4 * (2 + numInCitations)];
                     ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
                     citationDataBuf.putInt(0, 4 * (1 + numInCitations));
                     citationDataBuf.putInt(4, numOutCitations);
-                    int j = 0;
-                    for (String inCitation : inCitations) {
-                        Integer citation = citationsIdsMap.get(inCitation);
-                        if (citation != null) {
-                            citationDataBuf.putInt(4 * j + 8, citation);
-                            j++;
+                    int k = 0;
+                    for (int i = 0; i <inCitations.size(); i++) {
+                        if (!skipCitation(citationsIdsMap, inCitations, entry.getId(), inCitations.get(i), i)) {
+                            Integer citation = citationsIdsMap.get(inCitations.get(i));
+                            citationDataBuf.putInt(4 * (2 + k), citation);
+                            k++;
                         }
                     }
-
-                    //finally, write the array to the file
                     graphWriter.write(citationData);
                 }
                 currentDataFile.close();
             }
         }
         graphWriter.close();
-        citationsIdsMap.clear(); // can be garbage collected
+    }
+
+    /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
+    1) citation_i does not exist
+    2) citation_i referencing itself
+    3) citation_i is already in the list of citations
+     */
+    private boolean skipCitation(Map<String, Integer> citationsIds, List<String> citations, String docId, String citation_i, int citation_idx) {
+        if (citationsIds.get(citation_i) == null) { //skip citation if the document does not exist
+            return true;
+        }
+        if (citation_i.equals(docId)) { //skip citation if the document is referencing itself
+            return true;
+        }
+        boolean found = false;
+        for (int j = 0; j < citation_idx; j++) {
+            if (citation_i.equals(citations.get(j))) {
+                found = true;
+                break;
+            }
+        }
+        return found; //skip citation if we've already taken this citation into account
     }
 
     /* initialize the citations pagerank graph and its nodes */
