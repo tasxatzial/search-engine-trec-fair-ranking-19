@@ -209,6 +209,14 @@ public class Config {
     }
 
     /**
+     * Returns the directory that will have the files related to the citations graph
+     * @return
+     */
+    public String getCitationsGraphPath() {
+        return __PROP__.getProperty("CITATIONS_GRAPH_PATH");
+    }
+
+    /**
      * Returns if we should use the titles
      *
      * @return
