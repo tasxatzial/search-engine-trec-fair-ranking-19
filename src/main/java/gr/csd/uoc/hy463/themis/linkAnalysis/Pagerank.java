@@ -4,6 +4,7 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
@@ -37,7 +38,6 @@ public class Pagerank {
     public void citationsPagerank() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating Pagerank\n> Constructing graph...\n");
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
         String graphFileName = __INDEX_PATH__ + "/graph";
         dumpCitations(graphFileName);
         PagerankNode[] graph = initCitationsGraph(graphFileName);
@@ -48,8 +48,7 @@ public class Pagerank {
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
         writeCitationsScores(graph);
         Files.deleteIfExists(new File(graphFileName).toPath());
-        __DOCUMENTS_META_BUFFERS__.close();
-        __DOCUMENTS_META_BUFFERS__ = null;
+
     }
 
     /* Creates a temp file 'graph' in the Index directory. Entry N of this file corresponds to the Nth document
@@ -61,7 +60,7 @@ public class Pagerank {
         if (files == null) {
             return;
         }
-
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.READ);
         byte[] docIdArray = new byte[DocumentMetaEntry.ID_SIZE];
 
         /* This is a temporary file that stores for each document the number of Out citations
@@ -138,6 +137,8 @@ public class Pagerank {
             }
         }
         graphWriter.close();
+        __DOCUMENTS_META_BUFFERS__.close();
+        __DOCUMENTS_META_BUFFERS__ = null;
     }
 
     /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
@@ -275,9 +276,10 @@ public class Pagerank {
     }
 
     /* writes the citation scores to the documents_meta file */
-    private void writeCitationsScores(PagerankNode[] graph) {
+    private void writeCitationsScores(PagerankNode[] graph) throws IOException {
         long offset = 0;
         double maxScore = 0;
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
 
         //find the max score so that we can normalize all scores before writing them to file
         for (int i = 0; i < _totalDocuments; i++) {
@@ -290,5 +292,7 @@ public class Pagerank {
             buffer.putDouble(graph[i].getScore() / maxScore);
             offset += DocumentMetaEntry.totalSize;
         }
+        __DOCUMENTS_META_BUFFERS__.close();
+        __DOCUMENTS_META_BUFFERS__ = null;
     }
 }
