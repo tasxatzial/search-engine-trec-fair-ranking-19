@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis;
 
-import gr.csd.uoc.hy463.themis.examples.GloveExample;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -8,6 +7,7 @@ import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
+import gr.csd.uoc.hy463.themis.ui.SearchNoIndexException;
 import gr.csd.uoc.hy463.themis.ui.View.ExpansionDictionaryRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
@@ -192,7 +192,7 @@ public class Themis {
                 createIndex = null;
                 try { //todo: close files
                     search = new Search();
-                } catch (IOException | QueryExpansionException e) {
+                } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
                     __LOGGER__.error(e.getMessage());
                     print("Failed to initialize search\n");
                     _task = null;
@@ -201,7 +201,7 @@ public class Themis {
             }
             try { //todo: close files
                 new themisEval(search, _model, _dictionary);
-            } catch (IOException | QueryExpansionException e) {
+            } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");
             } finally {
@@ -280,10 +280,11 @@ public class Themis {
             createIndex = null;
             try { //todo: close files
                 search = new Search();
-            } catch (IOException | QueryExpansionException ex) {
+            } catch (IOException | QueryExpansionException | SearchNoIndexException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to initialize search\n");
-            } finally {
+            }
+            finally {
                 _task = null;
                 if (search != null) {
                     view.checkRetrievalModel(search.getRetrievalmodel());
@@ -310,7 +311,12 @@ public class Themis {
                         search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).get_dictionary());
                     } catch (IOException | QueryExpansionException e) {
                         __LOGGER__.error(e.getMessage());
-                        print("Failed to load expansion dictionary");
+                        print("Failed to load expansion dictionary\n");
+                        _task = null;
+                        return;
+                    } catch (SearchNoIndexException e) {
+                        __LOGGER__.error(e.getMessage());
+                        print("Index is not loaded\n");
                         _task = null;
                         return;
                     }
@@ -326,13 +332,27 @@ public class Themis {
                     props.add(((DocInfoRadioButton) documentProperties.getItem(i)).get_prop());
                 }
             }
-            search.setDocumentProperties(props);
+            try {
+                search.setDocumentProperties(props);
+            } catch (SearchNoIndexException e) {
+                __LOGGER__.error(e.getMessage());
+                print("Index is not loaded\n");
+                _task = null;
+                return;
+            }
 
             //set the retrieval model
             JMenu retrievalModel = view.get_retrievalModel();
             for (int i = 0; i < retrievalModel.getItemCount(); i++) {
                 if (retrievalModel.getItem(i).isSelected()) {
-                    search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).get_model());
+                    try {
+                        search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).get_model());
+                    } catch (SearchNoIndexException e) {
+                        __LOGGER__.error(e.getMessage());
+                        print("Index is not loaded\n");
+                        _task = null;
+                        return;
+                    }
                     break;
                 }
             }

@@ -32,6 +32,7 @@ import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
+import gr.csd.uoc.hy463.themis.ui.SearchNoIndexException;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -56,7 +57,7 @@ public class themisEval {
     private String __JUDGEMENTS_FILENAME__;
     private String __EVALUATION_FILENAME__;
 
-    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
+    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
         _search = search;
         __CONFIG__ = new Config();
         if (evaluateInit(model, dictionary)) {
@@ -79,7 +80,7 @@ public class themisEval {
      /* Sets the search model to the specified model, the query expansion dictionary to the specified
      * dictionary, and the retrieved document properties to an empty set.
      * Also sets the file name of the evaluation results based on the specified model and dictionary */
-    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
+    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
         __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
         String __INDEX_PATH__ = __CONFIG__.getIndexPath();
         if (!hasJudgements()) {
@@ -104,7 +105,7 @@ public class themisEval {
     }
 
     /* Runs the evaluation based on the configured parameters */
-    private void evaluate() throws IOException, QueryExpansionException {
+    private void evaluate() throws IOException, QueryExpansionException, SearchNoIndexException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print(">>> Starting evaluation\n");

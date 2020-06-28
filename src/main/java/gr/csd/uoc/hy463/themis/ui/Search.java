@@ -55,8 +55,11 @@ public class Search {
     private QueryExpansion _queryExpansion;
     private Set<DocInfo.PROPERTY> _props;
 
-    public Search() throws IOException, QueryExpansionException {
+    public Search() throws IOException, QueryExpansionException, SearchNoIndexException {
         _indexer = new Indexer();
+        if (!_indexer.load()) {
+            throw new SearchNoIndexException();
+        }
         switch (_indexer.getConfig().getRetrievalModel()) {
             case "BM25":
                 _model = new OkapiBM25(_indexer);
@@ -67,10 +70,6 @@ public class Search {
             default:
                 _model = new Existential(_indexer);
                 break;
-        }
-
-        if (!_indexer.load()) {
-            throw new IOException("Unable to load index");
         }
         _props = new HashSet<>();
         if (_indexer.getConfig().getUseQueryExpansion()) {
@@ -89,7 +88,16 @@ public class Search {
     }
 
     /**
-     * Unloads an index from memory
+     * Returns true if index is loaded
+     * @return
+     */
+    public boolean isIndexLoaded() {
+        return _indexer.loaded();
+    }
+
+    /**
+     * Unloads an index from memory. Any further method calls of this Search, except printing results, will
+     * throw a SearchNoIndexException.
      * @throws IOException
      */
     public void unloadIndex() throws IOException {
@@ -100,7 +108,10 @@ public class Search {
      * Sets the retrieval model to the specified model
      * @param model
      */
-    public void setRetrievalModel(ARetrievalModel.MODEL model) {
+    public void setRetrievalModel(ARetrievalModel.MODEL model) throws SearchNoIndexException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
         if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
             _model = new VSM(_indexer);
         }
@@ -131,7 +142,10 @@ public class Search {
      * @param dictionary
      * @throws IOException
      */
-    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException {
+    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove(_indexer.useStopwords());
         }
@@ -161,7 +175,10 @@ public class Search {
      * Returns the timestamp of the loaded index
      * @return
      */
-    public String getIndexTimestamp() {
+    public String getIndexTimestamp() throws SearchNoIndexException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
         return _indexer.getIndexTimestamp();
     }
 
@@ -169,7 +186,10 @@ public class Search {
      * Sets the retrieved document properties to the specified props
      * @param props
      */
-    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) {
+    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) throws SearchNoIndexException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
         _props = props;
     }
 
@@ -179,7 +199,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query) throws IOException, QueryExpansionException {
+    public List<Pair<Object, Double>> search(String query) throws IOException, QueryExpansionException, SearchNoIndexException {
         return search(query, 0, Integer.MAX_VALUE);
     }
 
@@ -194,7 +214,10 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException {
+    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
         int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
