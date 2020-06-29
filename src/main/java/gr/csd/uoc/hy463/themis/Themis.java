@@ -38,7 +38,7 @@ public class Themis {
     private static TASK _task = null;
 
     public static void main(String[] args) throws IOException {
-        if (args.length > 0 && args[0].equals("swing_window")) { //GUI version
+        if (args.length > 0 && args[0].equals("gui")) { //GUI version
             view = new View();
 
             /* close window button listener */
