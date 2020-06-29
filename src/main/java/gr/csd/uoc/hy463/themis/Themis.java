@@ -20,9 +20,7 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
