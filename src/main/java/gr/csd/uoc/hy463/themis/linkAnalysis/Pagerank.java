@@ -208,22 +208,9 @@ public class Pagerank {
         double teleportScore = (1 - dampingFactor) / graph.length;
         double[] scores_tmp = new double[graph.length];
 
-        // initialize scores, count number of sink nodes
-        int sinksNum = 0;
+        // initialize scores
         for (PagerankNode node : graph) {
-            if (node.getOutNodes() == 0) {
-                sinksNum++;
-            }
             node.setScore(1.0 / graph.length);
-        }
-
-        /* put sink nodes in a separate array */
-        PagerankNode[] sinks = new PagerankNode[sinksNum];
-        int i = 0;
-        for (PagerankNode node : graph) {
-            if (node.getOutNodes() == 0) {
-                sinks[i++] = node;
-            }
         }
 
         boolean maybeConverged = false;
@@ -236,30 +223,26 @@ public class Pagerank {
 
             /* collect the scores from all sink nodes, these should be distributed to every other node */
             double sinksScore = 0;
-            for (PagerankNode sink : sinks) {
-                sinksScore += sink.getScore();
+            for (int i = 0; i < graph.length; i++) {
+                if (graph[i].getOutNodes() == 0) {
+                    sinksScore += graph[i].getScore();
+                }
             }
-            sinksScore /= (graph.length - 1);
+            sinksScore /= graph.length;
 
             /* iterate over all nodes */
             for (int j = 0; j < graph.length; j++) {
-                double score;
                 PagerankNode node = graph[j];
 
-                /* initially the new score for the current node comes from the total score of the sink nodes.
-                 * However when the current node is a sink, we should not take into account its own score */
-                if (node.getOutNodes() == 0) {
-                    score = sinksScore - node.getScore() / (graph.length - 1);
-                } else {
-                    score = sinksScore;
-                }
+                /* initialize current node score to the average score of sinks */
+                double score = sinksScore;
 
-                /* we also need to add to the new score the contributions of the In nodes of the current node */
+                /* we also need to add to the score the contributions of the In nodes of the current node */
                 PagerankNode[] inNodes = node.getInNodes();
                 for (int k = 0; k < inNodes.length; k++) {
                     score += inNodes[k].getScore() / inNodes[k].getOutNodes();
                 }
-
+                
                 scores_tmp[j] = score * dampingFactor + teleportScore;
             }
 
