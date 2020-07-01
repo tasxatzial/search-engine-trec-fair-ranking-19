@@ -380,7 +380,7 @@ public class Indexer {
         deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
 
         /* compute the citations pagerank scores, update the documents file */
-        Pagerank pagerank = new Pagerank();
+        Pagerank pagerank = new Pagerank(this);
         pagerank.citationsPagerank();
 
         /* finally delete the tmp index */
@@ -832,7 +832,7 @@ public class Indexer {
 
         //load index meta file
         Themis.print("Loading meta index file...");
-        __META_INDEX_INFO__ = loadMeta(__INDEX_PATH__ + "/" + __META_FILENAME__);
+        __META_INDEX_INFO__ = loadMeta();
         Themis.print("DONE\n");
 
         Themis.print("Opening documents, postings files...");
@@ -861,12 +861,16 @@ public class Indexer {
 
     /**
      * Returns a Map of the index meta information as found in the specified filename
-     * @param filename
      * @return
      * @throws IOException
      */
-    public static Map<String, String> loadMeta(String filename) throws IOException {
-        BufferedReader indexMetaReader = new BufferedReader(new FileReader(filename));
+    public Map<String, String> loadMeta() throws IOException {
+        if (!hasIndex()) {
+            __LOGGER__.error("Index is not constructed correctly!");
+            Themis.print("Index is not constructed correctly!\n");
+            return null;
+        }
+        BufferedReader indexMetaReader = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
         Map<String, String> meta = new HashMap<>();
         String[] split;
         String line;

@@ -61,7 +61,10 @@ public abstract class MemBuffers {
      * @return
      */
     public ByteBuffer getBufferLong(long offset) {
-        for (int i = _offsets.size() - 1; i >= 0; i--) {
+        if (offset < 0 || offset >= _offsets.get(_offsets.size() - 1)) {
+            return null;
+        }
+        for (int i = _offsets.size() - 2; i >= 0; i--) {
             long currentOffset = _offsets.get(i);
             if (offset >= currentOffset) {
                 ByteBuffer buffer = _buffers.get(i);
