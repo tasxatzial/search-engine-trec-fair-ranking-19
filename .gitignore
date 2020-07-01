@@ -21,3 +21,6 @@ hy463-fairness-trec-2020.iml
 .idea/
 src/main/resources/META-INF/
 out/
+
+doc/report-phaseA.docx
+doc/report-phaseB.docx
