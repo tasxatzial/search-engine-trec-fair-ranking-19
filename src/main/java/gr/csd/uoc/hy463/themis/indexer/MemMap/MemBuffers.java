@@ -1,7 +1,5 @@
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
-import gr.csd.uoc.hy463.themis.config.Config;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -21,12 +19,7 @@ public abstract class MemBuffers {
     protected List<ByteBuffer> _buffers;
     protected List<Long> _offsets;
     protected RandomAccessFile _documents;
-    protected Config _config;
     protected String _documentsPath;
-
-    protected MemBuffers(Config config) {
-        _config = config;
-    }
 
     /**
      * Creates the appropriate buffers so that the file specified by filename is treated

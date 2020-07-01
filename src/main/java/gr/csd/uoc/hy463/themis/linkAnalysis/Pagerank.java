@@ -4,7 +4,6 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
@@ -18,16 +17,15 @@ import java.util.*;
 
 public class Pagerank {
     private String __DATASET_PATH__;
-    private String __INDEX_PATH__;
-    private DocumentMetaBuffers __DOCUMENTS_META_BUFFERS__;
+    private String __DOCUMENTS_META_PATH__;
     private Config __CONFIG__;
     private int _totalDocuments;
 
     public Pagerank() throws IOException {
         __CONFIG__ = new Config();
-        __INDEX_PATH__ = __CONFIG__.getIndexPath();
         __DATASET_PATH__ = __CONFIG__.getDatasetPath();
-        Map<String, String> indexMeta = Indexer.loadMeta(__INDEX_PATH__ + "/" + __CONFIG__.getMetaFileName());
+        __DOCUMENTS_META_PATH__ = __CONFIG__.getIndexPath() + "/" + __CONFIG__.getDocumentsMetaFileName();
+        Map<String, String> indexMeta = Indexer.loadMeta(__CONFIG__.getIndexPath() + "/" + __CONFIG__.getMetaFileName());
         _totalDocuments = Integer.parseInt(indexMeta.get("articles"));
     }
 
@@ -38,7 +36,7 @@ public class Pagerank {
     public void citationsPagerank() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating Pagerank\n> Constructing graph...\n");
-        String graphFileName = __INDEX_PATH__ + "/graph";
+        String graphFileName = __CONFIG__.getIndexPath() + "/graph";
         dumpCitations(graphFileName);
         PagerankNode[] graph = initCitationsGraph(graphFileName);
         Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
@@ -60,7 +58,7 @@ public class Pagerank {
         if (files == null) {
             return;
         }
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.READ);
+        DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(__DOCUMENTS_META_PATH__, DocumentMetaBuffers.MODE.READ);
         byte[] docIdArray = new byte[DocumentMetaEntry.ID_SIZE];
 
         /* This is a temporary file that stores for each document the number of Out citations
@@ -83,7 +81,7 @@ public class Pagerank {
         int intId = 0;
         long offset = 0;
         while (intId < _totalDocuments) {
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset);
+            ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset);
             buffer.get(docIdArray);
             String stringId = new String(docIdArray, 0, DocumentMetaEntry.ID_SIZE, "ASCII");
             citationsIdsMap.put(stringId, intId);
@@ -137,8 +135,8 @@ public class Pagerank {
             }
         }
         graphWriter.close();
-        __DOCUMENTS_META_BUFFERS__.close();
-        __DOCUMENTS_META_BUFFERS__ = null;
+        documentMetaBuffers.close();
+        documentMetaBuffers = null;
     }
 
     /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
@@ -279,7 +277,7 @@ public class Pagerank {
     private void writeCitationsScores(PagerankNode[] graph) throws IOException {
         long offset = 0;
         double maxScore = 0;
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
+        DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(__DOCUMENTS_META_PATH__, DocumentMetaBuffers.MODE.WRITE);
 
         //find the max score so that we can normalize all scores before writing them to file
         for (int i = 0; i < _totalDocuments; i++) {
@@ -288,11 +286,11 @@ public class Pagerank {
             }
         }
         for (int i = 0; i < _totalDocuments; i++) {
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
+            ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
             buffer.putDouble(graph[i].getScore() / maxScore);
             offset += DocumentMetaEntry.totalSize;
         }
-        __DOCUMENTS_META_BUFFERS__.close();
-        __DOCUMENTS_META_BUFFERS__ = null;
+        documentMetaBuffers.close();
+        documentMetaBuffers = null;
     }
 }

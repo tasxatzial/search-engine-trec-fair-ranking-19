@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
-import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 
 import java.io.IOException;
@@ -17,9 +16,8 @@ public class DocumentMetaBuffers extends MemBuffers {
      * as a memory mapped file.
      * @throws IOException
      */
-    public DocumentMetaBuffers(Config config, DocumentBuffers.MODE mode) throws IOException {
-        super(config);
-        _documentsPath = _config.getIndexPath() + "/" + _config.getDocumentsMetaFileName();
+    public DocumentMetaBuffers(String documentsMetaPath, DocumentBuffers.MODE mode) throws IOException {
+        _documentsPath = documentsMetaPath;
         createBuffers(createBufferOffsets(), mode);
     }
 

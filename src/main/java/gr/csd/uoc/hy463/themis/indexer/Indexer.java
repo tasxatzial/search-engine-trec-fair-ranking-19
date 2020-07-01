@@ -737,7 +737,7 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open the required files: documents_meta, doc_tf */
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentMetaBuffers.MODE.WRITE);
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentMetaBuffers.MODE.WRITE);
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
@@ -842,7 +842,7 @@ public class Indexer {
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
         __DOCUMENT_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
         __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__CONFIG__, DocumentBuffers.MODE.READ);
+        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
