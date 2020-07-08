@@ -237,13 +237,21 @@ public abstract class ARetrievalModel {
      * @param results
      */
     protected void sort(List<Pair<Object, Double>> results) {
-        double pagerankCitationsWeight = _indexer.getConfig().getPagerankPublicationsWeight();
+        double citationsPagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
         double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
-        for (Pair<Object, Double> result : results) {
-            DocInfo docInfo = (DocInfo) result.getL();
+        double citationsMaxPagerank = 0;
+        double[] citationsPageranks = new double[results.size()];
+        for (int i = 0; i < results.size(); i++) {
+            DocInfo docInfo = (DocInfo) results.get(i).getL();
+            citationsPageranks[i] = (double) docInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
+            if (citationsPageranks[i] > citationsMaxPagerank) {
+                citationsMaxPagerank = citationsPageranks[i];
+            }
+        }
+        for (int i = 0; i < results.size(); i++) {
+            Pair<Object, Double> result = results.get(i);
             double modelScore = result.getR();
-            double pagerankScore = (double) docInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
-            result.setR(modelScore * modelWeight + pagerankScore * pagerankCitationsWeight);
+            result.setR(modelScore * modelWeight + (citationsPageranks[i] / citationsMaxPagerank) * citationsPagerankWeight);
         }
 
         results.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));

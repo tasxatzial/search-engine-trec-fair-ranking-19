@@ -36,13 +36,13 @@ public class Pagerank {
             return;
         }
         long startTime = System.nanoTime();
-        Themis.print("Constructing graph\n");
+        Themis.print("> Constructing graph\n");
         String graphFileName = _indexer.getConfig().getIndexPath() + "/graph";
         int documents = dumpCitations(graphFileName);
         PagerankNode[] graph = initCitationsGraph(documents, graphFileName);
         Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
         startTime = System.nanoTime();
-        Themis.print("Iterating\n");
+        Themis.print("> Iterating\n");
         computeCitationsPagerank(graph);
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
         writeCitationsScores(graph);
@@ -264,19 +264,12 @@ public class Pagerank {
     /* writes the citation scores to the documents_meta file */
     private void writeCitationsScores(PagerankNode[] graph) throws IOException {
         long offset = 0;
-        double maxScore = 0;
         String documentsMetaPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsMetaFileName();
         DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(documentsMetaPath, DocumentMetaBuffers.MODE.WRITE);
 
-        //find the max score so that we can normalize all scores before writing them to file
-        for (int i = 0; i < graph.length; i++) {
-            if (graph[i].getScore() > maxScore) {
-                maxScore = graph[i].getScore();
-            }
-        }
         for (int i = 0; i < graph.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
-            buffer.putDouble(graph[i].getScore() / maxScore);
+            buffer.putDouble(graph[i].getScore());
             offset += DocumentMetaEntry.totalSize;
         }
         documentMetaBuffers.close();
