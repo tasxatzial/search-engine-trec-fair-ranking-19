@@ -43,9 +43,9 @@ public class Pagerank {
         Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
         startTime = System.nanoTime();
         Themis.print("> Iterating\n");
-        computeCitationsPagerank(graph);
+        double[] scores = computeCitationsPagerank(graph);
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
-        writeCitationsScores(graph);
+        writeCitationsScores(scores);
         Files.deleteIfExists(new File(graphFileName).toPath());
     }
 
@@ -202,7 +202,7 @@ public class Pagerank {
     }
 
     /* computes the citations pagerank scores */
-    private void computeCitationsPagerank(PagerankNode[] graph) {
+    private double[] computeCitationsPagerank(PagerankNode[] graph) {
         double threshold = _indexer.getConfig().getPagerankThreshold();
         double dampingFactor = _indexer.getConfig().getPagerankDampingFactor();
         double teleportScore = (1 - dampingFactor) / graph.length;
@@ -259,17 +259,24 @@ public class Pagerank {
             iteration++;
         }
         Themis.print("\n");
+
+        //write the final scores to the tmp file, this means that the graph can be garbage collected
+        for (int i = 0; i < graph.length; i++) {
+            scores_tmp[i] = graph[i].getScore();
+        }
+
+        return scores_tmp;
     }
 
     /* writes the citation scores to the documents_meta file */
-    private void writeCitationsScores(PagerankNode[] graph) throws IOException {
+    private void writeCitationsScores(double[] scores) throws IOException {
         long offset = 0;
         String documentsMetaPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsMetaFileName();
         DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(documentsMetaPath, DocumentMetaBuffers.MODE.WRITE);
 
-        for (int i = 0; i < graph.length; i++) {
+        for (int i = 0; i < scores.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
-            buffer.putDouble(graph[i].getScore());
+            buffer.putDouble(scores[i]);
             offset += DocumentMetaEntry.totalSize;
         }
         documentMetaBuffers.close();
