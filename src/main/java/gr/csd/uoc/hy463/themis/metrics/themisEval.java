@@ -110,14 +110,14 @@ public class themisEval {
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print(">>> Starting evaluation\n");
         Themis.print("Saving evaluation results in " + __EVALUATION_FILENAME__ + "\n");
-        Themis.print(">>> Index timestamp: " + _search.getIndexTimestamp() + "\n");
+        Themis.print("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         Themis.print(">>> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
         Themis.print("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
-        Themis.print("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");
-        evaluationWriter.write(">>> Index timestamp: " + _search.getIndexTimestamp() + "\n");
+        Themis.print("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n\n");
+        evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write(">>> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
@@ -131,6 +131,7 @@ public class themisEval {
         List<Double> ndcgs = new ArrayList<>();
         List<Pair<String, Time>> queryTime = new ArrayList<>();
         Time totalTime = new Time(0);
+        long totalResults = 0;
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
             try {
@@ -152,16 +153,20 @@ public class themisEval {
 
             //perform a search
             evaluationWriter.write("\n>>> Search query: " + query + "\n");
-            Themis.print("\n>>> Search query: " + query + "\n");
+            Themis.print("> Search query: " + query + "\n");
             long startTime = System.nanoTime();
             List<Pair<Object, Double>> results = _search.search(query);
             long endTime = System.nanoTime();
 
-            //calculate the time needed
+            //calculate the elapsed time for the search
             Time time = new Time(endTime - startTime);
             totalTime.addTime(time);
             queryTime.add(new Pair<>(query, time));
-            evaluationWriter.write("Time: " + time + "\n");
+            evaluationWriter.write("Search time: " + time + "\n");
+
+            //calculate the number of results
+            totalResults += results.size();
+            evaluationWriter.write("Results: " + results.size() + "\n");
 
             //calculate average precision, nDCG
             double avep = computeAveP(results, relevanceMap);
@@ -172,8 +177,6 @@ public class themisEval {
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n");
-            Themis.print("Average precision: " + avep + "\n");
-            Themis.print("nDCG: " + ndcg + "\n");
             evaluationWriter.flush();
         }
 
@@ -187,22 +190,30 @@ public class themisEval {
 
         Pair<String, Time> minTime = calculateMinTime(queryTime);
         Pair<String, Time> maxTime = calculateMaxTime(queryTime);
-        Time averageTime = calculateAverageTime(queryTime);
+        Time queryAverageTime = calculateAverageTime(queryTime);
+        Time resultsAverageTime;
+        if (totalResults == 0) {
+            resultsAverageTime = new Time(0);
+        }
+        else {
+            resultsAverageTime = new Time((totalTime.getValue() / totalResults) * calculateBaseResults(totalResults));
+        }
 
         Themis.print("\n>>> End of evaluation\n");
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
-        evaluationWriter.write("Average precision:\n");
+        evaluationWriter.write("-> Average precision\n");
         evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
-        evaluationWriter.write("nDCG:\n");
+        evaluationWriter.write("-> nDCG\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n\n");
-        evaluationWriter.write("Time:\n");
+        evaluationWriter.write("-> Search time\n");
         evaluationWriter.write("Total: " + totalTime + "\n");
-        evaluationWriter.write("Average: " + averageTime + "\n");
+        evaluationWriter.write("Average per query: " + queryAverageTime + "\n");
+        evaluationWriter.write("Average per " + calculateBaseResults(totalResults) + " results: " + resultsAverageTime + "\n");
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
         evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n");
         evaluationWriter.close();
@@ -412,5 +423,16 @@ public class themisEval {
             time.addTime(pair.getR());
         }
         return new Time(time.getValue() / list.size());
+    }
+
+    /* returns the X in 'time per X results' based on the specified results size */
+    private static long calculateBaseResults(long resultsSize) {
+        if (resultsSize == 0) {
+            return 0;
+        }
+        if (resultsSize > 1e6) {
+            return 1000000;
+        }
+        return resultsSize;
     }
 }
