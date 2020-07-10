@@ -285,6 +285,23 @@ public class Search {
     }
 
     /**
+     * Updates the list of results that are in ranked positions [startResult, endResult]
+     * @param searchResults
+     * @param startResult From 0 to Integer.MAX_VALUE
+     * @param endResult From 0 to Integer.MAX_VALUE
+     * @throws IOException
+     */
+    public void updateResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) throws IOException {
+        List<DocInfo> docInfos = new ArrayList<>();
+        for (int i = 0; i < searchResults.size(); i++) {
+            if (i >= startResult && i <= endResult) {
+                docInfos.add((DocInfo) searchResults.get(i).getL());
+            }
+        }
+        _indexer.updateDocInfo(docInfos, _props);
+    }
+
+    /**
      * Prints a list of results in decreasing ranking order.
      * @param searchResults
      */
