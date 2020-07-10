@@ -228,10 +228,11 @@ public class Indexer {
         // all files in dataset PATH
         File folder = new File(path);
         File[] files = folder.listFiles();
-        if (files == null) {
+        if (files == null || files.length == 0) {
+            Themis.print("No dataset files found\n");
             return true;
         }
-
+        
         // sort the files so that we parse them in a specific order
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
