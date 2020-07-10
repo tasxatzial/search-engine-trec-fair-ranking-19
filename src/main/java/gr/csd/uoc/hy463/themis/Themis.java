@@ -168,7 +168,7 @@ public class Themis {
                 return;
             }
             view.initOnlyResultsView();
-            Evaluate_runnable evaluateVSM = new  Evaluate_runnable(_model, _dictionary);
+            Evaluate_runnable evaluateVSM = new Evaluate_runnable(_model, _dictionary);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
         }
@@ -198,7 +198,8 @@ public class Themis {
                 }
             }
             try { //todo: close files
-                new themisEval(search, _model, _dictionary);
+                themisEval eval = new themisEval(search, _model, _dictionary);
+                eval.start();
             } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
                 __LOGGER__.error(e.getMessage());
                 print("Evaluation failed\n");

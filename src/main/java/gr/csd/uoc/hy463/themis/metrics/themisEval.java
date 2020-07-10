@@ -56,25 +56,26 @@ public class themisEval {
     private Config __CONFIG__;
     private String __JUDGEMENTS_FILENAME__;
     private String __EVALUATION_FILENAME__;
+    private ARetrievalModel.MODEL _model;
+    private QueryExpansion.DICTIONARY _dictionary;
 
     public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
         _search = search;
         __CONFIG__ = new Config();
-        if (evaluateInit(model, dictionary)) {
-            evaluate();
-        }
+        _model = model;
+        _dictionary = dictionary;
     }
 
     /**
-     * Returns true if judgements file exists, false otherwise
-     * @return
+     * Initiates the evaluation
+     * @throws SearchNoIndexException
+     * @throws IOException
+     * @throws QueryExpansionException
      */
-    public boolean hasJudgements() {
-        File file = new File(__JUDGEMENTS_FILENAME__);
-        if (!file.exists()) {
-            return false;
+    public void start() throws SearchNoIndexException, IOException, QueryExpansionException {
+        if (evaluateInit(_model, _dictionary)) {
+            evaluatePrivate();
         }
-        return true;
     }
 
      /* Sets the search model to the specified model, the query expansion dictionary to the specified
@@ -83,7 +84,7 @@ public class themisEval {
     private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
         __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
         String __INDEX_PATH__ = __CONFIG__.getIndexPath();
-        if (!hasJudgements()) {
+        if (!(new File(__JUDGEMENTS_FILENAME__).exists())) {
             __LOGGER__.error("No judgements file found! Evaluation failed");
             Themis.print("No judgements file found! Evaluation failed\n");
             return false;
@@ -105,7 +106,7 @@ public class themisEval {
     }
 
     /* Runs the evaluation based on the configured parameters */
-    private void evaluate() throws IOException, QueryExpansionException, SearchNoIndexException {
+    private void evaluatePrivate() throws IOException, QueryExpansionException, SearchNoIndexException {
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
         Themis.print(">>> Starting evaluation\n");
