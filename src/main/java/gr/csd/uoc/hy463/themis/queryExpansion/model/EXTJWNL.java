@@ -16,6 +16,9 @@ import net.sf.extjwnl.dictionary.Dictionary;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Expands a query using the extJWNL dictionary
+ */
 public class EXTJWNL extends QueryExpansion {
     private MaxentTagger maxentTagger;
     private Dictionary dictionary;
@@ -36,7 +39,7 @@ public class EXTJWNL extends QueryExpansion {
     }
 
     /**
-     * Expands the specified list of terms. For each term it appends the nearest 2 terms with weight 0.5.
+     * Expands the specified list of terms. Each term is expanded by the full list of its related terms (weight = 0.5)
      * @param query
      * @return
      */
@@ -89,7 +92,7 @@ public class EXTJWNL extends QueryExpansion {
     }
 
     /**
-     * Get the wordnet  Part-of-Speech (POS) representation from the stanford one
+     * Get the wordnet Part-of-Speech (POS) representation from the stanford one
      * @param taggedAs
      * @return
      */

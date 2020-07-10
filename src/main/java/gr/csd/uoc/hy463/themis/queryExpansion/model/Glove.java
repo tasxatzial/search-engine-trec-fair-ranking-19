@@ -26,7 +26,7 @@ public class Glove extends QueryExpansion {
 
     public Glove(boolean useStopwords) throws IOException, QueryExpansionException {
         Themis.print(">>> Initializing Glove...");
-        Config __CONFIG__ = new Config();  // reads info from themis.config file
+        Config __CONFIG__ = new Config();
         File gloveModel = new File(__CONFIG__.getGloveModelFileName());
         if (!gloveModel.exists()) {
             throw new QueryExpansionException();
@@ -41,8 +41,7 @@ public class Glove extends QueryExpansion {
     }
 
     /**
-     * Expands the specified list of terms. For each term it appends the nearest 2 terms with weight 0.5.
-     * The returned list contains only the new terms.
+     * Expands the specified list of terms. Each term is expanded by its 1 nearest term (weight = 0.5)
      * @param query
      * @return
      */
