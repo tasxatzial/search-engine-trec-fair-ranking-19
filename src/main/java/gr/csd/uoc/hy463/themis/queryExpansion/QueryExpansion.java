@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.queryExpansion;
 
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 
 import java.util.List;

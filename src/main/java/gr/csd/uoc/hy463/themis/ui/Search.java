@@ -32,12 +32,13 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
+import gr.csd.uoc.hy463.themis.ui.Exceptions.SearchNoIndexException;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;

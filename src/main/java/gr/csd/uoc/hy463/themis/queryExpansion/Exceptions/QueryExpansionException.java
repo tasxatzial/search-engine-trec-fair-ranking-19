@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.queryExpansion;
+package gr.csd.uoc.hy463.themis.queryExpansion.Exceptions;
 
 /**
  * Generic exception thrown by query expansion libraries
