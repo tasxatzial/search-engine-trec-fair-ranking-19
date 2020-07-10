@@ -1,0 +1,17 @@
+Documents: 46947044
+Sinks -(self references): 29978760
+Sinks: 29978760
+In edges -(self references + multiple references): 348041657
+In edges: 348041657
+Out edges -(self references + multiple references): 348041657
+Out edges: 348041657
+Duplicate In edges -(self references): 0
+Documents with duplicate In edges -(self references): 0
+Duplicate Out edges -(self references): 0
+Documents with duplicate Out edges -(self references): 0
+Self referencing documents via In edges: 0
+Self referencing In edges: 0
+Self referencing documents via Out edges: 0
+Self referencing Out edges: 0
+In edges which are not listed in the Out edges of the corresponding node: 0
+Out edges which are not listed in the In edges of the corresponding node: 0
