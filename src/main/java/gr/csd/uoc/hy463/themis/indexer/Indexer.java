@@ -721,7 +721,7 @@ public class Indexer {
 
     /* Reads the frequencies file doc_tf and calculates the
     VSM weights and the max tf for each document entry. It then updates the documents_meta file */
-    public void updateVSMweights() throws IOException {
+    private void updateVSMweights() throws IOException {
         long startTime = System.nanoTime();
         Themis.print(">>> Calculating VSM weights\n");
 
