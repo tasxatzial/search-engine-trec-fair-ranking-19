@@ -351,7 +351,7 @@ public class Indexer {
         }
         indexMetaWriter.close();
 
-        Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
+        Themis.print("Documents files & partial vocabularies/postings created in " + new Time(System.nanoTime() - startTime) + "\n");
 
         /* merge the partial vocabularies and delete them */
         mergeVocabularies(partialIndexes);
