@@ -152,8 +152,8 @@ public class Index {
             PartialIndexStruct indexStruct = __INDEX__.get(key);
             for (DocInfoFrequency docInfoFrequency : entry.getValue()) {
                 tf += docInfoFrequency.get_frequency();
-                totalTf += tf;
             }
+            totalTf += tf;
             if (indexStruct != null) {
                 indexStruct.incr_df();
                 indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
