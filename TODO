@@ -1,0 +1,4 @@
+- Improve exception handling
+- Properly close files when exceptions are thrown
+- Show paginated results in GUI
+- Reduce memory requirements for search
