@@ -137,6 +137,7 @@ public class View extends JFrame {
         DocInfoRadioButton weight = new DocInfoRadioButton("Weight");
         DocInfoRadioButton length = new DocInfoRadioButton("Length");
         DocInfoRadioButton maxTF = new DocInfoRadioButton("Max term frequency");
+        DocInfoRadioButton documentSize = new DocInfoRadioButton("Document size");
         _documentProperties.add(title);
         _documentProperties.add(authors);
         _documentProperties.add(authorIds);
@@ -146,7 +147,7 @@ public class View extends JFrame {
         _documentProperties.add(weight);
         _documentProperties.add(length);
         _documentProperties.add(maxTF);
-
+        _documentProperties.add(documentSize);
         search.add(_queryCollection);
         search.add(_retrievalModel);
         search.add(_expansionDictionary);

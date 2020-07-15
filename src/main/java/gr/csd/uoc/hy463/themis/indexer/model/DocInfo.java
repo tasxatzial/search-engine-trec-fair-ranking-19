@@ -53,10 +53,11 @@ public class DocInfo {
         FIELDS_OF_STUDY,
         VENUE,
         SOURCES,
-        PAGERANK, // pagerank score for 2nd phase (Value should be double)
-        WEIGHT, // weight (norm) of document VSM (Value should be double)
-        LENGTH,   // for OkapiBM25 (Value should be integer)
+        PAGERANK,
+        WEIGHT,
+        LENGTH,
         MAX_TF,
+        DOCUMENT_SIZE
     }
 
     private String id = "";         // the 40 byte id

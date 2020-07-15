@@ -598,18 +598,17 @@ public class Indexer {
     }
 
     /* DOCUMENTS META FILE => documents_meta.idx (Random Access File)
-     * Writes the appropriate document entry for a textual entry to the documents file and
-     * returns an offset that is the sum of the previous offset plus the document entry size
-     * (in bytes).
+     * Writes all meta info for a textual entry to the documents_meta file and
+     * returns an offset that is the sum of the previous offset plus the document entry size.
      *
-     * For each entry it stores in the following order:
+     * For each document it stores in the following order:
      * DOCUMENT_ID (40 ASCII chars => 40 bytes) |
-     * The weight (norm) of Document (double => 8 bytes) |
+     * The weight (norm) of the Document (double => 8 bytes) |
      * The max tf in the Document (int => 4 bytes) |
-     * Length of Document (int => 4 bytes) |
+     * Length of Document (int => 4 bytes). This is the number of terms in the document.idx |
      * PageRank Score (double => 8 bytes) |
      * Average author rank (double => 8 bytes) |
-     * Size of the document (int => 4 bytes) |
+     * Size of the document (int => 4 bytes). This is the size of the entry in the documents.idx |
      * Offset to the documents file (long => 8 bytes)
      *
      * For now 0 is added as PageRank, weight, max tf, average author rank */
@@ -1047,6 +1046,10 @@ public class Indexer {
         if (props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
             double authorRank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);
             docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
+        }
+        if (props.contains(DocInfo.PROPERTY.DOCUMENT_SIZE)) {
+            int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+            docInfo.setProperty(DocInfo.PROPERTY.DOCUMENT_SIZE, documentSize);
         }
         if (gotoDocuments) {
             if (props.contains(DocInfo.PROPERTY.YEAR)) {

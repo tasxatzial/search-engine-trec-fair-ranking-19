@@ -7,7 +7,6 @@ import java.awt.event.MouseEvent;
 
 /**
  * Used for associating a document property to a menu item.
- * o
  */
 public class DocInfoRadioButton extends JCheckBoxMenuItem {
     private DocInfo.PROPERTY _prop;
@@ -41,6 +40,9 @@ public class DocInfoRadioButton extends JCheckBoxMenuItem {
                 break;
             case "Max term frequency":
                 _prop = DocInfo.PROPERTY.MAX_TF;
+                break;
+            case "Document size":
+                _prop = DocInfo.PROPERTY.DOCUMENT_SIZE;
                 break;
         }
     }
