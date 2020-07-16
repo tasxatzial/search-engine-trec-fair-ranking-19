@@ -1,5 +1,5 @@
 >>> Start indexing
-Partial indexes created in 7578.0 s
+Documents files & partial vocabularies/postings created in 7578.0 s
 >>> Start Merging of partial vocabularies
 Partial vocabularies merged in 67.3 s
 >>> Calculating VSM weights
