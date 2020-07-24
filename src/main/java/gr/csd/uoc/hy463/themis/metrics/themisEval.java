@@ -1,27 +1,3 @@
-/*
- * themis - A fair search engine for scientific articles
- *
- * Currently over the Semantic Scholar Open Research Corpus
- * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
- *
- * Collaborative work with the undergraduate/graduate students of
- * Information Retrieval Systems (hy463) course
- * Spring Semester 2020
- *
- * -- Writing code during COVID-19 pandemic times :-( --
- *
- * Aiming to participate in TREC 2020 Fair Ranking Track
- * https://fair-trec.github.io/
- *
- * Computer Science Department http://www.csd.uoc.gr
- * University of Crete
- * Greece
- *
- * LICENCE: TO BE ADDED
- *
- * Copyright 2020
- *
- */
 package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
@@ -59,7 +35,7 @@ public class themisEval {
     private ARetrievalModel.MODEL _model;
     private QueryExpansion.DICTIONARY _dictionary;
 
-    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
+    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
         _search = search;
         __CONFIG__ = new Config();
         _model = model;

@@ -1,27 +1,3 @@
-/*
- * themis - A fair search engine for scientific articles
- *
- * Currently over the Semantic Scholar Open Research Corpus
- * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
- *
- * Collaborative work with the undergraduate/graduate students of
- * Information Retrieval Systems (hy463) course
- * Spring Semester 2020
- *
- * -- Writing code during COVID-19 pandemic times :-( --
- *
- * Aiming to participate in TREC 2020 Fair Ranking Track
- * https://fair-trec.github.io/
- *
- * Computer Science Department http://www.csd.uoc.gr
- * University of Crete
- * Greece
- *
- * LICENCE: TO BE ADDED
- *
- * Copyright 2020
- *
- */
 package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
@@ -50,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Our basic indexer class. This class is responsible for two tasks:
+ * The basic indexer class. This class is responsible for two tasks:
  *
  * a) Create the appropriate indexes given a specific directory with files (in
  * our case the Semantic Scholar collection)
@@ -58,11 +34,6 @@ import org.apache.logging.log4j.Logger;
  * b) Given a path load the indexes (if they exist) and provide information
  * about the indexed data, that can be used for implementing any kind of
  * retrieval models
- *
- * When the indexes have been created we should have three files, as documented
- * in Index.java
- *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
@@ -103,12 +74,10 @@ public class Indexer {
     ByteBuffer __DOCUMENT_BUFFER__;
 
     // This map holds any information related with the indexed collection
-    // and should be serialized when the index process has finished. Such
-    // information could be the avgDL for the Okapi-BM25 implementation,
+    // Such information could be the avgDL for the Okapi-BM25 implementation,
     // a timestamp of when the indexing process finished, the path of the indexed
     // collection, the options for stemming and stop-words used in the indexing process,
-    // and whatever else you might want. But make sure that before querying
-    // the serialized file is loaded
+    // and whatever else we might want
     private Map<String, String> __META_INDEX_INFO__ = null;
 
     /**
@@ -395,7 +364,7 @@ public class Indexer {
         return false;
     }
 
-    /* Merges the partial vocabularies and creates a new single vocabulary */
+    /* Merges the partial vocabularies and creates the final vocabulary.idx */
     private void mergeVocabularies(List<Integer> partialIndexes) throws IOException {
 
         /* If there is only one partial index, move the vocabulary file in INDEX_PATH else merge the partial
@@ -540,7 +509,7 @@ public class Indexer {
         return offset;
     }
 
-    /* Method that merges the partial postings and creates a new single posting file */
+    /* Method that merges the partial postings and creates the final postings.idx */
     private void mergePostings(List<Integer> partialIndexes) throws IOException {
 
         /* If there is only one partial index, move the posting file in INDEX_PATH else merge the partial postings */
@@ -599,7 +568,7 @@ public class Indexer {
 
     /* DOCUMENTS META FILE => documents_meta.idx (Random Access File)
      * Writes all meta info for a textual entry to the documents_meta file and
-     * returns an offset that is the sum of the previous offset plus the document entry size.
+     * returns a new offset which is the sum of the previous offset + the size of the meta info.
      *
      * For each document it stores in the following order:
      * DOCUMENT_ID (40 ASCII chars => 40 bytes) |
@@ -630,8 +599,7 @@ public class Indexer {
 
     /* DOCUMENTS FILE => documents.idx (Random Access File)
      * Writes the appropriate document entry for a textual entry to the documents file and
-     * returns an offset that is the sum of the previous offset plus the document entry size
-     * (in bytes).
+     * returns an offset that is the sum of the previous offset + the size of the written document entry.
      *
      * For each entry it stores in the following order:
      * Year (short => 2 bytes) |
@@ -705,7 +673,7 @@ public class Indexer {
         return totalSize + offset;
     }
 
-    /* Deletes everything in indexPath including indexpath */
+    /* Deletes everything in indexPath including indexPath */
     private boolean deleteDir(File indexPath) throws IOException {
         File[] contents = indexPath.listFiles();
         if (contents != null) {

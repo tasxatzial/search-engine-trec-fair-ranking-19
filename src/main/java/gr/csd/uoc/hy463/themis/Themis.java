@@ -23,8 +23,8 @@ import java.io.*;
 import java.util.*;
 
 /**
- * The main class. Outputs results in terminal but we also have an option of using a GUI which can be
- * enabled by passing swing_window as first argument.
+ * The main class. Results are printed in console but we also have an option of using a GUI which can be
+ * enabled by passing 'gui' as first argument of the main function.
  */
 public class Themis {
     private static final Logger __LOGGER__ = LogManager.getLogger(Themis.class);

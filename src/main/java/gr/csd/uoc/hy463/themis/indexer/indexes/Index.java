@@ -1,27 +1,3 @@
-/*
- * themis - A fair search engine for scientific articles
- *
- * Currently over the Semantic Scholar Open Research Corpus
- * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
- *
- * Collaborative work with the undergraduate/graduate students of
- * Information Retrieval Systems (hy463) course
- * Spring Semester 2020
- *
- * -- Writing code during COVID-19 pandemic times :-( --
- *
- * Aiming to participate in TREC 2020 Fair Ranking Track
- * https://fair-trec.github.io/
- *
- * Computer Science Department http://www.csd.uoc.gr
- * University of Crete
- * Greece
- *
- * LICENCE: TO BE ADDED
- *
- * Copyright 2020
- *
- */
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
 import gr.csd.uoc.hy463.themis.Themis;
@@ -43,9 +19,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * This class holds all information related to a specific (partial or not) index
- * in memory. It also knows how to store this information to files
- *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * in memory. It also knows how to store this information to files.
  */
 public class Index {
 
@@ -135,7 +109,7 @@ public class Index {
     }
 
     /**
-     * Adds the map of term frequencies of a textual entry to the partial index. Returns
+     * Adds the map of term frequencies of a textual entry to the partial index struct. Returns
      * the total number of frequencies.
      *
      * @param entryWords The map of term frequencies

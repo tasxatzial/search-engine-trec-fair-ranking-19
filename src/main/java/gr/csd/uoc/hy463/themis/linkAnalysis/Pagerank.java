@@ -172,7 +172,7 @@ public class Pagerank {
                 (new RandomAccessFile(graphFileName, "r").getFD()));
         PagerankNode[] graph = new PagerankNode[documents];
 
-        /* Create the graph -> a list of nodes */
+        /* Create the graph: array of nodes */
         for (int i = 0; i < documents; i++) {
             graph[i] = new PagerankNode();
         }
@@ -260,7 +260,7 @@ public class Pagerank {
         }
         Themis.print("\n");
 
-        //write the final scores to the tmp file, this means that the graph can be garbage collected
+        //write the final scores to the tmp score array, this means that the graph can now be garbage collected
         for (int i = 0; i < graph.length; i++) {
             scores_tmp[i] = graph[i].getScore();
         }

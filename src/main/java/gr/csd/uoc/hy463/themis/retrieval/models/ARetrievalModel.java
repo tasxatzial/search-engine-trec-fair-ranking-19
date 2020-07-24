@@ -1,30 +1,5 @@
-/*
- * themis - A fair search engine for scientific articles
- *
- * Currently over the Semantic Scholar Open Research Corpus
- * http://s2-public-api-prod.us-west-2.elasticbeanstalk.com/corpus/
- *
- * Collaborative work with the undergraduate/graduate students of
- * Information Retrieval Systems (hy463) course
- * Spring Semester 2020
- *
- * -- Writing code during COVID-19 pandemic times :-( --
- *
- * Aiming to participate in TREC 2020 Fair Ranking Track
- * https://fair-trec.github.io/
- *
- * Computer Science Department http://www.csd.uoc.gr
- * University of Crete
- * Greece
- *
- * LICENCE: TO BE ADDED
- *
- * Copyright 2020
- *
- */
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
-import akka.dispatch.sysmsg.Suspend;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -35,8 +10,6 @@ import java.util.*;
 
 /**
  * This is an abstract class that each retrieval model should extend
- *
- * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public abstract class ARetrievalModel {
     public enum MODEL {
@@ -65,17 +38,6 @@ public abstract class ARetrievalModel {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
         props.add(DocInfo.PROPERTY.LENGTH);
         props.add(DocInfo.PROPERTY.PAGERANK);
-        return props;
-    }
-
-    public static Set<DocInfo.PROPERTY> getMonModelProps() {
-        Set<DocInfo.PROPERTY> props = new HashSet<>();
-        props.add(DocInfo.PROPERTY.TITLE);
-        props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-        props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-        props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-        props.add(DocInfo.PROPERTY.YEAR);
-        props.add(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
         return props;
     }
 
