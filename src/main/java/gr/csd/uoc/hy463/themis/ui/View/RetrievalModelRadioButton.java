@@ -19,7 +19,7 @@ public class RetrievalModelRadioButton extends JRadioButtonMenuItem {
             case "VSM":
                 _model = ARetrievalModel.MODEL.VSM;
                 break;
-            case "BM25+":
+            case "BM25":
                 _model = ARetrievalModel.MODEL.BM25;
                 break;
         }

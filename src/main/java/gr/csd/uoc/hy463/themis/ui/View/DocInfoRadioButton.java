@@ -41,7 +41,7 @@ public class DocInfoRadioButton extends JCheckBoxMenuItem {
             case "Max term frequency":
                 _prop = DocInfo.PROPERTY.MAX_TF;
                 break;
-            case "Document size":
+            case "Size":
                 _prop = DocInfo.PROPERTY.DOCUMENT_SIZE;
                 break;
         }

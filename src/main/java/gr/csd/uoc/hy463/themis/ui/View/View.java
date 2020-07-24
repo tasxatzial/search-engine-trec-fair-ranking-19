@@ -107,7 +107,7 @@ public class View extends JFrame {
         ButtonGroup group = new ButtonGroup();
         RetrievalModelRadioButton modelBoolean = new RetrievalModelRadioButton("Existential");
         RetrievalModelRadioButton modelVSM = new RetrievalModelRadioButton("VSM");
-        RetrievalModelRadioButton modelBM25 = new RetrievalModelRadioButton("BM25+");
+        RetrievalModelRadioButton modelBM25 = new RetrievalModelRadioButton("BM25");
         group.add(modelBoolean);
         group.add(modelVSM);
         group.add(modelBM25);
@@ -137,7 +137,7 @@ public class View extends JFrame {
         DocInfoRadioButton weight = new DocInfoRadioButton("Weight");
         DocInfoRadioButton length = new DocInfoRadioButton("Length");
         DocInfoRadioButton maxTF = new DocInfoRadioButton("Max term frequency");
-        DocInfoRadioButton documentSize = new DocInfoRadioButton("Document size");
+        DocInfoRadioButton documentSize = new DocInfoRadioButton("Size");
         _documentProperties.add(title);
         _documentProperties.add(authors);
         _documentProperties.add(authorIds);
