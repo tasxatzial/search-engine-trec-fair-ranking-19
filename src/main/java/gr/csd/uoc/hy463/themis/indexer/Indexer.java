@@ -9,10 +9,10 @@ import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.utils.*;
-import gr.csd.uoc.hy463.themis.utils.SpaceSplit;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -550,7 +550,7 @@ public class Indexer {
         the same line in the final vocabulary file, thus both lines refer to the same term */
         String line;
         while ((line = termDfReader.readLine()) != null) {
-            List<String> split = SpaceSplit.splitString(line);
+            List<String> split = ProcessText.splitString(line);
             for (int i = 0; i < split.size(); i+=2) {
                 byte[] postings = new byte[Integer.parseInt(split.get(i + 1)) * PostingStruct.SIZE];
                 postingsStream[Integer.parseInt(split.get(i))].read(postings); //read into postings byte array
@@ -715,7 +715,7 @@ public class Indexer {
 
         /* read an entry from the frequencies file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
-            List<String> splitList = SpaceSplit.splitString(line);
+            List<String> splitList = ProcessText.splitString(line);
             double weight = 0;
             int maxTf = 0;
             for (int i = 0; i < splitList.size(); i += 2) {
