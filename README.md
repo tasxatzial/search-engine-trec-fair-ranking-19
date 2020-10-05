@@ -121,4 +121,4 @@ Check the [screenshots](screenshots/) folder.
 
 ## Contributions
 
-Parts of the project were contributed by [Panagiotis Padadakos](http://users.ics.forth.gr/~papadako/).
+Parts of the project were contributed by [Panagiotis Padadakos](https://github.com/papadako).
