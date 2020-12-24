@@ -5,7 +5,8 @@
 themis is a search engine for scientific articles, built to index and search the collection of documents from the
 [TREC Fair Ranking Track](https://fair-trec.github.io/).
 
-The entire collection consists of ~47 million articles, total size ~108GB.
+The entire collection consists of ~47 million articles, total size ~108GB. A small sample can be found
+[here](/samples/sample-S2-records).
 
 ## Features
 
@@ -42,7 +43,7 @@ only the necessary document properties).
 
 ### Evaluation
 
-~600 queries from a judgements file were used for the evaluation of the engine.
+~600 queries from a [judgements file](/samples/fair-TREC-training-sample.json) were used for the evaluation of the engine.
 
 The average of the average precision scores was ~0.7. The average of the nDCG scores was ~0.8. These numbers change
 slightly depending on the retrieval parameters (retrieval model/query expansion/pagerank).
@@ -66,7 +67,7 @@ should build the final executable jar file in the 'trec-search-engine/target' fo
 
 ### Run
 
-* Running the project without a GUI.
+#### Running the project without a GUI
 
 Write the code that will be executed in the main function of the class gr.csd.uoc.hy463.themis.Themis.
 Then compile the project as specified in the [compile](#Compile) section. Finally, switch to the 'trec-search-engine/target'
@@ -74,7 +75,7 @@ folder and run the project as:
 
     java -Xmx45G -jar hy463-fairness-trec-2020-1.0-SNAPSHOT.jar
 
-* Running the project with a GUI.
+#### Running the project with a GUI
 
 The GUI gives us access to most of the needed functionality. It has some limitations though as explained in the following
 section. To enable the GUI, switch to the 'trec-search-engine/target' folder and run the project as:
@@ -113,7 +114,7 @@ memory.
 
 ## Screenshots
 
-Check the [screenshots](screenshots/).
+See [screenshots](screenshots/).
 
 ## Contributions
 
