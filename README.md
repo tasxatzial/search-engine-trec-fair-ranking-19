@@ -5,11 +5,7 @@
 themis is a search engine for scientific articles, built to index and search the collection of documents from the
 [TREC Fair Ranking Track](https://fair-trec.github.io/).
 
-The entire collection consisted of ~47 million articles, total size ~108GB.
-
-## Language
-
-Java 8.
+The entire collection consists of ~47 million articles, total size ~108GB.
 
 ## Features
 
@@ -72,7 +68,7 @@ should build the final executable jar file in the 'trec-search-engine/target' fo
 
 * Running the project without a GUI.
 
-No GUI means we should manually write the code that will be executed in the main function of the class gr.csd.uoc.hy463.themis.Themis.
+Write the code that will be executed in the main function of the class gr.csd.uoc.hy463.themis.Themis.
 Then compile the project as specified in the [compile](#Compile) section. Finally, switch to the 'trec-search-engine/target'
 folder and run the project as:
 
@@ -117,7 +113,7 @@ memory.
 
 ## Screenshots
 
-Check the [screenshots](screenshots/) folder.
+Check the [screenshots](screenshots/).
 
 ## Contributions
 
