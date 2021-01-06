@@ -1,7 +1,5 @@
 # themis
 
-## Description
-
 themis is a search engine for scientific articles, built to index and search the collection of documents from the
 [TREC Fair Ranking Track](https://fair-trec.github.io/).
 
