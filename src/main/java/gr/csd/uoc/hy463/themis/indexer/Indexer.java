@@ -881,7 +881,7 @@ public class Indexer {
 
     /**
      * Returns true if index and index_tmp directories exist and are empty, false otherwise.
-     * @return
+     * @returnn
      */
     public boolean isIndexDirEmpty() {
         File file = new File(__INDEX_PATH__);
@@ -889,7 +889,6 @@ public class Indexer {
         if (fileList != null && fileList.length != 0) {
             return false;
         }
-
         file = new File(__INDEX_TMP_PATH__);
         fileList = file.listFiles();
         return fileList == null || fileList.length == 0;
