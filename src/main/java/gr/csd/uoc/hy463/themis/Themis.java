@@ -367,6 +367,7 @@ public class Themis {
             } catch (Exception ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
+                ex.printStackTrace();
             } finally {
                 _task = null;
             }

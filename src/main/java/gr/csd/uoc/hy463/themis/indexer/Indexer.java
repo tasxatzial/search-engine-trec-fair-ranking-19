@@ -192,7 +192,6 @@ public class Indexer {
         long totalDocumentLength = 0;
         long documentOffset = 0;
         long documentMetaOffset = 0;
-        int maxDocumentSize = 0;
 
         // all files in dataset PATH
         File folder = new File(path);
@@ -270,11 +269,6 @@ public class Indexer {
                     // update the documents_meta file
                     documentMetaOffset = dumpDocumentsMeta(documentsMetaOutStream, entry, documentLength, documentSize, documentMetaOffset, prevDocumentOffset);
 
-                    // calculate the maximum size of an entry in the documents file
-                    if (documentSize > maxDocumentSize) {
-                        maxDocumentSize = documentSize;
-                    }
-
                     // check if a dump of the current partial index is needed
                     totalDocuments++;
                     if (totalDocuments % __CONFIG__.getPartialIndexSize() == 0) {
@@ -311,7 +305,6 @@ public class Indexer {
         __META_INDEX_INFO__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
         __META_INDEX_INFO__.put("articles", String.valueOf(totalDocuments));
         __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
-        __META_INDEX_INFO__.put("max_doc_size", String.valueOf(maxDocumentSize));
         __META_INDEX_INFO__.put("timestamp", Instant.now().toString());
         __META_INDEX_INFO__.put("pagerank_damping", String.valueOf(__CONFIG__.getPagerankDampingFactor()));
         __META_INDEX_INFO__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
@@ -808,8 +801,6 @@ public class Indexer {
 
         //open documents, documents_meta files and initialize the appropriate structures
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
-        __DOCUMENT_ARRAY__ = new byte[Integer.parseInt(__META_INDEX_INFO__.get("max_doc_size"))];
-        __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
         __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
@@ -944,6 +935,8 @@ public class Indexer {
                 if (gotoDocuments) {
                     long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
                     int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                    __DOCUMENT_ARRAY__ = new byte[documentSize];
+                    __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
                     __DOCUMENTS__.seek(documentOffset);
                     __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
                 }
@@ -984,6 +977,8 @@ public class Indexer {
                 if (gotoDocuments) {
                     long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
                     int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                    __DOCUMENT_ARRAY__ = new byte[documentSize];
+                    __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
                     __DOCUMENTS__.seek(documentOffset);
                     __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
                 }
