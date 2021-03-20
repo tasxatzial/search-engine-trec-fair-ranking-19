@@ -13,5 +13,5 @@ Self referencing documents via In edges: 0
 Self referencing In edges: 0
 Self referencing documents via Out edges: 0
 Self referencing Out edges: 0
-In edges which are not listed in the Out edges of the corresponding node: 0
-Out edges which are not listed in the In edges of the corresponding node: 0
+In edges which are not listed in the Out edges of the source node: 0
+Out edges which are not listed in the In edges of the source node: 0

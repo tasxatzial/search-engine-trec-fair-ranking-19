@@ -512,8 +512,8 @@ public class CreateCitationsGraph {
         outEdgesWriter.close();
 
         statsWriter.write("Documents: " + graph.length + "\n");
-        statsWriter.write("Sinks -(self references): " + (outEdgesHistogram.get(0) != null ? outEdgesHistogram.get(0) : 0) + "\n");
-        statsWriter.write("Sinks: " + (outEdgesTrueHistogram.get(0) != null ? outEdgesTrueHistogram.get(0) : 0) + "\n");
+        statsWriter.write("Sinks: " + (outEdgesHistogram.get(0) != null ? outEdgesHistogram.get(0) : 0) + "\n");
+        statsWriter.write("Sinks +(self references): " + (outEdgesTrueHistogram.get(0) != null ? outEdgesTrueHistogram.get(0) : 0) + "\n");
         statsWriter.write("In edges -(self references + multiple same references): " + totalInEdgesTrue + "\n");
         statsWriter.write("In edges: " + totalInEdges + "\n");
         statsWriter.write("Out edges -(self references + multiple same references): " + totalOutEdgesTrue + "\n");
@@ -526,8 +526,8 @@ public class CreateCitationsGraph {
         statsWriter.write("Self referencing In edges: " + totalSelfRefInEdges + "\n");
         statsWriter.write("Self referencing documents via Out edges: " + totalSelfRefDocsViaOutEdge + "\n");
         statsWriter.write("Self referencing Out edges: " + totalSelfRefOutEdges + "\n");
-        statsWriter.write("In edges which are not listed in the Out edges of the corresponding node: " + totalInconsistentInEdges + "\n");
-        statsWriter.write("Out edges which are not listed in the In edges of the corresponding node: " + totalInconsistentOutEdges + "\n");
+        statsWriter.write("In edges which are not listed in the Out edges of the source node: " + totalInconsistentInEdges + "\n");
+        statsWriter.write("Out edges which are not listed in the In edges of the source node: " + totalInconsistentOutEdges + "\n");
         statsWriter.close();
     }
 
