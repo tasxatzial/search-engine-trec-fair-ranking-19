@@ -162,14 +162,10 @@ public class Indexer {
     /**
      * Method responsible for indexing a directory of files
      *
-     * If the number of files is larger than the PARTIAL_INDEX_MAX_DOCS_SIZE set
-     * to the themis.config file then we have to dump all data read up to now to
+     * If the number of files is larger than the PARTIAL_INDEX_MAX_DOCS_SIZE specified
+     * in themis.config file then we have to dump all data read up to now to
      * a partial index and continue with a new index. After creating all partial
-     * indexes then we have to merge them to create the final index that will be
-     * stored in the file path.
-     *
-     * Can also be modified to use the MAX_MEMORY usage parameter given in
-     * themis.conf for brave hearts!
+     * indexes then we have to merge them to create the final index.
      *
      * @param path
      * @return
@@ -360,15 +356,25 @@ public class Indexer {
     /* Merges the partial vocabularies and creates the final vocabulary.idx */
     private void mergeVocabularies(List<Integer> partialIndexes) throws IOException {
 
-        /* If there is only one partial index, move the vocabulary file in INDEX_PATH else merge the partial
-        vocabularies */
+        /* If there is only one partial index, we need to append to each line a postings offset */
         long startTime =  System.nanoTime();
         Themis.print(">>> Start Merging of partial vocabularies\n");
         if (partialIndexes.size() == 1) {
-            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0);
-            Files.move(Paths.get(partialIndexPath + "/" + __VOCABULARY_FILENAME__),
-                    Paths.get(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__),
-                    StandardCopyOption.REPLACE_EXISTING);
+            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0) + "/" + __VOCABULARY_FILENAME__;
+            String finalIndexPath = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
+            BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(finalIndexPath), "UTF-8"));
+            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(partialIndexPath), "UTF-8"));
+            String line;
+            String[] split;
+            long offset = 0;
+            while ((line = vocabularyReader.readLine()) != null) {
+                split = line.split(" ");
+                int df = Integer.parseInt(split[1]);
+                vocabularyWriter.write(split[0] + ' ' + split[1] + ' ' + offset + '\n');
+                offset += df * PostingStruct.SIZE;
+            }
+            vocabularyReader.close();
+            vocabularyWriter.close();
         } else {
             combinePartialVocabularies(partialIndexes);
         }
@@ -419,7 +425,6 @@ public class Indexer {
                 vocabularyQueue.add(new PartialVocabularyStruct(
                         minTermVocabularyStruct.get_term(),
                         minTermVocabularyStruct.get_df(),
-                        minTermVocabularyStruct.get_offset(),
                         i));
             }
         }
@@ -438,7 +443,7 @@ public class Indexer {
 
             /* the current vocabulary entry is put into the array of equal terms */
             equalTerms.add(new PartialVocabularyStruct(prevMinTerm, minTermVocabularyStruct.get_df(),
-                    minTermVocabularyStruct.get_offset(), minTermVocabularyStruct.get_indexId()));
+                    minTermVocabularyStruct.get_indexId()));
 
             /* finally add the next vocabulary entry to the queue of min lex terms */
             int indexId = minTermVocabularyStruct.get_indexId();
@@ -462,12 +467,12 @@ public class Indexer {
         termDfWriter.close();
     }
 
-    /* Returns the next vocabulary entry (term, df, offset) that belongs to partial vocabulary with indexId */
+    /* Returns the next vocabulary entry (term, df) that belongs to partial vocabulary with indexId */
     private PartialVocabularyStruct getNextVocabularyEntry(BufferedReader vocabularyReader, int indexId) throws IOException {
         String line = vocabularyReader.readLine();
         if (line != null) {
             String[] fields = line.split(" ");
-            return new PartialVocabularyStruct(fields[0], Integer.parseInt(fields[1]), Long.parseLong(fields[2]), indexId);
+            return new PartialVocabularyStruct(fields[0], Integer.parseInt(fields[1]), indexId);
         }
         return null;
     }

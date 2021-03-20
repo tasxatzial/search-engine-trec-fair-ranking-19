@@ -59,8 +59,7 @@ public class Index {
 
     /**
      * This method is responsible for dumping all information held by this index
-     * to the filesystem in the directory INDEX_PATH/id. If id = 0 then it dumps
-     * every idx files to the INDEX_PATH
+     * to the filesystem in the directory INDEX_PATH/id.
      *
      * Specifically, it creates:
      *
@@ -68,17 +67,16 @@ public class Index {
      * 1) VOCABULARY FILE => vocabulary.idx (Normal Sequential file)
      *
      * This is a normal sequential file where we write in lexicographic order
-     * the following entries separated by space: | TERM (a term of the
-     * vocabulary) | DF document frequency of this term | POINTER_TO_POSTING
-     * (the offset in the posting.idx, this is a long number) |
+     * the following entries separated by space:
+     * TERM (a term of the vocabulary)
+     * DF document frequency of this term (in how many articles this term is found)
      *
      * =========================================================================
      * 2) POSTING FILE => posting.idx (Random Access File)
      *
-     * For each entry it stores: | TF (int => 4 bytes) |
-     * POINTER_TO_DOCUMENT_FILE (long => 4 bytes) |
-     *
-     * @return
+     * For each entry it stores:
+     * TF (int => 4 bytes)
+     * POINTER_TO_DOCUMENT_FILE (long => 4 bytes)
      */
     public boolean dump() throws IOException {
         __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
@@ -94,15 +92,6 @@ public class Index {
 
     public void setID(int id) {
         this.id = id;
-    }
-
-    /**
-     * Returns if index is partial
-     *
-     * @return
-     */
-    public boolean isPartial() {
-        return id != 0;
     }
 
     /**
@@ -141,21 +130,17 @@ public class Index {
         return totalTf;
     }
 
-    /* Dumps the appropriate info from a partial index memory struct to the
-    appropriate partial vocabulary file */
+    /* Dumps the appropriate info from a partial index stored in memory to a partial vocabulary file */
     private void dumpVocabulary(String filename) throws IOException {
         BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"));
-        long offset = 0;
         for (String term : __INDEX_KEYS_SORTED__) {
             int df = __INDEX__.get(term).get_df();
-            vocabularyWriter.write(term + ' ' + df + ' ' + offset + '\n');
-            offset += df * PostingStruct.SIZE;
+            vocabularyWriter.write(term + ' ' + df + '\n');
         }
         vocabularyWriter.close();
     }
 
-    /* Dumps the appropriate info from a partial index memory struct to the
-    appropriate partial postings file */
+    /* Dumps the appropriate info from a partial index stored in memory to a partial postings file */
     private void dumpPostings(String filename) throws IOException {
         BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(filename, "rw").getFD()));
         for (String term : __INDEX_KEYS_SORTED__) {
