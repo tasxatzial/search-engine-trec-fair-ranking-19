@@ -12,8 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Class that holds configuration options for the themis system
- *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class Config {
 

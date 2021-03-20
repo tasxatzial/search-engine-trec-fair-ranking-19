@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.indexer.indexes;
 
-import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 
 import java.io.*;
@@ -9,9 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFrequency;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 import gr.csd.uoc.hy463.themis.indexer.model.PartialIndexStruct;
 import gr.csd.uoc.hy463.themis.indexer.model.PostingStruct;
 import org.apache.logging.log4j.LogManager;

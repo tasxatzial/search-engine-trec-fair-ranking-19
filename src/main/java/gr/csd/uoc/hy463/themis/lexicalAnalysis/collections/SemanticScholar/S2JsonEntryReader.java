@@ -17,7 +17,6 @@ import java.util.List;
  * Class responsible for reading textual entries from the json description of
  * entries
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class S2JsonEntryReader {
 

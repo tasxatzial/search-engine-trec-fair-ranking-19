@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
-import javax.print.Doc;
 import java.util.*;
 
 /**
@@ -13,8 +12,6 @@ import java.util.*;
  * seems to be simpler to interact with
  *
  * ID and offset in document file are set only in the constructor
- *
- * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class DocInfo {
     public enum PROPERTY {

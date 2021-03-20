@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
  * Class that showcases example of BERT usage
- *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class BertExample {
 

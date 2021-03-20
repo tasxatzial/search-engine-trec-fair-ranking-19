@@ -7,7 +7,6 @@ import java.io.Serializable;
  *
  * @param <L>
  * @param <R>
- * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class Pair<L, R> implements Serializable {
 

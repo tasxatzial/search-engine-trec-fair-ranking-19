@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
 
 /**
- * Node used for computing the pagerank scores
+ * Node class used for computing the pagerank scores
  */
 public class PagerankNode {
     private double score = 0;

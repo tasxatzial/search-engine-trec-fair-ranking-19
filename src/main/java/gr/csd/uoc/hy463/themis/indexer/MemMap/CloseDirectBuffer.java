@@ -1,4 +1,6 @@
-/* Source: https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java */
+/* Credits: Whome
+   Source: https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
+* */
 
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
