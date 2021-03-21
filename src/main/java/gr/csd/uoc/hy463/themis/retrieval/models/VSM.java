@@ -17,11 +17,11 @@ public class VSM extends ARetrievalModel {
     }
 
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
-        return getRankedResults(query, props, 0, Integer.MAX_VALUE);
+        return getRankedResults(query, props, Integer.MAX_VALUE);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
         int totalArticles = _indexer.getTotalArticles();
 
@@ -43,7 +43,7 @@ public class VSM extends ARetrievalModel {
         query = mergeTerms(query);
 
         //get the relevant documents from the documents file
-        fetchEssentialDocInfo(query, props, startDoc, endDoc);
+        fetchEssentialDocInfo(query, props, endDoc);
 
         //df of the terms of the query
         int[] dfs = _indexer.getDf(query);
@@ -107,7 +107,7 @@ public class VSM extends ARetrievalModel {
         sort(results);
 
         //update the properties of these results that are in [startDoc, endDoc]
-        updateDocInfo(results, props, startDoc, endDoc);
+        updateDocInfo(results, props, endDoc);
 
         return results;
     }

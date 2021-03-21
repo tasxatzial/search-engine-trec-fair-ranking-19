@@ -174,21 +174,18 @@ public class Search {
      * @throws IOException
      */
     public List<Pair<Object, Double>> search(String query) throws IOException, QueryExpansionException, SearchNoIndexException {
-        return search(query, 0, Integer.MAX_VALUE);
+        return search(query, Integer.MAX_VALUE);
     }
 
     /**
      * Searches for a query and returns a ranked list of results. The results in the range
-     * [startResult, endResult] contain the document properties set by setDocumentProperties().
-     * startResult, endResult should be set to different values other than 0, Integer.MAX_VALUE only when we
-     * want a small number of results.
+     * [0, endResult] contain the document properties set by setDocumentProperties().
      * @param query
-     * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, int startResult, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
+    public List<Pair<Object, Double>> search(String query, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
         if (!isIndexLoaded()) {
             throw new SearchNoIndexException();
         }
@@ -255,24 +252,7 @@ public class Search {
             }
         }
 
-        return _model.getRankedResults(finalQuery, _props, startResult, endResult);
-    }
-
-    /**
-     * Updates the list of results that are in ranked positions [startResult, endResult]
-     * @param searchResults
-     * @param startResult From 0 to Integer.MAX_VALUE
-     * @param endResult From 0 to Integer.MAX_VALUE
-     * @throws IOException
-     */
-    public void updateResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) throws IOException {
-        List<DocInfo> docInfos = new ArrayList<>();
-        for (int i = 0; i < searchResults.size(); i++) {
-            if (i >= startResult && i <= endResult) {
-                docInfos.add((DocInfo) searchResults.get(i).getL());
-            }
-        }
-        _indexer.updateDocInfo(docInfos, _props);
+        return _model.getRankedResults(finalQuery, _props, endResult);
     }
 
     /**
@@ -300,11 +280,11 @@ public class Search {
         int firstDisplayedResult = Math.max(startResult, 0);
         int lastDisplayedResult = Math.min(endResult, searchResults.size() - 1);
         if (firstDisplayedResult > lastDisplayedResult) {
-            Themis.print("No results found in the specified range\n");
+            Themis.print("\nNo results found in the specified range\n");
             return;
         }
 
-        Themis.print("Displaying results " + firstDisplayedResult + " to " + lastDisplayedResult + "\n\n");
+        Themis.print("\nDisplaying results " + firstDisplayedResult + " to " + lastDisplayedResult + "\n\n");
 
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {

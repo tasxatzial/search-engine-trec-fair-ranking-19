@@ -37,8 +37,10 @@ public class Themis {
     }
     private static TASK _task = null;
 
-    public static void main(String[] args) throws IOException {
-        if (args.length > 0 && args[0].equals("gui")) { //GUI version
+    public static void main(String[] args) throws IOException, QueryExpansionException, SearchNoIndexException {
+
+        //GUI version
+        if (args.length > 0 && args[0].equals("gui")) {
             view = new View();
 
             /* close window button listener */
@@ -81,8 +83,26 @@ public class Themis {
 
             view.setVisible(true);
         }
-        else { //non GUI version
 
+        //non GUI version, write code in else block
+        else {
+            /* test */
+            search = new Search();
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+
+            /* we want to fetch the titles */
+            props.add(DocInfo.PROPERTY.TITLE);
+            search.setDocumentProperties(props);
+
+            /* search for the top 6 ([0..5]) results of 'case':
+            1. The essential props of the retrieval model will be fetched for all results even for those in [0..5]
+            2. The above props will be fetched only for the results in [0..5] */
+            List<Pair<Object, Double>> results = search.search("case", 5);
+
+            /* print top 11 ([0..10]) results. Assume that 'case' returns a total of 9 results:
+            1. DOC_ID will be displayed for all top 9 ([0..8]) results
+            2. TITLE will be displayed only for results in [0..5] */
+            search.printResults(results, 0, 10);
         }
     }
 
@@ -360,7 +380,7 @@ public class Themis {
             long startTime = System.nanoTime();
             print(">>> Searching for: " + query + " ... ");
             try { //todo: close files
-                results = search.search(view.get_searchField().getText(), 0, 9);
+                results = search.search(view.get_searchField().getText(), 9);
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + results.size() + " results\n");
                 search.printResults(results, 0, 9);

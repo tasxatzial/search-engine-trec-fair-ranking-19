@@ -910,12 +910,6 @@ public class Indexer {
         for (int i = 0; i < terms.size(); i++) {
             List<DocInfo> termDocInfo = termsDocInfo.get(i);
 
-            //if we have already a result of docInfos for this term, just update the properties of each docInfo object
-            if (!termDocInfo.isEmpty()) {
-                updateDocInfo(termDocInfo, props);
-                continue;
-            }
-
             // go to the next term if this term does not appear in the vocabulary
             VocabularyStruct termValue = __VOCABULARY__.get(terms.get(i));
             if (termValue == null) {
@@ -947,9 +941,7 @@ public class Indexer {
                 }
                 String docId = new String(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.ID_SIZE, "ASCII");
                 DocInfo docInfo = new DocInfo(docId, documentMetaOffset);
-                if (!props.isEmpty()) {
-                    fetchInfo(docInfo, props, gotoDocuments);
-                }
+                fetchInfo(docInfo, props, gotoDocuments);
                 termDocInfo.add(docInfo);
                 postingOffset += PostingStruct.SIZE;
             }
@@ -963,32 +955,22 @@ public class Indexer {
      * @throws IOException
      */
     public void updateDocInfo(List<DocInfo> docInfos, Set<DocInfo.PROPERTY> props) throws IOException {
-        if (props.isEmpty()) {
-            return;
-        }
-
         for (DocInfo docInfo : docInfos) {
-            Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
-            extraProps.removeAll(docInfo.getProps());
-
-            // grab only the properties that the docInfo object does not have
-            if (!extraProps.isEmpty()) {
-                long documentMetaOffset = docInfo.getMetaOffset();
-                ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
-                buffer.get(__DOCUMENT_META_ARRAY__);
-                boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
-                        props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
-                        props.contains(DocInfo.PROPERTY.YEAR);
-                if (gotoDocuments) {
-                    long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
-                    int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-                    __DOCUMENT_ARRAY__ = new byte[documentSize];
-                    __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
-                    __DOCUMENTS__.seek(documentOffset);
-                    __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
-                }
-                fetchInfo(docInfo, extraProps, gotoDocuments);
+            long documentMetaOffset = docInfo.getMetaOffset();
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            buffer.get(__DOCUMENT_META_ARRAY__);
+            boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
+                    props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
+                    props.contains(DocInfo.PROPERTY.YEAR);
+            if (gotoDocuments) {
+                long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
+                int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                __DOCUMENT_ARRAY__ = new byte[documentSize];
+                __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
+                __DOCUMENTS__.seek(documentOffset);
+                __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
             }
+            fetchInfo(docInfo, props, gotoDocuments);
         }
     }
 

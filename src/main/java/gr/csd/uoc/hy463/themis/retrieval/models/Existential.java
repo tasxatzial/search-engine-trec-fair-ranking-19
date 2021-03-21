@@ -20,18 +20,18 @@ public class Existential extends ARetrievalModel {
     }
 
     public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
-        return getRankedResults(query, props, 0, Integer.MAX_VALUE);
+        return getRankedResults(query, props, Integer.MAX_VALUE);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
+    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
         List<Pair<Object, Double>> results = new ArrayList<>();
 
         //merge weights of the same terms
         query = mergeTerms(query);
 
         //get the relevant documents from the documents file
-        fetchEssentialDocInfo(query, props, startDoc, endDoc);
+        fetchEssentialDocInfo(query, props, endDoc);
 
         //remove the duplicates
         Set<DocInfo> resultsSet = new HashSet<>();
@@ -45,7 +45,7 @@ public class Existential extends ARetrievalModel {
         }
 
         //update the properties of these results that are in [startDoc, endDoc]
-        updateDocInfo(results, props, startDoc, endDoc);
+        updateDocInfo(results, props, endDoc);
 
         return results;
     }

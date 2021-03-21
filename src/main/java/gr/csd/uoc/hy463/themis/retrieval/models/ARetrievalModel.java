@@ -22,8 +22,6 @@ public abstract class ARetrievalModel {
 
     public ARetrievalModel(Indexer indexer) {
         _indexer = indexer;
-        _terms = new ArrayList<>();
-        _termsDocInfo = new ArrayList<>();
     }
 
     public static Set<DocInfo.PROPERTY> getVSMProps() {
@@ -58,12 +56,11 @@ public abstract class ARetrievalModel {
     /**
      * Method that evaluates the query and returns a list of pairs with
      * the ranked results. In that list the properties specified in props are retrieved only for the
-     * documents with indexes from startDoc to endDoc.
+     * documents with indexes from 0 to endDoc.
      *
-     * startDoc and endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
-     * startDoc should be set to 0 and endDoc should be set to Integer.MAX_VALUE if we want to retrieve all
-     * documents related to this query. Using different values for any of them is encouraged only when we want
-     * to see a small number of results.
+     * endDoc range is from 0 (top ranked doc) to Integer.MAX_VALUE.
+     * endDoc should be set to Integer.MAX_VALUE if we want to retrieve all
+     * documents related to this query.
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -81,60 +78,35 @@ public abstract class ARetrievalModel {
      * @param query list of query terms
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException;
+    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException;
 
     /**
      * Reads the documents file and creates a list of list of docInfo objects (one list for each term of the query).
      * The list will have been updated when the function returns.
      * @param query
      * @param props
-     * @param startDoc
      * @param endDoc
      * @throws IOException
      */
-    protected void fetchEssentialDocInfo(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
+    protected void fetchEssentialDocInfo(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
 
         /* collect all terms */
-        List<String> terms = new ArrayList<>(query.size());
+        _terms = new ArrayList<>(query.size());
         for (QueryTerm queryTerm : query) {
-            terms.add(queryTerm.getTerm());
+            _terms.add(queryTerm.getTerm());
         }
 
         /* initialize structures */
-        List<List<DocInfo>> termsDocInfo = new ArrayList<>(terms.size());
-        for (int i = 0; i < terms.size(); i++) {
-            termsDocInfo.add(new ArrayList<>());
-        }
-
-        /* check whether this query has same terms as the previous query */
-        for (int i = 0; i < terms.size(); i++) {
-            for (int j = 0; j < _terms.size(); j++) {
-                if (terms.get(i).equals(_terms.get(j))) {
-                    termsDocInfo.set(i, _termsDocInfo.get(j));
-                    break;
-                }
-            }
-        }
-
-        /* remove the docInfo from all the terms of the previous query that do not appear in this query */
-        for (int i = 0; i < _termsDocInfo.size(); i++) {
-            boolean found = false;
-            for (int j = 0; j < termsDocInfo.size(); j++) {
-                if (_termsDocInfo.get(i) == termsDocInfo.get(j)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                _termsDocInfo.set(i, null);
-            }
+        _termsDocInfo = new ArrayList<>();
+        for (int i = 0; i < _terms.size(); i++) {
+            _termsDocInfo.add(new ArrayList<>());
         }
 
         /* if we want paginated results, both the okapi and VSM models should fetch only their
         essential properties for each result so that they can do the ranking. The rest of the properties
         will be fetched after the ranking is determined */
         Set<DocInfo.PROPERTY> newProps = new HashSet<>(props);
-        if (startDoc == 0 && endDoc == Integer.MAX_VALUE) {
+        if (endDoc == Integer.MAX_VALUE) {
             if (this instanceof VSM) {
                 newProps.addAll(getVSMProps());
             }
@@ -152,21 +124,17 @@ public abstract class ARetrievalModel {
         }
 
         /* finally fetch the properties */
-        _indexer.getDocInfo(terms, termsDocInfo, newProps);
-
-        _termsDocInfo = termsDocInfo;
-        _terms = terms;
+        _indexer.getDocInfo(_terms, _termsDocInfo, newProps);
     }
 
     /**
-     * Updates the ranked results that have index in [startDoc, endDoc] by fetching the specified props
+     * Updates the ranked results that have index in [0, endDoc] by fetching the specified props
      * from the documents file
      * @param results
-     * @param startDoc
      * @param endDoc
      * @throws IOException
      */
-    protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int startDoc, int endDoc) throws IOException {
+    protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
 
         /* the properties that each docInfo should have that are not the essential properties of this model */
         Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
@@ -184,7 +152,7 @@ public abstract class ARetrievalModel {
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
             DocInfo docInfo = (DocInfo) results.get(i).getL();
-            if (i >= startDoc && i <= endDoc) {
+            if (i <= endDoc) {
                 updatedDocInfos.add(docInfo);
             }
         }
