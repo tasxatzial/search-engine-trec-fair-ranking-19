@@ -108,7 +108,7 @@ We can change the configuration options for indexing/searching/evaluation via th
 Note that any changes to the config file are taken into account only when:
 
 * A new index is created.
-* The index is loaded ιν memory.
+* The index is loaded in memory.
 
 ## Screenshots
 
