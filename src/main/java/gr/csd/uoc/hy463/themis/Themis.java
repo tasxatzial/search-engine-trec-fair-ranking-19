@@ -97,7 +97,7 @@ public class Themis {
             /* search for the top 6 ([0..5]) results of 'case':
             1. The essential props of the retrieval model will be fetched for all results even for those in [0..5]
             2. The above props will be fetched only for the results in [0..5] */
-            List<Pair<Object, Double>> results = search.search("case", 5);
+            List<Pair<DocInfo, Double>> results = search.search("case", 5);
 
             /* print top 11 ([0..10]) results. Assume that 'case' returns a total of 9 results:
             1. DOC_ID will be displayed for all top 9 ([0..8]) results
@@ -320,7 +320,7 @@ public class Themis {
                 return;
             }
             _task = TASK.SEARCH;
-            List<Pair<Object, Double>> results;
+            List<Pair<DocInfo, Double>> results;
 
             //set the query expansion dictionary
             JMenu expansionDictionary = view.get_expansionDictionary();

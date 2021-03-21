@@ -16,13 +16,13 @@ public class VSM extends ARetrievalModel {
         super(index);
     }
 
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
         return getRankedResults(query, props, Integer.MAX_VALUE);
     }
 
     @Override
-    public List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
-        List<Pair<Object, Double>> results = new ArrayList<>();
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
+        List<Pair<DocInfo, Double>> results = new ArrayList<>();
         int totalArticles = _indexer.getTotalArticles();
 
         //frequencies of the terms in the query
@@ -99,14 +99,14 @@ public class VSM extends ARetrievalModel {
         }
 
         //normalize to [0, 1]
-        for (Pair<Object, Double> result : results) {
+        for (Pair<DocInfo, Double> result : results) {
             result.setR(result.getR() / maxScore);
         }
 
         //sort based on pagerank score and this model score
         sort(results);
 
-        //update the properties of these results that are in [startDoc, endDoc]
+        //update the properties of these results that are in [0, endDoc]
         updateDocInfo(results, props, endDoc);
 
         return results;

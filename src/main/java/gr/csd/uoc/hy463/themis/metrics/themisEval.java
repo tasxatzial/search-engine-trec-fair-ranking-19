@@ -132,7 +132,7 @@ public class themisEval {
             evaluationWriter.write("\n>>> Search query: " + query + "\n");
             Themis.print("> Search query: " + query + "\n");
             long startTime = System.nanoTime();
-            List<Pair<Object, Double>> results = _search.search(query);
+            List<Pair<DocInfo, Double>> results = _search.search(query);
             long endTime = System.nanoTime();
 
             //calculate the elapsed time for the search
@@ -198,7 +198,7 @@ public class themisEval {
     }
 
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
-    private static double computeAveP(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+    private static double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -212,8 +212,8 @@ public class themisEval {
         if (relevantDocuments == 0) {
             return Double.NaN;
         }
-        for (Pair<Object, Double> rankedDocument : results) {
-            String docId = ((DocInfo) rankedDocument.getL()).getId();
+        for (Pair<DocInfo, Double> rankedDocument : results) {
+            String docId = rankedDocument.getL().getId();
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -247,7 +247,7 @@ public class themisEval {
         }
         else {
             for (Pair<Object, Double> result : results) {
-                String docId = ((DocInfo) result.getL()).getId();
+                String docId = result.getL().getId();
                 Long isJudged = relevanceMap.get(docId);
                 if (isJudged != null) {
                     if (isJudged == 1) {
@@ -269,7 +269,7 @@ public class themisEval {
     }*/
 
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private static double computeNdcg(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
+    private static double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;
@@ -284,7 +284,7 @@ public class themisEval {
         if (relevantDocuments == 0) {
             return Double.NaN;
         }
-        for (Pair<Object, Double> result : results) {
+        for (Pair<DocInfo, Double> result : results) {
             String docId = ((DocInfo) result.getL()).getId();
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
@@ -315,7 +315,7 @@ public class themisEval {
                 sum += value;
             }
         }
-        return 1.0 * sum / numbers;
+        return sum / numbers;
     }
 
     /* calculates the min in a list of doubles */

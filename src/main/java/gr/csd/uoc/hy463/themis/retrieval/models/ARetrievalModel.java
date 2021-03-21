@@ -51,7 +51,7 @@ public abstract class ARetrievalModel {
      * @param query set of query terms
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
+    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException;
 
     /**
      * Method that evaluates the query and returns a list of pairs with
@@ -78,7 +78,7 @@ public abstract class ARetrievalModel {
      * @param query list of query terms
      * @return
      */
-    public abstract List<Pair<Object, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException;
+    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException;
 
     /**
      * Reads the documents file and creates a list of list of docInfo objects (one list for each term of the query).
@@ -134,7 +134,7 @@ public abstract class ARetrievalModel {
      * @param endDoc
      * @throws IOException
      */
-    protected void updateDocInfo(List<Pair<Object, Double>> results, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
+    protected void updateDocInfo(List<Pair<DocInfo, Double>> results, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
 
         /* the properties that each docInfo should have that are not the essential properties of this model */
         Set<DocInfo.PROPERTY> extraProps = new HashSet<>(props);
@@ -151,7 +151,7 @@ public abstract class ARetrievalModel {
         /* update all docInfo items of the results accordingly */
         List<DocInfo> updatedDocInfos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
-            DocInfo docInfo = (DocInfo) results.get(i).getL();
+            DocInfo docInfo = results.get(i).getL();
             if (i <= endDoc) {
                 updatedDocInfos.add(docInfo);
             }
@@ -166,20 +166,20 @@ public abstract class ARetrievalModel {
      * model. The scores should be normalized to [0, 1]
      * @param results
      */
-    protected void sort(List<Pair<Object, Double>> results) {
+    protected void sort(List<Pair<DocInfo, Double>> results) {
         double citationsPagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
         double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
         double citationsMaxPagerank = 0;
         double[] citationsPageranks = new double[results.size()];
         for (int i = 0; i < results.size(); i++) {
-            DocInfo docInfo = (DocInfo) results.get(i).getL();
+            DocInfo docInfo = results.get(i).getL();
             citationsPageranks[i] = (double) docInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
             if (citationsPageranks[i] > citationsMaxPagerank) {
                 citationsMaxPagerank = citationsPageranks[i];
             }
         }
         for (int i = 0; i < results.size(); i++) {
-            Pair<Object, Double> result = results.get(i);
+            Pair<DocInfo, Double> result = results.get(i);
             double modelScore = result.getR();
             result.setR(modelScore * modelWeight + (citationsPageranks[i] / citationsMaxPagerank) * citationsPagerankWeight);
         }

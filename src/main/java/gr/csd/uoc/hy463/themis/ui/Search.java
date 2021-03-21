@@ -173,7 +173,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query) throws IOException, QueryExpansionException, SearchNoIndexException {
+    public List<Pair<DocInfo, Double>> search(String query) throws IOException, QueryExpansionException, SearchNoIndexException {
         return search(query, Integer.MAX_VALUE);
     }
 
@@ -185,7 +185,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<Object, Double>> search(String query, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
+    public List<Pair<DocInfo, Double>> search(String query, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
         if (!isIndexLoaded()) {
             throw new SearchNoIndexException();
         }
@@ -259,7 +259,7 @@ public class Search {
      * Prints a list of results in decreasing ranking order.
      * @param searchResults
      */
-    public void printResults(List<Pair<Object, Double>> searchResults) {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults) {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
 
@@ -270,7 +270,7 @@ public class Search {
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      */
-    public void printResults(List<Pair<Object, Double>> searchResults, int startResult, int endResult) {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) {
         if (searchResults.isEmpty()) {
             return;
         }
