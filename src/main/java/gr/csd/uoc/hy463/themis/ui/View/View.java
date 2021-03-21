@@ -133,11 +133,11 @@ public class View extends JFrame {
         DocInfoRadioButton authorIds = new DocInfoRadioButton("Author ids");
         DocInfoRadioButton journal = new DocInfoRadioButton("Journal");
         DocInfoRadioButton year = new DocInfoRadioButton("Year");
-        DocInfoRadioButton pagerank = new DocInfoRadioButton("Pagerank");
-        DocInfoRadioButton weight = new DocInfoRadioButton("Weight");
-        DocInfoRadioButton length = new DocInfoRadioButton("Length");
-        DocInfoRadioButton maxTF = new DocInfoRadioButton("Max term frequency");
-        DocInfoRadioButton documentSize = new DocInfoRadioButton("Size");
+        DocInfoRadioButton pagerank = new DocInfoRadioButton("Citations Pagerank");
+        DocInfoRadioButton weight = new DocInfoRadioButton("VSM Weight");
+        DocInfoRadioButton length = new DocInfoRadioButton("Token count");
+        DocInfoRadioButton maxTF = new DocInfoRadioButton("Max TF");
+        DocInfoRadioButton documentSize = new DocInfoRadioButton("Document Size");
         _documentProperties.add(title);
         _documentProperties.add(authors);
         _documentProperties.add(authorIds);

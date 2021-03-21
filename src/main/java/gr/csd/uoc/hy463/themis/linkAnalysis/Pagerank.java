@@ -275,7 +275,7 @@ public class Pagerank {
         DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(documentsMetaPath, DocumentMetaBuffers.MODE.WRITE);
 
         for (int i = 0; i < scores.length; i++) {
-            ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.PAGERANK_OFFSET);
+            ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             buffer.putDouble(scores[i]);
             offset += DocumentMetaEntry.totalSize;
         }

@@ -582,10 +582,10 @@ public class Indexer {
     private long dumpDocumentsMeta(BufferedOutputStream out, S2TextualEntry textualEntry, int entryLength,
                                    int entrySize, long documentMetaOffset, long documentOffset) throws IOException {
         __DOCUMENT_META_BUFFER__.put(textualEntry.getId().getBytes("ASCII"));
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.WEIGHT_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.LENGTH_OFFSET, entryLength);
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.PAGERANK_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET, entryLength);
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET, entrySize);
         __DOCUMENT_META_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentOffset);
@@ -728,7 +728,7 @@ public class Indexer {
             weight = Math.sqrt(weight) / maxTf;
 
             //update the documents_meta file
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.WEIGHT_OFFSET);
+            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
             buffer.putDouble(weight);
             buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.MAX_TF_OFFSET);
             buffer.putInt(maxTf);
@@ -977,20 +977,20 @@ public class Indexer {
     /* Reads the fields byte array and adds to the docInfo object the properties specified by props */
     private void fetchInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, boolean gotoDocuments) throws UnsupportedEncodingException {
         if (props.contains(DocInfo.PROPERTY.PAGERANK)) {
-            double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.PAGERANK_OFFSET);
+            double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);
         }
-        if (props.contains(DocInfo.PROPERTY.WEIGHT)) {
-            double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.WEIGHT_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.WEIGHT, weight);
+        if (props.contains(DocInfo.PROPERTY.VSM_WEIGHT)) {
+            double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            docInfo.setProperty(DocInfo.PROPERTY.VSM_WEIGHT, weight);
         }
         if (props.contains(DocInfo.PROPERTY.MAX_TF)) {
             int maxTf = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
             docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
         }
-        if (props.contains(DocInfo.PROPERTY.LENGTH)) {
-            int length = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.LENGTH_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.LENGTH, length);
+        if (props.contains(DocInfo.PROPERTY.TOKEN_COUNT)) {
+            int length = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
+            docInfo.setProperty(DocInfo.PROPERTY.TOKEN_COUNT, length);
         }
         if (props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
             double authorRank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);

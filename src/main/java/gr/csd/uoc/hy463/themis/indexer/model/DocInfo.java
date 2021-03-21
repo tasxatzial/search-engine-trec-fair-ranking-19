@@ -27,8 +27,8 @@ public class DocInfo {
         VENUE,
         SOURCES,
         PAGERANK,
-        WEIGHT,
-        LENGTH,
+        VSM_WEIGHT,
+        TOKEN_COUNT,
         MAX_TF,
         DOCUMENT_SIZE
     }

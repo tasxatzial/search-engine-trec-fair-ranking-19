@@ -87,7 +87,7 @@ public class VSM extends ARetrievalModel {
             double documentScore = 0;
             double[] weights = docWeights.getValue();
             DocInfo docInfo = docWeights.getKey();
-            double documentNorm = (double) docInfo.getProperty(DocInfo.PROPERTY.WEIGHT);
+            double documentNorm = (double) docInfo.getProperty(DocInfo.PROPERTY.VSM_WEIGHT);
             for (int i = 0; i < queryWeights.length; i++) {
                 documentScore += queryWeights[i] * weights[i];
             }

@@ -26,7 +26,7 @@ public abstract class ARetrievalModel {
 
     public static Set<DocInfo.PROPERTY> getVSMProps() {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
-        props.add(DocInfo.PROPERTY.WEIGHT);
+        props.add(DocInfo.PROPERTY.VSM_WEIGHT);
         props.add(DocInfo.PROPERTY.MAX_TF);
         props.add(DocInfo.PROPERTY.PAGERANK);
         return props;
@@ -34,7 +34,7 @@ public abstract class ARetrievalModel {
 
     public static Set<DocInfo.PROPERTY> getOkapiProps() {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
-        props.add(DocInfo.PROPERTY.LENGTH);
+        props.add(DocInfo.PROPERTY.TOKEN_COUNT);
         props.add(DocInfo.PROPERTY.PAGERANK);
         return props;
     }

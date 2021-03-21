@@ -64,7 +64,7 @@ public class OkapiBM25 extends ARetrievalModel {
             double documentScore = 0;
             double[] freqs = docFreqs.getValue();
             DocInfo docInfo = docFreqs.getKey();
-            int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.LENGTH);
+            int docLength = (int) docInfo.getProperty(DocInfo.PROPERTY.TOKEN_COUNT);
             for (int i = 0; i < query.size(); i++) {
                 documentScore += idfs[i] * (freqs[i] * (k1 + 1) / (freqs[i] + k1 * (1 - b + (b * docLength) / avgdl)) + 1);
             }

@@ -29,19 +29,19 @@ public class DocInfoRadioButton extends JCheckBoxMenuItem {
             case "Year":
                 _prop = DocInfo.PROPERTY.YEAR;
                 break;
-            case "Pagerank":
+            case "Citations Pagerank":
                 _prop = DocInfo.PROPERTY.PAGERANK;
                 break;
-            case "Weight":
-                _prop = DocInfo.PROPERTY.WEIGHT;
+            case "VSM Weight":
+                _prop = DocInfo.PROPERTY.VSM_WEIGHT;
                 break;
-            case "Length":
-                _prop = DocInfo.PROPERTY.LENGTH;
+            case "Token count":
+                _prop = DocInfo.PROPERTY.TOKEN_COUNT;
                 break;
-            case "Max term frequency":
+            case "Max TF":
                 _prop = DocInfo.PROPERTY.MAX_TF;
                 break;
-            case "Size":
+            case "Document Size":
                 _prop = DocInfo.PROPERTY.DOCUMENT_SIZE;
                 break;
         }
