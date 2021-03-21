@@ -95,7 +95,7 @@ public class View extends JFrame {
         /* index menu */
         JMenu index = new JMenu("Index");
         _createIndex = new JMenuItem("Create index");
-        _loadIndex = new JMenuItem("Load index");
+        _loadIndex = new JMenuItem("Load default index");
         index.add(_createIndex);
         index.add(_loadIndex);
 
