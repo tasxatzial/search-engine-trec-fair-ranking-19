@@ -2,9 +2,9 @@
 
 themis is a search engine for scientific articles.
 
-It was built to index and query the collection of documents from the [TREC 2019 Fair Ranking Track](https://fair-trec.github.io/2019/). The entire collection consists of ~47 million articles, total size ~108GB. A small sample can be found in [sample-S2-records](scripts/sample-S2-records). The collection indexed was the one released on 2019-01-31.
+It was built to index and query the collection of documents from the [TREC Fair Ranking Track](https://fair-trec.github.io/). The entire collection consists of ~47 million articles, total size ~108GB. The collection indexed was the one released on 2019-01-31.
 
-Other versions may or may not work with this engine and may require few modifications.
+Other versions may or may not work with this engine and may require a few modifications.
 
 ## Features
 
@@ -39,7 +39,7 @@ However, searching requires a lot of memory especially when a query expansion mo
 
 ### Evaluation
 
-~600 queries from a [judgements file](scripts/fair-TREC-training-sample.json) were used for the evaluation of the engine.
+~600 queries from a judgements file were used for the evaluation of the engine.
 
 The average of the average precision scores was ~0.7. The average of the nDCG scores was ~0.8. These numbers change slightly depending on the retrieval parameters (retrieval model/query expansion/pagerank).
 
@@ -63,10 +63,6 @@ The [results](results/) folder contains a complete log of the results including 
 ## Documentation
 
 The [docs](doc/) folder contains reports about the indexing/searching/evaluation process, an overview of the fair ranking track, and detailed explanations of the algorithms used in this engine.
-
-## Scripts
-
-The [scripts](scripts/) folder contains all necessary files regarding the evaluation the system for the TREC fair ranking track. For this engine only [fair-TREC-evaluation-sample.json](scripts/fair-TREC-evaluation-sample.json) was used.
 
 ## TODO
 
