@@ -76,7 +76,7 @@ public class Index {
      *
      * For each entry it stores:
      * TF (int => 4 bytes)
-     * POINTER_TO_DOCUMENT_FILE (long => 4 bytes)
+     * POINTER_TO_DOCUMENT_META_FILE (long => 8 bytes)
      */
     public boolean dump() throws IOException {
         __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
