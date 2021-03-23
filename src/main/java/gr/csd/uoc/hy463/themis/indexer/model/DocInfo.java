@@ -26,7 +26,7 @@ public class DocInfo {
         FIELDS_OF_STUDY,
         VENUE,
         SOURCES,
-        PAGERANK,
+        CITATIONS_PAGERANK,
         VSM_WEIGHT,
         TOKEN_COUNT,
         MAX_TF,

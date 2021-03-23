@@ -28,14 +28,14 @@ public abstract class ARetrievalModel {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
         props.add(DocInfo.PROPERTY.VSM_WEIGHT);
         props.add(DocInfo.PROPERTY.MAX_TF);
-        props.add(DocInfo.PROPERTY.PAGERANK);
+        props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
         return props;
     }
 
     public static Set<DocInfo.PROPERTY> getOkapiProps() {
         Set<DocInfo.PROPERTY> props = new HashSet<>();
         props.add(DocInfo.PROPERTY.TOKEN_COUNT);
-        props.add(DocInfo.PROPERTY.PAGERANK);
+        props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
         return props;
     }
 
@@ -173,7 +173,7 @@ public abstract class ARetrievalModel {
         double[] citationsPageranks = new double[results.size()];
         for (int i = 0; i < results.size(); i++) {
             DocInfo docInfo = results.get(i).getL();
-            citationsPageranks[i] = (double) docInfo.getProperty(DocInfo.PROPERTY.PAGERANK);
+            citationsPageranks[i] = (double) docInfo.getProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK);
             if (citationsPageranks[i] > citationsMaxPagerank) {
                 citationsMaxPagerank = citationsPageranks[i];
             }

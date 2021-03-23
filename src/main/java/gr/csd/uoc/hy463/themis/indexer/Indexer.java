@@ -976,9 +976,9 @@ public class Indexer {
 
     /* Reads the fields byte array and adds to the docInfo object the properties specified by props */
     private void fetchInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, boolean gotoDocuments) throws UnsupportedEncodingException {
-        if (props.contains(DocInfo.PROPERTY.PAGERANK)) {
+        if (props.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK)) {
             double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.PAGERANK, pagerank);
+            docInfo.setProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK, pagerank);
         }
         if (props.contains(DocInfo.PROPERTY.VSM_WEIGHT)) {
             double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
