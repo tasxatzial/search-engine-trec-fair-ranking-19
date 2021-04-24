@@ -2,7 +2,9 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentIDBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
+import gr.csd.uoc.hy463.themis.indexer.model.DocumentIDEntry;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
@@ -60,9 +62,9 @@ public class Pagerank {
             return 0;
         }
 
-        String documentsMetaPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsMetaFileName();
-        DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(documentsMetaPath, DocumentMetaBuffers.MODE.READ);
-        byte[] docIdArray = new byte[DocumentMetaEntry.ID_SIZE];
+        String documentsIDPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsIDFileName();
+        DocumentIDBuffers documentIDBuffers = new DocumentIDBuffers(documentsIDPath, DocumentIDBuffers.MODE.READ);
+        byte[] docIdArray = new byte[DocumentIDEntry.ID_SIZE];
 
         /* This is a temporary file that stores for each document the number of Out citations
         and the Ids of the In citations. Each entry in the file consists of:
@@ -80,16 +82,16 @@ public class Pagerank {
         // document string Id -> int Id
         Map<String, Integer> citationsIdsMap = new HashMap<>();
 
-        /* read the documents_meta file and create the map of string id -> int id */
+        /* read the documents_id file and create the map of doc_id -> int id */
         int documents = 0;
         long offset = 0;
         ByteBuffer buffer;
-        while ((buffer = documentMetaBuffers.getBufferLong(offset)) != null) {
+        while ((buffer = documentIDBuffers.getBufferLong(offset)) != null) {
             buffer.get(docIdArray);
-            String stringId = new String(docIdArray, 0, DocumentMetaEntry.ID_SIZE, "ASCII");
+            String stringId = new String(docIdArray, 0, DocumentIDEntry.ID_SIZE, "ASCII");
             citationsIdsMap.put(stringId, documents);
             documents++;
-            offset += DocumentMetaEntry.totalSize;
+            offset += DocumentIDEntry.totalSize;
         }
 
         /* parse the dataset and write the required data to the 'graph' file */
@@ -138,8 +140,8 @@ public class Pagerank {
             }
         }
         graphWriter.close();
-        documentMetaBuffers.close();
-        documentMetaBuffers = null;
+        documentIDBuffers.close();
+        documentIDBuffers = null;
 
         return documents;
     }

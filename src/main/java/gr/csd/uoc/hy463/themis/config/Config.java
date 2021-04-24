@@ -67,7 +67,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of vocabulary index
+     * Returns the filename of the vocabulary file
      *
      * @return
      */
@@ -76,7 +76,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of postings index
+     * Returns the filename of postings file
      *
      * @return
      */
@@ -85,7 +85,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of documents index
+     * Returns the filename of documents file
      *
      * @return
      */
@@ -94,7 +94,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of documents meta index
+     * Returns the filename of documents meta file
      *
      * @return
      */
@@ -103,8 +103,16 @@ public class Config {
     }
 
     /**
-     * Returns the filename of meta index, holding meta information about the
-     * index
+     * Returns the filename of documents docID file
+     *
+     * @return
+     */
+    public String getDocumentsIDFileName() {
+        return __PROP__.getProperty("DOCUMENTS_ID_FILENAME");
+    }
+
+    /**
+     * Returns the filename of the index meta file
      *
      * @return
      */
