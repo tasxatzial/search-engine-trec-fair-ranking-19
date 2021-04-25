@@ -101,7 +101,7 @@ public class View extends JFrame {
 
         /* search menu */
         JMenu search = new JMenu("Search");
-        _queryCollection = new JMenuItem("Query collection");
+        _queryCollection = new JMenuItem("New query");
 
         _retrievalModel = new JMenu("Retrieval model");
         ButtonGroup group = new ButtonGroup();
@@ -224,6 +224,7 @@ public class View extends JFrame {
     public void initSearchView() {
         if (searchInitialized) {
             clearResultsArea();
+            clearQuery();
             return;
         }
         if (onlyResultsInitialized) {
@@ -307,6 +308,15 @@ public class View extends JFrame {
     public void clearResultsArea() {
         if (_resultsArea != null) {
             _resultsArea.setText("");
+        }
+    }
+
+    /**
+     * Clears the query text
+     */
+    public void clearQuery() {
+        if (_searchField != null) {
+            _searchField.setText("");
         }
     }
 

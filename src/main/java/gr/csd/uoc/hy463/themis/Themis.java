@@ -36,6 +36,7 @@ public class Themis {
         CREATE_INDEX, LOAD_INDEX, SEARCH, EVALUATE
     }
     private static TASK _task = null;
+    private static ActionListener searchButtonListener = null;
 
     public static void main(String[] args) throws IOException, QueryExpansionException, SearchNoIndexException {
 
@@ -140,6 +141,7 @@ public class Themis {
                 return;
             }
             view.initOnlyResultsView();
+            searchButtonListener = null;
             Thread runnableCreate = new Thread(new CreateIndex_runnable());
             runnableCreate.start();
         }
@@ -153,7 +155,10 @@ public class Themis {
                 return;
             }
             view.initSearchView();
-            view.get_searchButton().addActionListener(new searchButtonListener());
+            if (searchButtonListener == null) {
+                searchButtonListener = new searchButtonListener();
+                view.get_searchButton().addActionListener(searchButtonListener);
+            }
             if (search == null) {
                 Thread runnableLoad = new Thread(new LoadIndex_runnable());
                 runnableLoad.start();
@@ -188,6 +193,7 @@ public class Themis {
                 return;
             }
             view.initOnlyResultsView();
+            searchButtonListener = null;
             Evaluate_runnable evaluateVSM = new Evaluate_runnable(_model, _dictionary);
             Thread runnableEvaluateVSM = new Thread(evaluateVSM);
             runnableEvaluateVSM.start();
