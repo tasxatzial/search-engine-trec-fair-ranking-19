@@ -2,8 +2,8 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentIDBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentIDEntry;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -63,7 +63,7 @@ public class Pagerank {
         }
 
         String documentsIDPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsIDFileName();
-        DocumentIDBuffers documentIDBuffers = new DocumentIDBuffers(documentsIDPath, DocumentIDBuffers.MODE.READ);
+        DocBuffers documentIDBuffers = new DocBuffers(documentsIDPath, MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
         byte[] docIdArray = new byte[DocumentIDEntry.ID_SIZE];
 
         /* This is a temporary file that stores for each document the number of Out citations
@@ -274,7 +274,7 @@ public class Pagerank {
     private void writeCitationsScores(double[] scores) throws IOException {
         long offset = 0;
         String documentsMetaPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsMetaFileName();
-        DocumentMetaBuffers documentMetaBuffers = new DocumentMetaBuffers(documentsMetaPath, DocumentMetaBuffers.MODE.WRITE);
+        DocBuffers documentMetaBuffers = new DocBuffers(documentsMetaPath, MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
 
         for (int i = 0; i < scores.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);

@@ -24,11 +24,11 @@ public abstract class MemBuffers {
     /**
      * Creates the appropriate buffers so that the file specified by filename is treated
      * as a memory mapped file.
-     * @param documentBufferOffsets A list of file offsets
+     * @param bufferOffsets A list of file offsets
      * @throws IOException
      */
-    protected void createBuffers(List<Long> documentBufferOffsets, DocumentBuffers.MODE mode) throws IOException {
-        if (documentBufferOffsets.size() < 2) {
+    protected void createBuffers(List<Long> bufferOffsets, MemBuffers.MODE mode) throws IOException {
+        if (bufferOffsets.size() < 2) {
             throw new IllegalArgumentException("offsets size < 2");
         }
         _buffers = new ArrayList<>();
@@ -43,14 +43,14 @@ public abstract class MemBuffers {
             openMode = FileChannel.MapMode.READ_ONLY;
         }
         FileChannel documentsChannel = _documents.getChannel();
-        for (int i = 0; i < documentBufferOffsets.size() - 1; i++) {
-            MappedByteBuffer buffer = documentsChannel.map(openMode, documentBufferOffsets.get(i),
-                    documentBufferOffsets.get(i + 1) - documentBufferOffsets.get(i)).load();
+        for (int i = 0; i < bufferOffsets.size() - 1; i++) {
+            MappedByteBuffer buffer = documentsChannel.map(openMode, bufferOffsets.get(i),
+                    bufferOffsets.get(i + 1) - bufferOffsets.get(i)).load();
             _buffers.add(buffer);
-            _offsets.add(documentBufferOffsets.get(i));
+            _offsets.add(bufferOffsets.get(i));
 
         }
-        _offsets.add(documentBufferOffsets.get(documentBufferOffsets.size() - 1));
+        _offsets.add(bufferOffsets.get(bufferOffsets.size() - 1));
         documentsChannel.close();
     }
 

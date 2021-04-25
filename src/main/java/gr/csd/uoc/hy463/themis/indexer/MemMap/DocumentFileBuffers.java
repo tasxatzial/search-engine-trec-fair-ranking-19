@@ -10,31 +10,31 @@ import java.util.List;
 /**
  * Implements the memory mapped file concept for the documents file.
  */
-public class DocumentBuffers extends MemBuffers {
+public class DocumentFileBuffers extends MemBuffers {
 
     /**
-     * Creates the appropriate buffers so that the documents file is treated
-     * as a memory mapped file.
-     * @param documentMetaBuffers Object that corresponds to a memory mapped documents_meta file
+     * Constructor.
+     *
+     * @param docBuffers Object that corresponds to the memory mapped file documents_meta
      * @throws IOException
      */
-    public DocumentBuffers(String documentsPath, DocumentBuffers.MODE mode, DocumentMetaBuffers documentMetaBuffers) throws IOException {
+    public DocumentFileBuffers(String documentsPath, MemBuffers.MODE mode, MemBuffers docBuffers) throws IOException {
         _documentsPath = documentsPath;
-        createBuffers(createBufferOffsets(documentMetaBuffers), mode);
+        createBuffers(createBufferOffsets(docBuffers), mode);
     }
 
     /**
-     * Creates the appropriate buffers so that the documents file is treated as a memory mapped file.
+     * Creates the necessary buffers.
      */
-    private List<Long> createBufferOffsets(DocumentMetaBuffers documentMetaBuffers) {
+    private List<Long> createBufferOffsets(MemBuffers docBuffers) {
         int maxBufferSize = Integer.MAX_VALUE;
         List<Long> bufferOffsets = new ArrayList<>();
         bufferOffsets.add(0L);
         long totalDocumentsSize = 0;
         long documentOffset = 0;
-        for (int i = 0; i < documentMetaBuffers.getTotalBuffers(); i++) {
-            ByteBuffer buffer = documentMetaBuffers.getBuffer(i);
-            int bufferSize = documentMetaBuffers.getBufferSize(buffer);
+        for (int i = 0; i < docBuffers.getTotalBuffers(); i++) {
+            ByteBuffer buffer = docBuffers.getBuffer(i);
+            int bufferSize = docBuffers.getBufferSize(buffer);
             for (int j = 0; j < bufferSize; j += DocumentMetaEntry.totalSize) {
                 int documentSize = buffer.getInt(j + DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
                 if (documentSize > maxBufferSize - totalDocumentsSize) {

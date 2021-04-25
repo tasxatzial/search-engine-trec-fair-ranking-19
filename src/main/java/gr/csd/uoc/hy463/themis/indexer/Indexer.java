@@ -2,9 +2,9 @@ package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentIDBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentMetaBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFileBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -65,10 +65,10 @@ public class Indexer {
     private RandomAccessFile __DOCUMENTS__ = null;
 
     // Object for using the documents_meta file as a memory mapped file
-    DocumentMetaBuffers __DOCMETA_BUFFERS__ = null;
+    DocBuffers __DOCMETA_BUFFERS__ = null;
 
     // Object for using the documents_id file as a memory mapped file
-    DocumentIDBuffers __DOCID_BUFFERS__ = null;
+    DocBuffers __DOCID_BUFFERS__ = null;
 
     // stores all information about an entry (see DocumentMetaEntry class) from the documents_meta file
     byte[] __DOCUMENT_META_ARRAY__;
@@ -742,7 +742,7 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open the required files: documents_meta, doc_tf */
-        __DOCMETA_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentMetaBuffers.MODE.WRITE);
+        __DOCMETA_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
@@ -847,10 +847,10 @@ public class Indexer {
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
 
-        __DOCMETA_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
+        __DOCMETA_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, MemBuffers.MODE.READ, DocumentMetaEntry.totalSize);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCID_BUFFERS__ = new DocumentIDBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, DocumentBuffers.MODE.READ);
+        __DOCID_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
         __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
         __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         Themis.print("DONE\n");
