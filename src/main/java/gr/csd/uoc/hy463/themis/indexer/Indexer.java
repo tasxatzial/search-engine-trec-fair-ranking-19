@@ -61,24 +61,24 @@ public class Indexer {
 
     private RandomAccessFile __POSTINGS__ = null;
 
-    // has any information that appears in documents (except the docId)
+    // has any information that appears in the dataset (except the docId)
     private RandomAccessFile __DOCUMENTS__ = null;
 
-    // A list of buffers, each one is used for a different segment of the documents meta file
-    DocumentMetaBuffers __DOCUMENTS_META_BUFFERS__ = null;
+    // Object for using the documents_meta file as a memory mapped file
+    DocumentMetaBuffers __DOCMETA_BUFFERS__ = null;
 
-    // A list of buffers, each one is used for a different segment of the documents id file
-    DocumentIDBuffers __DOCUMENTS_ID_BUFFERS__ = null;
+    // Object for using the documents_id file as a memory mapped file
+    DocumentIDBuffers __DOCID_BUFFERS__ = null;
 
-    // stores all information about a document from the documents meta file
+    // stores all information about an entry (see DocumentMetaEntry class) from the documents_meta file
     byte[] __DOCUMENT_META_ARRAY__;
     ByteBuffer __DOCUMENT_META_BUFFER__;
 
-    // stores a doc ID from the documents ID file
+    // stores the doc ID of an entry (see DocumentIDEntry class) from the documents_id file
     byte[] __DOCUMENT_ID_ARRAY__;
     ByteBuffer __DOCUMENT_ID_BUFFER__;
 
-    // stores all information about a document from the documents file
+    // stores all information about an entry (see DocumentEntry class) from the documents file
     byte[] __DOCUMENT_ARRAY__;
     ByteBuffer __DOCUMENT_BUFFER__;
 
@@ -87,7 +87,7 @@ public class Indexer {
     // a timestamp of when the indexing process finished, the path of the indexed
     // collection, the options for stemming and stop-words used in the indexing process,
     // and whatever else we might want
-    private Map<String, String> __META_INDEX_INFO__ = null;
+    private Map<String, String> _INDEX_META__ = null;
 
     /**
      * Default constructor. Creates also a config instance
@@ -193,9 +193,6 @@ public class Indexer {
             return false;
         }
 
-        long startTime = System.nanoTime();
-        Themis.print(">>> Start indexing\n");
-
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
@@ -211,7 +208,22 @@ public class Indexer {
             Themis.print("No dataset files found\n");
             return true;
         }
-        
+
+        /* save any info related to this index */
+        _INDEX_META__ = new HashMap<>();
+        Themis.print(">>> Indexing options:\n");
+        _INDEX_META__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
+        Themis.print("Stemmer: " + __CONFIG__.getUseStemmer() + "\n");
+        _INDEX_META__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
+        Themis.print("Stopwords: " + __CONFIG__.getUseStopwords() + "\n");
+        _INDEX_META__.put("pagerank_damping", String.valueOf(__CONFIG__.getPagerankDampingFactor()));
+        Themis.print("Pagerank damping factor: " + __CONFIG__.getPagerankDampingFactor() + "\n");
+        _INDEX_META__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
+        Themis.print("Pagerank threshold: " + __CONFIG__.getPagerankThreshold() + "\n");
+
+        long startTime = System.nanoTime();
+        Themis.print(">>> Start indexing\n");
+
         // sort the files so that we parse them in a specific order
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
@@ -225,19 +237,19 @@ public class Indexer {
         Files.createDirectories(Paths.get(__INDEX_TMP_PATH__));
 
         /* the index metadata file */
-        BufferedWriter indexMetaWriter = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        BufferedWriter metaWriter = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
 
         /* The documents file for writing document information */
-        RandomAccessFile documents_RA = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
-        BufferedOutputStream documents_OutStream = new BufferedOutputStream(new FileOutputStream(documents_RA.getFD()));
+        RandomAccessFile documents = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
+        BufferedOutputStream documents_out = new BufferedOutputStream(new FileOutputStream(documents.getFD()));
 
         /* The documents meta file for writing document meta information */
-        RandomAccessFile documentsMeta_RA = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "rw");
-        BufferedOutputStream documentsMeta_OutStream = new BufferedOutputStream(new FileOutputStream(documentsMeta_RA.getFD()));
+        RandomAccessFile documentsMeta = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "rw");
+        BufferedOutputStream documentsMeta_out = new BufferedOutputStream(new FileOutputStream(documentsMeta.getFD()));
 
         /* The documents meta file for writing document docID information */
-        RandomAccessFile documentsID_RA = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, "rw");
-        BufferedOutputStream documentsID_OutStream = new BufferedOutputStream(new FileOutputStream(documentsID_RA.getFD()));
+        RandomAccessFile documentsID = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, "rw");
+        BufferedOutputStream documentsID_out = new BufferedOutputStream(new FileOutputStream(documentsID.getFD()));
 
         /* Temp file that stores the <term, TF> of every term that appears in
         each document (one line per document). Will be used for fast calculation of VSM weights */
@@ -277,20 +289,20 @@ public class Indexer {
 
                     // update the documents file
                     long prevDocumentOffset = documentOffset;
-                    documentOffset = dumpDocuments(documents_OutStream, entry, documentOffset);
+                    documentOffset = dumpDocuments(documents_out, entry, documentOffset);
 
                     int documentSize = (int) (documentOffset - prevDocumentOffset);
 
                     // update the documents_meta file
-                    documentMetaOffset = dumpDocumentsMeta(documentsMeta_OutStream, totalDocuments, documentLength, documentSize, documentMetaOffset, prevDocumentOffset);
+                    documentMetaOffset = dumpDocumentsMeta(documentsMeta_out, totalDocuments, documentLength, documentSize, documentMetaOffset, prevDocumentOffset);
 
                     //update the documents_docID file
-                    dumpDocumentsID(documentsID_OutStream, entry);
+                    dumpDocumentsID(documentsID_out, entry);
 
                     // check if a dump of the current partial index is needed
                     totalDocuments++;
                     if (totalDocuments % __CONFIG__.getPartialIndexSize() == 0) {
-                        index.dump();   // dump partial index to appropriate subdirectory
+                        index.dump();
                         id++;
                         index = new Index(__CONFIG__);
                         index.setID(id);
@@ -310,27 +322,22 @@ public class Indexer {
             index.dump();
         }
 
-        documents_OutStream.close();
-        documentsMeta_OutStream.close();
-        documentsID_OutStream.close();
+        documents_out.close();
+        documentsMeta_out.close();
+        documentsID_out.close();
         termFreqWriter.close();
 
         /* calculate avgdl for Okapi BM25 */
         double avgdl = (0.0 + totalDocumentLength) / totalDocuments;
 
-        /* save any info related to this index */
-        __META_INDEX_INFO__ = new HashMap<>();
-        __META_INDEX_INFO__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
-        __META_INDEX_INFO__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
-        __META_INDEX_INFO__.put("articles", String.valueOf(totalDocuments));
-        __META_INDEX_INFO__.put("avgdl", String.valueOf(avgdl));
-        __META_INDEX_INFO__.put("timestamp", Instant.now().toString());
-        __META_INDEX_INFO__.put("pagerank_damping", String.valueOf(__CONFIG__.getPagerankDampingFactor()));
-        __META_INDEX_INFO__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
-        for (Map.Entry<String, String> pair : __META_INDEX_INFO__.entrySet()) {
-            indexMetaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
+        _INDEX_META__.put("articles", String.valueOf(totalDocuments));
+        _INDEX_META__.put("avgdl", String.valueOf(avgdl));
+        _INDEX_META__.put("timestamp", Instant.now().toString());
+
+        for (Map.Entry<String, String> pair : _INDEX_META__.entrySet()) {
+            metaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
         }
-        indexMetaWriter.close();
+        metaWriter.close();
 
         Themis.print("Documents files & partial vocabularies/postings created in " + new Time(System.nanoTime() - startTime) + "\n");
 
@@ -394,7 +401,7 @@ public class Indexer {
                 split = line.split(" ");
                 int df = Integer.parseInt(split[1]);
                 vocabularyWriter.write(split[0] + ' ' + split[1] + ' ' + offset + '\n');
-                offset += df * PostingStruct.SIZE;
+                offset += (long) df * PostingStruct.SIZE;
             }
             vocabularyReader.close();
             vocabularyWriter.close();
@@ -524,7 +531,7 @@ public class Indexer {
         vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + offset + '\n');
 
         //calculate the posting offset of the next term
-        offset += df * PostingStruct.SIZE;
+        offset += (long) df * PostingStruct.SIZE;
 
         equalTerms.clear();
         return offset;
@@ -592,13 +599,13 @@ public class Indexer {
      * returns a new offset which is the sum of the previous offset + the size of the meta info.
      *
      * For each document it stores in the following order:
-     * The int ID of the document (int => 4 bytes) |
-     * The weight (norm) of the Document (double => 8 bytes) |
-     * The max tf in the Document (int => 4 bytes) |
-     * Length of Document (int => 4 bytes). This is the number of terms in the document.idx |
-     * PageRank Score (double => 8 bytes) |
-     * Average author rank (double => 8 bytes) |
-     * Size of the document (int => 4 bytes). This is the size of the entry in the documents.idx |
+     * The int ID of the document (int => 4 bytes)
+     * The weight (norm) of the Document (double => 8 bytes)
+     * The max tf in the Document (int => 4 bytes)
+     * Length of Document (int => 4 bytes). This is the number of terms in the document.idx
+     * PageRank Score (double => 8 bytes)
+     * Average author rank (double => 8 bytes)
+     * Size of the document (int => 4 bytes). This is the size of the entry in the documents.idx
      * Offset to the documents file (long => 8 bytes)
      *
      * PageRank, weight, max tf, average author rank are all initialized to 0 */
@@ -632,18 +639,18 @@ public class Indexer {
      * returns an offset that is the sum of the previous offset + the size of the written document entry.
      *
      * For each entry it stores in the following order:
-     * Year (short => 2 bytes) |
-     * [Title] size (int => 4 bytes) |
-     * [Author_1,Author_2, ...,Author_k] size (int => 4 bytes) |
-     * [AuthorID_1, AuthorID_2, ...,Author_ID_k] size (int => 4 bytes) |
-     * [Journal name] size (short => 2 bytes / UTF-8) |
-     * Title (variable bytes / UTF-8) |
-     * Author_1,Author_2, ...,Author_k (variable bytes / UTF-8) |
-     * AuthorID_1, AuthorID_2, ...,Author_ID_k (variable bytes / ASCII) |
+     * Year (short => 2 bytes)
+     * [Title] size (int => 4 bytes)
+     * [Author_1,Author_2, ...,Author_k] size (int => 4 bytes)
+     * [AuthorID_1, AuthorID_2, ...,Author_ID_k] size (int => 4 bytes)
+     * [Journal name] size (short => 2 bytes / UTF-8)
+     * Title (variable bytes / UTF-8)
+     * Author_1,Author_2, ...,Author_k (variable bytes / UTF-8)
+     * AuthorID_1, AuthorID_2, ...,Author_ID_k (variable bytes / ASCII)
      * Journal name (variable bytes / UTF-8)
      *
      * Authors are separated by a comma
-     * Author ids are also separated with a comma */
+     * Author ids are separated by a comma */
     private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, long offset)
             throws IOException {
         int totalSize = 0;
@@ -735,15 +742,15 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open the required files: documents_meta, doc_tf */
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentMetaBuffers.MODE.WRITE);
+        __DOCMETA_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentMetaBuffers.MODE.WRITE);
         BufferedReader tfReader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
 
-        int totalArticles = Integer.parseInt(__META_INDEX_INFO__.get("articles"));
+        int totalArticles = Integer.parseInt(_INDEX_META__.get("articles"));
         double logArticles = Math.log(totalArticles);
         long offset = 0;
 
-        /* read an entry from the frequencies file and calculate the weight */
+        /* read a line from the doc_tf file and calculate the weight */
         while ((line = tfReader.readLine()) != null) {
             List<String> splitList = ProcessText.splitString(line);
             double weight = 0;
@@ -760,26 +767,23 @@ public class Indexer {
             weight = Math.sqrt(weight) / maxTf;
 
             //update the documents_meta file
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
             buffer.putDouble(weight);
-            buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.MAX_TF_OFFSET);
+            buffer = __DOCMETA_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.MAX_TF_OFFSET);
             buffer.putInt(maxTf);
             offset += DocumentMetaEntry.totalSize;
         }
 
         /* close files */
         tfReader.close();
-        __DOCUMENTS_META_BUFFERS__.close();
-        __DOCUMENTS_META_BUFFERS__ = null;
+        __DOCMETA_BUFFERS__.close();
+        __DOCMETA_BUFFERS__ = null;
 
         Themis.print("VSM weights calculated in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
     /**
-     * Method that indexes the collection that is given in the themis.config
-     * file
-     *
-     * Used for the task of indexing!
+     * Method that indexes the collection that is given in the themis.config file
      *
      * @return
      * @throws IOException
@@ -811,10 +815,23 @@ public class Indexer {
             return false;
         }
 
-        Themis.print(">>> Loading index from " + __INDEX_PATH__ + "\n");
+        Themis.print(">>> Index path: " + __INDEX_PATH__ + "\n");
+
+        //load index meta file
+        _INDEX_META__ = loadMeta();
+        Themis.print("Stemmer: " + _INDEX_META__.get("use_stemmer") + "\n");
+        Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
+
+        if (__CONFIG__.getUseQueryExpansion()) {
+            Themis.print("Default query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
+        }
+        else {
+            Themis.print("Default query expansion model: None\n");
+        }
+        Themis.print("Default retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
+        Themis.print(">>> Loading index...");
 
         //load vocabulary file
-        Themis.print("Loading vocabulary...");
         __VOCABULARY__ = new HashMap<>();
         String line;
         String[] fields;
@@ -826,33 +843,17 @@ public class Indexer {
             __VOCABULARY__.put(fields[0], new VocabularyStruct(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
         }
         vocabularyReader.close();
-        Themis.print("DONE\n");
 
-        //load index meta file
-        Themis.print("Loading meta index file...");
-        __META_INDEX_INFO__ = loadMeta();
-        Themis.print("DONE\n");
-
-        Themis.print("Opening documents, postings files.\n");
         __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
         __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
 
-        Themis.print("Loading document_meta, documents_id files...");
-        __DOCUMENTS_META_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
+        __DOCMETA_BUFFERS__ = new DocumentMetaBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, DocumentBuffers.MODE.READ);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCUMENTS_ID_BUFFERS__ = new DocumentIDBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, DocumentBuffers.MODE.READ);
+        __DOCID_BUFFERS__ = new DocumentIDBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, DocumentBuffers.MODE.READ);
         __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
         __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         Themis.print("DONE\n");
-
-        if (__CONFIG__.getUseQueryExpansion()) {
-            Themis.print("Default query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
-        }
-        else {
-            Themis.print("Default query expansion model: None\n");
-        }
-        Themis.print("Default retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
 
         return true;
     }
@@ -890,16 +891,16 @@ public class Indexer {
             __DOCUMENTS__.close();
             __DOCUMENTS__ = null;
         }
-        if (__DOCUMENTS_META_BUFFERS__ != null) {
-            __DOCUMENTS_META_BUFFERS__.close();
-            __DOCUMENTS_META_BUFFERS__ = null;
+        if (__DOCMETA_BUFFERS__ != null) {
+            __DOCMETA_BUFFERS__.close();
+            __DOCMETA_BUFFERS__ = null;
         }
-        if (__DOCUMENTS_ID_BUFFERS__ != null) {
-            __DOCUMENTS_ID_BUFFERS__.close();
-            __DOCUMENTS_ID_BUFFERS__ = null;
+        if (__DOCID_BUFFERS__ != null) {
+            __DOCID_BUFFERS__.close();
+            __DOCID_BUFFERS__ = null;
         }
         __VOCABULARY__ = null;
-        __META_INDEX_INFO__ = null;
+        _INDEX_META__ = null;
     }
 
     /**
@@ -907,7 +908,7 @@ public class Indexer {
      * @throws IOException
      */
     public void deleteIndex() throws IOException {
-        Themis.print("Deleting previous index...");
+        Themis.print(">>> Deleting previous index...");
         deleteDir(new File(__INDEX_PATH__ + "/"));
         deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
         Themis.print("DONE\n");
@@ -965,7 +966,7 @@ public class Indexer {
             int postingOffset = 0;
             for (int j = 0; j < termValue.get_df(); j++) {
                 long documentMetaOffset = postingBuffer.getLong(postingOffset + PostingStruct.TF_SIZE);
-                ByteBuffer metaBuffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+                ByteBuffer metaBuffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
                 metaBuffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
 
                 //grab information from the documents file
@@ -978,13 +979,19 @@ public class Indexer {
                     __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
                 }
 
+                //read the int doc id from the postings file
                 int intID = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.INTID_OFFSET);
-                ByteBuffer idBuffer = __DOCUMENTS_ID_BUFFERS__.getBufferLong((long) intID * DocumentIDEntry.ID_SIZE);
+
+                //based on the int doc id, find the real doc id in the documents_id file
+                ByteBuffer idBuffer = __DOCID_BUFFERS__.getBufferLong((long) intID * DocumentIDEntry.ID_SIZE);
                 idBuffer.get(__DOCUMENT_ID_ARRAY__, 0 , DocumentIDEntry.totalSize);
                 String docId = new String(__DOCUMENT_ID_ARRAY__, 0, DocumentIDEntry.ID_SIZE, "ASCII");
+
+                //create the docInfo object
                 DocInfo docInfo = new DocInfo(docId, documentMetaOffset);
                 fetchInfo(docInfo, props, gotoDocuments);
                 termDocInfo.add(docInfo);
+
                 postingOffset += PostingStruct.SIZE;
             }
         }
@@ -999,7 +1006,7 @@ public class Indexer {
     public void updateDocInfo(List<DocInfo> docInfos, Set<DocInfo.PROPERTY> props) throws IOException {
         for (DocInfo docInfo : docInfos) {
             long documentMetaOffset = docInfo.getMetaOffset();
-            ByteBuffer buffer = __DOCUMENTS_META_BUFFERS__.getBufferLong(documentMetaOffset);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
             buffer.get(__DOCUMENT_META_ARRAY__);
             boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
                     props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
@@ -1077,7 +1084,7 @@ public class Indexer {
      */
     public boolean loaded() {
         return __VOCABULARY__ != null && __POSTINGS__ != null && __DOCUMENTS__ != null
-                 && __DOCUMENTS_META_BUFFERS__ != null && __META_INDEX_INFO__ != null;
+                && __DOCMETA_BUFFERS__ != null && __DOCID_BUFFERS__ != null && _INDEX_META__ != null;
     }
 
     /**
@@ -1091,32 +1098,6 @@ public class Indexer {
         } else {
             __LOGGER__.error("Index has not been initialized correctly");
             return "";
-        }
-    }
-
-    /**
-     * Returns the total number of articles of this index
-     * @return
-     */
-    public int getTotalArticles() {
-        if (__META_INDEX_INFO__ != null) {
-            return Integer.parseInt(__META_INDEX_INFO__.get("articles"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return 0;
-        }
-    }
-
-    /**
-     * Returns the avgdl used by the okapi bm25 retrieval model
-     * @return
-     */
-    public double getAvgdl() {
-        if (__META_INDEX_INFO__ != null) {
-            return Double.parseDouble(__META_INDEX_INFO__.get("avgdl"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return 0;
         }
     }
 
@@ -1163,12 +1144,39 @@ public class Indexer {
     }
 
     /**
-     * Returns true if stopwords is enabled for this index. Returns null if meta index info file is not loaded.
+     * Returns the total number of articles of this index
+     * @return
+     */
+    public int getTotalArticles() {
+        if (_INDEX_META__ != null) {
+            return Integer.parseInt(_INDEX_META__.get("articles"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return 0;
+        }
+    }
+
+    /**
+     * Returns the avgdl used by the okapi bm25 retrieval model
+     * @return
+     */
+    public double getAvgdl() {
+        if (_INDEX_META__ != null) {
+            return Double.parseDouble(_INDEX_META__.get("avgdl"));
+        } else {
+            __LOGGER__.error("Meta index info file is not loaded!");
+            return 0;
+        }
+    }
+
+    /**
+     * Returns true if stopwords is enabled (reads the index meta file).
+     * Returns null if meta index info file is not loaded.
      * @return
      */
     public Boolean useStopwords() {
-        if (__META_INDEX_INFO__ != null) {
-            return Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stopwords"));
+        if (_INDEX_META__ != null) {
+            return Boolean.parseBoolean(_INDEX_META__.get("use_stopwords"));
         } else {
             __LOGGER__.error("Meta index info file is not loaded!");
             return null;
@@ -1176,12 +1184,13 @@ public class Indexer {
     }
 
     /**
-     * Returns true if stemming is enabled for this index. Returns null if meta index info file is not loaded.
+     * Returns true if stemming is enabled (reads the index meta file).
+     * Returns null if meta index info file is not loaded.
      * @return
      */
     public Boolean useStemmer() {
-        if (__META_INDEX_INFO__ != null) {
-            return Boolean.parseBoolean(__META_INDEX_INFO__.get("use_stemmer"));
+        if (_INDEX_META__ != null) {
+            return Boolean.parseBoolean(_INDEX_META__.get("use_stemmer"));
         } else {
             __LOGGER__.error("Meta index info file is not loaded!");
             return null;
@@ -1189,12 +1198,12 @@ public class Indexer {
     }
 
     /**
-     * Returns the timestamp of the loaded index
+     * Returns the timestamp of the index (reads the index meta file).
      * @return
      */
     public String getIndexTimestamp() {
-        if (__META_INDEX_INFO__ != null) {
-            return __META_INDEX_INFO__.get("timestamp");
+        if (_INDEX_META__ != null) {
+            return _INDEX_META__.get("timestamp");
         } else {
             __LOGGER__.error("Meta index info file is not loaded!");
             return null;

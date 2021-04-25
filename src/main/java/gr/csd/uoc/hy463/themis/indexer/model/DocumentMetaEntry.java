@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Class that holds information about a document meta entry in the documents_meta file.
+ * Class that holds information about an entry in the documents_meta file.
  */
 public class DocumentMetaEntry {
     public static int INTID_SIZE = 4;

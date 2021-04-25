@@ -30,8 +30,8 @@ public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private Search _search;
     private Config __CONFIG__;
-    private String __JUDGEMENTS_FILENAME__;
-    private String __EVALUATION_FILENAME__;
+    private String __JUDGEMENTS_PATH__;
+    private String __EVALUATION_PATH__;
     private ARetrievalModel.MODEL _model;
     private QueryExpansion.DICTIONARY _dictionary;
 
@@ -49,21 +49,11 @@ public class themisEval {
      * @throws QueryExpansionException
      */
     public void start() throws SearchNoIndexException, IOException, QueryExpansionException {
-        if (evaluateInit(_model, _dictionary)) {
-            evaluatePrivate();
-        }
-    }
-
-     /* Sets the search model to the specified model, the query expansion dictionary to the specified
-     * dictionary, and the retrieved document properties to an empty set.
-     * Also sets the file name of the evaluation results based on the specified model and dictionary */
-    private boolean evaluateInit(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
-        __JUDGEMENTS_FILENAME__ = __CONFIG__.getJudgmentsFileName();
-        String __INDEX_PATH__ = __CONFIG__.getIndexPath();
-        if (!(new File(__JUDGEMENTS_FILENAME__).exists())) {
+        __JUDGEMENTS_PATH__ = __CONFIG__.getJudgmentsPath();
+        if (!(new File(__JUDGEMENTS_PATH__).exists())) {
             __LOGGER__.error("No judgements file found! Evaluation failed");
             Themis.print("No judgements file found! Evaluation failed\n");
-            return false;
+            return;
         }
         String evaluationFilename = __CONFIG__.getEvaluationFilename();
         String timestamp = Instant.now().toString().replace(':', '.');
@@ -74,34 +64,33 @@ public class themisEval {
         else {
             evaluationFilename = evaluationFilename + '_' + timestamp;
         }
-        _search.setRetrievalModel(model);
-        _search.setExpansionDictionary(dictionary);
+        _search.setRetrievalModel(_model);
+        _search.setExpansionDictionary(_dictionary);
         _search.setDocumentProperties(new HashSet<>());
-        __EVALUATION_FILENAME__ = __INDEX_PATH__ + "/" + evaluationFilename;
-        return true;
-    }
+        __EVALUATION_PATH__ = __CONFIG__.getIndexPath() + "/" + evaluationFilename;
 
-    /* Runs the evaluation based on the configured parameters */
-    private void evaluatePrivate() throws IOException, QueryExpansionException, SearchNoIndexException {
-        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILENAME__), "UTF-8"));
-        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILENAME__), "UTF-8"));
+        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_PATH__), "UTF-8"));
+        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_PATH__), "UTF-8"));
         Themis.print(">>> Starting evaluation\n");
-        Themis.print("Saving evaluation results in " + __EVALUATION_FILENAME__ + "\n");
-        Themis.print("Index timestamp: " + _search.getIndexTimestamp() + "\n");
+        Themis.print("Saving evaluation results in " + __EVALUATION_PATH__ + "\n");
         Themis.print(">>> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
-        Themis.print("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
-        Themis.print("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n\n");
+        Themis.print("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n\n");
+        evaluationWriter.write("Index path: " + __CONFIG__.getIndexPath() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write(">>> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         evaluationWriter.write("Retrieval model weight: " + __CONFIG__.getRetrievalModelWeight() + "\n");
-        evaluationWriter.write("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n");
-        evaluationWriter.write("Pagerank authors weight: " + __CONFIG__.getPagerankAuthorsWeight() + "\n");
+        evaluationWriter.write("Pagerank citations weight: " + __CONFIG__.getPagerankPublicationsWeight() + "\n\n");
 
+        evaluate(judgementsReader, evaluationWriter);
+    }
+
+    /* Runs the evaluation based on the configured parameters */
+    private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter) throws IOException, QueryExpansionException, SearchNoIndexException {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
@@ -129,7 +118,7 @@ public class themisEval {
             }
 
             //perform a search
-            evaluationWriter.write("\n>>> Search query: " + query + "\n");
+            evaluationWriter.write(">>> Search query: " + query + "\n");
             Themis.print("> Search query: " + query + "\n");
             long startTime = System.nanoTime();
             List<Pair<DocInfo, Double>> results = _search.search(query);
@@ -153,7 +142,7 @@ public class themisEval {
             ndcg = (Double.isNaN(ndcg)) ? Double.NaN : ndcg;
             ndcgs.add(ndcg);
             evaluationWriter.write("Average precision: " + avep + "\n");
-            evaluationWriter.write("nDCG: " + ndcg + "\n");
+            evaluationWriter.write("nDCG: " + ndcg + "\n\n");
             evaluationWriter.flush();
         }
 

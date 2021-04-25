@@ -99,7 +99,7 @@ public class Index {
      * the total number of frequencies.
      *
      * @param entryWords The map of term frequencies
-     * @param docOffset The offset to the document files
+     * @param docOffset The offset to the document_meta file
      * @return
      * @throws IOException
      */

@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Class that holds information about a document entry in the documents file.
+ * Class that holds information about an entry in the documents file.
  */
 public class DocumentEntry {
     public static int YEAR_SIZE = 2;
