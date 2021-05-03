@@ -19,11 +19,14 @@ import java.nio.file.Files;
 import java.util.*;
 
 public class Pagerank {
-    private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private Indexer _indexer;
+    private String __GRAPH_PATH__;
+    private Map<String, String> _INDEX_META__ = null;
 
-    public Pagerank(Indexer indexer) {
+    public Pagerank(Indexer indexer) throws IOException {
         _indexer = indexer;
+        __GRAPH_PATH__ = _indexer.getIndexPath() + "graph";
+        _INDEX_META__ = indexer.loadMeta();
     }
 
     /**
@@ -33,36 +36,33 @@ public class Pagerank {
     public void citationsPagerank() throws IOException {
         Themis.print(">>> Calculating Pagerank\n");
         if (!_indexer.hasIndex()) {
-            __LOGGER__.error("Index is not constructed correctly!");
-            Themis.print("Index is not constructed correctly!\n");
             return;
         }
         long startTime = System.nanoTime();
         Themis.print("> Constructing graph\n");
-        String graphFileName = _indexer.getConfig().getIndexPath() + "/graph";
-        int documents = dumpCitations(graphFileName);
-        PagerankNode[] graph = initCitationsGraph(documents, graphFileName);
+        dumpCitations();
+        PagerankNode[] graph = initCitationsGraph(Integer.parseInt(_INDEX_META__.get("articles")), __GRAPH_PATH__);
         Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
         startTime = System.nanoTime();
         Themis.print("> Iterating\n");
         double[] scores = computeCitationsPagerank(graph);
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
         writeCitationsScores(scores);
-        Files.deleteIfExists(new File(graphFileName).toPath());
+        Files.deleteIfExists(new File(__GRAPH_PATH__).toPath());
     }
 
     /* Creates a temp file 'graph' in the Index directory. Entry N of this file corresponds to the Nth document
     that was parsed and it contains the number of its Out citations followed by a list of integer Ids that correspond to
     the Ids of its In citations. A document that has Id N in this file corresponds to entry N (starting from 0).
     Returns the total number of citations */
-    private int dumpCitations(String graphFileName) throws IOException {
-        File folder = new File(_indexer.getConfig().getDatasetPath());
+    private void dumpCitations() throws IOException {
+        File folder = new File(_indexer.getDataSetPath());
         File[] files = folder.listFiles();
         if (files == null) {
-            return 0;
+            return;
         }
 
-        String documentsIDPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsIDFileName();
+        String documentsIDPath = _indexer.getDocumentsIDFilePath();
         DocBuffers documentIDBuffers = new DocBuffers(documentsIDPath, MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
         byte[] docIdArray = new byte[DocumentIDEntry.ID_SIZE];
 
@@ -71,8 +71,7 @@ public class Pagerank {
         size (int) -> this is the size of the rest of the data in this entry |
         number of Out citations (int) |
         In citation Id 1 (int) | in citation Id 2 (int) ... */
-        BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(graphFileName, "rw").getFD()));
+        BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__GRAPH_PATH__, "rw").getFD()));
 
         // sort the files so that we parse them in a specific order
         List<File> corpus = new ArrayList<>(files.length);
@@ -142,8 +141,6 @@ public class Pagerank {
         graphWriter.close();
         documentIDBuffers.close();
         documentIDBuffers = null;
-
-        return documents;
     }
 
     /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
@@ -273,7 +270,7 @@ public class Pagerank {
     /* writes the citation scores to the documents_meta file */
     private void writeCitationsScores(double[] scores) throws IOException {
         long offset = 0;
-        String documentsMetaPath = _indexer.getConfig().getIndexPath() + "/" + _indexer.getConfig().getDocumentsMetaFileName();
+        String documentsMetaPath = _indexer.getDocumentsMetaFilePath();
         DocBuffers documentMetaBuffers = new DocBuffers(documentsMetaPath, MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
 
         for (int i = 0; i < scores.length; i++) {

@@ -27,7 +27,7 @@ public class Config {
         if (input != null) {
             __PROP__.load(input);
         } else {
-            __LOGGER__.error("property file '" + propFileName + "' not found in the classpath");
+            __LOGGER__.error("config file '" + propFileName + "' not found in the classpath");
         }
     }
 
@@ -199,24 +199,6 @@ public class Config {
     }
 
     /**
-     * Returns if we should use the titles
-     *
-     * @return
-     */
-    public boolean getUseTitles() {
-        return Boolean.parseBoolean(__PROP__.getProperty("TITLES_ENABLED"));
-    }
-
-    /**
-     * Returns the path to the compressed glove model
-     *
-     * @return
-     */
-    public String getTitlesFileName() {
-        return __PROP__.getProperty("TITLES_PATH");
-    }
-
-    /**
      * number of max number of files per each partial index
      *
      * @return
@@ -339,5 +321,6 @@ public class Config {
 
         return bytes;
     }
+
 
 }

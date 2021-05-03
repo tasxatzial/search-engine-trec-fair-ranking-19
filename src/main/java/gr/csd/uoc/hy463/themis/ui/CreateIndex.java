@@ -3,8 +3,6 @@ package gr.csd.uoc.hy463.themis.ui;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This class runs the indexers

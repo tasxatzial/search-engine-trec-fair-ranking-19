@@ -2,7 +2,6 @@ package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFileBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
@@ -44,7 +43,6 @@ public class Indexer {
 
     // The file path of indexes
     private String __INDEX_PATH__ = null;
-    private String __INDEX_TMP_PATH__ = null;
 
     // Filenames of indexes
     private String __VOCABULARY_FILENAME__ = null;
@@ -96,33 +94,13 @@ public class Indexer {
      * @throws ClassNotFoundException
      */
     public Indexer() throws IOException {
-        __CONFIG__ = new Config();  // reads info from themis.config file
-        init();
-    }
-
-    /**
-     * Constructor that gets a current Config instance
-     *
-     * @param config
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    public Indexer(Config config) {
-        this.__CONFIG__ = config;  // reads info from themis.config file
-        init();
-    }
-
-    /**
-     * Initialize things
-     */
-    private void init() {
+        this.__CONFIG__ = new Config();  // reads info from themis.config file
+        __INDEX_PATH__ = getIndexPath();
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __DOCUMENTS_META_FILENAME__ = __CONFIG__.getDocumentsMetaFileName();
         __DOCUMENTS_ID_FILENAME__ = __CONFIG__.getDocumentsIDFileName();
-        __INDEX_PATH__ = __CONFIG__.getIndexPath();
-        __INDEX_TMP_PATH__ = __CONFIG__.getIndexTmpPath();
         __META_FILENAME__ = __CONFIG__.getMetaFileName();
     }
 
@@ -134,44 +112,56 @@ public class Indexer {
      * @return
      */
     public boolean hasIndex() {
-        // Check if path exists
-        File file = new File(__INDEX_PATH__);
-        if (!file.exists() || !file.isDirectory()) {
-            __LOGGER__.error(__INDEX_PATH__ + " directory does not exist!");
-            return false;
-        }
+        File file;
+
         // Check if index files exist
-        file = new File(__INDEX_PATH__ + __VOCABULARY_FILENAME__);
+        file = new File(getVocabularyPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
             return false;
         }
-        file = new File(__INDEX_PATH__ + __POSTINGS_FILENAME__);
+        file = new File(getPostingsPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__);
             return false;
         }
-        file = new File(__INDEX_PATH__ + __DOCUMENTS_FILENAME__);
+        file = new File(getDocumentsFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__);
             return false;
         }
-        file = new File(__INDEX_PATH__ + __DOCUMENTS_ID_FILENAME__);
+        file = new File(getDocumentsIDFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__);
             return false;
         }
-        file = new File(__INDEX_PATH__ + __DOCUMENTS_META_FILENAME__);
+        file = new File(getDocumentsMetaFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__);
             return false;
         }
-        file = new File(__INDEX_PATH__ + __META_FILENAME__);
+        file = new File(getMetaPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
+            Themis.print(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
             return false;
         }
         return true;
+    }
+
+    /**
+     * Method that indexes the collection specified in the DATASET_PATH prop in the themis.config file
+     *
+     * @return
+     * @throws IOException
+     */
+    public void index() throws IOException {
+        index(getDataSetPath());
     }
 
     /**
@@ -186,16 +176,17 @@ public class Indexer {
      * @return
      * @throws IOException
      */
-    public boolean index(String path) throws IOException {
+    public void index(String path) throws IOException {
         if (!isIndexDirEmpty()) {
-            Themis.print("Previous index found. Aborting...\n");
-            __LOGGER__.error("Previous index found. Aborting...");
-            return false;
+            Themis.print("Previous index found. Please delete it first.\n");
+            __LOGGER__.error("Previous index found. Please delete it first.");
+            return;
         }
 
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
+        String indexTmpPath = getIndexTmpPath();
         int totalDocuments = 0;
         long totalDocumentLength = 0;
         long documentOffset = 0;
@@ -205,8 +196,8 @@ public class Indexer {
         File folder = new File(path);
         File[] files = folder.listFiles();
         if (files == null || files.length == 0) {
-            Themis.print("No dataset files found\n");
-            return true;
+            Themis.print("No dataset files found in " + path + "\n");
+            return;
         }
 
         /* save any info related to this index */
@@ -234,27 +225,26 @@ public class Indexer {
 
         /* create index folders */
         Files.createDirectories(Paths.get(__INDEX_PATH__));
-        Files.createDirectories(Paths.get(__INDEX_TMP_PATH__));
+        Files.createDirectories(Paths.get(indexTmpPath));
 
         /* the index metadata file */
-        BufferedWriter metaWriter = new BufferedWriter(new FileWriter(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        BufferedWriter metaWriter = new BufferedWriter(new FileWriter(getMetaPath()));
 
         /* The documents file for writing document information */
-        RandomAccessFile documents = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "rw");
+        RandomAccessFile documents = new RandomAccessFile(getDocumentsFilePath(), "rw");
         BufferedOutputStream documents_out = new BufferedOutputStream(new FileOutputStream(documents.getFD()));
 
         /* The documents meta file for writing document meta information */
-        RandomAccessFile documentsMeta = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, "rw");
+        RandomAccessFile documentsMeta = new RandomAccessFile(getDocumentsMetaFilePath(), "rw");
         BufferedOutputStream documentsMeta_out = new BufferedOutputStream(new FileOutputStream(documentsMeta.getFD()));
 
         /* The documents meta file for writing document docID information */
-        RandomAccessFile documentsID = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, "rw");
+        RandomAccessFile documentsID = new RandomAccessFile(getDocumentsIDFilePath(), "rw");
         BufferedOutputStream documentsID_out = new BufferedOutputStream(new FileOutputStream(documentsID.getFD()));
 
         /* Temp file that stores the <term, TF> of every term that appears in
         each document (one line per document). Will be used for fast calculation of VSM weights */
-        BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
+        BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTfPath()), "UTF-8"));
 
         // Use a linked list to keep the partial indexes ids
         List<Integer> partialIndexes = new LinkedList<>();
@@ -345,8 +335,7 @@ public class Indexer {
         mergeVocabularies(partialIndexes);
         try {
             for (Integer partialIndex : partialIndexes) {
-                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
-                deleteDir(new File(partialIndexPath + "/" + __VOCABULARY_FILENAME__));
+                deleteDir(new File(getPartialVocabularyPath(partialIndex)));
             }
         } catch (IOException e) {
             Themis.print("Error deleting partial vocabularies\n");
@@ -354,19 +343,18 @@ public class Indexer {
 
         /* calculate VSM weights, update the documents file, and delete doc_tf file */
         updateVSMweights();
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/doc_tf"));
+        deleteDir(new File(getDocTfPath()));
 
         /* merge the postings and delete them, also delete the term_df file */
         mergePostings(partialIndexes);
         try {
             for (Integer partialIndex : partialIndexes) {
-                String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndex;
-                deleteDir(new File(partialIndexPath + "/" + __POSTINGS_FILENAME__));
+                deleteDir(new File(getPartialPostingPath(partialIndex)));
             }
         } catch (IOException e) {
             Themis.print("Error deleting partial postings\n");
         }
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/term_df"));
+        deleteDir(new File(getTermDfPath()));
 
         /* compute the citations pagerank scores, update the documents file */
         Pagerank pagerank = new Pagerank(this);
@@ -374,13 +362,12 @@ public class Indexer {
 
         /* finally delete the tmp index */
         try {
-            deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
+            deleteDir(new File(getIndexTmpPath()));
         } catch (IOException e) {
             Themis.print("Error deleting tmp index\n");
         }
 
         Themis.print(">>> End of indexing\n");
-        return false;
     }
 
     /* Merges the partial vocabularies and creates the final vocabulary.idx */
@@ -390,10 +377,9 @@ public class Indexer {
         long startTime =  System.nanoTime();
         Themis.print(">>> Start Merging of partial vocabularies\n");
         if (partialIndexes.size() == 1) {
-            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0) + "/" + __VOCABULARY_FILENAME__;
-            String finalIndexPath = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
-            BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(finalIndexPath), "UTF-8"));
-            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(partialIndexPath), "UTF-8"));
+            String partialVocabularyPath = getPartialVocabularyPath(partialIndexes.get(0));
+            BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
+            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
             String line;
             String[] split;
             long offset = 0;
@@ -418,17 +404,14 @@ public class Indexer {
         /* the partial vocabularies */
         BufferedReader[] vocabularyReader = new BufferedReader[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
-            String vocabularyPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(i) + "/" + __VOCABULARY_FILENAME__;
-            vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(vocabularyPath), "UTF-8"));
+            String partialVocabularyPath = getPartialVocabularyPath(partialIndexes.get(i));
+            vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
         }
 
         /* the final vocabulary file */
-        String vocabularyName = __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
-        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(vocabularyName), "UTF-8"));
+        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
 
-        BufferedWriter termDfWriter = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(__INDEX_TMP_PATH__ + "/term_df"), "ASCII"));
+        BufferedWriter termDfWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getTermDfPath()), "ASCII"));
 
         /* the previous lex min word */
         String prevMinTerm = "";
@@ -510,8 +493,8 @@ public class Indexer {
     /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
     vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
     all (partial index id, df) for each term to term_df file that will be used during the merging of postings */
-    private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter,
-                                BufferedWriter termDfWriter, long offset) throws IOException {
+    private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long offset)
+            throws IOException {
         int df = 0;
 
         //sort based on the partial index id. This ensures that postings will be written in the final
@@ -544,10 +527,8 @@ public class Indexer {
         long startTime =  System.nanoTime();
         Themis.print(">>> Start Merging of partial postings\n");
         if (partialIndexes.size() == 1) {
-            String partialIndexPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(0);
-            Files.move(Paths.get(partialIndexPath + "/" + __POSTINGS_FILENAME__),
-                    Paths.get(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__),
-                    StandardCopyOption.REPLACE_EXISTING);
+            String partialPostingPath = getPartialPostingPath(partialIndexes.get(0));
+            Files.move(Paths.get(partialPostingPath), Paths.get(getPostingsPath()), StandardCopyOption.REPLACE_EXISTING);
         } else {
             combinePartialPostings(partialIndexes);
         }
@@ -560,19 +541,15 @@ public class Indexer {
         /* the partial postings */
         BufferedInputStream[] postingsStream = new BufferedInputStream[partialIndexes.size()];
         for (int i = 0; i < partialIndexes.size(); i++) {
-            String postingPath = __INDEX_TMP_PATH__ + "/" + partialIndexes.get(i) + "/" + __POSTINGS_FILENAME__;
-            postingsStream[i] = new BufferedInputStream(new FileInputStream
-                    (new RandomAccessFile(postingPath, "rw").getFD()));
+            String partialPostingPath = getPartialPostingPath(partialIndexes.get(i));
+            postingsStream[i] = new BufferedInputStream(new FileInputStream(new RandomAccessFile(partialPostingPath, "rw").getFD()));
         }
 
         /* the final posting file */
-        String postingName = __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
-        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream
-                (new RandomAccessFile(postingName, "rw").getFD()));
+        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(getPostingsPath(), "rw").getFD()));
 
         /* the file with the (partial index id, df) for each term */
-        BufferedReader termDfReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_TMP_PATH__ + "/term_df"), "ASCII"));
+        BufferedReader termDfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getTermDfPath()), "ASCII"));
 
         /* read each line of the file that has the (partial index id, df). Each line corresponds to
         the same line in the final vocabulary file, thus both lines refer to the same term */
@@ -609,8 +586,8 @@ public class Indexer {
      * Offset to the documents file (long => 8 bytes)
      *
      * PageRank, weight, max tf, average author rank are all initialized to 0 */
-    private long dumpDocumentsMeta(BufferedOutputStream out, int intID, int entryLength,
-                                   int entrySize, long documentMetaOffset, long documentOffset) throws IOException {
+    private long dumpDocumentsMeta(BufferedOutputStream out, int intID, int entryLength, int entrySize, long documentMetaOffset, long documentOffset)
+            throws IOException {
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.INTID_OFFSET, intID);
         __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
@@ -730,8 +707,7 @@ public class Indexer {
         Themis.print(">>> Calculating VSM weights\n");
 
         /* load the vocabulary terms */
-        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
         Map<String, Integer> vocabulary = new HashMap<>();
         String line;
         String[] split;
@@ -742,9 +718,8 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open the required files: documents_meta, doc_tf */
-        __DOCMETA_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
-        BufferedReader tfReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_TMP_PATH__ + "/doc_tf"), "UTF-8"));
+        __DOCMETA_BUFFERS__ = new DocBuffers(getDocumentsMetaFilePath(), MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
+        BufferedReader tfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTfPath()), "UTF-8"));
 
         int totalArticles = Integer.parseInt(_INDEX_META__.get("articles"));
         double logArticles = Math.log(totalArticles);
@@ -783,23 +758,6 @@ public class Indexer {
     }
 
     /**
-     * Method that indexes the collection that is given in the themis.config file
-     *
-     * @return
-     * @throws IOException
-     */
-    public boolean index() throws IOException {
-        String collectionPath = __CONFIG__.getDatasetPath();
-        if (collectionPath != null) {
-            return index(collectionPath);
-        } else {
-            __LOGGER__.error("DATASET_PATH not set in themis.config!");
-            Themis.print("DATASET_PATH not set in themis.config!\n");
-            return false;
-        }
-    }
-
-    /**
      * Method responsible for loading vocabulary file to memory and also opening
      * RAF files to postings and documents, ready to seek
      *
@@ -810,8 +768,6 @@ public class Indexer {
      */
     public boolean load() throws IOException {
         if (!hasIndex()) {
-            __LOGGER__.error("Index is not constructed correctly!");
-            Themis.print("Index is not constructed correctly!\n");
             return false;
         }
 
@@ -819,7 +775,7 @@ public class Indexer {
 
         //load index meta file
         _INDEX_META__ = loadMeta();
-        Themis.print("Stemmer: " + _INDEX_META__.get("use_stemmer") + "\n");
+        Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
         Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
 
         if (__CONFIG__.getUseQueryExpansion()) {
@@ -836,21 +792,20 @@ public class Indexer {
         String line;
         String[] fields;
 
-        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(__INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__), "UTF-8"));
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
         while ((line = vocabularyReader.readLine()) != null) {
             fields = line.split(" ");
             __VOCABULARY__.put(fields[0], new VocabularyStruct(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
         }
         vocabularyReader.close();
 
-        __POSTINGS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __POSTINGS_FILENAME__, "r");
-        __DOCUMENTS__ = new RandomAccessFile(__INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__, "r");
+        __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
+        __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
 
-        __DOCMETA_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__, MemBuffers.MODE.READ, DocumentMetaEntry.totalSize);
+        __DOCMETA_BUFFERS__ = new DocBuffers(getDocumentsMetaFilePath(), MemBuffers.MODE.READ, DocumentMetaEntry.totalSize);
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCID_BUFFERS__ = new DocBuffers(__INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__, MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
+        __DOCID_BUFFERS__ = new DocBuffers(getDocumentsIDFilePath(), MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
         __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
         __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         Themis.print("DONE\n");
@@ -865,11 +820,9 @@ public class Indexer {
      */
     public Map<String, String> loadMeta() throws IOException {
         if (!hasIndex()) {
-            __LOGGER__.error("Index is not constructed correctly!");
-            Themis.print("Index is not constructed correctly!\n");
             return null;
         }
-        BufferedReader indexMetaReader = new BufferedReader(new FileReader(__INDEX_PATH__ + "/" + __META_FILENAME__));
+        BufferedReader indexMetaReader = new BufferedReader(new FileReader(getMetaPath()));
         Map<String, String> meta = new HashMap<>();
         String[] split;
         String line;
@@ -909,8 +862,8 @@ public class Indexer {
      */
     public void deleteIndex() throws IOException {
         Themis.print(">>> Deleting previous index...");
-        deleteDir(new File(__INDEX_PATH__ + "/"));
-        deleteDir(new File(__INDEX_TMP_PATH__ + "/"));
+        deleteDir(new File(getIndexPath()));
+        deleteDir(new File(getIndexTmpPath()));
         Themis.print("DONE\n");
     }
 
@@ -924,7 +877,7 @@ public class Indexer {
         if (fileList != null && fileList.length != 0) {
             return false;
         }
-        file = new File(__INDEX_TMP_PATH__);
+        file = new File(getIndexTmpPath());
         fileList = file.listFiles();
         return fileList == null || fileList.length == 0;
     }
@@ -1088,20 +1041,6 @@ public class Indexer {
     }
 
     /**
-     * Get the path of index as set in themis.config file
-     *
-     * @return
-     */
-    public String getIndexDirectory() {
-        if (__CONFIG__ != null) {
-            return __INDEX_PATH__;
-        } else {
-            __LOGGER__.error("Index has not been initialized correctly");
-            return "";
-        }
-    }
-
-    /**
      * Returns an array of the document frequencies (df) for each term in the specified list.
      * @param query
      * @return
@@ -1170,7 +1109,7 @@ public class Indexer {
     }
 
     /**
-     * Returns true if stopwords is enabled (reads the index meta file).
+     * Returns true if stopwords is enabled.
      * Returns null if meta index info file is not loaded.
      * @return
      */
@@ -1184,7 +1123,7 @@ public class Indexer {
     }
 
     /**
-     * Returns true if stemming is enabled (reads the index meta file).
+     * Returns true if stemming is enabled.
      * Returns null if meta index info file is not loaded.
      * @return
      */
@@ -1198,7 +1137,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the timestamp of the index (reads the index meta file).
+     * Returns the timestamp of the index.
      * @return
      */
     public String getIndexTimestamp() {
@@ -1216,5 +1155,124 @@ public class Indexer {
      */
     public Config getConfig() {
         return __CONFIG__;
+    }
+
+    /**
+     * Returns the full path of the vocabulary file of the index
+     * @return
+     */
+    public String getVocabularyPath() {
+        return __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the postings file of the index
+     * @return
+     */
+    public String getPostingsPath() {
+        return __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the documents file of the index
+     * @return
+     */
+    public String getDocumentsFilePath() {
+        return __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the documents meta file of the index
+     * @return
+     */
+    public String getDocumentsMetaFilePath() {
+        return __INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the documents ID file of the index
+     * @return
+     */
+    public String getDocumentsIDFilePath() {
+        return __INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the meta file of the index
+     * @return
+     */
+    public String getMetaPath() {
+        return __INDEX_PATH__ + "/" + __META_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the term_df tmp file that is created during the indexing process
+     * @return
+     */
+    private String getTermDfPath() {
+        return getIndexTmpPath() + "term_df";
+    }
+
+    /**
+     * Returns the full path of the doc_df tmp file that is created during the indexing process
+     * @return
+     */
+    private String getDocTfPath() {
+        return getIndexTmpPath() + "doc_tf";
+    }
+
+    /**
+     * Returns the full path of the partial index folder specified by the given index
+     * @param index
+     * @return
+     */
+    private String getPartialIndexPath(int index) {
+        return getIndexTmpPath() + index + "/";
+    }
+
+    /**
+     * Returns the full path of the postings file found inside the partial index folder specified
+     * by the given index
+     *
+     * @param index
+     * @return
+     */
+    private String getPartialPostingPath(int index) {
+        return getPartialIndexPath(index) + __POSTINGS_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the vocabulary file found inside the partial index folder specified
+     * by the given index
+     *
+     * @param index
+     * @return
+     */
+    private String getPartialVocabularyPath(int index) {
+        return getPartialIndexPath(index) + __VOCABULARY_FILENAME__;
+    }
+
+    /**
+     * Returns the full path of the index
+     * @return
+     */
+    public String getIndexPath() {
+        return __CONFIG__.getIndexPath() + "/";
+    }
+
+    /**
+     * Returns the full path of the data set files of the collection
+     * @return
+     */
+    public String getDataSetPath() {
+        return __CONFIG__.getDatasetPath() + "/";
+    }
+
+    /**
+     * Returns the full path of the partial index folder that is created during the indexing process
+     * @return
+     */
+    private String getIndexTmpPath() {
+        return __CONFIG__.getIndexTmpPath() + "/";
     }
 }
