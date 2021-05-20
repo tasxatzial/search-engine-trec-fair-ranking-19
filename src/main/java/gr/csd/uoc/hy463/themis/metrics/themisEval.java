@@ -187,7 +187,7 @@ public class themisEval {
     }
 
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
-    private static double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) {
+    private double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, SearchNoIndexException {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -202,7 +202,7 @@ public class themisEval {
             return Double.NaN;
         }
         for (Pair<DocInfo, Double> rankedDocument : results) {
-            String docId = rankedDocument.getL().getId();
+            String docId = _search.getDocID(rankedDocument.getL().getId());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -217,48 +217,8 @@ public class themisEval {
         return avep;
     }
 
-    /* calculates the bpref given a ranked list of results and a map of (docId, binary relevance value)
-    private static double computeBpref(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
-        double bpref = 0;
-        int knownRelevantDocuments = 0;
-        int knownIrrelevantDocuments = 0;
-        int irrelevantDocuments = 0;
-
-        for (Long relevance : relevanceMap.values()) {
-            if (relevance == 1) {
-                knownRelevantDocuments++;
-            }
-        }
-        knownIrrelevantDocuments = relevanceMap.size() - knownRelevantDocuments;
-
-        if (knownIrrelevantDocuments < knownRelevantDocuments) {
-            bpref = computeBpref10(results, relevanceMap);
-        }
-        else {
-            for (Pair<Object, Double> result : results) {
-                String docId = result.getL().getId();
-                Long isJudged = relevanceMap.get(docId);
-                if (isJudged != null) {
-                    if (isJudged == 1) {
-                        bpref += 1 - (0.0 + irrelevantDocuments) / knownIrrelevantDocuments;
-                    } else {
-                        irrelevantDocuments++;
-                    }
-                }
-            }
-            bpref /= knownRelevantDocuments;
-        }
-
-        return bpref;
-    }
-
-    calculates the bpref10 given a ranked list of results and a map of (docId, binary relevance value)
-    private static double computeBpref10(List<Pair<Object, Double>> results, Map<String, Long> relevanceMap) {
-        return 0;
-    }*/
-
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private static double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) {
+    private double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, SearchNoIndexException {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;
@@ -274,7 +234,7 @@ public class themisEval {
             return Double.NaN;
         }
         for (Pair<DocInfo, Double> result : results) {
-            String docId = ((DocInfo) result.getL()).getId();
+            String docId = _search.getDocID(result.getL().getId());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;

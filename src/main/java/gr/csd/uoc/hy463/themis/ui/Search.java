@@ -18,6 +18,7 @@ import gr.csd.uoc.hy463.themis.ui.Exceptions.SearchNoIndexException;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -89,7 +90,7 @@ public class Search {
         if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
             _model = new VSM(_indexer);
         }
-        else if (model == ARetrievalModel.MODEL.BM25 && !(_model instanceof OkapiBM25)) {
+        else if (model == ARetrievalModel.MODEL.OKAPI && !(_model instanceof OkapiBM25)) {
             _model = new OkapiBM25(_indexer);
         }
         else if (model == ARetrievalModel.MODEL.EXISTENTIAL && !(_model instanceof Existential)) {
@@ -106,7 +107,7 @@ public class Search {
             return ARetrievalModel.MODEL.VSM;
         }
         if (_model instanceof OkapiBM25) {
-            return ARetrievalModel.MODEL.BM25;
+            return ARetrievalModel.MODEL.OKAPI;
         }
         return ARetrievalModel.MODEL.EXISTENTIAL;
     }
@@ -165,6 +166,13 @@ public class Search {
             throw new SearchNoIndexException();
         }
         _props = props;
+    }
+
+    public String getDocID(int intId) throws SearchNoIndexException, UnsupportedEncodingException {
+        if (!isIndexLoaded()) {
+            throw new SearchNoIndexException();
+        }
+        return _indexer.getDocID(intId);
     }
 
     /**
@@ -252,14 +260,24 @@ public class Search {
             }
         }
 
-        return _model.getRankedResults(finalQuery, _props, endResult);
+        List<Pair<DocInfo, Double>> result = _model.getRankedResults(finalQuery, endResult);
+        _indexer.updateDocInfo(result, _props);
+        return result;
+    }
+
+    /**
+     * Returns the total number of results of the last query.
+     * @return
+     */
+    public int getTotalResults() {
+        return _model.getTotalResults();
     }
 
     /**
      * Prints a list of results in decreasing ranking order.
      * @param searchResults
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults) {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults) throws UnsupportedEncodingException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
 
@@ -270,7 +288,7 @@ public class Search {
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) throws UnsupportedEncodingException {
         if (searchResults.isEmpty()) {
             return;
         }
@@ -288,11 +306,11 @@ public class Search {
 
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
-            DocInfo docInfo = (DocInfo) searchResults.get(i).getL();
+            DocInfo docInfo = searchResults.get(i).getL();
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");
-            Themis.print("DOC_ID: " + docInfo.getId() + "\n");
+            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.getId()) + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 if (docInfo.hasProperty(docInfoProp)) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");

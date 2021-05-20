@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis.retrieval.models;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+import gr.csd.uoc.hy463.themis.retrieval.model.Posting;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
@@ -15,38 +16,42 @@ import java.util.*;
  * relevant and have a score 1.0
  */
 public class Existential extends ARetrievalModel {
+    boolean[] valid;
+
     public Existential(Indexer index) {
         super(index);
-    }
-
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props) throws IOException {
-        return getRankedResults(query, props, Integer.MAX_VALUE);
+        valid = new boolean[totalArticles];
     }
 
     @Override
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, Set<DocInfo.PROPERTY> props, int endDoc) throws IOException {
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException {
         List<Pair<DocInfo, Double>> results = new ArrayList<>();
+        totalResults = 0;
+
+        for (int i = 0; i < totalArticles; i++) {
+            valid[i] = false;
+        }
 
         //merge weights of the same terms
         query = mergeTerms(query);
 
-        //get the relevant documents from the documents file
-        fetchEssentialDocInfo(query, props, endDoc);
-
-        //remove the duplicates
-        Set<DocInfo> resultsSet = new HashSet<>();
-        for (List<DocInfo> termDocInfo : _termsDocInfo) {
-            resultsSet.addAll(termDocInfo);
+        int[] dfs = _indexer.getDf(query);
+        for (int i = 0; i < query.size(); i++) {
+            Posting postings = _indexer.getPostings(query.get(i).getTerm());
+            long[] docMetaOffsets = postings.getDocMetaOffsets();
+            for (int j = 0; j < dfs[i]; j++) {
+                valid[DocInfo.getIntId(docMetaOffsets[j])] = true;
+            }
         }
 
-        //create the results list
-        for (DocInfo docInfo : resultsSet) {
-            results.add(new Pair<>(docInfo, 1.0));
+        for (int i = 0; i < totalArticles; i++) {
+            if (valid[i]) {
+                DocInfo docInfo = new DocInfo(i);
+                results.add(new Pair<>(docInfo, 1.0));
+            }
         }
 
-        //update the properties of these results that are in [0, endDoc]
-        updateDocInfo(results, props, endDoc);
-
+        totalResults = results.size();
         return results;
     }
 }

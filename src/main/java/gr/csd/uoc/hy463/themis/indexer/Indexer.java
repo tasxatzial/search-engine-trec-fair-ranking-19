@@ -12,6 +12,9 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Tex
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
+import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
+import gr.csd.uoc.hy463.themis.retrieval.model.Posting;
 import gr.csd.uoc.hy463.themis.utils.*;
 
 import java.io.*;
@@ -883,149 +886,187 @@ public class Indexer {
     }
 
     /**
-     * Basic method for querying functionality. Given the list of terms in the query, returns a List of
-     * Lists of DocInfo objects, where each DocInfo object objects holds the DocInfo representation of the
-     * docs that the corresponding term of the query appears in.
-     * @param terms The terms of the query (after pre-processing)
-     * @param termsDocInfo An initial list of lists of DocInfo objects
+     * Returns the String docID based on the int docID
+     * @param intID
      * @return
-     * @throws IOException
+     * @throws UnsupportedEncodingException
      */
-    public void getDocInfo(List<String> terms, List<List<DocInfo>> termsDocInfo, Set<DocInfo.PROPERTY> props) throws IOException {
-        if (!loaded()) {
-            return;
-        }
-        boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
-                props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
-                props.contains(DocInfo.PROPERTY.YEAR);
+    public String getDocID(int intID) throws UnsupportedEncodingException {
+        long docIdOffset = DocInfo.getDocIdOffset(intID);
+        ByteBuffer buffer = __DOCID_BUFFERS__.getBufferLong(docIdOffset);
+        buffer.get(__DOCUMENT_ID_ARRAY__);
+        String docId = new String(__DOCUMENT_ID_ARRAY__, 0, DocumentIDEntry.ID_SIZE, "ASCII");
 
-        for (int i = 0; i < terms.size(); i++) {
-            List<DocInfo> termDocInfo = termsDocInfo.get(i);
-
-            // go to the next term if this term does not appear in the vocabulary
-            VocabularyStruct termValue = __VOCABULARY__.get(terms.get(i));
-            if (termValue == null) {
-                continue;
-            }
-
-            // go to the postings file and grab all postings for this term at once
-            long postingPointer = termValue.get_offset();
-            __POSTINGS__.seek(postingPointer);
-            byte[] postings = new byte[termValue.get_df() * PostingStruct.SIZE];
-            __POSTINGS__.readFully(postings);
-            ByteBuffer postingBuffer = ByteBuffer.wrap(postings);
-
-            // for each posting, grab any needed information from the documents_meta file and documents file
-            int postingOffset = 0;
-            for (int j = 0; j < termValue.get_df(); j++) {
-                long documentMetaOffset = postingBuffer.getLong(postingOffset + PostingStruct.TF_SIZE);
-                ByteBuffer metaBuffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
-                metaBuffer.get(__DOCUMENT_META_ARRAY__, 0, DocumentMetaEntry.totalSize);
-
-                //grab information from the documents file
-                if (gotoDocuments) {
-                    long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
-                    int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-                    __DOCUMENT_ARRAY__ = new byte[documentSize];
-                    __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
-                    __DOCUMENTS__.seek(documentOffset);
-                    __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
-                }
-
-                //read the int doc id from the postings file
-                int intID = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.INTID_OFFSET);
-
-                //based on the int doc id, find the real doc id in the documents_id file
-                ByteBuffer idBuffer = __DOCID_BUFFERS__.getBufferLong((long) intID * DocumentIDEntry.ID_SIZE);
-                idBuffer.get(__DOCUMENT_ID_ARRAY__, 0 , DocumentIDEntry.totalSize);
-                String docId = new String(__DOCUMENT_ID_ARRAY__, 0, DocumentIDEntry.ID_SIZE, "ASCII");
-
-                //create the docInfo object
-                DocInfo docInfo = new DocInfo(docId, documentMetaOffset);
-                fetchInfo(docInfo, props, gotoDocuments);
-                termDocInfo.add(docInfo);
-
-                postingOffset += PostingStruct.SIZE;
-            }
-        }
+        return docId;
     }
 
     /**
-     * Reads the documents file and adds the docInfo properties specified by props to each of the docInfo objects
-     * @param docInfos
+     * Reads the documents file and adds the docInfo properties specified by props to each of the docInfo objects.
+     * The function assumes that all DocInfo objects have the same props.
+     *
      * @param props
      * @throws IOException
      */
-    public void updateDocInfo(List<DocInfo> docInfos, Set<DocInfo.PROPERTY> props) throws IOException {
-        for (DocInfo docInfo : docInfos) {
-            long documentMetaOffset = docInfo.getMetaOffset();
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
-            buffer.get(__DOCUMENT_META_ARRAY__);
-            boolean gotoDocuments = props.contains(DocInfo.PROPERTY.TITLE) || props.contains(DocInfo.PROPERTY.AUTHORS_NAMES) ||
-                    props.contains(DocInfo.PROPERTY.JOURNAL_NAME) || props.contains(DocInfo.PROPERTY.AUTHORS_IDS) ||
-                    props.contains(DocInfo.PROPERTY.YEAR);
-            if (gotoDocuments) {
-                long documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
-                int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+    public void updateDocInfo(List<Pair<DocInfo, Double>> docInfos, Set<DocInfo.PROPERTY> props) throws IOException {
+        if (docInfos.size() == 0) {
+            return;
+        }
+        Set<DocInfo.PROPERTY> firstProps = docInfos.get(0).getL().getProps();
+
+        //these props will be deleted from each docinfo
+        Set<DocInfo.PROPERTY> delProps = new HashSet<>(firstProps);
+        delProps.removeAll(props);
+
+        //these props will be added to each docinfo
+        Set<DocInfo.PROPERTY> addProps = new HashSet<>(props);
+        addProps.removeAll(firstProps);
+
+        //add flags for each prop
+        boolean ADD_CITATIONS_PAGERANK = addProps.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK);
+        boolean ADD_VSM_WEIGHT = addProps.contains(DocInfo.PROPERTY.VSM_WEIGHT);
+        boolean ADD_MAX_TF = addProps.contains(DocInfo.PROPERTY.MAX_TF);
+        boolean ADD_TOKEN_COUNT = addProps.contains(DocInfo.PROPERTY.TOKEN_COUNT);
+        boolean ADD_AVG_AUTHOR_RANK = addProps.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        boolean ADD_TITLE = addProps.contains(DocInfo.PROPERTY.TITLE);
+        boolean ADD_AUTHORS_NAMES = addProps.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
+        boolean ADD_JOURNAL_NAME = addProps.contains(DocInfo.PROPERTY.JOURNAL_NAME);
+        boolean ADD_AUTHORS_IDS = addProps.contains(DocInfo.PROPERTY.AUTHORS_IDS);
+        boolean ADD_YEAR = addProps.contains(DocInfo.PROPERTY.YEAR);
+        boolean ADD_DOC_SIZE = addProps.contains(DocInfo.PROPERTY.DOCUMENT_SIZE);
+
+        //delete flags for each prop
+        boolean DEL_CITATIONS_PAGERANK = delProps.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK);
+        boolean DEL_VSM_WEIGHT = delProps.contains(DocInfo.PROPERTY.VSM_WEIGHT);
+        boolean DEL_MAX_TF = delProps.contains(DocInfo.PROPERTY.MAX_TF);
+        boolean DEL_TOKEN_COUNT = delProps.contains(DocInfo.PROPERTY.TOKEN_COUNT);
+        boolean DEL_AVG_AUTHOR_RANK = delProps.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+        boolean DEL_TITLE = delProps.contains(DocInfo.PROPERTY.TITLE);
+        boolean DEL_AUTHORS_NAMES = delProps.contains(DocInfo.PROPERTY.AUTHORS_NAMES);
+        boolean DEL_JOURNAL_NAME = delProps.contains(DocInfo.PROPERTY.JOURNAL_NAME);
+        boolean DEL_AUTHORS_IDS = delProps.contains(DocInfo.PROPERTY.AUTHORS_IDS);
+        boolean DEL_YEAR = delProps.contains(DocInfo.PROPERTY.YEAR);
+        boolean DEL_DOC_SIZE = addProps.contains(DocInfo.PROPERTY.DOCUMENT_SIZE);
+
+        for (Pair<DocInfo, Double> docInfoPair : docInfos) {
+            DocInfo docInfo = docInfoPair.getL();
+
+            //delete props
+            if (DEL_CITATIONS_PAGERANK) {
+                docInfo.clearProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK);
+            }
+            if (DEL_VSM_WEIGHT) {
+                docInfo.clearProperty(DocInfo.PROPERTY.VSM_WEIGHT);
+            }
+            if (DEL_MAX_TF) {
+                docInfo.clearProperty(DocInfo.PROPERTY.MAX_TF);
+            }
+            if (DEL_TOKEN_COUNT) {
+                docInfo.clearProperty(DocInfo.PROPERTY.TOKEN_COUNT);
+            }
+            if (DEL_AVG_AUTHOR_RANK) {
+                docInfo.clearProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK);
+            }
+            if (DEL_TITLE) {
+                docInfo.clearProperty(DocInfo.PROPERTY.TITLE);
+            }
+            if (DEL_AUTHORS_NAMES) {
+                docInfo.clearProperty(DocInfo.PROPERTY.AUTHORS_NAMES);
+            }
+            if (DEL_JOURNAL_NAME) {
+                docInfo.clearProperty(DocInfo.PROPERTY.JOURNAL_NAME);
+            }
+            if (DEL_AUTHORS_IDS) {
+                docInfo.clearProperty(DocInfo.PROPERTY.AUTHORS_IDS);
+            }
+            if (DEL_YEAR) {
+                docInfo.clearProperty(DocInfo.PROPERTY.YEAR);
+            }
+            if (DEL_DOC_SIZE) {
+                docInfo.clearProperty(DocInfo.PROPERTY.DOCUMENT_SIZE);
+            }
+
+            long documentMetaOffset = -1;
+            int documentSize = 0;
+            long documentOffset = 0;
+
+            //add props -> read the document_meta file
+            if (ADD_CITATIONS_PAGERANK || ADD_VSM_WEIGHT || ADD_MAX_TF || ADD_TOKEN_COUNT || ADD_AVG_AUTHOR_RANK || ADD_DOC_SIZE) {
+                documentMetaOffset = DocInfo.getMetaOffset(docInfo.getId());
+                ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
+                buffer.get(__DOCUMENT_META_ARRAY__);
+                documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
+
+                if (ADD_CITATIONS_PAGERANK) {
+                    double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK, pagerank);
+                }
+                if (ADD_VSM_WEIGHT) {
+                    double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.VSM_WEIGHT, weight);
+                }
+                if (ADD_MAX_TF) {
+                    int maxTf = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
+                }
+                if (ADD_TOKEN_COUNT) {
+                    int length = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.TOKEN_COUNT, length);
+                }
+                if (ADD_AVG_AUTHOR_RANK) {
+                    double authorRank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
+                }
+                if (ADD_DOC_SIZE) {
+                    docInfo.setProperty(DocInfo.PROPERTY.DOCUMENT_SIZE, documentSize);
+                }
+            }
+
+            //add props -> read the documents file
+            if (ADD_TITLE || ADD_AUTHORS_NAMES || ADD_JOURNAL_NAME || ADD_AUTHORS_IDS || ADD_YEAR) {
+                if (documentMetaOffset == -1) {
+                    documentMetaOffset = DocInfo.getMetaOffset(docInfo.getId());
+                    ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentMetaOffset);
+                    buffer.get(__DOCUMENT_META_ARRAY__);
+                    documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                    documentOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
+                }
+
+                //read the whole entry in the documents file
                 __DOCUMENT_ARRAY__ = new byte[documentSize];
                 __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
                 __DOCUMENTS__.seek(documentOffset);
                 __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
-            }
-            fetchInfo(docInfo, props, gotoDocuments);
-        }
-    }
 
-    /* Reads the fields byte array and adds to the docInfo object the properties specified by props */
-    private void fetchInfo(DocInfo docInfo, Set<DocInfo.PROPERTY> props, boolean gotoDocuments) throws UnsupportedEncodingException {
-        if (props.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK)) {
-            double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK, pagerank);
-        }
-        if (props.contains(DocInfo.PROPERTY.VSM_WEIGHT)) {
-            double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.VSM_WEIGHT, weight);
-        }
-        if (props.contains(DocInfo.PROPERTY.MAX_TF)) {
-            int maxTf = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTf);
-        }
-        if (props.contains(DocInfo.PROPERTY.TOKEN_COUNT)) {
-            int length = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.TOKEN_COUNT, length);
-        }
-        if (props.contains(DocInfo.PROPERTY.AVG_AUTHOR_RANK)) {
-            double authorRank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
-        }
-        if (props.contains(DocInfo.PROPERTY.DOCUMENT_SIZE)) {
-            int documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-            docInfo.setProperty(DocInfo.PROPERTY.DOCUMENT_SIZE, documentSize);
-        }
-        if (gotoDocuments) {
-            if (props.contains(DocInfo.PROPERTY.YEAR)) {
-                short year = __DOCUMENT_BUFFER__.getShort(DocumentEntry.YEAR_OFFSET);
-                docInfo.setProperty(DocInfo.PROPERTY.YEAR, year);
-            }
-            int titleSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.TITLE_SIZE_OFFSET);
-            int authorNamesSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET);
-            int authorIdsSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_IDS_SIZE_OFFSET);
-            short journalNameSize = __DOCUMENT_BUFFER__.getShort(DocumentEntry.JOURNAL_NAME_SIZE_OFFSET);
-            if (props.contains(DocInfo.PROPERTY.TITLE)) {
-                String title = new String(__DOCUMENT_ARRAY__, DocumentEntry.TITLE_OFFSET, titleSize, "UTF-8");
-                docInfo.setProperty(DocInfo.PROPERTY.TITLE, title);
-            }
-            if (props.contains(DocInfo.PROPERTY.AUTHORS_NAMES)) {
-                String authorNames = new String(__DOCUMENT_ARRAY__, DocumentEntry.TITLE_OFFSET + titleSize, authorNamesSize, "UTF-8");
-                docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
-            }
-            if (props.contains(DocInfo.PROPERTY.AUTHORS_IDS)) {
-                String authorIds = new String(__DOCUMENT_ARRAY__, DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize, authorIdsSize, "ASCII");
-                docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIds);
-            }
-            if (props.contains(DocInfo.PROPERTY.JOURNAL_NAME)) {
-                String journalName = new String(__DOCUMENT_ARRAY__, DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize + authorIdsSize, journalNameSize, "UTF-8");
-                docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, journalName);
+                //grab the props
+                if (ADD_YEAR) {
+                    short year = __DOCUMENT_BUFFER__.getShort(DocumentEntry.YEAR_OFFSET);
+                    docInfo.setProperty(DocInfo.PROPERTY.YEAR, year);
+                }
+                int titleSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.TITLE_SIZE_OFFSET);
+                int authorNamesSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET);
+                int authorIdsSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_IDS_SIZE_OFFSET);
+                short journalNameSize = __DOCUMENT_BUFFER__.getShort(DocumentEntry.JOURNAL_NAME_SIZE_OFFSET);
+                int offset;
+                if (ADD_TITLE) {
+                    String title = new String(__DOCUMENT_ARRAY__, DocumentEntry.TITLE_OFFSET, titleSize, "UTF-8");
+                    docInfo.setProperty(DocInfo.PROPERTY.TITLE, title);
+                }
+                if (ADD_AUTHORS_NAMES) {
+                    offset = DocumentEntry.TITLE_OFFSET + titleSize;
+                    String authorNames = new String(__DOCUMENT_ARRAY__, offset, authorNamesSize, "UTF-8");
+                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
+                }
+                if (ADD_AUTHORS_IDS) {
+                    offset = DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize;
+                    String authorIds = new String(__DOCUMENT_ARRAY__, offset, authorIdsSize, "ASCII");
+                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIds);
+                }
+                if (ADD_JOURNAL_NAME) {
+                    offset = DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize + authorIdsSize;
+                    String journalName = new String(__DOCUMENT_ARRAY__, offset, journalNameSize, "UTF-8");
+                    docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, journalName);
+                }
             }
         }
     }
@@ -1036,8 +1077,12 @@ public class Indexer {
      * @return
      */
     public boolean loaded() {
-        return __VOCABULARY__ != null && __POSTINGS__ != null && __DOCUMENTS__ != null
-                && __DOCMETA_BUFFERS__ != null && __DOCID_BUFFERS__ != null && _INDEX_META__ != null;
+        return  __VOCABULARY__ != null &&
+                __POSTINGS__ != null &&
+                __DOCUMENTS__ != null &&
+                __DOCMETA_BUFFERS__ != null &&
+                __DOCID_BUFFERS__ != null &&
+                _INDEX_META__ != null;
     }
 
     /**
@@ -1058,28 +1103,72 @@ public class Indexer {
     }
 
     /**
-     * Returns an array of the frequencies of the specified term for every article that this term appears in.
+     * Returns an object that represents the postings of a term.
      * @param term
      * @return
      * @throws IOException
      */
-    public int[] getFreq(String term) throws IOException {
+    public Posting getPostings(String term) throws IOException {
         VocabularyStruct vocabularyValue = __VOCABULARY__.get(term);
         if (vocabularyValue == null) {
-            return new int[0];
+            return new Posting(new int[0], new long[0]);
         }
+
         int df = vocabularyValue.get_df();
-        int[] freq = new int[df];
         __POSTINGS__.seek(vocabularyValue.get_offset());
         byte[] postings = new byte[df * PostingStruct.SIZE];
         __POSTINGS__.readFully(postings);
         ByteBuffer bb = ByteBuffer.wrap(postings);
-        int offset = 0;
+        long[] offsets = new long[df];
+        int[] tfs = new int[df];
         for (int i = 0; i < df; i++) {
-            freq[i] = bb.getInt(offset);
-            offset += PostingStruct.SIZE;
+            tfs[i] = bb.getInt();
+            offsets[i] = bb.getLong();
         }
-        return freq;
+        return new Posting(tfs, offsets);
+    }
+
+    /**
+     * Returns an object that holds all essential properties for the Vector space model. These are:
+     * 1) Max TF in a document
+     * 2) Citations pagerank score
+     * 3) Document weight
+     *
+     * @param docMetaOffsets array of offsets in the document_meta file.
+     * @return
+     */
+    public VSMprops getVSMprops(long[] docMetaOffsets) {
+        int[] maxTfs = new int[docMetaOffsets.length];
+        double[] VSMweights = new double[docMetaOffsets.length];
+        double[] citationsPagerank = new double[docMetaOffsets.length];
+        for (int i = 0; i < docMetaOffsets.length; i++) {
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(docMetaOffsets[i]);
+            buffer.get(__DOCUMENT_META_ARRAY__);
+            citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
+            VSMweights[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            maxTfs[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
+        }
+        return new VSMprops(maxTfs, citationsPagerank, VSMweights);
+    }
+
+    /**
+     * Returns an object that holds all essential properties for the Okapi model. These are:
+     * 1) Citations pagerank score
+     * 2) Token count
+     *
+     * @param docMetaOffsets array of offsets in the document_meta file.
+     * @return
+     */
+    public OKAPIprops getOKAPIprops(long[] docMetaOffsets) {
+        int[] tokenCount = new int[docMetaOffsets.length];
+        double[] citationsPagerank = new double[docMetaOffsets.length];
+        for (int i = 0; i < docMetaOffsets.length; i++) {
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(docMetaOffsets[i]);
+            buffer.get(__DOCUMENT_META_ARRAY__);
+            citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
+            tokenCount[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
+        }
+        return new OKAPIprops(tokenCount, citationsPagerank);
     }
 
     /**

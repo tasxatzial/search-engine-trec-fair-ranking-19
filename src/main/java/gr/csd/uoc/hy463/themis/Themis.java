@@ -78,16 +78,15 @@ public class Themis {
             view.get_evaluateVSM().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE));
             view.get_evaluateVSMGlove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE));
             view.get_evaluateVSM_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL));
-            view.get_evaluateBM25().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.NONE));
-            view.get_evaluateBM25Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.GLOVE));
-            view.get_evaluateBM25_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.BM25, QueryExpansion.DICTIONARY.EXTJWNL));
+            view.get_evaluateBM25().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE));
+            view.get_evaluateBM25Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE));
+            view.get_evaluateBM25_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL));
 
             view.setVisible(true);
         }
 
         //non GUI version, write code in else block
         else {
-            /* test */
             search = new Search();
             Set<DocInfo.PROPERTY> props = new HashSet<>();
 
@@ -95,15 +94,12 @@ public class Themis {
             props.add(DocInfo.PROPERTY.TITLE);
             search.setDocumentProperties(props);
 
-            /* search for the top 6 ([0..5]) results of 'case':
-            1. The essential props of the retrieval model will be fetched for all results even for those in [0..5]
-            2. The above props will be fetched only for the results in [0..5] */
-            List<Pair<DocInfo, Double>> results = search.search("case", 5);
+            /* retrieve info for the results that have index 0-7 for query 'case' */
+            List<Pair<DocInfo, Double>> results = search.search("test", 8);
 
-            /* print top 11 ([0..10]) results. Assume that 'case' returns a total of 9 results:
-            1. DOC_ID will be displayed for all top 9 ([0..8]) results
-            2. TITLE will be displayed only for results in [0..5] */
-            search.printResults(results, 0, 10);
+            /* result indexes start from 0.
+            print results that have index 5-20. If we got only 10 results, it would print results 5-7 */
+            search.printResults(results, 5, 20);
         }
     }
 
@@ -214,7 +210,7 @@ public class Themis {
             _task = TASK.EVALUATE;
             if (search == null) {
                 createIndex = null;
-                try { //todo: close files
+                try {
                     search = new Search();
                 } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
                     __LOGGER__.error(e.getMessage());
@@ -223,7 +219,7 @@ public class Themis {
                     return;
                 }
             }
-            try { //todo: close files
+            try {
                 themisEval eval = new themisEval(search, _model, _dictionary);
                 eval.start();
             } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
@@ -239,7 +235,7 @@ public class Themis {
         @Override
         public void run() {
             _task = TASK.CREATE_INDEX;
-            try { //todo: close files
+            try {
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -276,7 +272,7 @@ public class Themis {
                     return;
                 }
             }
-            try { //todo: close files
+            try {
                 createIndex.createIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -303,7 +299,7 @@ public class Themis {
                 return;
             }
             createIndex = null;
-            try { //todo: close files
+            try {
                 search = new Search();
             } catch (IOException | QueryExpansionException | SearchNoIndexException ex) {
                 __LOGGER__.error(ex.getMessage());
@@ -385,10 +381,24 @@ public class Themis {
             String query = view.get_searchField().getText();
             long startTime = System.nanoTime();
             print(">>> Searching for: " + query + " ... ");
-            try { //todo: close files
-                results = search.search(view.get_searchField().getText(), 9);
+
+            //retrieve info the results with index 0 to 50 (non inclusive)
+            int endResult = 50;
+            try {
+                if (search.getRetrievalmodel() == ARetrievalModel.MODEL.EXISTENTIAL) {
+                    results = search.search(view.get_searchField().getText());
+                } else {
+                    results = search.search(view.get_searchField().getText(), endResult);
+                }
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
-                print("Found " + results.size() + " results\n");
+                print("Found " + search.getTotalResults() + " results\n");
+                if (search.getRetrievalmodel() == ARetrievalModel.MODEL.EXISTENTIAL) {
+                    print("Retrieved info for all results\n");
+                } else {
+                    print("Retrieved info for top " + Math.min(search.getTotalResults(), endResult) + " results\n");
+                }
+
+                //print info for results with index 0 to 9 (inclusive)
                 search.printResults(results, 0, 9);
             } catch (Exception ex) {
                 __LOGGER__.error(ex.getMessage());
