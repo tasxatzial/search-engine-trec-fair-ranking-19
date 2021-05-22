@@ -98,21 +98,18 @@ public class Index {
      * the total number of frequencies. Also writes to doc_tf file a line of
      * "term1 tf1 term2 tf2 ..."
      *
-     * @param entryWords The map of term frequencies
+     * @param termTF The map of term frequencies
      * @param intID The intID of the related document
      * @return
      * @throws IOException
      */
-    public int add(Map<String, List<DocInfoFrequency>> entryWords, BufferedWriter docTfWriter, int intID) throws IOException {
+    public int add(Map<String, Integer> termTF, BufferedWriter docTfWriter, int intID) throws IOException {
         StringBuilder sb = new StringBuilder();
         int totalTf = 0;
-        for (Map.Entry<String, List<DocInfoFrequency>> entry : entryWords.entrySet()) {
-            int tf = 0;
+        for (Map.Entry<String, Integer> entry : termTF.entrySet()) {
+            int tf = entry.getValue();
             String key = entry.getKey();
             PartialIndexStruct indexStruct = __INDEX__.get(key);
-            for (DocInfoFrequency docInfoFrequency : entry.getValue()) {
-                tf += docInfoFrequency.get_frequency();
-            }
             totalTf += tf;
             if (indexStruct != null) {
                 indexStruct.incr_df();

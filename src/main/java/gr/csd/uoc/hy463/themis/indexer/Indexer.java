@@ -220,7 +220,7 @@ public class Indexer {
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        /* initialize the class that calculates the map of frequencies of a term in a document entry */
+        /* initialize the class that calculates the map of frequencies of a term in a S2TextualEntry */
         S2TextualEntryTermFrequencies wordFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
         /* create index folders */
@@ -268,11 +268,11 @@ public class Indexer {
                     // Extract all textual info
                     S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
 
-                    // create the map of entry field frequencies for each term
-                    Map<String, List<DocInfoFrequency>> entryWords = wordFrequencies.createWordsMap(entry);
+                    // create the map of frequencies for all terms
+                    Map<String, Integer> termTF = wordFrequencies.createWordsMap(entry);
 
                     // update the partial index and the doc_tf file
-                    int documentLength = index.add(entryWords, docTfWriter, intID);
+                    int documentLength = index.add(termTF, docTfWriter, intID);
 
                     // update document length (number of tokens)
                     totalDocumentLength += documentLength;

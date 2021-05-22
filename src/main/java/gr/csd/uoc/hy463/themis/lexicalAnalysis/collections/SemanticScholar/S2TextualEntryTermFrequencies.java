@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Creates a map of term frequencies for a textual entry.
- * Each value of the map is the list of field frequencies of the corresponding term:
- * <<field1, tf1> <field1, tf2> ...>
+ * Creates the map of term frequencies from a S2TextualEntry.
  */
 public class S2TextualEntryTermFrequencies {
     private boolean _useStemmer;
@@ -24,35 +22,35 @@ public class S2TextualEntryTermFrequencies {
     }
 
     /**
-     * Returns the map of term frequencies.
+     * Creates the map of term frequencies from a S2TextualEntry.
      * @param entry
      * @return
      */
-    public Map<String, List<DocInfoFrequency>> createWordsMap(S2TextualEntry entry) {
-        Map<String, List<DocInfoFrequency>> entryWordsMap = new HashMap<>();
+    public Map<String, Integer> createWordsMap(S2TextualEntry entry) {
+        Map<String, Integer> termTF = new HashMap<>();
 
-        addToWordsMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , entryWordsMap);
-        addToWordsMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, entryWordsMap);
+        addToWordsMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , termTF);
+        addToWordsMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, termTF);
         for (String entity : entry.getEntities()) {
-            addToWordsMap(entity, DocInfo.PROPERTY.ENTITIES, entryWordsMap);
+            addToWordsMap(entity, DocInfo.PROPERTY.ENTITIES, termTF);
         }
         for (String fieldsOfStudy : entry.getFieldsOfStudy()) {
-            addToWordsMap(fieldsOfStudy, DocInfo.PROPERTY.FIELDS_OF_STUDY, entryWordsMap);
+            addToWordsMap(fieldsOfStudy, DocInfo.PROPERTY.FIELDS_OF_STUDY, termTF);
         }
         for (Pair<String, List<String>> author : entry.getAuthors()) {
-            addToWordsMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, entryWordsMap);
+            addToWordsMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, termTF);
         }
-        addToWordsMap_asIs(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, entryWordsMap);
-        addToWordsMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, entryWordsMap);
-        addToWordsMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, entryWordsMap);
+        addToWordsMap(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, termTF);
+        addToWordsMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, termTF);
+        addToWordsMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, termTF);
         for (String source : entry.getSources()) {
-            addToWordsMap(source, DocInfo.PROPERTY.SOURCES, entryWordsMap);
+            addToWordsMap(source, DocInfo.PROPERTY.SOURCES, termTF);
         }
-        return entryWordsMap;
+        return termTF;
     }
 
     /* Takes a string, applies stemming/stopwords, and adds the result to the map of term frequencies */
-    private void addToWordsMap(String field, DocInfo.PROPERTY prop, Map<String, List<DocInfoFrequency>> entryWords) {
+    private void addToWordsMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> termTF) {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
@@ -64,31 +62,17 @@ public class S2TextualEntryTermFrequencies {
             if (_useStemmer) {
                 currentToken = ProcessText.applyStemming(currentToken);
             }
-            addToWordsMap_asIs(currentToken, prop, entryWords);
+            Integer tf = termTF.get(currentToken);
+            if (tf != null) {
+                termTF.put(currentToken, tf + 1);
+            } else {
+                termTF.put(currentToken, 1);
+            }
+            //entryWords.merge(currentToken, 1, Integer::sum);
         }
     }
 
-    /* Takes a string and adds it to the map of term frequencies. Does not apply stemming or stopwords */
-    private void addToWordsMap_asIs(String currentToken, DocInfo.PROPERTY prop, Map<String, List<DocInfoFrequency>> entryWords) {
-        List<DocInfoFrequency> tokenValues = entryWords.get(currentToken);
-        DocInfoFrequency lastDocInfoFrequency;
-        if (tokenValues != null) {
-            lastDocInfoFrequency = tokenValues.get(tokenValues.size() - 1);
-            if (lastDocInfoFrequency.get_prop() == prop) {
-                lastDocInfoFrequency.incr_frequency();
-            }
-            else {
-                tokenValues.add(new DocInfoFrequency(prop));
-            }
-        }
-        else {
-            tokenValues = new ArrayList<>();
-            tokenValues.add(new DocInfoFrequency(prop));
-            entryWords.put(currentToken, tokenValues);
-        }
-    }
-
-    /* Returns the split pattern that will be used for splitting a String */
+    /* Returns the string split pattern for a specific DocInfo property */
     private static String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:
