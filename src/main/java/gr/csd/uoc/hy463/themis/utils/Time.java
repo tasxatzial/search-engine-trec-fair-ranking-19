@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.utils;
 
 /**
- * Used for printing a time period (long number) in a human readable format.
+ * Convert a time period (long number) in a human readable format.
  */
 public class Time {
     private long _longValue;
@@ -18,27 +18,27 @@ public class Time {
         double msec = toMsec(_longValue);
         if (msec > toMsec(fromHr(1))) {
             double hours = toHr(_longValue);
-            double intHours = countHour(_longValue);
+            int intHours = countHour(_longValue);
             double secs = toSec(fromHr(hours) - fromHr(intHours));
             double mins = toMin(fromSec(secs));
-            return intHours + "h " + roundToDecimal(mins, 0) + "m";
+            return intHours + "h " + roundToInt(mins) + "m";
         }
         if (msec > toMsec(fromMin(1))) {
             double mins = toMin(_longValue);
-            double intMins = countMin(_longValue);
+            int intMins = countMin(_longValue);
             double secs = toSec(fromMin(mins) - fromMin(intMins));
-            return intMins + "m " + roundToDecimal(secs, 0) + "s";
+            return intMins + "m " + roundToInt(secs) + "s";
         }
         if (msec > toMsec(fromSec(10))) {
             double secs = toSec(_longValue);
-            return roundToDecimal(secs, 1) + "s";
+            return roundToInt(secs) + "s";
         }
         if (msec > toMsec(fromSec(1))) {
             double secs = toSec(_longValue);
-            return roundToDecimal(secs, 2) + "s";
+            return roundToDecimal(secs, 1) + "s";
         }
         if (msec > 10) {
-            return roundToDecimal(msec, 0) + "ms";
+            return roundToInt(msec) + "ms";
         }
         if (msec > 1) {
             return roundToDecimal(msec, 1) + "ms";
@@ -46,50 +46,64 @@ public class Time {
         return roundToDecimal(msec, 2) + "ms";
     }
 
-    /* Rounds the specified value to numDigits decimal digits */
-    public static double roundToDecimal(double value, int numDigits) {
-        double pow = Math.pow(10, numDigits);
+    /**
+     * Rounds the specified value to the closest decimal that has digits decimal digits
+     * @param value
+     * @param digits
+     * @return
+     */
+    public static double roundToDecimal(double value, int digits) {
+        double pow = Math.pow(10, digits);
         return Math.round(value * pow) / pow;
     }
 
     /**
-     * Returns how many hr the specified long value has
+     * Rounds the specified value to the nearest integer
      * @param value
      * @return
      */
-    public static double countHour(long value) {
-        return Math.floor(toHr(value));
+    public static int roundToInt(double value) {
+        return (int) Math.round(value);
     }
 
     /**
-     * Returns how many min the specified long value has
+     * Returns the hours (int) from the specified long value
      * @param value
      * @return
      */
-    public static double countMin(long value) {
-        return Math.floor(toMin(value));
+    public static int countHour(long value) {
+        return (int) Math.floor(toHr(value));
     }
 
     /**
-     * Returns how many sec the specified long value has
+     * Returns the minutes (int) from the specified long value
      * @param value
      * @return
      */
-    public static double countSec(long value) {
-        return Math.floor(toSec(value));
+    public static int countMin(long value) {
+        return (int) Math.floor(toMin(value));
     }
 
     /**
-     * Returns how many msec the specified long value has
+     * Returns the seconds (int) from the specified long value
      * @param value
      * @return
      */
-    public static double countMsec(long value) {
-        return Math.floor(toMsec(value));
+    public static int countSec(long value) {
+        return (int) Math.floor(toSec(value));
     }
 
     /**
-     * Returns the long number from a given time in hr
+     * Returns the mseconds (int) from the specified long value
+     * @param value
+     * @return
+     */
+    public static int countMsec(long value) {
+        return (int) Math.floor(toMsec(value));
+    }
+
+    /**
+     * Returns the long value from a given time in hours
      * @param value
      * @return
      */
@@ -98,7 +112,7 @@ public class Time {
     }
 
     /**
-     * Returns the long number from a given time in min
+     * Returns the long value from a given time in minutes
      * @param value
      * @return
      */
@@ -107,7 +121,7 @@ public class Time {
     }
 
     /**
-     * Returns the long number from a given time in sec
+     * Returns the long value from a given time in seconds
      * @param value
      * @return
      */
@@ -116,7 +130,7 @@ public class Time {
     }
 
     /**
-     * Returns the long number from a given time in msec
+     * Returns the long value from a given time in mseconds
      * @param value
      * @return
      */
@@ -125,7 +139,8 @@ public class Time {
     }
 
     /**
-     * Returns the specified time in msec
+     * Returns the time in mseconds (decimal) from the specified long value
+     * @param value
      * @return
      */
     public static double toMsec(long value) {
@@ -133,7 +148,8 @@ public class Time {
     }
 
     /**
-     * Returns the specified time in sec
+     * Returns the time in seconds (decimal) from the specified long value
+     * @param value
      * @return
      */
     public static double toSec(long value) {
@@ -141,7 +157,7 @@ public class Time {
     }
 
     /**
-     * Returns the specified time in min
+     * Returns the time in minutes (decimal) from the specified long value
      * @param value
      * @return
      */
@@ -150,7 +166,8 @@ public class Time {
     }
 
     /**
-     * Returns the specified time in hr
+     * Returns the time in hours (decimal) from the specified long value
+     * @param value
      * @return
      */
     public static double toHr(long value) {
@@ -158,8 +175,7 @@ public class Time {
     }
 
     /**
-     * Adds the specified time to this Time. The new long value of this Time is increased by
-     * the long value of the specified time
+     * Adds the specified time to this Time.
      * @param time
      */
     public void addTime(Time time) {
