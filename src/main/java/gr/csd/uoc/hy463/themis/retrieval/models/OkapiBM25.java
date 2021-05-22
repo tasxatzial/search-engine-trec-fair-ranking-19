@@ -83,10 +83,10 @@ public class OkapiBM25 extends ARetrievalModel {
                 double idf = Math.log(totalArticles / (1.0 + dfs[j]));
                 score += idf * (freqs[j] * (k1 + 1) / (freqs[j] + k1 * (1 - b + (b * tokenCount[i]) / avgdl)) + 1);
             }
+            modelScore[i] = score;
             if (score > maxScore) {
                 maxScore = score;
             }
-            modelScore[i] = score;
             DocInfo docInfo = new DocInfo(i);
             results.add(docInfo);
         }

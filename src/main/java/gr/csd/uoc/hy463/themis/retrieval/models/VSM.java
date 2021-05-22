@@ -110,10 +110,10 @@ public class VSM extends ARetrievalModel {
             for (int j = 0; j < queryWeights.length; j++) {
                 score += queryWeights[j] * weights[j];
             }
-            if (score > maxScore) {
-                maxScore = score;
-            }
             modelScore[i] = score / (documentWeights[i] * queryNorm);
+            if (modelScore[i] > maxScore) {
+                maxScore = modelScore[i];
+            }
             DocInfo docInfo = new DocInfo(i);
             results.add(docInfo);
         }
