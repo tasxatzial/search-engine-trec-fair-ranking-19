@@ -47,7 +47,7 @@ public class Indexer {
     // The file path of indexes
     private String __INDEX_PATH__ = null;
 
-    // Filenames of indexes
+    // Filenames of the files of the final index
     private String __VOCABULARY_FILENAME__ = null;
     private String __POSTINGS_FILENAME__ = null;
     private String __DOCUMENTS_FILENAME__ = null;
@@ -55,11 +55,10 @@ public class Indexer {
     private String __META_FILENAME__ = null;
     private String __DOCUMENTS_ID_FILENAME__ = null;
 
-    // Vocabulary should be stored in memory for querying! This is crucial
-    // since we want to keep things fast! This is done through load().
-    // For this project use a HashMap instead of a trie
+    //The vocabulary struct (always loaded in memory)
     private HashMap<String, VocabularyStruct> __VOCABULARY__ = null;
 
+    // The postings file
     private RandomAccessFile __POSTINGS__ = null;
 
     // has any information that appears in the dataset (except the docId)
@@ -108,9 +107,8 @@ public class Indexer {
     }
 
     /**
-     * Checks that the index path + all *.idx files exist
-     *
-     * Method that checks if we have all appropriate files
+     * Checks if the index directory specified in the INDEX_PATH prop in the themis.config file
+     * has all the required files.
      *
      * @return
      */
@@ -121,37 +119,37 @@ public class Indexer {
         file = new File(getVocabularyPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         file = new File(getPostingsPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         file = new File(getDocumentsFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         file = new File(getDocumentsIDFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         file = new File(getDocumentsMetaFilePath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__);
+            Themis.print(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         file = new File(getMetaPath());
         if (!file.exists() || file.isDirectory()) {
             __LOGGER__.error(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
-            Themis.print(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
+            Themis.print(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__ + "\n");
             return false;
         }
         return true;
@@ -190,10 +188,9 @@ public class Indexer {
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
         String indexTmpPath = getIndexTmpPath();
-        int totalDocuments = 0;
+        int intID = 0;
         long totalDocumentLength = 0;
         long documentOffset = 0;
-        long documentMetaOffset = 0;
 
         // all files in dataset PATH
         File folder = new File(path);
@@ -241,13 +238,13 @@ public class Indexer {
         RandomAccessFile documentsMeta = new RandomAccessFile(getDocumentsMetaFilePath(), "rw");
         BufferedOutputStream documentsMeta_out = new BufferedOutputStream(new FileOutputStream(documentsMeta.getFD()));
 
-        /* The documents meta file for writing document docID information */
+        /* The documents id file for writing the document string ID */
         RandomAccessFile documentsID = new RandomAccessFile(getDocumentsIDFilePath(), "rw");
         BufferedOutputStream documentsID_out = new BufferedOutputStream(new FileOutputStream(documentsID.getFD()));
 
         /* Temp file that stores the <term, TF> of every term that appears in
-        each document (one line per document). Will be used for fast calculation of VSM weights */
-        BufferedWriter termFreqWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTfPath()), "UTF-8"));
+        each document (one line per document). Will be used during the calculation of VSM weights */
+        BufferedWriter docTfWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTfPath()), "UTF-8"));
 
         // Use a linked list to keep the partial indexes ids
         List<Integer> partialIndexes = new LinkedList<>();
@@ -275,7 +272,7 @@ public class Indexer {
                     Map<String, List<DocInfoFrequency>> entryWords = wordFrequencies.createWordsMap(entry);
 
                     // update the partial index and the doc_tf file
-                    int documentLength = index.add(entryWords, termFreqWriter, documentMetaOffset);
+                    int documentLength = index.add(entryWords, docTfWriter, intID);
 
                     // update document length (number of tokens)
                     totalDocumentLength += documentLength;
@@ -287,14 +284,14 @@ public class Indexer {
                     int documentSize = (int) (documentOffset - prevDocumentOffset);
 
                     // update the documents_meta file
-                    documentMetaOffset = dumpDocumentsMeta(documentsMeta_out, totalDocuments, documentLength, documentSize, documentMetaOffset, prevDocumentOffset);
+                    dumpDocumentsMeta(documentsMeta_out, intID, documentLength, documentSize, prevDocumentOffset);
 
-                    //update the documents_docID file
+                    //update the documents_id file
                     dumpDocumentsID(documentsID_out, entry);
 
                     // check if a dump of the current partial index is needed
-                    totalDocuments++;
-                    if (totalDocuments % __CONFIG__.getPartialIndexSize() == 0) {
+                    intID++;
+                    if (intID % __CONFIG__.getPartialIndexSize() == 0) {
                         index.dump();
                         id++;
                         index = new Index(__CONFIG__);
@@ -307,7 +304,7 @@ public class Indexer {
         }
 
         /* dump the last partial index if needed */
-        if (totalDocuments != 0 && totalDocuments % __CONFIG__.getPartialIndexSize() == 0) {
+        if (intID != 0 && intID % __CONFIG__.getPartialIndexSize() == 0) {
             partialIndexes.remove(partialIndexes.size() - 1);
             id--;
         }
@@ -318,12 +315,12 @@ public class Indexer {
         documents_out.close();
         documentsMeta_out.close();
         documentsID_out.close();
-        termFreqWriter.close();
+        docTfWriter.close();
 
         /* calculate avgdl for Okapi BM25 */
-        double avgdl = (0.0 + totalDocumentLength) / totalDocuments;
+        double avgdl = (0.0 + totalDocumentLength) / intID;
 
-        _INDEX_META__.put("articles", String.valueOf(totalDocuments));
+        _INDEX_META__.put("articles", String.valueOf(intID));
         _INDEX_META__.put("avgdl", String.valueOf(avgdl));
         _INDEX_META__.put("timestamp", Instant.now().toString());
 
@@ -423,7 +420,7 @@ public class Indexer {
         List<PartialVocabularyStruct> equalTerms = new ArrayList<>();
 
         /* pointer to the postings file */
-        long offset = 0;
+        long postingsOffset = 0;
 
         /* the current vocabulary entry that has the min lex word */
         PartialVocabularyStruct minTermVocabularyStruct;
@@ -451,7 +448,7 @@ public class Indexer {
             /* if the min term is not equal to the previous term, we must write all
             vocabulary entries that are in the array of equal terms to the final vocabulary file */
             if (!minTermVocabularyStruct.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
-                offset = dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, offset);
+                postingsOffset = dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
             }
 
             /* save the current term for the next iteration */
@@ -472,7 +469,7 @@ public class Indexer {
         /* we are done reading the vocabularies. Write the remaining vocabulary entries that are
         still in the array of equal terms to the final vocabulary file */
         if (!equalTerms.isEmpty()) {
-            dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, offset);
+            dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
         }
 
         /* close any open files */
@@ -496,7 +493,7 @@ public class Indexer {
     /* Used during merging of the partial vocabularies. Writes all entries in the array of equal terms to the final
     vocabulary files. Returns an offset to the postings file that will be used during the next iteration. Also writes
     all (partial index id, df) for each term to term_df file that will be used during the merging of postings */
-    private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long offset)
+    private long dumpEqualTerms(List<PartialVocabularyStruct> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long postingsOffset)
             throws IOException {
         int df = 0;
 
@@ -514,13 +511,13 @@ public class Indexer {
         termDfWriter.write(sb.toString());
 
         //write a new entry in the final vocabulary file
-        vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + offset + '\n');
+        vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + postingsOffset + '\n');
 
         //calculate the posting offset of the next term
-        offset += (long) df * PostingStruct.SIZE;
+        postingsOffset += (long) df * PostingStruct.SIZE;
 
         equalTerms.clear();
-        return offset;
+        return postingsOffset;
     }
 
     /* Method that merges the partial postings and creates the final postings.idx */
@@ -575,8 +572,7 @@ public class Indexer {
     }
 
     /* DOCUMENTS META FILE => documents_meta.idx (Random Access File)
-     * Writes all meta info for a textual entry to the documents_meta file and
-     * returns a new offset which is the sum of the previous offset + the size of the meta info.
+     * Writes all meta info for a textual entry to the documents_meta file.
      *
      * For each document it stores in the following order:
      * The int ID of the document (int => 4 bytes)
@@ -589,7 +585,7 @@ public class Indexer {
      * Offset to the documents file (long => 8 bytes)
      *
      * PageRank, weight, max tf, average author rank are all initialized to 0 */
-    private long dumpDocumentsMeta(BufferedOutputStream out, int intID, int entryLength, int entrySize, long documentMetaOffset, long documentOffset)
+    private void dumpDocumentsMeta(BufferedOutputStream out, int intID, int entryLength, int entrySize, long documentOffset)
             throws IOException {
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.INTID_OFFSET, intID);
         __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
@@ -601,12 +597,10 @@ public class Indexer {
         __DOCUMENT_META_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentOffset);
         __DOCUMENT_META_BUFFER__.position(0);
         out.write(__DOCUMENT_META_ARRAY__);
-
-        return DocumentMetaEntry.totalSize + documentMetaOffset;
     }
 
     /* DOCUMENTS ID FILE => documents_id.idx (Random Access File)
-     * Writes the document ID of a textual entry to the documents_ID file
+     * Writes the document ID of a textual entry to the documents_id file
      *
      * For each document it stores:
      * DOCUMENT_ID (40 ASCII chars => 40 bytes) */
@@ -722,14 +716,14 @@ public class Indexer {
 
         /* open the required files: documents_meta, doc_tf */
         __DOCMETA_BUFFERS__ = new DocBuffers(getDocumentsMetaFilePath(), MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
-        BufferedReader tfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTfPath()), "UTF-8"));
+        BufferedReader docTfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTfPath()), "UTF-8"));
 
         int totalArticles = Integer.parseInt(_INDEX_META__.get("articles"));
         double logArticles = Math.log(totalArticles);
         long offset = 0;
 
         /* read a line from the doc_tf file and calculate the weight */
-        while ((line = tfReader.readLine()) != null) {
+        while ((line = docTfReader.readLine()) != null) {
             List<String> splitList = ProcessText.splitString(line);
             double weight = 0;
             int maxTf = 0;
@@ -753,7 +747,7 @@ public class Indexer {
         }
 
         /* close files */
-        tfReader.close();
+        docTfReader.close();
         __DOCMETA_BUFFERS__.close();
         __DOCMETA_BUFFERS__ = null;
 
@@ -886,7 +880,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the String docID based on the int docID
+     * Returns the string ID of a document based on its intID
      * @param intID
      * @return
      * @throws UnsupportedEncodingException
@@ -1072,7 +1066,7 @@ public class Indexer {
     }
 
     /**
-     * Method that checks if indexes have been loaded/opened
+     * Method that checks if the index has been loaded
      *
      * @return
      */
@@ -1103,7 +1097,10 @@ public class Indexer {
     }
 
     /**
-     * Returns an object that represents the postings of a term.
+     * Returns an object that represents the postings of a term in the posting file. These are:
+     * 1) An array of TF
+     * 2) An array of intID of the relevant documents
+     *
      * @param term
      * @return
      * @throws IOException
@@ -1111,7 +1108,7 @@ public class Indexer {
     public Posting getPostings(String term) throws IOException {
         VocabularyStruct vocabularyValue = __VOCABULARY__.get(term);
         if (vocabularyValue == null) {
-            return new Posting(new int[0], new long[0]);
+            return new Posting(new int[0], new int[0]);
         }
 
         int df = vocabularyValue.get_df();
@@ -1119,30 +1116,31 @@ public class Indexer {
         byte[] postings = new byte[df * PostingStruct.SIZE];
         __POSTINGS__.readFully(postings);
         ByteBuffer bb = ByteBuffer.wrap(postings);
-        long[] offsets = new long[df];
+        int[] intIDs = new int[df];
         int[] tfs = new int[df];
         for (int i = 0; i < df; i++) {
             tfs[i] = bb.getInt();
-            offsets[i] = bb.getLong();
+            intIDs[i] = bb.getInt();
         }
-        return new Posting(tfs, offsets);
+        return new Posting(tfs, intIDs);
     }
 
     /**
-     * Returns an object that holds all essential properties for the Vector space model. These are:
+     * Returns an object that holds all essential properties in a document for the Vector space model. These are:
      * 1) Max TF in a document
      * 2) Citations pagerank score
      * 3) Document weight
      *
-     * @param docMetaOffsets array of offsets in the document_meta file.
+     * @param intIDs array of the intIDs of documents
      * @return
      */
-    public VSMprops getVSMprops(long[] docMetaOffsets) {
-        int[] maxTfs = new int[docMetaOffsets.length];
-        double[] VSMweights = new double[docMetaOffsets.length];
-        double[] citationsPagerank = new double[docMetaOffsets.length];
-        for (int i = 0; i < docMetaOffsets.length; i++) {
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(docMetaOffsets[i]);
+    public VSMprops getVSMprops(int[] intIDs) {
+        int[] maxTfs = new int[intIDs.length];
+        double[] VSMweights = new double[intIDs.length];
+        double[] citationsPagerank = new double[intIDs.length];
+        for (int i = 0; i < intIDs.length; i++) {
+            long offset = DocInfo.getMetaOffset(intIDs[i]);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset);
             buffer.get(__DOCUMENT_META_ARRAY__);
             citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             VSMweights[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
@@ -1156,14 +1154,15 @@ public class Indexer {
      * 1) Citations pagerank score
      * 2) Token count
      *
-     * @param docMetaOffsets array of offsets in the document_meta file.
+     * @param intIDs array of the intIDs of documents
      * @return
      */
-    public OKAPIprops getOKAPIprops(long[] docMetaOffsets) {
-        int[] tokenCount = new int[docMetaOffsets.length];
-        double[] citationsPagerank = new double[docMetaOffsets.length];
-        for (int i = 0; i < docMetaOffsets.length; i++) {
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(docMetaOffsets[i]);
+    public OKAPIprops getOKAPIprops(int[] intIDs) {
+        int[] tokenCount = new int[intIDs.length];
+        double[] citationsPagerank = new double[intIDs.length];
+        for (int i = 0; i < intIDs.length; i++) {
+            long offset = DocInfo.getMetaOffset(intIDs[i]);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset);
             buffer.get(__DOCUMENT_META_ARRAY__);
             citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             tokenCount[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);

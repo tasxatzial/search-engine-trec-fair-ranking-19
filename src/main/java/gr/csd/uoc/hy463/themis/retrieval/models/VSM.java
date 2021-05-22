@@ -75,8 +75,8 @@ public class VSM extends ARetrievalModel {
 
         for (int i = 0; i < query.size(); i++) {
             Posting postings = _indexer.getPostings(query.get(i).getTerm());
-            long[] docMetaOffsets = postings.getDocMetaOffsets();
-            VSMprops props = _indexer.getVSMprops(docMetaOffsets);
+            int[] intIDs = postings.getIntID();
+            VSMprops props = _indexer.getVSMprops(intIDs);
             double[] i_VSMWeight = props.getVSMweights();
             double[] i_citationsPagerank = props.getCitationsPagerank();
             int[] maxTfs = props.getMaxTfs();
@@ -86,7 +86,7 @@ public class VSM extends ARetrievalModel {
 
             //calculate weights
             for (int j = 0; j < dfs[i]; j++) {
-                int id = DocInfo.getIntId(docMetaOffsets[j]);
+                int id = intIDs[j];
                 documentWeights[id] = i_VSMWeight[j];
                 citationsPagerank[id] = i_citationsPagerank[j];
                 double[] weights = calculatedWeights[id];

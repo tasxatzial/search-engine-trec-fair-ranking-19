@@ -41,7 +41,6 @@ public class Index {
     // sorted list of the keys of the vocabulary
     private List<String> __INDEX_KEYS_SORTED__ = null;
 
-    // We have to hold also other appropriate data structures for postings / documents
     public Index(Config config) {
         __CONFIG__ = config;
         init();
@@ -76,7 +75,7 @@ public class Index {
      *
      * For each entry it stores:
      * TF (int => 4 bytes)
-     * POINTER_TO_DOCUMENT_META_FILE (long => 8 bytes)
+     * intID of the relevant document (int => 4 bytes)
      */
     public boolean dump() throws IOException {
         __INDEX_KEYS_SORTED__ = new ArrayList<>(__INDEX__.keySet());
@@ -95,15 +94,16 @@ public class Index {
     }
 
     /**
-     * Adds the map of term frequencies of a textual entry to the partial index struct. Returns
-     * the total number of frequencies.
+     * Adds the map of term frequencies of a document to the partial index struct. Returns
+     * the total number of frequencies. Also writes to doc_tf file a line of
+     * "term1 tf1 term2 tf2 ..."
      *
      * @param entryWords The map of term frequencies
-     * @param docOffset The offset to the document_meta file
+     * @param intID The intID of the related document
      * @return
      * @throws IOException
      */
-    public int add(Map<String, List<DocInfoFrequency>> entryWords, BufferedWriter termFreqWriter, long docOffset) throws IOException {
+    public int add(Map<String, List<DocInfoFrequency>> entryWords, BufferedWriter docTfWriter, int intID) throws IOException {
         StringBuilder sb = new StringBuilder();
         int totalTf = 0;
         for (Map.Entry<String, List<DocInfoFrequency>> entry : entryWords.entrySet()) {
@@ -116,17 +116,17 @@ public class Index {
             totalTf += tf;
             if (indexStruct != null) {
                 indexStruct.incr_df();
-                indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
+                indexStruct.get_postings().add(new PostingStruct(tf, intID));
             }
             else {
                 indexStruct = new PartialIndexStruct();
-                indexStruct.get_postings().add(new PostingStruct(tf, docOffset));
+                indexStruct.get_postings().add(new PostingStruct(tf, intID));
                 __INDEX__.put(key, indexStruct);
             }
             sb.append(key).append(' ').append(tf).append(' ');
         }
         sb.append('\n');
-        termFreqWriter.write(sb.toString());
+        docTfWriter.write(sb.toString());
         return totalTf;
     }
 
@@ -150,7 +150,7 @@ public class Index {
             int offset = 0;
             for (PostingStruct posting : postings) {
                 postingsBuf.putInt(offset, posting.get_tf());
-                postingsBuf.putLong(offset + PostingStruct.POINTER_OFFSET, posting.get_docPointer());
+                postingsBuf.putInt(offset + PostingStruct.INTID_OFFSET, posting.get_intID());
                 offset += PostingStruct.SIZE;
             }
             postingsWriter.write(postingsArray);

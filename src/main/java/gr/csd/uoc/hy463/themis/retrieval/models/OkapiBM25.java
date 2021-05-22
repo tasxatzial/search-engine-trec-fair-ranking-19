@@ -50,8 +50,8 @@ public class OkapiBM25 extends ARetrievalModel {
 
         for(int i = 0; i < query.size(); i++) {
             Posting postings = _indexer.getPostings(query.get(i).getTerm());
-            long[] docMetaOffsets = postings.getDocMetaOffsets();
-            OKAPIprops props = _indexer.getOKAPIprops(docMetaOffsets);
+            int[] intIDs = postings.getIntID();
+            OKAPIprops props = _indexer.getOKAPIprops(intIDs);
             double[] i_citationsPagerank = props.getCitationsPagerank();
             int[] i_tokenCount = props.getTokenCount();
             int[] tfs = postings.getTfs();
@@ -59,7 +59,7 @@ public class OkapiBM25 extends ARetrievalModel {
 
             //calculate the frequencies
             for (int j = 0; j < dfs[i]; j++) {
-                int id = DocInfo.getIntId(docMetaOffsets[j]);
+                int id = intIDs[j];
                 citationsPagerank[id] = i_citationsPagerank[j];
                 tokenCount[id] = i_tokenCount[j];
                 double[] freqs = calculatedFreqs[id];

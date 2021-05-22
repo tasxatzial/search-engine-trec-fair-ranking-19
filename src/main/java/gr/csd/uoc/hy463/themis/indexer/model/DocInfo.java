@@ -65,10 +65,6 @@ public class DocInfo {
         return (long) id * DocumentIDEntry.totalSize;
     }
 
-    public static int getIntId(long docMetaOffset) {
-        return (int) (docMetaOffset / DocumentMetaEntry.totalSize);
-    }
-
     public Set<PROPERTY> getProps() {
         return new HashSet<>(props.keySet());
     }

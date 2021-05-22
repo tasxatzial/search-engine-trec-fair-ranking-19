@@ -38,9 +38,9 @@ public class Existential extends ARetrievalModel {
         int[] dfs = _indexer.getDf(query);
         for (int i = 0; i < query.size(); i++) {
             Posting postings = _indexer.getPostings(query.get(i).getTerm());
-            long[] docMetaOffsets = postings.getDocMetaOffsets();
+            int[] intIDs = postings.getIntID();
             for (int j = 0; j < dfs[i]; j++) {
-                valid[DocInfo.getIntId(docMetaOffsets[j])] = true;
+                valid[intIDs[j]] = true;
             }
         }
 
