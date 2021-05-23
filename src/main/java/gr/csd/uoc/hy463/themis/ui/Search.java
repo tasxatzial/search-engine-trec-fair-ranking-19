@@ -1,6 +1,7 @@
 package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.Themis;
+import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
@@ -8,14 +9,15 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
-import gr.csd.uoc.hy463.themis.ui.Exceptions.SearchNoIndexException;
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import net.sf.extjwnl.JWNLException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -30,10 +32,10 @@ public class Search {
     private QueryExpansion _queryExpansion;
     private Set<DocInfo.PROPERTY> _props;
 
-    public Search() throws IOException, QueryExpansionException, SearchNoIndexException {
+    public Search() throws ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _indexer = new Indexer();
         if (!_indexer.load()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         switch (_indexer.getConfig().getRetrievalModel()) {
             case "BM25":
@@ -83,9 +85,9 @@ public class Search {
      * Sets the retrieval model to the specified model
      * @param model
      */
-    public void setRetrievalModel(ARetrievalModel.MODEL model) throws SearchNoIndexException {
+    public void setRetrievalModel(ARetrievalModel.MODEL model) throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
             _model = new VSM(_indexer);
@@ -117,9 +119,9 @@ public class Search {
      * @param dictionary
      * @throws IOException
      */
-    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, QueryExpansionException, SearchNoIndexException {
+    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
             _queryExpansion = new Glove(_indexer.useStopwords());
@@ -150,9 +152,9 @@ public class Search {
      * Returns the timestamp of the loaded index
      * @return
      */
-    public String getIndexTimestamp() throws SearchNoIndexException {
+    public String getIndexTimestamp() throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         return _indexer.getIndexTimestamp();
     }
@@ -161,16 +163,16 @@ public class Search {
      * Sets the retrieved document properties to the specified props
      * @param props
      */
-    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) throws SearchNoIndexException {
+    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         _props = props;
     }
 
-    public String getDocID(int intId) throws SearchNoIndexException, UnsupportedEncodingException {
+    public String getDocID(int intId) throws IndexNotLoadedException, UnsupportedEncodingException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         return _indexer.getDocID(intId);
     }
@@ -181,7 +183,7 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query) throws IOException, QueryExpansionException, SearchNoIndexException {
+    public List<Pair<DocInfo, Double>> search(String query) throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         return search(query, Integer.MAX_VALUE);
     }
 
@@ -193,9 +195,9 @@ public class Search {
      * @return
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query, int endResult) throws QueryExpansionException, IOException, SearchNoIndexException {
+    public List<Pair<DocInfo, Double>> search(String query, int endResult) throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         if (!isIndexLoaded()) {
-            throw new SearchNoIndexException();
+            throw new IndexNotLoadedException();
         }
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
@@ -277,7 +279,7 @@ public class Search {
      * Prints a list of results in decreasing ranking order.
      * @param searchResults
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults) throws UnsupportedEncodingException {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults) throws UnsupportedEncodingException, IndexNotLoadedException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
 
@@ -288,7 +290,7 @@ public class Search {
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) throws UnsupportedEncodingException {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) throws UnsupportedEncodingException, IndexNotLoadedException {
         if (searchResults.isEmpty()) {
             return;
         }

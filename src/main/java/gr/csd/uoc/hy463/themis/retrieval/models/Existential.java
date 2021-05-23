@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -18,13 +19,13 @@ import java.util.*;
 public class Existential extends ARetrievalModel {
     boolean[] valid;
 
-    public Existential(Indexer index) {
+    public Existential(Indexer index) throws IndexNotLoadedException {
         super(index);
         valid = new boolean[totalArticles];
     }
 
     @Override
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException {
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException {
         List<Pair<DocInfo, Double>> results = new ArrayList<>();
         totalResults = 0;
 

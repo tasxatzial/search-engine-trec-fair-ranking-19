@@ -2,15 +2,17 @@ package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.ui.Exceptions.SearchNoIndexException;
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
@@ -44,15 +46,15 @@ public class themisEval {
 
     /**
      * Initiates the evaluation
-     * @throws SearchNoIndexException
+     * @throws IndexNotLoadedException
      * @throws IOException
-     * @throws QueryExpansionException
+     * @throws ExpansionDictionaryInitException
      */
-    public void start() throws SearchNoIndexException, IOException, QueryExpansionException {
+    public void start() throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
         __JUDGEMENTS_PATH__ = __CONFIG__.getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_PATH__).exists())) {
-            __LOGGER__.error("No judgements file found! Evaluation failed");
-            Themis.print("No judgements file found! Evaluation failed\n");
+            __LOGGER__.info("No judgements file found!");
+            Themis.print("No judgements file found!\n");
             return;
         }
         String evaluationFilename = __CONFIG__.getEvaluationFilename();
@@ -90,7 +92,7 @@ public class themisEval {
     }
 
     /* Runs the evaluation based on the configured parameters */
-    private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter) throws IOException, QueryExpansionException, SearchNoIndexException {
+    private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter) throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
@@ -104,6 +106,7 @@ public class themisEval {
                 obj = parser.parse(line);
             } catch (ParseException e) {
                 __LOGGER__.error(e.getMessage());
+                Themis.print("Unable to parse json\n");
                 continue;
             }
             JSONObject jsonObject = (JSONObject) obj;
@@ -187,7 +190,7 @@ public class themisEval {
     }
 
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, SearchNoIndexException {
+    private double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -218,7 +221,7 @@ public class themisEval {
     }
 
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, SearchNoIndexException {
+    private double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;

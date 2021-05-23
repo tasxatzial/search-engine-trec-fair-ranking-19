@@ -8,6 +8,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocumentIDEntry;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
+import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +20,11 @@ import java.nio.file.Files;
 import java.util.*;
 
 public class Pagerank {
+    private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
+
     private Indexer _indexer;
     private String __GRAPH_PATH__;
-    private Map<String, String> _INDEX_META__ = null;
+    private Map<String, String> _INDEX_META__;
 
     public Pagerank(Indexer indexer) throws IOException {
         _indexer = indexer;
@@ -33,22 +36,24 @@ public class Pagerank {
      * Computes the pagerank scores based on the citations
      * @throws IOException
      */
-    public void citationsPagerank() throws IOException {
-        Themis.print(">>> Calculating Pagerank\n");
-        if (!_indexer.hasIndex()) {
-            return;
+    public void citationsPagerank() throws PagerankException {
+        try {
+            Themis.print(">>> Calculating Pagerank\n");
+            long startTime = System.nanoTime();
+            Themis.print("> Constructing graph\n");
+            dumpCitations();
+            PagerankNode[] graph = initCitationsGraph(Integer.parseInt(_INDEX_META__.get("articles")), __GRAPH_PATH__);
+            Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
+            startTime = System.nanoTime();
+            Themis.print("> Iterating\n");
+            double[] scores = computeCitationsPagerank(graph);
+            Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
+            writeCitationsScores(scores);
+            Files.deleteIfExists(new File(__GRAPH_PATH__).toPath());
         }
-        long startTime = System.nanoTime();
-        Themis.print("> Constructing graph\n");
-        dumpCitations();
-        PagerankNode[] graph = initCitationsGraph(Integer.parseInt(_INDEX_META__.get("articles")), __GRAPH_PATH__);
-        Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
-        startTime = System.nanoTime();
-        Themis.print("> Iterating\n");
-        double[] scores = computeCitationsPagerank(graph);
-        Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
-        writeCitationsScores(scores);
-        Files.deleteIfExists(new File(__GRAPH_PATH__).toPath());
+        catch (IOException e) {
+            throw new PagerankException();
+        }
     }
 
     /* Creates a temp file 'graph' in the Index directory. Entry N of this file corresponds to the Nth document
@@ -279,6 +284,5 @@ public class Pagerank {
             offset += DocumentMetaEntry.totalSize;
         }
         documentMetaBuffers.close();
-        documentMetaBuffers = null;
     }
 }

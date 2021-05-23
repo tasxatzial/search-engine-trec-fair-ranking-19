@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -22,7 +23,7 @@ public class OkapiBM25 extends ARetrievalModel {
     double[] modelScore;
     double[][] calculatedFreqs;
 
-    public OkapiBM25(Indexer index) {
+    public OkapiBM25(Indexer index) throws IndexNotLoadedException {
         super(index);
         calculatedFreqs = new double[totalArticles][];
         citationsPagerank = new double[totalArticles];
@@ -32,7 +33,7 @@ public class OkapiBM25 extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException {
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException {
         List<DocInfo> results = new ArrayList<>();
         totalResults = 0;
         for (int i = 0; i < totalArticles; i++) {

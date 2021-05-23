@@ -2,9 +2,10 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
@@ -23,12 +24,18 @@ public class Glove extends QueryExpansion {
     private int _nearest;
     private boolean _useStopwords;
 
-    public Glove(boolean useStopwords) throws IOException, QueryExpansionException {
+    public Glove(boolean useStopwords) throws ExpansionDictionaryInitException, ConfigLoadException {
         Themis.print(">>> Initializing Glove...");
-        Config __CONFIG__ = new Config();
+        Config __CONFIG__;
+        try {
+            __CONFIG__ = new Config();
+        }
+        catch (IOException e) {
+            throw new ConfigLoadException();
+        }
         File gloveModel = new File(__CONFIG__.getGloveModelFileName());
         if (!gloveModel.exists()) {
-            throw new QueryExpansionException();
+            throw new ExpansionDictionaryInitException();
         }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 

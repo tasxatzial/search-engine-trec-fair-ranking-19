@@ -1,19 +1,22 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.ui.Exceptions.SearchNoIndexException;
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.ui.View.ExpansionDictionaryRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +41,7 @@ public class Themis {
     private static TASK _task = null;
     private static ActionListener searchButtonListener = null;
 
-    public static void main(String[] args) throws IOException, QueryExpansionException, SearchNoIndexException {
+    public static void main(String[] args) {
 
         //GUI version
         if (args.length > 0 && args[0].equals("gui")) {
@@ -87,19 +90,24 @@ public class Themis {
 
         //non GUI version, write code in else block
         else {
-            search = new Search();
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            try {
+                search = new Search();
+                Set<DocInfo.PROPERTY> props = new HashSet<>();
 
-            /* we want to fetch the titles */
-            props.add(DocInfo.PROPERTY.TITLE);
-            search.setDocumentProperties(props);
+                /* we want to fetch the titles */
+                props.add(DocInfo.PROPERTY.TITLE);
+                search.setDocumentProperties(props);
 
-            /* retrieve info for the results that have index 0-7 for query 'case' */
-            List<Pair<DocInfo, Double>> results = search.search("test", 8);
+                /* retrieve info for the results that have index 0-7 for query 'case' */
+                List<Pair<DocInfo, Double>> results = search.search("test", 8);
 
             /* result indexes start from 0.
             print results that have index 5-20. If we got only 10 results, it would print results 5-7 */
-            search.printResults(results, 5, 20);
+                search.printResults(results, 5, 20);
+            }
+            catch (Exception ex) {
+                print("Search failed\n");
+            }
         }
     }
 
@@ -212,9 +220,19 @@ public class Themis {
                 createIndex = null;
                 try {
                     search = new Search();
-                } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
-                    __LOGGER__.error(e.getMessage());
+                } catch (ExpansionDictionaryInitException ex) {
+                    __LOGGER__.error(ex.getMessage());
                     print("Failed to initialize search\n");
+                    _task = null;
+                    return;
+                } catch (IndexNotLoadedException ex) {
+                    __LOGGER__.error(ex.getMessage());
+                    print("Index is not loaded\n");
+                    _task = null;
+                    return;
+                } catch (ConfigLoadException ex) {
+                    __LOGGER__.error(ex.getMessage());
+                    print("Failed to read from config file\n");
                     _task = null;
                     return;
                 }
@@ -222,9 +240,21 @@ public class Themis {
             try {
                 themisEval eval = new themisEval(search, _model, _dictionary);
                 eval.start();
-            } catch (IOException | QueryExpansionException | SearchNoIndexException e) {
-                __LOGGER__.error(e.getMessage());
+            } catch (IOException ex) {
+                __LOGGER__.error(ex.getMessage());
                 print("Evaluation failed\n");
+            } catch (ExpansionDictionaryInitException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to initialize expansion dictionary\n");
+            } catch (IndexNotLoadedException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Index is not loaded\n");
+            } catch (JWNLException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("extJWNL error\n");
+            } catch (ConfigLoadException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to read from config file\n");
             } finally {
                 _task = null;
             }
@@ -239,7 +269,12 @@ public class Themis {
                 createIndex = new CreateIndex();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize\n");
+                print("Failed to initialize indexer\n");
+                _task = null;
+                return;
+            } catch (ConfigLoadException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to read from config file\n");
                 _task = null;
                 return;
             }
@@ -277,6 +312,9 @@ public class Themis {
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Failed to create index\n");
+            } catch (PagerankException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Pagerank failed\n");
             } finally {
                 _task = null;
             }
@@ -301,11 +339,16 @@ public class Themis {
             createIndex = null;
             try {
                 search = new Search();
-            } catch (IOException | QueryExpansionException | SearchNoIndexException ex) {
+            } catch (ExpansionDictionaryInitException ex) {
                 __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize search\n");
-            }
-            finally {
+                print("Failed to initialize expansion dictionary\n");
+            } catch (IndexNotLoadedException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to load index\n");
+            } catch (ConfigLoadException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to read from config file\n");
+            } finally {
                 _task = null;
                 if (search != null) {
                     view.checkRetrievalModel(search.getRetrievalmodel());
@@ -330,14 +373,24 @@ public class Themis {
                 if (expansionDictionary.getItem(i).isSelected()) {
                     try {
                         search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).get_dictionary());
-                    } catch (IOException | QueryExpansionException e) {
-                        __LOGGER__.error(e.getMessage());
-                        print("Failed to load expansion dictionary\n");
+                    } catch (ExpansionDictionaryInitException ex) {
+                        __LOGGER__.error(ex.getMessage());
+                        print("Failed to initialize expansion dictionary\n");
                         _task = null;
                         return;
-                    } catch (SearchNoIndexException e) {
-                        __LOGGER__.error(e.getMessage());
+                    } catch (IndexNotLoadedException ex) {
+                        __LOGGER__.error(ex.getMessage());
                         print("Index is not loaded\n");
+                        _task = null;
+                        return;
+                    } catch (ConfigLoadException ex) {
+                        __LOGGER__.error(ex.getMessage());
+                        print("Failed to read from config file\n");
+                        _task = null;
+                        return;
+                    } catch (IOException ex) {
+                        __LOGGER__.error(ex.getMessage());
+                        print("IO error\n");
                         _task = null;
                         return;
                     }
@@ -355,8 +408,8 @@ public class Themis {
             }
             try {
                 search.setDocumentProperties(props);
-            } catch (SearchNoIndexException e) {
-                __LOGGER__.error(e.getMessage());
+            } catch (IndexNotLoadedException ex) {
+                __LOGGER__.error(ex.getMessage());
                 print("Index is not loaded\n");
                 _task = null;
                 return;
@@ -368,8 +421,8 @@ public class Themis {
                 if (retrievalModel.getItem(i).isSelected()) {
                     try {
                         search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).get_model());
-                    } catch (SearchNoIndexException e) {
-                        __LOGGER__.error(e.getMessage());
+                    } catch (IndexNotLoadedException ex) {
+                        __LOGGER__.error(ex.getMessage());
                         print("Index is not loaded\n");
                         _task = null;
                         return;
@@ -392,18 +445,26 @@ public class Themis {
                 }
                 print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + search.getTotalResults() + " results\n");
-                if (search.getRetrievalmodel() == ARetrievalModel.MODEL.EXISTENTIAL) {
-                    print("Retrieved info for all results\n");
-                } else {
-                    print("Retrieved info for top " + Math.min(search.getTotalResults(), endResult) + " results\n");
+                if (search.getRetrievalmodel() != ARetrievalModel.MODEL.EXISTENTIAL) {
+                    print("Returning top " + Math.min(search.getTotalResults(), endResult) + " results\n");
                 }
 
-                //print info for results with index 0 to 9 (inclusive)
+                //print results with index 0 to 9 (inclusive)
                 search.printResults(results, 0, 9);
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Search failed\n");
-            } finally {
+            } catch (IndexNotLoadedException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Index is not loaded\n");
+            } catch (ExpansionDictionaryInitException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("Failed to initialize expansion dictionary\n");
+            } catch (JWNLException ex) {
+                __LOGGER__.error(ex.getMessage());
+                print("extJWNL error\n");
+            }
+            finally {
                 _task = null;
             }
         }

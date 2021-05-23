@@ -4,7 +4,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
 import net.sf.extjwnl.data.IndexWord;
@@ -24,12 +24,12 @@ public class EXTJWNL extends QueryExpansion {
     private Dictionary dictionary;
     private boolean _useStopwords;
 
-    public EXTJWNL(boolean useStopwords) throws QueryExpansionException {
+    public EXTJWNL(boolean useStopwords) throws ExpansionDictionaryInitException {
         Themis.print(">>> Initializing extJWNL...");
         try {
             dictionary = Dictionary.getDefaultResourceInstance();
         } catch (JWNLException e) {
-            throw new QueryExpansionException();
+            throw new ExpansionDictionaryInitException();
         }
         if (dictionary != null) {
             maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
@@ -44,7 +44,7 @@ public class EXTJWNL extends QueryExpansion {
      * @return
      */
     @Override
-    public List<List<QueryTerm>> expandQuery(List<String> query) throws QueryExpansionException {
+    public List<List<QueryTerm>> expandQuery(List<String> query) throws JWNLException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
@@ -72,11 +72,7 @@ public class EXTJWNL extends QueryExpansion {
             // Ignore anything that is not a noun, verb, adjective, adverb
             if (pos != null) {
                 IndexWord iWord;
-                try {
-                    iWord = dictionary.getIndexWord(pos, term);
-                } catch (JWNLException e) {
-                    throw new QueryExpansionException();
-                }
+                iWord = dictionary.getIndexWord(pos, term);
                 if (iWord != null) {
                     for (Synset synset : iWord.getSenses()) {
                         List<Word> words = synset.getWords();

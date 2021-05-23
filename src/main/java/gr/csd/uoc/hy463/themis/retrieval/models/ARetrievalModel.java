@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.retrieval.models;
 
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -20,7 +21,7 @@ public abstract class ARetrievalModel {
     protected int totalArticles;
     protected int totalResults = 0;
 
-    protected ARetrievalModel(Indexer indexer) {
+    protected ARetrievalModel(Indexer indexer) throws IndexNotLoadedException {
         _indexer = indexer;
         totalArticles = _indexer.getTotalArticles();
     }
@@ -46,7 +47,7 @@ public abstract class ARetrievalModel {
      * @param query list of query terms
      * @return
      */
-    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException;
+    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException;
 
     /**
      * Sorts the specified results based on the citations pagerank scores and the retrieval model score.

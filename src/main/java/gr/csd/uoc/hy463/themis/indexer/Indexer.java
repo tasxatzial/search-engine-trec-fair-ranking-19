@@ -2,6 +2,8 @@ package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
+import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
@@ -10,6 +12,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Jso
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
@@ -95,8 +98,13 @@ public class Indexer {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public Indexer() throws IOException {
-        this.__CONFIG__ = new Config();  // reads info from themis.config file
+    public Indexer() throws ConfigLoadException {
+        try {
+            this.__CONFIG__ = new Config();  // reads info from themis.config file
+        }
+        catch (IOException e) {
+            throw new ConfigLoadException();
+        }
         __INDEX_PATH__ = getIndexPath();
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
@@ -107,61 +115,12 @@ public class Indexer {
     }
 
     /**
-     * Checks if the index directory specified in the INDEX_PATH prop in the themis.config file
-     * has all the required files.
-     *
-     * @return
-     */
-    public boolean hasIndex() {
-        File file;
-
-        // Check if index files exist
-        file = new File(getVocabularyPath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__VOCABULARY_FILENAME__ + " vocabulary file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        file = new File(getPostingsPath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__POSTINGS_FILENAME__ + " postings binary file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        file = new File(getDocumentsFilePath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_FILENAME__ + " documents binary file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        file = new File(getDocumentsIDFilePath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_ID_FILENAME__ + " documents_ID binary file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        file = new File(getDocumentsMetaFilePath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__);
-            Themis.print(__DOCUMENTS_META_FILENAME__ + " documents_meta binary file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        file = new File(getMetaPath());
-        if (!file.exists() || file.isDirectory()) {
-            __LOGGER__.error(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__);
-            Themis.print(__META_FILENAME__ + " meta file does not exist in " + __INDEX_PATH__ + "\n");
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Method that indexes the collection specified in the DATASET_PATH prop in the themis.config file
      *
      * @return
      * @throws IOException
      */
-    public void index() throws IOException {
+    public void index() throws IOException, PagerankException {
         index(getDataSetPath());
     }
 
@@ -177,10 +136,10 @@ public class Indexer {
      * @return
      * @throws IOException
      */
-    public void index(String path) throws IOException {
+    public void index(String path) throws IOException, PagerankException {
         if (!isIndexDirEmpty()) {
-            Themis.print("Previous index found. Please delete it first.\n");
-            __LOGGER__.error("Previous index found. Please delete it first.");
+            __LOGGER__.error("Previous index found. Aborting...");
+            Themis.print("Previous index found. Aborting...\n");
             return;
         }
 
@@ -196,6 +155,7 @@ public class Indexer {
         File folder = new File(path);
         File[] files = folder.listFiles();
         if (files == null || files.length == 0) {
+            __LOGGER__.info("No dataset files found in " + path);
             Themis.print("No dataset files found in " + path + "\n");
             return;
         }
@@ -338,6 +298,7 @@ public class Indexer {
                 deleteDir(new File(getPartialVocabularyPath(partialIndex)));
             }
         } catch (IOException e) {
+            __LOGGER__.error("Error deleting partial vocabularies");
             Themis.print("Error deleting partial vocabularies\n");
         }
 
@@ -352,6 +313,7 @@ public class Indexer {
                 deleteDir(new File(getPartialPostingPath(partialIndex)));
             }
         } catch (IOException e) {
+            __LOGGER__.error("Error deleting partial postings");
             Themis.print("Error deleting partial postings\n");
         }
         deleteDir(new File(getTermDfPath()));
@@ -364,6 +326,7 @@ public class Indexer {
         try {
             deleteDir(new File(getIndexTmpPath()));
         } catch (IOException e) {
+            __LOGGER__.error("Error deleting tmp index");
             Themis.print("Error deleting tmp index\n");
         }
 
@@ -763,48 +726,48 @@ public class Indexer {
      * @return
      * @throws IOException
      */
-    public boolean load() throws IOException {
-        if (!hasIndex()) {
-            return false;
-        }
-
+    public boolean load() throws IndexNotLoadedException {
         Themis.print(">>> Index path: " + __INDEX_PATH__ + "\n");
 
         //load index meta file
-        _INDEX_META__ = loadMeta();
-        Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
-        Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
+        try {
+            _INDEX_META__ = loadMeta();
+            Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
+            Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
 
-        if (__CONFIG__.getUseQueryExpansion()) {
-            Themis.print("Default query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
+            if (__CONFIG__.getUseQueryExpansion()) {
+                Themis.print("Default query expansion model: " + __CONFIG__.getQueryExpansionModel() + "\n");
+            } else {
+                Themis.print("Default query expansion model: None\n");
+            }
+            Themis.print("Default retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
+            Themis.print(">>> Loading index...");
+
+            //load vocabulary file
+            __VOCABULARY__ = new HashMap<>();
+            String line;
+            String[] fields;
+
+            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
+            while ((line = vocabularyReader.readLine()) != null) {
+                fields = line.split(" ");
+                __VOCABULARY__.put(fields[0], new VocabularyStruct(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
+            }
+            vocabularyReader.close();
+
+            __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
+            __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
+
+            __DOCMETA_BUFFERS__ = new DocBuffers(getDocumentsMetaFilePath(), MemBuffers.MODE.READ, DocumentMetaEntry.totalSize);
+            __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
+            __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
+            __DOCID_BUFFERS__ = new DocBuffers(getDocumentsIDFilePath(), MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
+            __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
+            __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         }
-        else {
-            Themis.print("Default query expansion model: None\n");
+        catch (IOException e) {
+            throw new IndexNotLoadedException();
         }
-        Themis.print("Default retrieval model: " + __CONFIG__.getRetrievalModel() + "\n");
-        Themis.print(">>> Loading index...");
-
-        //load vocabulary file
-        __VOCABULARY__ = new HashMap<>();
-        String line;
-        String[] fields;
-
-        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
-        while ((line = vocabularyReader.readLine()) != null) {
-            fields = line.split(" ");
-            __VOCABULARY__.put(fields[0], new VocabularyStruct(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
-        }
-        vocabularyReader.close();
-
-        __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
-        __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
-
-        __DOCMETA_BUFFERS__ = new DocBuffers(getDocumentsMetaFilePath(), MemBuffers.MODE.READ, DocumentMetaEntry.totalSize);
-        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
-        __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        __DOCID_BUFFERS__ = new DocBuffers(getDocumentsIDFilePath(), MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
-        __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
-        __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         Themis.print("DONE\n");
 
         return true;
@@ -816,11 +779,9 @@ public class Indexer {
      * @throws IOException
      */
     public Map<String, String> loadMeta() throws IOException {
-        if (!hasIndex()) {
-            return null;
-        }
+        Map<String, String> meta;
         BufferedReader indexMetaReader = new BufferedReader(new FileReader(getMetaPath()));
-        Map<String, String> meta = new HashMap<>();
+        meta = new HashMap<>();
         String[] split;
         String line;
         while((line = indexMetaReader.readLine()) != null) {
@@ -828,6 +789,7 @@ public class Indexer {
             meta.put(split[0], split[1]);
         }
         indexMetaReader.close();
+
         return meta;
     }
 
@@ -885,7 +847,10 @@ public class Indexer {
      * @return
      * @throws UnsupportedEncodingException
      */
-    public String getDocID(int intID) throws UnsupportedEncodingException {
+    public String getDocID(int intID) throws UnsupportedEncodingException, IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         long docIdOffset = DocInfo.getDocIdOffset(intID);
         ByteBuffer buffer = __DOCID_BUFFERS__.getBufferLong(docIdOffset);
         buffer.get(__DOCUMENT_ID_ARRAY__);
@@ -901,7 +866,10 @@ public class Indexer {
      * @param props
      * @throws IOException
      */
-    public void updateDocInfo(List<Pair<DocInfo, Double>> docInfos, Set<DocInfo.PROPERTY> props) throws IOException {
+    public void updateDocInfo(List<Pair<DocInfo, Double>> docInfos, Set<DocInfo.PROPERTY> props) throws IOException, IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         if (docInfos.size() == 0) {
             return;
         }
@@ -1084,7 +1052,10 @@ public class Indexer {
      * @param query
      * @return
      */
-    public int[] getDf(List<QueryTerm> query) {
+    public int[] getDf(List<QueryTerm> query) throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         int[] dfs = new int[query.size()];
         VocabularyStruct vocabularyValue;
         for (int i = 0; i < query.size(); i++) {
@@ -1105,7 +1076,10 @@ public class Indexer {
      * @return
      * @throws IOException
      */
-    public Posting getPostings(String term) throws IOException {
+    public Posting getPostings(String term) throws IOException, IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         VocabularyStruct vocabularyValue = __VOCABULARY__.get(term);
         if (vocabularyValue == null) {
             return new Posting(new int[0], new int[0]);
@@ -1134,7 +1108,10 @@ public class Indexer {
      * @param intIDs array of the intIDs of documents
      * @return
      */
-    public VSMprops getVSMprops(int[] intIDs) {
+    public VSMprops getVSMprops(int[] intIDs) throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         int[] maxTfs = new int[intIDs.length];
         double[] VSMweights = new double[intIDs.length];
         double[] citationsPagerank = new double[intIDs.length];
@@ -1157,7 +1134,10 @@ public class Indexer {
      * @param intIDs array of the intIDs of documents
      * @return
      */
-    public OKAPIprops getOKAPIprops(int[] intIDs) {
+    public OKAPIprops getOKAPIprops(int[] intIDs) throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
         int[] tokenCount = new int[intIDs.length];
         double[] citationsPagerank = new double[intIDs.length];
         for (int i = 0; i < intIDs.length; i++) {
@@ -1174,71 +1154,59 @@ public class Indexer {
      * Returns the total number of articles of this index
      * @return
      */
-    public int getTotalArticles() {
-        if (_INDEX_META__ != null) {
-            return Integer.parseInt(_INDEX_META__.get("articles"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return 0;
+    public int getTotalArticles() throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
         }
+        return Integer.parseInt(_INDEX_META__.get("articles"));
     }
 
     /**
      * Returns the avgdl used by the okapi bm25 retrieval model
      * @return
      */
-    public double getAvgdl() {
-        if (_INDEX_META__ != null) {
-            return Double.parseDouble(_INDEX_META__.get("avgdl"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return 0;
+    public double getAvgdl() throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
         }
+        return Double.parseDouble(_INDEX_META__.get("avgdl"));
     }
 
     /**
-     * Returns true if stopwords is enabled.
-     * Returns null if meta index info file is not loaded.
+     * Returns true if stopwords is enabled
      * @return
      */
-    public Boolean useStopwords() {
-        if (_INDEX_META__ != null) {
-            return Boolean.parseBoolean(_INDEX_META__.get("use_stopwords"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return null;
+    public Boolean useStopwords() throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
         }
+        return Boolean.parseBoolean(_INDEX_META__.get("use_stopwords"));
     }
 
     /**
-     * Returns true if stemming is enabled.
-     * Returns null if meta index info file is not loaded.
+     * Returns true if stemming is enabled
      * @return
      */
-    public Boolean useStemmer() {
-        if (_INDEX_META__ != null) {
-            return Boolean.parseBoolean(_INDEX_META__.get("use_stemmer"));
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return null;
+    public Boolean useStemmer() throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
         }
+        return Boolean.parseBoolean(_INDEX_META__.get("use_stemmer"));
     }
 
     /**
-     * Returns the timestamp of the index.
+     * Returns the timestamp of the index
      * @return
      */
-    public String getIndexTimestamp() {
-        if (_INDEX_META__ != null) {
-            return _INDEX_META__.get("timestamp");
-        } else {
-            __LOGGER__.error("Meta index info file is not loaded!");
-            return null;
+    public String getIndexTimestamp() throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
         }
+        return _INDEX_META__.get("timestamp");
     }
 
     /**
-     * Returns the configuration file this indexer uses
+     * Returns the configuration file used by this Indexer
      * @return
      */
     public Config getConfig() {
