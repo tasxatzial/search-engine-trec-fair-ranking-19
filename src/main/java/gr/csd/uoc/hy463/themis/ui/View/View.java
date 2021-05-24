@@ -83,7 +83,7 @@ public class View extends JFrame {
         initMenu();
         pack();
         setTitle("Themis search engine v0.1");
-        setSize(1000, 800); //initial frame size
+        setSize(800, 600); //initial frame size
         _mainPane = new JLayeredPane();
         initTitleArea();
         getContentPane().add(_mainPane);

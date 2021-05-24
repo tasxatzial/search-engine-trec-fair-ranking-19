@@ -84,7 +84,7 @@ public class Pagerank {
         Collections.sort(corpus);
 
         // document string Id -> int Id
-        Map<String, Integer> citationsIdsMap = new HashMap<>();
+        Map<String, Integer> citationsIntMap = new HashMap<>();
 
         /* read the documents_id file and create the map of doc_id -> int id */
         int documents = 0;
@@ -93,10 +93,11 @@ public class Pagerank {
         while ((buffer = documentIDBuffers.getBufferLong(offset)) != null) {
             buffer.get(docIdArray);
             String stringId = new String(docIdArray, 0, DocumentIDEntry.ID_SIZE, "ASCII");
-            citationsIdsMap.put(stringId, documents);
+            citationsIntMap.put(stringId, documents);
             documents++;
             offset += DocumentIDEntry.totalSize;
         }
+        documentIDBuffers.close();
 
         /* parse the dataset and write the required data to the 'graph' file */
         for (File file : corpus) {
@@ -111,7 +112,7 @@ public class Pagerank {
                     List<String> outCitations = entry.getOutCitations();
                     int numOutCitations = 0;
                     for (int i = 0; i < outCitations.size(); i++) {
-                        if (!skipCitation(citationsIdsMap, outCitations, entry.getId(), outCitations.get(i), i)) {
+                        if (!skipCitation(citationsIntMap, outCitations, entry.getId(), outCitations.get(i), i)) {
                             numOutCitations++;
                         }
                     }
@@ -120,7 +121,7 @@ public class Pagerank {
                     List<String> inCitations = entry.getInCitations();
                     int numInCitations = 0;
                     for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(citationsIdsMap, inCitations, entry.getId(), inCitations.get(i), i)) {
+                        if (!skipCitation(citationsIntMap, inCitations, entry.getId(), inCitations.get(i), i)) {
                             numInCitations++;
                         }
                     }
@@ -132,8 +133,8 @@ public class Pagerank {
                     citationDataBuf.putInt(4, numOutCitations);
                     int k = 0;
                     for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(citationsIdsMap, inCitations, entry.getId(), inCitations.get(i), i)) {
-                            Integer citation = citationsIdsMap.get(inCitations.get(i));
+                        if (!skipCitation(citationsIntMap, inCitations, entry.getId(), inCitations.get(i), i)) {
+                            Integer citation = citationsIntMap.get(inCitations.get(i));
                             citationDataBuf.putInt(4 * (2 + k), citation);
                             k++;
                         }
@@ -144,8 +145,7 @@ public class Pagerank {
             }
         }
         graphWriter.close();
-        documentIDBuffers.close();
-        documentIDBuffers = null;
+
     }
 
     /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
