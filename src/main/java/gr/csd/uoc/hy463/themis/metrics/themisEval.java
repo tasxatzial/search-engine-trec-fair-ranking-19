@@ -258,16 +258,16 @@ public class themisEval {
     private static double calculateAverage(List<Double> list) {
         double sum = 0;
         if (list.isEmpty()) {
-            return 0;
+            return Double.NaN;
         }
-        int numbers = 0;
+        int count = 0;
         for (Double value : list) {
-            if (value > -Double.MIN_VALUE && Double.isFinite(value)) {
-                numbers++;
+            if (Double.isFinite(value)) {
+                count++;
                 sum += value;
             }
         }
-        return sum / numbers;
+        return sum / count;
     }
 
     /* calculates the min in a list of doubles */
@@ -277,7 +277,7 @@ public class themisEval {
             return Double.NaN;
         }
         int i = 0;
-        while (i < list.size() && (list.get(i) < -Double.MIN_VALUE || !Double.isFinite(list.get(i)))) {
+        while (i < list.size() && !Double.isFinite(list.get(i))) {
             i++;
         }
         if (i == list.size()) {
@@ -285,7 +285,7 @@ public class themisEval {
         }
         min = list.get(i);
         for (Double value : list) {
-            if (value > -Double.MIN_VALUE && Double.isFinite(value) && value < min) {
+            if (Double.isFinite(value) && value < min) {
                 min = value;
             }
         }
@@ -299,7 +299,7 @@ public class themisEval {
             return Double.NaN;
         }
         int i = 0;
-        while (i < list.size() && (list.get(i) < -Double.MIN_VALUE || !Double.isFinite(list.get(i)))) {
+        while (i < list.size() && !Double.isFinite(list.get(i))) {
             i++;
         }
         if (i == list.size()) {
@@ -307,7 +307,7 @@ public class themisEval {
         }
         max = list.get(i);
         for (Double value : list) {
-            if (value > -Double.MIN_VALUE && Double.isFinite(value) && value > max) {
+            if (Double.isFinite(value) && value > max) {
                 max = value;
             }
         }
