@@ -34,7 +34,7 @@ public class OkapiBM25 extends ARetrievalModel {
 
     @Override
     public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException {
-        List<DocInfo> results = new ArrayList<>();
+        List<Pair<DocInfo, Double>> results = new ArrayList<>();
         totalResults = 0;
         for (int i = 0; i < totalArticles; i++) {
             calculatedFreqs[i] = null;
@@ -72,6 +72,11 @@ public class OkapiBM25 extends ARetrievalModel {
             }
         }
 
+        double[] idfs = new double[query.size()];
+        for (int i = 0; i < idfs.length; i++) {
+            idfs[i] = Math.log(totalArticles / (1.0 + dfs[i]));
+        }
+
         //calculate the scores
         double maxScore = 0;
         for (int i = 0; i < calculatedFreqs.length; i++) {
@@ -81,25 +86,31 @@ public class OkapiBM25 extends ARetrievalModel {
             double score = 0;
             double[] freqs = calculatedFreqs[i];
             for (int j = 0; j < query.size(); j++) {
-                double idf = Math.log(totalArticles / (1.0 + dfs[j]));
-                score += idf * (freqs[j] * (k1 + 1) / (freqs[j] + k1 * (1 - b + (b * tokenCount[i]) / avgdl)) + 1);
+                score += idfs[j] * (freqs[j] * (k1 + 1) / (freqs[j] + k1 * (1 - b + (b * tokenCount[i]) / avgdl)) + 1);
             }
             modelScore[i] = score;
             if (score > maxScore) {
                 maxScore = score;
             }
-            DocInfo docInfo = new DocInfo(i);
-            results.add(docInfo);
+        }
+
+        if (Double.compare(maxScore, 0.0) == 0) {
+            maxScore = 1;
         }
 
         //normalize to [0, 1]
-        for (int i = 0; i < modelScore.length; i++) {
+        for (int i = 0; i < calculatedFreqs.length; i++) {
+            if (calculatedFreqs[i] == null) {
+                continue;
+            }
             modelScore[i] /= maxScore;
+            DocInfo docInfo = new DocInfo(i);
+            results.add(new Pair<>(docInfo, modelScore[i]));
         }
 
         totalResults = results.size();
 
         //sort based on pagerank score and this model score
-        return sort(results, citationsPagerank, modelScore, endResult);
+        return sort(results, citationsPagerank, endResult);
     }
 }

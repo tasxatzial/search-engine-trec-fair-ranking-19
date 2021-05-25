@@ -30,7 +30,7 @@ public class VSM extends ARetrievalModel {
 
     @Override
     public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException {
-        List<DocInfo> results = new ArrayList<>();
+        List<Pair<DocInfo, Double>> results = new ArrayList<>();
         totalResults = 0;
         for (int i = 0; i < totalArticles; i++) {
             calculatedWeights[i] = null;
@@ -115,18 +115,25 @@ public class VSM extends ARetrievalModel {
             if (modelScore[i] > maxScore) {
                 maxScore = modelScore[i];
             }
-            DocInfo docInfo = new DocInfo(i);
-            results.add(docInfo);
         }
 
+        if (Double.compare(maxScore, 0.0) == 0) {
+            maxScore = 1;
+        }
+        
         //normalize to [0, 1]
-        for (int i = 0; i < modelScore.length; i++) {
+        for (int i = 0; i < calculatedWeights.length; i++) {
+            if (calculatedWeights[i] == null) {
+                continue;
+            }
             modelScore[i] /= maxScore;
+            DocInfo docInfo = new DocInfo(i);
+            results.add(new Pair<>(docInfo, modelScore[i]));
         }
 
         totalResults = results.size();
 
         //sort based on pagerank score and this model score
-        return sort(results, citationsPagerank, modelScore, endResult);
+        return sort(results, citationsPagerank, endResult);
     }
 }

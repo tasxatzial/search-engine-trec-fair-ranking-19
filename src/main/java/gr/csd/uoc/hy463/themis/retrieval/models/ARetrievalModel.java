@@ -53,39 +53,46 @@ public abstract class ARetrievalModel {
      * Sorts the specified results based on the citations pagerank scores and the retrieval model score.
      * @param results
      */
-    protected List<Pair<DocInfo, Double>> sort(List<DocInfo> results, double[] citationsPagerank, double[] modelScore, int endResult) {
+    protected List<Pair<DocInfo, Double>> sort(List<Pair<DocInfo, Double>> results, double[] citationsPagerank, int endResult) {
         double pagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
         double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
-        List<Pair<DocInfo, Double>> finalResults = new ArrayList<>();
 
         //normalize pagerank scores
-        double maxScore = 0;
+        double maxPagerankScore = 0;
         for (int i = 0; i < citationsPagerank.length; i++) {
-            if (citationsPagerank[i] > maxScore) {
-                maxScore = citationsPagerank[i];
+            if (citationsPagerank[i] > maxPagerankScore) {
+                maxPagerankScore = citationsPagerank[i];
             }
         }
-        for (int i = 0; i < citationsPagerank.length; i++) {
-            citationsPagerank[i] /= maxScore;
+
+        if (Double.compare(maxPagerankScore, 0.0) == 0) {
+            maxPagerankScore = 1;
         }
 
         //calculate the combined score
         for (int i = 0; i < results.size(); i++) {
-            double baseScore = modelScore[results.get(i).getId()];
-            double pagerankScore = citationsPagerank[results.get(i).getId()];
-            double combinedScore = baseScore * modelWeight + pagerankScore * pagerankWeight;
-            finalResults.add(new Pair<>(results.get(i), combinedScore));
+            Pair<DocInfo, Double> pair = results.get(i);
+            double modelScore = pair.getR();
+            double pagerankScore = citationsPagerank[pair.getL().getId()] / maxPagerankScore;
+            double combinedScore = modelScore * modelWeight + pagerankScore * pagerankWeight;
+            pair.setR(combinedScore);
         }
 
         //sort results based on the combined score
-        finalResults.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));
+        results.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));
 
         //return at most endResults results
-        List<Pair<DocInfo, Double>> topResults = new ArrayList<>();
-        for (int i = 0; i < Math.min(endResult, finalResults.size()); i++) {
-            topResults.add(finalResults.get(i));
+        int finalSize = Math.min(endResult, results.size());
+        if (finalSize == results.size()) {
+            return results;
         }
-        return topResults;
+        else {
+            List<Pair<DocInfo, Double>> topResults = new ArrayList<>(finalSize);
+            for (int i = 0; i < finalSize; i++) {
+                topResults.add(results.get(i));
+            }
+            return topResults;
+        }
     }
 
     /**
