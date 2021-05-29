@@ -11,6 +11,7 @@ import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
@@ -231,7 +232,7 @@ public class Search {
      * @throws JWNLException
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query)
+    public List<Result> search(String query)
             throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         return search(query, Integer.MAX_VALUE);
     }
@@ -248,7 +249,7 @@ public class Search {
      * @throws JWNLException
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query, int endResult)
+    public List<Result> search(String query, int endResult)
             throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
@@ -330,7 +331,7 @@ public class Search {
             }
         }
 
-        List<Pair<DocInfo, Double>> result = _model.getRankedResults(newQuery, endResult);
+        List<Result> result = _model.getRankedResults(newQuery, endResult);
         _indexer.updateDocInfo(result, _props);
         return result;
     }
@@ -351,7 +352,7 @@ public class Search {
      * @throws UnsupportedEncodingException
      * @throws IndexNotLoadedException
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults)
+    public void printResults(List<Result> searchResults)
             throws UnsupportedEncodingException, IndexNotLoadedException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
@@ -366,7 +367,7 @@ public class Search {
      * @throws UnsupportedEncodingException
      * @throws IndexNotLoadedException
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult)
+    public void printResults(List<Result> searchResults, int startResult, int endResult)
             throws UnsupportedEncodingException, IndexNotLoadedException {
         if (searchResults.isEmpty()) {
             return;
@@ -385,7 +386,7 @@ public class Search {
 
         /* print the results */
         for (int i = firstDisplayedResult; i <= lastDisplayedResult; i++) {
-            DocInfo docInfo = searchResults.get(i).getL();
+            DocInfo docInfo = searchResults.get(i).getDocInfo();
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");

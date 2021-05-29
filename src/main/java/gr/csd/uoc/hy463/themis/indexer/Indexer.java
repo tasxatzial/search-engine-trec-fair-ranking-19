@@ -17,6 +17,7 @@ import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
 import gr.csd.uoc.hy463.themis.utils.*;
 
@@ -996,17 +997,17 @@ public class Indexer {
      * @throws IOException
      * @throws IndexNotLoadedException
      */
-    public void updateDocInfo(List<Pair<DocInfo, Double>> docInfos, Set<DocInfo.PROPERTY> props)
+    public void updateDocInfo(List<Result> results, Set<DocInfo.PROPERTY> props)
             throws IOException, IndexNotLoadedException {
         if (!loaded()) {
             throw new IndexNotLoadedException();
         }
-        if (docInfos.size() == 0) {
+        if (results.size() == 0) {
             return;
         }
 
         /* get the props of the first DocInfo */
-        Set<DocInfo.PROPERTY> firstProps = docInfos.get(0).getL().get_props();
+        Set<DocInfo.PROPERTY> firstProps = results.get(0).getDocInfo().get_props();
 
         /* find the props that will be deleted from each Docinfo */
         Set<DocInfo.PROPERTY> delProps = new HashSet<>(firstProps);
@@ -1046,8 +1047,8 @@ public class Indexer {
         boolean DEL_YEAR = delProps.contains(DocInfo.PROPERTY.YEAR);
         boolean DEL_DOC_SIZE = addProps.contains(DocInfo.PROPERTY.DOCUMENT_SIZE);
 
-        for (Pair<DocInfo, Double> docInfoPair : docInfos) {
-            DocInfo docInfo = docInfoPair.getL();
+        for (Result result : results) {
+            DocInfo docInfo = result.getDocInfo();
 
             /* delete props */
             if (DEL_CITATIONS_PAGERANK) {

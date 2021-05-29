@@ -6,6 +6,7 @@ import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.metrics.themisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
@@ -101,7 +102,7 @@ public class Themis {
                 _search.setDocumentProperties(props);
 
                 /* retrieve info for the results that have index 0-7 for query 'test' */
-                List<Pair<DocInfo, Double>> results = _search.search("test", 8);
+                List<Result> results = _search.search("test", 8);
 
                 /* print results that have index 5-20. If there are only 10 results, it would print
                 results 5-7 */
@@ -374,7 +375,7 @@ public class Themis {
                 return;
             }
             _task = TASK.SEARCH;
-            List<Pair<DocInfo, Double>> results;
+            List<Result> results;
 
             /* set the query expansion dictionary */
             JMenu expansionDictionary = _view.get_expansionDictionary();

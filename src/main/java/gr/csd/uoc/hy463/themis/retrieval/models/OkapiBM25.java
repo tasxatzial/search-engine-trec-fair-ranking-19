@@ -6,6 +6,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
@@ -34,9 +35,9 @@ public class OkapiBM25 extends ARetrievalModel {
     }
 
     @Override
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult)
+    public List<Result> getRankedResults(List<QueryTerm> query, int endResult)
             throws IOException, IndexNotLoadedException {
-        List<Pair<DocInfo, Double>> results = new ArrayList<>();
+        List<Result> results = new ArrayList<>();
         _totalResults = 0;
         for (int i = 0; i < _totalDocuments; i++) {
             _calculatedFreqs[i] = null;
@@ -105,7 +106,7 @@ public class OkapiBM25 extends ARetrievalModel {
             }
             _modelScore[i] /= maxScore;
             DocInfo docInfo = new DocInfo(i);
-            results.add(new Pair<>(docInfo, _modelScore[i]));
+            results.add(new Result(docInfo, _modelScore[i]));
         }
 
         _totalResults = results.size();

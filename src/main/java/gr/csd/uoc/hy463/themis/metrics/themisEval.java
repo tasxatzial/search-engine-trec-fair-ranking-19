@@ -7,6 +7,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
@@ -143,7 +144,7 @@ public class themisEval {
             evaluationWriter.write(">>> Search query: " + query + "\n");
             Themis.print("> Search query: " + query + "\n");
             long startTime = System.nanoTime();
-            List<Pair<DocInfo, Double>> results = _search.search(query);
+            List<Result> results = _search.search(query);
             long endTime = System.nanoTime();
 
             totalResults += results.size();
@@ -209,7 +210,7 @@ public class themisEval {
     }
 
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeAveP(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
+    private double computeAveP(List<Result> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -223,8 +224,8 @@ public class themisEval {
         if (relevantDocuments == 0) {
             return Double.NaN;
         }
-        for (Pair<DocInfo, Double> rankedDocument : results) {
-            String docId = _search.getDocID(rankedDocument.getL().get_id());
+        for (Result result : results) {
+            String docId = _search.getDocID(result.getDocInfo().get_id());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -240,7 +241,7 @@ public class themisEval {
     }
 
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeNdcg(List<Pair<DocInfo, Double>> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
+    private double computeNdcg(List<Result> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;
@@ -255,8 +256,8 @@ public class themisEval {
         if (relevantDocuments == 0) {
             return Double.NaN;
         }
-        for (Pair<DocInfo, Double> result : results) {
-            String docId = _search.getDocID(result.getL().get_id());
+        for (Result result : results) {
+            String docId = _search.getDocID(result.getDocInfo().get_id());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;

@@ -4,6 +4,7 @@ import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public abstract class ARetrievalModel {
      * @throws IOException
      * @throws IndexNotLoadedException
      */
-    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult)
+    public abstract List<Result> getRankedResults(List<QueryTerm> query, int endResult)
             throws IOException, IndexNotLoadedException;
 
     /**
@@ -68,7 +69,7 @@ public abstract class ARetrievalModel {
      * @param endResult
      * @return
      */
-    protected List<Pair<DocInfo, Double>> sort(List<Pair<DocInfo, Double>> results, double[] citationsPagerank, int endResult) {
+    protected List<Result> sort(List<Result> results, double[] citationsPagerank, int endResult) {
         double pagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
         double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
 
@@ -86,15 +87,15 @@ public abstract class ARetrievalModel {
 
         //calculate the combined score
         for (int i = 0; i < results.size(); i++) {
-            Pair<DocInfo, Double> pair = results.get(i);
-            double modelScore = pair.getR();
-            double pagerankScore = citationsPagerank[pair.getL().get_id()] / maxPagerankScore;
+            DocInfo docInfo = results.get(i).getDocInfo();
+            double modelScore = results.get(i).getScore();
+            double pagerankScore = citationsPagerank[docInfo.get_id()] / maxPagerankScore;
             double combinedScore = modelScore * modelWeight + pagerankScore * pagerankWeight;
-            pair.setR(combinedScore);
+            results.get(i).setScore(combinedScore);
         }
 
         //sort results based on the combined score
-        results.sort((o1, o2) -> Double.compare(o2.getR(), o1.getR()));
+        Collections.sort(results);
 
         //return at most endResults results
         int finalSize = Math.min(endResult, results.size());
@@ -102,7 +103,7 @@ public abstract class ARetrievalModel {
             return results;
         }
         else {
-            List<Pair<DocInfo, Double>> topResults = new ArrayList<>(finalSize);
+            List<Result> topResults = new ArrayList<>();
             for (int i = 0; i < finalSize; i++) {
                 topResults.add(results.get(i));
             }
