@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Creates the map of term frequencies from a S2TextualEntry.
+ * Creates the map of term frequencies from a S2TextualEntry
  */
 public class S2TextualEntryTermFrequencies {
-    private boolean _useStemmer;
-    private boolean _useStopwords;
+    private final boolean _useStemmer;
+    private final boolean _useStopwords;
 
     public S2TextualEntryTermFrequencies(boolean useStemmer, boolean useStopwords) {
         _useStemmer = useStemmer;
@@ -22,7 +22,8 @@ public class S2TextualEntryTermFrequencies {
     }
 
     /**
-     * Creates the map of term frequencies from a S2TextualEntry.
+     * Creates the map of term frequencies from a S2TextualEntry
+     *
      * @param entry
      * @return
      */
@@ -49,7 +50,7 @@ public class S2TextualEntryTermFrequencies {
         return termTF;
     }
 
-    /* Takes a string, applies stemming/stopwords, and adds the result to the map of term frequencies */
+    /* Splits a string into tokens, applies stemming/stopwords, and adds the result to the map of term frequencies */
     private void addToWordsMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> termTF) {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
@@ -68,16 +69,25 @@ public class S2TextualEntryTermFrequencies {
             } else {
                 termTF.put(currentToken, 1);
             }
-            //entryWords.merge(currentToken, 1, Integer::sum);
         }
     }
 
-    /* Returns the string split pattern for a specific DocInfo property */
+    /* Returns the split pattern for the specified DocInfo property */
     private static String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:
-                return "\u0020.:,[]-―−—–‑‐‒─⎯⁻\"?“”◆!{}()+<>›'‹_″‟„¶|\\¿;»«§¡¸±：×^＂*@・˚•·∼°⁺◦，⋅ªº␣�≥⋯≡／∕∣ⓡ£€ⅰ⁃╉＜＞（）【】《》〈〉〔〕≪≫「」╅│｜－？＋✔✓←↑→↓↔⇑⇒⇔⇤①②③④⑤⑥⑦⑧⑨⑩…‡†‗™©®~$#%&/=∗。、‚׳‘’‛´`′⁄▾▵┙␥〈〉⋆⊥⊤♦♀♂●∞∙♣◆☆▪□■▶►▲▼▸‖～［］\n\t\r\f\u00AD\uF020\u008D\u00A0\uF020\u2003\u202F\u2009\u2002\u2005\u200A\u2006\u200B\u2008\u2004\u2000\u008E\u3000\uF0E0\uF07D\uF07A\uF076\uF073\uF072\uF070\uF06E\uF06D\uF06C\uF064\uF062\uF061\uF05B\uF034\uF025\uF02D\uE0D5\uE004\u0084\u0094\u0093\u0097\u0085\u0091\u0092\uE011\uFFFB\uF8E7\uF0D8\uF0A7\uF074\uF0E1\uF0F1\uF0E2\uF0B5\uF0B3\uF0B4\uF079\uF07E\uF0A0\uF0A8\uF0AB\uF0AD\uF0B5\uF078\uF077\uF071\uF06F\uF06B\uF067\uF0A2\uF065\uF063\uF053\uF047\uF044\uF03C\uF02A\uF000\uF0A3\uF0E8\uF0EB\uF0F7\uF0D6\uF0B7\uF0B9\uF0BA\uF0BD\uF0BE\u200E\uE003\uE009\u2028\u0082\u2007\uFEFF\u0096\u0099⃝◇◮║➔➢➤✉☁✣✭✩✴✳✿➝✦✸❛❖✞♯◌◊⌜♮❚♠❯☞┚⌈➀➁➂➃➄△≈∥\uF075‵※『と⁎₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹\u2FFF⩾⦁⋄✰⪡⪢\uF080\uF081\uF082\uF083\uF084\uF085\uF086\uF087\uF088\uF089";
-            //
+                //
+                return "\u0020.:,[]-―−—–‑‐‒─⎯⁻\"?“”◆!{}()+<>›'‹_″‟„¶|\\¿;»«§¡¸±：×^＂*@・˚•·∼°⁺◦，⋅ªº␣�≥⋯≡／∕" +
+                        "∣ⓡ£€ⅰ⁃╉＜＞（）【】《》〈〉〔〕≪≫「」╅│｜－？＋✔✓←↑→↓↔⇑⇒⇔⇤①②③④⑤⑥⑦⑧⑨⑩…‡†‗™©®~$#%&/=∗。、‚׳‘" +
+                        "’‛´`′⁄▾▵┙␥〈〉⋆⊥⊤♦♀♂●∞∙♣◆☆▪□■▶►▲▼▸‖～［］\n\t\r\f\u00AD\uF020\u008D\u00A0\uF020\u2003\u202F" +
+                        "\u2009\u2002\u2005\u200A\u2006\u200B\u2008\u2004\u2000\u008E\u3000\uF0E0\uF07D\uF07A\uF076" +
+                        "\uF073\uF072\uF070\uF06E\uF06D\uF06C\uF064\uF062\uF061\uF05B\uF034\uF025\uF02D\uE0D5\uE004" +
+                        "\u0084\u0094\u0093\u0097\u0085\u0091\u0092\uE011\uFFFB\uF8E7\uF0D8\uF0A7\uF074\uF0E1\uF0F1" +
+                        "\uF0E2\uF0B5\uF0B3\uF0B4\uF079\uF07E\uF0A0\uF0A8\uF0AB\uF0AD\uF0B5\uF078\uF077\uF071\uF06F" +
+                        "\uF06B\uF067\uF0A2\uF065\uF063\uF053\uF047\uF044\uF03C\uF02A\uF000\uF0A3\uF0E8\uF0EB\uF0F7" +
+                        "\uF0D6\uF0B7\uF0B9\uF0BA\uF0BD\uF0BE\u200E\uE003\uE009\u2028\u0082\u2007\uFEFF\u0096\u0099⃝◇" +
+                        "◮║➔➢➤✉☁✣✭✩✴✳✿➝✦✸❛❖✞♯◌◊⌜♮❚♠❯☞┚⌈➀➁➂➃➄△≈∥\uF075‵※『と⁎₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹\u2FFF⩾⦁⋄✰⪡⪢" +
+                        "\uF080\uF081\uF082\uF083\uF084\uF085\uF086\uF087\uF088\uF089";
             case AUTHORS_NAMES:
                 return "\u0020（），･·;,-―−—–‑‐&@“”„、ᆞ⋅‧•†‡‹↑'׳′´`’‘ʿ．.©\"‟«»*∗()#\n\r\u00AD\u200E\u2009";
             case VENUE:

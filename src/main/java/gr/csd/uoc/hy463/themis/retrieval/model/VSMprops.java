@@ -8,25 +8,25 @@ package gr.csd.uoc.hy463.themis.retrieval.model;
  * 3) Document weight
  */
 public class VSMprops {
-    private int[] maxTfs;
-    private double[] citationsPagerank;
-    private double[] VSMweights;
+    private final int[] _maxTfs;
+    private final double[] _citationsPagerank;
+    private final double[] _VSMweights;
 
     public VSMprops(int[] maxTfs, double[] citationsPagerank, double[] VSMweights) {
-        this.maxTfs = maxTfs;
-        this.citationsPagerank = citationsPagerank;
-        this.VSMweights = VSMweights;
+        _maxTfs = maxTfs;
+        _citationsPagerank = citationsPagerank;
+        _VSMweights = VSMweights;
     }
 
-    public int[] getMaxTfs() {
-        return maxTfs;
+    public int[] get_MaxTfs() {
+        return _maxTfs;
     }
 
-    public double[] getCitationsPagerank() {
-        return citationsPagerank;
+    public double[] get_CitationsPagerank() {
+        return _citationsPagerank;
     }
 
-    public double[] getVSMweights() {
-        return VSMweights;
+    public double[] get_VSMweights() {
+        return _VSMweights;
     }
 }

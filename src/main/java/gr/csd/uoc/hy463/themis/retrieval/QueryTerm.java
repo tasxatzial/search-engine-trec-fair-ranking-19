@@ -6,29 +6,23 @@ package gr.csd.uoc.hy463.themis.retrieval;
  * (e.g., synonyms/antonyms)
  */
 public class QueryTerm {
-
-    private double weight = 1.0;
-    private String term = null;
-
-    public QueryTerm(String term) {
-        this.term = term;
-    }
+    private double _weight;
+    private final String _term;
 
     public QueryTerm(String term, double weight) {
-        this.term = term;
-        this.weight = weight;
-
+        _term = term;
+        _weight = weight;
     }
 
-    public String getTerm() {
-        return term;
+    public String get_term() {
+        return _term;
     }
 
-    public double getWeight() {
-        return weight;
+    public double get_weight() {
+        return _weight;
     }
 
-    public void setWeight(double weight) {
-        this.weight = weight;
+    public void set_weight(double weight) {
+        _weight = weight;
     }
 }

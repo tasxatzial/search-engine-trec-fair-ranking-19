@@ -7,10 +7,12 @@ import java.util.Map;
  * A comparator for sorting a map by its values.
  */
 public class MapValueComparator implements Comparator<Integer> {
-    private Map<Integer, Integer> _map;
+    private final Map<Integer, Integer> _map;
+
     public MapValueComparator(Map<Integer, Integer> map) {
         _map = map;
     }
+
     @Override
     public int compare(Integer o1, Integer o2) {
         int res = _map.get(o2).compareTo(_map.get(o1));

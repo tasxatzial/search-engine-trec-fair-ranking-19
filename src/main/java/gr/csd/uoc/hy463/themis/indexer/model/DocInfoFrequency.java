@@ -1,8 +1,8 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * This class is used during the indexing process. It holds all required information about the
- * frequency of a term in a document field: (document field name, frequency of term in this field)
+ * Holds the name of a DocInfo property and the frequency of a term in the corresponding data. See also class
+ * DocInfo.
  */
 public class DocInfoFrequency {
     DocInfo.PROPERTY _prop;

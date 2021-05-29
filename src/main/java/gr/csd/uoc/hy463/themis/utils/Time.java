@@ -12,6 +12,7 @@ public class Time {
 
     /**
      * Returns a string representation that is an approximation of this Time
+     *
      * @return
      */
     public String toString() {

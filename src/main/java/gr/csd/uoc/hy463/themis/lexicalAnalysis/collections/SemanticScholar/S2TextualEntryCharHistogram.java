@@ -11,20 +11,23 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Creates a histogram of the number of occurrences of each character in a textual entry.
- * The histogram is then written to a file in order to help us find the most frequent occurring characters.
+ * Creates a histogram of the number of occurrences of each character in the collection.
+ * The histogram is then written to a file.
+ *
+ * Used to find the most frequently occurring characters.
  */
 public class S2TextualEntryCharHistogram {
 
     /**
-     * Creates a histogram of the number of occurrences of each character in a textual entry and writes it to
-     * the disk.
-     * @param datasetPath The source folder path. Files have one json per line, each json can be parsed as a
-     *                    textual entry.
-     * @param outPath The histogram will be saved in this folder.
+     * Reads the JSON entries from the files in the specified datasetPath and creates a histogram of the number of
+     * occurrences of each character. One histogram is generated per JSON name.
+     *
+     * @param datasetPath The source folder path. Files have one JSON per line which can be parsed as a textual entry.
+     * @param outPath The histogram will be saved in this folder
      * @throws IOException
      */
-    public static void createCharMap(String datasetPath, String outPath) throws IOException {
+    public static void createCharMap(String datasetPath, String outPath)
+            throws IOException {
         BufferedWriter charWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(outPath), "UTF-8"));
 
@@ -108,7 +111,7 @@ public class S2TextualEntryCharHistogram {
         }
     }
 
-    /* writes to file the character map associated with a DocInfo property */
+    /* writes to file the character map associated with the specified DocInfo property */
     private static void writeField(BufferedWriter writer, DocInfo.PROPERTY property, Map<Integer, Integer> charMap)
             throws IOException {
         Map<Integer, Integer> sortedCharMap = new TreeMap<>(new MapValueComparator(charMap));

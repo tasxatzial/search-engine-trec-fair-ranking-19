@@ -8,11 +8,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Class that holds all textual information read from an entry of the collection
  * It is used by the S2JSONEntryReader
- *
  */
 public class S2TextualEntry {
-
-    private static final Logger __LOGGER__ = LogManager.getLogger(S2TextualEntry.class);
     private String __ID__ = null;
     private String __TITLE__ = null;
     private String __ABSTRACT__ = null;
@@ -170,7 +167,7 @@ public class S2TextualEntry {
                 } else {
                     first = false;
                 }
-                sb.append(author.getL()); // get the name
+                sb.append(author.getL());
                 // Also list its ids
                 List<String> ids = author.getR();
                 sb.append(" => ");
@@ -212,7 +209,7 @@ public class S2TextualEntry {
                 } else {
                     first = false;
                 }
-                sb.append(citation); // get the name
+                sb.append(citation);
             }
             sb.append("\n");
         }
@@ -226,7 +223,7 @@ public class S2TextualEntry {
                 } else {
                     first = false;
                 }
-                sb.append(citation); // get the name
+                sb.append(citation);
             }
             sb.append("\n");
         }

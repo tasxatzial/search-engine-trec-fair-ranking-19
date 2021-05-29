@@ -5,13 +5,17 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 /**
- * String processing functions
+ * This class provides utilities for string processing:
+ * 1) Stem a term
+ * 2) Split a string into lowercase tokens using a predefined set of delimiters
+ * 3) Split a string into tokens using the space character
  */
 public class ProcessText {
 
     /**
-     * Applies stemming if the specified term has more than 3 characters. Returns the non-stemmed term
-     * if the stemmed term has less than 3 characters.
+     * Applies stemming. Returns the original term only if the stemmed term has less than 3 characters
+     * or the original term has less than 4 characters.
+     *
      * @param term
      * @return
      */
@@ -26,7 +30,8 @@ public class ProcessText {
     }
 
     /**
-     * Splits a query into tokens and converts them to lowercase
+     * Splits a string into lowercase tokens using a predefined set of delimiters
+     *
      * @param query
      * @return
      */
@@ -42,8 +47,10 @@ public class ProcessText {
     }
 
     /**
-     * Split a string into a List of terms using the space character as delimiter.
+     * Splits a string into a List of terms using the space character as delimiter.
      * If there are consecutive spaces, an empty string is added as a term.
+     *
+     * @param str
      */
     public static List<String> splitString(String str) {
         StringBuilder sb = new StringBuilder();

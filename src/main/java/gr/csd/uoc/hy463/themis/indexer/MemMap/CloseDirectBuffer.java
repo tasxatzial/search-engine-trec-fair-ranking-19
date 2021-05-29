@@ -8,6 +8,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
+/**
+ * Closes all ByteBuffers so that the file can be unmapped from memory
+ */
 public class CloseDirectBuffer {
     public static void closeDirectBuffer(ByteBuffer cb) {
         if (cb==null || !cb.isDirect()) return;

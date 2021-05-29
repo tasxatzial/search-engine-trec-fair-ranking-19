@@ -2,47 +2,67 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocBuffers;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.MemBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.MemoryBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentIDEntry;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
-import gr.csd.uoc.hy463.themis.linkAnalysis.graph.PagerankNode;
 import gr.csd.uoc.hy463.themis.utils.Time;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 
+/**
+ * Class for calculating the pagerank scores of the documents of the collection.
+ */
 public class Pagerank {
-    private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
+    private final Indexer _indexer;
 
-    private Indexer _indexer;
-    private String __GRAPH_PATH__;
-    private Map<String, String> _INDEX_META__;
+    /* The full path of the citations 'graph' file */
+    private final String __GRAPH_PATH__;
 
-    public Pagerank(Indexer indexer) throws IOException {
+    private final int _totalDocuments;
+
+    /**
+     * Constructor.
+     *
+     * @param indexer
+     * @throws IOException
+     */
+    public Pagerank(Indexer indexer)
+            throws IOException {
         _indexer = indexer;
-        __GRAPH_PATH__ = _indexer.getIndexPath() + "graph";
-        _INDEX_META__ = indexer.loadMeta();
+
+        /* Set the full path of the 'graph' file. The file is saved in the 'index' folder */
+        String indexPath = _indexer.getConfig().getIndexPath();
+        __GRAPH_PATH__ = indexPath + "/graph";
+
+        /* Read the total number of documents from 'index_meta' file */
+        Map<String, String> __INDEX_META__ = indexer.loadMeta();
+        _totalDocuments = Integer.parseInt(__INDEX_META__.get("documents"));
     }
 
     /**
-     * Computes the pagerank scores based on the citations
-     * @throws IOException
+     * Parses the collection and creates the 'graph' file.
+     * It then reads that file, loads the graph in memory and computes the pagerank scores. Finally, it updates the
+     * corresponding records in the 'documents_meta' file.
+     *
+     * Requires both 'documents_meta' and 'documents_id' files to be present.
+     *
+     * @throws PagerankException
      */
-    public void citationsPagerank() throws PagerankException {
+    public void citationsPagerank()
+            throws PagerankException {
         try {
             Themis.print(">>> Calculating Pagerank\n");
             long startTime = System.nanoTime();
             Themis.print("> Constructing graph\n");
             dumpCitations();
-            PagerankNode[] graph = initCitationsGraph(Integer.parseInt(_INDEX_META__.get("articles")), __GRAPH_PATH__);
+            PagerankNode[] graph = initCitationsGraph();
             Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
             startTime = System.nanoTime();
             Themis.print("> Iterating\n");
@@ -56,50 +76,58 @@ public class Pagerank {
         }
     }
 
-    /* Creates a temp file 'graph' in the Index directory. Entry N of this file corresponds to the Nth document
-    that was parsed and it contains the number of its Out citations followed by a list of integer Ids that correspond to
-    the Ids of its In citations. A document that has Id N in this file corresponds to entry N (starting from 0).
-    Returns the total number of citations */
-    private void dumpCitations() throws IOException {
+    /* Creates the 'graph' file. This is a random access file.
+    An entry in this file contains the number of Out citations followed by a list of int IDs that correspond to
+    the IDs of the In citations.
+
+    The N-th entry corresponds to the document with int ID = N (starting from 0) */
+    private void dumpCitations()
+            throws IOException {
         File folder = new File(_indexer.getDataSetPath());
         File[] files = folder.listFiles();
         if (files == null) {
             return;
         }
 
+        /* load the 'documents_id' file as a memory mapped file */
         String documentsIDPath = _indexer.getDocumentsIDFilePath();
-        DocBuffers documentIDBuffers = new DocBuffers(documentsIDPath, MemBuffers.MODE.READ, DocumentIDEntry.totalSize);
-        byte[] docIdArray = new byte[DocumentIDEntry.ID_SIZE];
+        DocumentBuffers documentIDBuffers = new DocumentBuffers(documentsIDPath, MemoryBuffers.MODE.READ, DocumentIDEntry.totalSize);
+        byte[] docIdArray = new byte[DocumentIDEntry.DOCID_SIZE];
 
-        /* This is a temporary file that stores for each document the number of Out citations
-        and the Ids of the In citations. Each entry in the file consists of:
-        size (int) -> this is the size of the rest of the data in this entry |
-        number of Out citations (int) |
-        In citation Id 1 (int) | in citation Id 2 (int) ... */
+        /* The 'graph' file stores for each document the number of Out citations and the IDs of the
+        In citations. Each entry in the file consists of:
+        1) size (int) -> this is the size of the rest of the data in this entry
+        2) number of Out citations (int)
+        3) In citation Id 1 (int) | in citation Id 2 (int) ... */
         BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__GRAPH_PATH__, "rw").getFD()));
 
-        // sort the files so that we parse them in a specific order
+        /* sort the files of the collection. This is necessary so that the N-th parsed document is the one with
+        int ID = N (starting from 0) since the same ordering was used to generate the int ID of each document
+        during the indexing */
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        // document string Id -> int Id
+        /* A map of string docID -> int ID */
         Map<String, Integer> citationsIntMap = new HashMap<>();
 
-        /* read the documents_id file and create the map of doc_id -> int id */
+        /* read the 'documents_id' file and create the map of string docID -> int ID with int ID taking
+        values from 0 to totalDocuments in increasing order. That way, the int ID is
+        the actual int ID of the corresponding document (determined during the indexing process).
+        We can now use an integer to refer to a document instead of its string docID */
         int documents = 0;
         long offset = 0;
         ByteBuffer buffer;
         while ((buffer = documentIDBuffers.getBufferLong(offset)) != null) {
             buffer.get(docIdArray);
-            String stringId = new String(docIdArray, 0, DocumentIDEntry.ID_SIZE, "ASCII");
+            String stringId = new String(docIdArray, 0, DocumentIDEntry.DOCID_SIZE, "ASCII");
             citationsIntMap.put(stringId, documents);
             documents++;
             offset += DocumentIDEntry.totalSize;
         }
         documentIDBuffers.close();
 
-        /* parse the dataset and write the required data to the 'graph' file */
+        /* parse the collection and write the required data to the 'graph' file */
         for (File file : corpus) {
             if (file.isFile()) {
                 Themis.print("Parsing file: " + file + "\n");
@@ -108,7 +136,7 @@ public class Pagerank {
                 while ((json = currentDataFile.readLine()) != null) {
                     S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
 
-                    //count out citations
+                    /* count out citations */
                     List<String> outCitations = entry.getOutCitations();
                     int numOutCitations = 0;
                     for (int i = 0; i < outCitations.size(); i++) {
@@ -117,7 +145,7 @@ public class Pagerank {
                         }
                     }
 
-                    //count in citations
+                    /* count in citations */
                     List<String> inCitations = entry.getInCitations();
                     int numInCitations = 0;
                     for (int i = 0; i <inCitations.size(); i++) {
@@ -126,7 +154,7 @@ public class Pagerank {
                         }
                     }
 
-                    //dump citations to file
+                    /* dump citations data to disk */
                     byte[] citationData = new byte[4 * (2 + numInCitations)];
                     ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
                     citationDataBuf.putInt(0, 4 * (1 + numInCitations));
@@ -148,36 +176,43 @@ public class Pagerank {
 
     }
 
-    /* Returns true iff the citation_i should not be added to the list of citations. This can happen when:
+    /* Returns true iff the citation_i should not be added to the specified list of citations. This can happen when:
     1) citation_i does not exist
-    2) citation_i referencing itself
+    2) citation_i is referencing itself
     3) citation_i is already in the list of citations
-     */
+    */
     private boolean skipCitation(Map<String, Integer> citationsIds, List<String> citations, String docId, String citation_i, int citation_idx) {
-        if (citationsIds.get(citation_i) == null) { //skip citation if the document does not exist
+
+        /* skip citation if the corresponding document does not exist */
+        if (citationsIds.get(citation_i) == null) {
             return true;
         }
-        if (citation_i.equals(docId)) { //skip citation if the document is referencing itself
+
+        /* skip citation if it is the same as the doc ID */
+        if (citation_i.equals(docId)) {
             return true;
         }
+
         boolean found = false;
         for (int j = 0; j < citation_idx; j++) {
+
+            /* skip citation if we've already taken this citation into account */
             if (citation_i.equals(citations.get(j))) {
                 found = true;
                 break;
             }
         }
-        return found; //skip citation if we've already taken this citation into account
+        return found;
     }
 
-    /* initialize the citations pagerank graph and its nodes */
-    private PagerankNode[] initCitationsGraph(int documents, String graphFileName) throws IOException {
-        BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream
-                (new RandomAccessFile(graphFileName, "r").getFD()));
-        PagerankNode[] graph = new PagerankNode[documents];
+    /* initialize the citations pagerank graph */
+    private PagerankNode[] initCitationsGraph()
+            throws IOException {
+        BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream(new RandomAccessFile(__GRAPH_PATH__, "r").getFD()));
+        PagerankNode[] graph = new PagerankNode[_totalDocuments];
 
-        /* Create the graph: array of nodes */
-        for (int i = 0; i < documents; i++) {
+        /* initialize the graph as an array of nodes */
+        for (int i = 0; i < _totalDocuments; i++) {
             graph[i] = new PagerankNode();
         }
 
@@ -185,7 +220,7 @@ public class Pagerank {
         ByteBuffer numBuf = ByteBuffer.wrap(num);
 
         /* read the 'graph' file and update the In citations of each node of the graph */
-        for (int i = 0; i < documents; i++) {
+        for (int i = 0; i < _totalDocuments; i++) {
             PagerankNode node = graph[i];
             graphReader.read(num);
             int size = numBuf.getInt(0);
@@ -193,28 +228,28 @@ public class Pagerank {
             ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
             graphReader.read(citationData);
             int outCitationsNum = citationDataBuf.getInt(0);
-            node.setOutNodes(outCitationsNum);
+            node.set_outNodes(outCitationsNum);
             int inCitationsNum = size / 4 - 1;
             node.initializeInNodes(inCitationsNum);
             for (int j = 0; j < inCitationsNum; j++) {
                 int inCitation = citationDataBuf.getInt(4 * j + 4);
-                node.getInNodes()[j] = graph[inCitation];
+                node.get_inNodes()[j] = graph[inCitation];
             }
         }
         graphReader.close();
         return graph;
     }
 
-    /* computes the citations pagerank scores */
+    /* computes the pagerank scores based on the citations graph */
     private double[] computeCitationsPagerank(PagerankNode[] graph) {
         double threshold = _indexer.getConfig().getPagerankThreshold();
         double dampingFactor = _indexer.getConfig().getPagerankDampingFactor();
         double teleportScore = (1 - dampingFactor) / graph.length;
         double[] scores_tmp = new double[graph.length];
 
-        // initialize scores
+        /* initialize scores */
         for (PagerankNode node : graph) {
-            node.setScore(1.0 / graph.length);
+            node.set_score(1.0 / graph.length);
         }
 
         boolean maybeConverged = false;
@@ -225,11 +260,11 @@ public class Pagerank {
             }
             Themis.print(iteration + " ");
 
-            /* collect the scores from all sink nodes, these should be distributed to every other node */
+            /* collect the scores from all sink nodes, these should be distributed evenly to all nodes */
             double sinksScore = 0;
             for (int i = 0; i < graph.length; i++) {
-                if (graph[i].getOutNodes() == 0) {
-                    sinksScore += graph[i].getScore();
+                if (graph[i].get_outNodes() == 0) {
+                    sinksScore += graph[i].get_score();
                 }
             }
             sinksScore /= graph.length;
@@ -238,45 +273,46 @@ public class Pagerank {
             for (int j = 0; j < graph.length; j++) {
                 PagerankNode node = graph[j];
 
-                /* initialize current node score to the average score of sinks */
+                /* initialize current node score to the score from the sinks */
                 double score = sinksScore;
 
-                /* we also need to add to the score the contributions of the In nodes of the current node */
-                PagerankNode[] inNodes = node.getInNodes();
+                /* add to the score the contributions of the In nodes of the current node */
+                PagerankNode[] inNodes = node.get_inNodes();
                 for (int k = 0; k < inNodes.length; k++) {
-                    score += inNodes[k].getScore() / inNodes[k].getOutNodes();
+                    score += inNodes[k].get_score() / inNodes[k].get_outNodes();
                 }
                 
                 scores_tmp[j] = score * dampingFactor + teleportScore;
             }
 
-            // check for convergence
+            /* check for convergence */
             maybeConverged = true;
             for (int j = 0; j < graph.length; j++) {
                 PagerankNode node = graph[j];
-                if (maybeConverged && Math.abs(scores_tmp[j] - node.getScore()) > threshold) {
+                if (maybeConverged && Math.abs(scores_tmp[j] - node.get_score()) > threshold) {
                     maybeConverged = false;
                 }
-                node.setScore(scores_tmp[j]);
+                node.set_score(scores_tmp[j]);
             }
 
             iteration++;
         }
         Themis.print("\n");
 
-        //write the final scores to the tmp score array, this means that the graph can now be garbage collected
+        /* write the final scores to the tmp score array, this means that the graph can now be garbage collected */
         for (int i = 0; i < graph.length; i++) {
-            scores_tmp[i] = graph[i].getScore();
+            scores_tmp[i] = graph[i].get_score();
         }
 
         return scores_tmp;
     }
 
-    /* writes the citation scores to the documents_meta file */
-    private void writeCitationsScores(double[] scores) throws IOException {
+    /* writes the citation pagerank scores to the 'documents_meta' file */
+    private void writeCitationsScores(double[] scores)
+            throws IOException {
         long offset = 0;
         String documentsMetaPath = _indexer.getDocumentsMetaFilePath();
-        DocBuffers documentMetaBuffers = new DocBuffers(documentsMetaPath, MemBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
+        DocumentBuffers documentMetaBuffers = new DocumentBuffers(documentsMetaPath, MemoryBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
 
         for (int i = 0; i < scores.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);

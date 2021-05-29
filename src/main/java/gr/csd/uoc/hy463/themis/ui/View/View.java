@@ -10,10 +10,10 @@ import java.io.IOException;
 public class View extends JFrame {
 
     /* true when we see the search bar and button */
-    private boolean searchInitialized = false;
+    private boolean _searchInitialized = false;
 
     /* true when we see only a text area */
-    private boolean onlyResultsInitialized = false;
+    private boolean _onlyResultsInitialized = false;
 
     /* The main menu bar */
     private JMenuBar _menu;
@@ -82,7 +82,7 @@ public class View extends JFrame {
         UIManager.put("RadioButtonMenuItem.font", font);
         initMenu();
         pack();
-        setTitle("Themis search engine v0.1");
+        setTitle("Themis search engine v1");
         setSize(800, 600); //initial frame size
         _mainPane = new JLayeredPane();
         initTitleArea();
@@ -188,7 +188,7 @@ public class View extends JFrame {
 
     /* Initializes the area that shows the results of create/load index or search */
     private void initResultsArea() {
-        if (searchInitialized || onlyResultsInitialized) {
+        if (_searchInitialized || _onlyResultsInitialized) {
             return;
         }
         _resultsArea = new JTextArea();
@@ -200,36 +200,36 @@ public class View extends JFrame {
 
     /**
      * Modifies the view when the "create index", "load index", "evaluate VSM", "evaluate BM25" menu items
-     * are clicked.
+     * are clicked
      */
     public void initOnlyResultsView() {
-        if (onlyResultsInitialized) {
+        if (_onlyResultsInitialized) {
             clearResultsArea();
             return;
         }
-        if (searchInitialized) {
+        if (_searchInitialized) {
             _mainPane.remove(_searchButton);
             _mainPane.remove(_searchField);
             _mainPane.remove(_resultsPane);
-            searchInitialized = false;
+            _searchInitialized = false;
         }
         initResultsArea();
-        onlyResultsInitialized = true;
+        _onlyResultsInitialized = true;
         setOnlyResultsBounds();
     }
 
     /**
-     * Modifies the view when the "query collection" menu item is clicked.
+     * Modifies the view when the "query collection" menu item is clicked
      */
     public void initSearchView() {
-        if (searchInitialized) {
+        if (_searchInitialized) {
             clearResultsArea();
             clearQuery();
             return;
         }
-        if (onlyResultsInitialized) {
+        if (_onlyResultsInitialized) {
             _mainPane.remove(_resultsPane);
-            onlyResultsInitialized = false;
+            _onlyResultsInitialized = false;
         }
         _searchButton = new JButton("Search");
         _searchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -238,7 +238,7 @@ public class View extends JFrame {
         _mainPane.add(_searchField);
         _mainPane.add(_searchButton);
         initResultsArea();
-        searchInitialized = true;
+        _searchInitialized = true;
         setSearchViewBounds();
     }
 
@@ -257,10 +257,10 @@ public class View extends JFrame {
 
     /**
      * Sets the proper bounds of the results area when the "create index", "load index", "evaluate VSM",
-     * "evaluate BM25" menu items are clicked.
+     * "evaluate BM25" menu items are clicked
      */
     public void setOnlyResultsBounds() {
-        if (!onlyResultsInitialized) {
+        if (!_onlyResultsInitialized) {
             return;
         }
         Dimension frameDim = getBounds().getSize();
@@ -276,7 +276,7 @@ public class View extends JFrame {
      * Sets the proper bounds of the search results area
      */
     public void setSearchViewBounds() {
-        if (!searchInitialized) {
+        if (!_searchInitialized) {
             return;
         }
         Dimension frameDim = getBounds().getSize();
@@ -312,7 +312,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Clears the query text
+     * Clears the query text box
      */
     public void clearQuery() {
         if (_searchField != null) {
@@ -476,7 +476,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Checks the menu radio button that correspods to the specified query expansion dictionary
+     * Checks the menu radio button that corresponds to the specified query expansion dictionary
      * @param dictionary
      */
     public void checkExpansionDictionary(QueryExpansion.DICTIONARY dictionary) {

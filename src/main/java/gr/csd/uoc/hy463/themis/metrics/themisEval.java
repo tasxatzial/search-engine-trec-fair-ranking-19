@@ -25,19 +25,31 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Runs the evaluation for the specified retrieval model and query expansion dictionary that are
+ * Runs the evaluation for the specified retrieval model and query expansion dictionary
  * specified in the constructor
  */
 public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
-    private Search _search;
-    private Config __CONFIG__;
-    private String __JUDGEMENTS_PATH__;
-    private String __EVALUATION_PATH__;
-    private ARetrievalModel.MODEL _model;
-    private QueryExpansion.DICTIONARY _dictionary;
+    private final Search _search;
 
-    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) throws IOException {
+    /* general configuration options */
+    private final Config __CONFIG__;
+
+    private final ARetrievalModel.MODEL _model;
+    private final QueryExpansion.DICTIONARY _dictionary;
+
+    /**
+     * Constructor.
+     *
+     * Reads general configuration options from themis.config file.
+     *
+     * @param search
+     * @param model
+     * @param dictionary
+     * @throws IOException
+     */
+    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary)
+            throws IOException {
         _search = search;
         __CONFIG__ = new Config();
         _model = model;
@@ -45,13 +57,19 @@ public class themisEval {
     }
 
     /**
-     * Initiates the evaluation
+     * Initiates the evaluation: Parses the 'judgements' file, performs a search for each query, and writes results
+     * to an 'evaluation' file in the 'index' folder.
+     * The begin date of the evaluation is appended to name of the file.
+     *
      * @throws IndexNotLoadedException
      * @throws IOException
      * @throws ExpansionDictionaryInitException
+     * @throws JWNLException
+     * @throws ConfigLoadException
      */
-    public void start() throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
-        __JUDGEMENTS_PATH__ = __CONFIG__.getJudgmentsPath();
+    public void start()
+            throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
+        String __JUDGEMENTS_PATH__ = __CONFIG__.getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_PATH__).exists())) {
             __LOGGER__.info("No judgements file found!");
             Themis.print("No judgements file found!\n");
@@ -69,7 +87,7 @@ public class themisEval {
         _search.setRetrievalModel(_model);
         _search.setExpansionDictionary(_dictionary);
         _search.setDocumentProperties(new HashSet<>());
-        __EVALUATION_PATH__ = __CONFIG__.getIndexPath() + "/" + evaluationFilename;
+        String __EVALUATION_PATH__ =  __CONFIG__.getIndexPath() + "/" + evaluationFilename;
 
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_PATH__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_PATH__), "UTF-8"));
@@ -92,13 +110,14 @@ public class themisEval {
     }
 
     /* Runs the evaluation based on the configured parameters */
-    private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter) throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException {
+    private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter)
+            throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
         List<Double> ndcgs = new ArrayList<>();
         List<Pair<String, Time>> queryTime = new ArrayList<>();
-        Time totalTime = new Time(0);
+        Time totalSearchTime = new Time(0);
         long totalResults = 0;
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
@@ -127,45 +146,45 @@ public class themisEval {
             List<Pair<DocInfo, Double>> results = _search.search(query);
             long endTime = System.nanoTime();
 
+            totalResults += results.size();
+
             //calculate the elapsed time for the search
             Time time = new Time(endTime - startTime);
-            totalTime.addTime(time);
+            totalSearchTime.addTime(time);
             queryTime.add(new Pair<>(query, time));
-            evaluationWriter.write("Search time: " + time + "\n");
 
-            //calculate the number of results
-            totalResults += results.size();
+            evaluationWriter.write("Search time: " + time + "\n");
             evaluationWriter.write("Results: " + results.size() + "\n");
 
-            //calculate average precision, nDCG
+            //calculate avg. precision, nDCG
             double avep = computeAveP(results, relevanceMap);
             avep = (Double.isNaN(avep)) ? Double.NaN : avep;
             aveps.add(avep);
             double ndcg = computeNdcg(results, relevanceMap);
             ndcg = (Double.isNaN(ndcg)) ? Double.NaN : ndcg;
             ndcgs.add(ndcg);
+
             evaluationWriter.write("Average precision: " + avep + "\n");
             evaluationWriter.write("nDCG: " + ndcg + "\n\n");
             evaluationWriter.flush();
         }
 
+        //calculate some stats for this evaluation
         double averageAvep = calculateAverage(aveps);
-        double minAvep = calculateMin(aveps);
-        double maxAvep = calculateMax(aveps);
-
+        double minAvep = findMin(aveps);
+        double maxAvep = findMax(aveps);
         double averageNdcg = calculateAverage(ndcgs);
-        double minNdcg = calculateMin(ndcgs);
-        double maxNdcg = calculateMax(ndcgs);
-
-        Pair<String, Time> minTime = calculateMinTime(queryTime);
-        Pair<String, Time> maxTime = calculateMaxTime(queryTime);
+        double minNdcg = findMin(ndcgs);
+        double maxNdcg = findMax(ndcgs);
+        Pair<String, Time> minTime = findMinTime(queryTime);
+        Pair<String, Time> maxTime = findMaxTime(queryTime);
         Time queryAverageTime = calculateAverageTime(queryTime);
         Time resultsAverageTime;
         if (totalResults == 0) {
-            resultsAverageTime = new Time(0);
+            resultsAverageTime = new Time(totalSearchTime.getValue());
         }
         else {
-            resultsAverageTime = new Time((totalTime.getValue() / totalResults) * calculateBaseResults(totalResults));
+            resultsAverageTime = new Time((totalSearchTime.getValue() / totalResults) * calculateBaseResults(totalResults));
         }
 
         Themis.print("\n>>> End of evaluation\n");
@@ -180,7 +199,7 @@ public class themisEval {
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n\n");
         evaluationWriter.write("-> Search time\n");
-        evaluationWriter.write("Total: " + totalTime + "\n");
+        evaluationWriter.write("Total: " + totalSearchTime + "\n");
         evaluationWriter.write("Average per query: " + queryAverageTime + "\n");
         evaluationWriter.write("Average per " + calculateBaseResults(totalResults) + " results: " + resultsAverageTime + "\n");
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
@@ -205,7 +224,7 @@ public class themisEval {
             return Double.NaN;
         }
         for (Pair<DocInfo, Double> rankedDocument : results) {
-            String docId = _search.getDocID(rankedDocument.getL().getId());
+            String docId = _search.getDocID(rankedDocument.getL().get_id());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -237,7 +256,7 @@ public class themisEval {
             return Double.NaN;
         }
         for (Pair<DocInfo, Double> result : results) {
-            String docId = _search.getDocID(result.getL().getId());
+            String docId = _search.getDocID(result.getL().get_id());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -254,7 +273,7 @@ public class themisEval {
         return dcg / idcg;
     }
 
-    /* calculates the average in a list of doubles */
+    /* calculates the average of a list of doubles */
     private static double calculateAverage(List<Double> list) {
         double sum = 0;
         if (list.isEmpty()) {
@@ -270,8 +289,8 @@ public class themisEval {
         return sum / count;
     }
 
-    /* calculates the min in a list of doubles */
-    private static double calculateMin(List<Double> list) {
+    /* finds the min in a list of doubles */
+    private static double findMin(List<Double> list) {
         double min;
         if (list.isEmpty()) {
             return Double.NaN;
@@ -292,8 +311,8 @@ public class themisEval {
         return min;
     }
 
-    /* calculates the max in a list of doubles */
-    private static double calculateMax(List<Double> list) {
+    /* finds the max in a list of doubles */
+    private static double findMax(List<Double> list) {
         double max;
         if (list.isEmpty()) {
             return Double.NaN;
@@ -315,7 +334,7 @@ public class themisEval {
     }
 
     /* returns the minimum search time and the corresponding query as a pair */
-    private static Pair<String, Time> calculateMaxTime(List<Pair<String, Time>> list) {
+    private static Pair<String, Time> findMaxTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
             return new Pair("", new Time(0));
         }
@@ -329,7 +348,7 @@ public class themisEval {
     }
 
     /* returns the maximum search time and the corresponding query as a pair */
-    private static Pair<String, Time> calculateMinTime(List<Pair<String, Time>> list) {
+    private static Pair<String, Time> findMinTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
             return new Pair("", new Time(0));
         }
@@ -342,7 +361,7 @@ public class themisEval {
         return min;
     }
 
-    /* returns the average search time */
+    /* calculates the average search time */
     private static Time calculateAverageTime(List<Pair<String, Time>> list) {
         if (list.isEmpty()) {
             return new Time(0);
@@ -354,7 +373,7 @@ public class themisEval {
         return new Time(time.getValue() / list.size());
     }
 
-    /* returns the X in 'time per X results' based on the specified results size */
+    /* returns the X as in 'time per X results' based on the specified results size */
     private static long calculateBaseResults(long resultsSize) {
         if (resultsSize == 0) {
             return 0;

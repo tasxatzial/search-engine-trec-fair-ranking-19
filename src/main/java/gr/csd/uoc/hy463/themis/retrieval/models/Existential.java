@@ -4,7 +4,7 @@ import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
-import gr.csd.uoc.hy463.themis.retrieval.model.Posting;
+import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
@@ -17,42 +17,44 @@ import java.util.*;
  * relevant and have a score 1.0
  */
 public class Existential extends ARetrievalModel {
-    boolean[] valid;
+    boolean[] _valid;
 
-    public Existential(Indexer index) throws IndexNotLoadedException {
+    public Existential(Indexer index)
+            throws IndexNotLoadedException {
         super(index);
-        valid = new boolean[totalArticles];
+        _valid = new boolean[_totalDocuments];
     }
 
     @Override
-    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException {
+    public List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult)
+            throws IOException, IndexNotLoadedException {
         List<Pair<DocInfo, Double>> results = new ArrayList<>();
-        totalResults = 0;
+        _totalResults = 0;
 
-        for (int i = 0; i < totalArticles; i++) {
-            valid[i] = false;
+        for (int i = 0; i < _totalDocuments; i++) {
+            _valid[i] = false;
         }
 
-        //merge weights of the same terms
+        //merge weights for the same terms
         query = mergeTerms(query);
 
         int[] dfs = _indexer.getDf(query);
         for (int i = 0; i < query.size(); i++) {
-            Posting postings = _indexer.getPostings(query.get(i).getTerm());
-            int[] intIDs = postings.getIntID();
+            Postings postings = _indexer.getPostings(query.get(i).get_term());
+            int[] intIDs = postings.get_intID();
             for (int j = 0; j < dfs[i]; j++) {
-                valid[intIDs[j]] = true;
+                _valid[intIDs[j]] = true;
             }
         }
 
-        for (int i = 0; i < totalArticles; i++) {
-            if (valid[i]) {
+        for (int i = 0; i < _totalDocuments; i++) {
+            if (_valid[i]) {
                 DocInfo docInfo = new DocInfo(i);
                 results.add(new Pair<>(docInfo, 1.0));
             }
         }
 
-        totalResults = results.size();
+        _totalResults = results.size();
         return results;
     }
 }

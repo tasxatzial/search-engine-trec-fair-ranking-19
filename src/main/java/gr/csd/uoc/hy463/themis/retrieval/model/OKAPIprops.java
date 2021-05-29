@@ -7,19 +7,19 @@ package gr.csd.uoc.hy463.themis.retrieval.model;
  * 2) Token count
  */
 public class OKAPIprops {
-    private int[] tokenCount;
-    private double[] citationsPagerank;
+    private final int[] _tokenCount;
+    private final double[] _citationsPagerank;
 
     public OKAPIprops(int[] tokenCount, double[] citationsPagerank) {
-        this.tokenCount = tokenCount;
-        this.citationsPagerank = citationsPagerank;
+        _tokenCount = tokenCount;
+        _citationsPagerank = citationsPagerank;
     }
 
-    public double[] getCitationsPagerank() {
-        return citationsPagerank;
+    public double[] get_citationsPagerank() {
+        return _citationsPagerank;
     }
 
-    public int[] getTokenCount() {
-        return tokenCount;
+    public int[] get_tokenCount() {
+        return _tokenCount;
     }
 }

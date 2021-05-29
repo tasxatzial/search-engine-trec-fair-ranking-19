@@ -14,15 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class responsible for reading textual entries from the json description of
- * entries
- *
+ * Class responsible for reading textual entries from the JSON description of the documents
+ * of the collection
  */
 public class S2JsonEntryReader {
-
     private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);
 
-    // Method that reads only the doc Id from an entry
+    /**
+     * Method that reads the doc Id from a JSON string
+     * @param jsonToRead
+     * @return
+     */
     public static S2TextualEntry readDocIdEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
@@ -41,7 +43,11 @@ public class S2JsonEntryReader {
         return entry;
     }
 
-    // Method that reads all textual information from an entry
+    /**
+     * Method that reads all textual information from a JSON string
+     * @param jsonToRead
+     * @return
+     */
     public static S2TextualEntry readTextualEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
@@ -51,16 +57,16 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the id for example
+            // Get the id
             String id = (String) jsonObject.get("id");
             entry.setId(id);
 
-            // Get the title for example
+            // Get the title
             String titleCheck = (String) jsonObject.get("title");
             String title = titleCheck != null ? titleCheck : "";
             entry.setTitle(title);
 
-            // Get abstract for example
+            // Get abstract
             String paperAbstractCheck = (String) jsonObject.get("paperAbstract");
             String paperAbstract = paperAbstractCheck != null ? paperAbstractCheck : "";
             entry.setPaperAbstract(paperAbstract);
@@ -107,7 +113,7 @@ public class S2JsonEntryReader {
             }
             entry.setAuthors(authors);
 
-            // Get journal for example
+            // Get journal
             String journalCheck = (String) jsonObject.get("journalName");
             String journal = journalCheck != null ? journalCheck : "";
             entry.setJournalName(journal);
@@ -122,12 +128,12 @@ public class S2JsonEntryReader {
             }
             entry.setSources(sources);
 
-            // Get year for example
+            // Get year
             Long yearLong = (Long) jsonObject.get("year");
             int year = yearLong != null ? yearLong.intValue() : 0;
             entry.setYear(year);
 
-            // Get venue for example
+            // Get venue
             String venueCheck = (String) jsonObject.get("venue");
             String venue = venueCheck != null ? venueCheck : "";
             entry.setVenue(venue);
@@ -139,7 +145,11 @@ public class S2JsonEntryReader {
         return entry;
     }
 
-    // Method that reads all citation related information from an entry
+    /**
+     * Method that reads the In and Out citations from a JSON string
+     * @param jsonToRead
+     * @return
+     */
     public static S2TextualEntry readCitationsEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();

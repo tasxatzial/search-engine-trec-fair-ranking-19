@@ -15,10 +15,14 @@ public abstract class QueryExpansion {
     }
 
     /**
-     * Expands a given query using a query expansion dictionary. The first term in each List<QueryTerm>
-     * should be the non-expanded term.
+     * Expands a given query using an expansion dictionary. The first term in each List<QueryTerm>
+     * must be the original term
+     *
      * @param query
      * @return
+     * @throws ExpansionDictionaryInitException
+     * @throws JWNLException
      */
-    public abstract List<List<QueryTerm>> expandQuery(List<String> query) throws ExpansionDictionaryInitException, JWNLException;
+    public abstract List<List<QueryTerm>> expandQuery(List<String> query)
+            throws ExpansionDictionaryInitException, JWNLException;
 }

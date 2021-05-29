@@ -20,31 +20,41 @@ import java.util.List;
  * Expands a query using the extJWNL dictionary
  */
 public class EXTJWNL extends QueryExpansion {
-    private MaxentTagger maxentTagger;
-    private Dictionary dictionary;
-    private boolean _useStopwords;
+    private MaxentTagger _maxentTagger;
+    private final Dictionary _dictionary;
+    private final boolean _useStopwords;
 
-    public EXTJWNL(boolean useStopwords) throws ExpansionDictionaryInitException {
+    /**
+     * Constructor.
+     *
+     * @param useStopwords
+     * @throws ExpansionDictionaryInitException
+     */
+    public EXTJWNL(boolean useStopwords)
+            throws ExpansionDictionaryInitException {
         Themis.print(">>> Initializing extJWNL...");
         try {
-            dictionary = Dictionary.getDefaultResourceInstance();
+            _dictionary = Dictionary.getDefaultResourceInstance();
         } catch (JWNLException e) {
             throw new ExpansionDictionaryInitException();
         }
-        if (dictionary != null) {
-            maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
+        if (_dictionary != null) {
+            _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
         }
         _useStopwords = useStopwords;
         Themis.print("DONE\n");
     }
 
     /**
-     * Expands the specified list of terms. Each term is expanded by the full list of its related terms (weight = 0.5)
+     * Expands the specified list of terms. Each term is expanded by the full list of its related terms and each
+     * new term gets a weight of 0.5.
+     *
      * @param query
      * @return
      */
     @Override
-    public List<List<QueryTerm>> expandQuery(List<String> query) throws JWNLException {
+    public List<List<QueryTerm>> expandQuery(List<String> query)
+            throws JWNLException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
@@ -55,7 +65,7 @@ public class EXTJWNL extends QueryExpansion {
         }
         String queryString = sb.toString();
 
-        String taggedQuery = maxentTagger.tagString(queryString);
+        String taggedQuery = _maxentTagger.tagString(queryString);
         String[] eachTag = taggedQuery.split("\\s+");
 
         for (int i = 0; i < eachTag.length; i++) {
@@ -72,7 +82,7 @@ public class EXTJWNL extends QueryExpansion {
             // Ignore anything that is not a noun, verb, adjective, adverb
             if (pos != null) {
                 IndexWord iWord;
-                iWord = dictionary.getIndexWord(pos, term);
+                iWord = _dictionary.getIndexWord(pos, term);
                 if (iWord != null) {
                     for (Synset synset : iWord.getSenses()) {
                         List<Word> words = synset.getWords();

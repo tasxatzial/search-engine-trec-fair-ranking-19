@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.linkAnalysis.graph.utils;
+package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
 
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -10,40 +10,41 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class CreateCitationsGraph {
-    private String __DATASET_PATH__;
+public class CitationsGraph {
+    private final String __DATASET_PATH__;
 
     /* graph file in binary format */
-    private String _citationsGraphBinary;
+    private final String _citationsGraphBinary;
 
     /* graph file in human readable format */
-    private String _citationsGraph;
+    private final String _citationsGraph;
 
     /* graph statistics file for the citations that exist in the collection */
-    private String _citationsStats;
+    private final String _citationsStats;
 
     /* histogram info file: Number of In edges -> Number of documents (duplicates and self references excluded) */
-    private String _inEdgesTrue;
+    private final String _inEdgesTrue;
 
     /* histogram info file: Number of Out edges -> Number of documents (duplicates and self references excluded) */
-    private String _outEdgesTrue;
+    private final String _outEdgesTrue;
 
     /* histogram info file: Number of In edges -> Number of documents */
-    private String _inEdges;
+    private final String _inEdges;
 
     /* histogram info file: Number of Out edges -> Number of documents */
-    private String _outEdges;
+    private final String _outEdges;
 
     /* histogram info file for the citations that do not exist in the collection: Number of In edges -> Number of documents */
-    private String _inEdgesNotFound;
+    private final String _inEdgesNotFound;
 
     /* histogram info file for the citations that do not exist in the collection: Number of Out edges -> Number of documents */
-    private String _outEdgesNotFound;
+    private final String _outEdgesNotFound;
 
     /* graph statistics file for the citations that do not exist in the collection */
-    private String _citationsNotFoundStats;
+    private final String _citationsNotFoundStats;
 
-    public CreateCitationsGraph() throws IOException {
+    public CitationsGraph()
+            throws IOException {
         Config __CONFIG__ = new Config();
         __DATASET_PATH__ = __CONFIG__.getDatasetPath();
         String citationsGraphPath = __CONFIG__.getCitationsGraphPath();
@@ -77,7 +78,8 @@ public class CreateCitationsGraph {
      * 2) in_edges_not_found
      * 3) out_edges_not_found
      */
-    public void dumpCitationsGraph() throws IOException {
+    public void dumpCitationsGraph()
+            throws IOException {
         File folder = new File(__DATASET_PATH__);
         File[] files = folder.listFiles();
         if (files == null) {
@@ -103,7 +105,7 @@ public class CreateCitationsGraph {
         BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(_citationsGraphBinary, "rw").getFD()));
         int totalDocuments = 0;
 
-        /* parse the dataset and write the required citation data to the 'citations_graph_binary' file */
+        /* parse the collection and write the required citation data to the 'citations_graph_binary' file */
         for (File file : corpus) {
             if (file.isFile()) {
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
@@ -237,12 +239,14 @@ public class CreateCitationsGraph {
     }
 
     /**
-     * Returns an array that has the citations graph. Entry N of the array corresponds to document
-     * with id N.
+     * Returns the array of the citations graph. Entry N of the array corresponds to document
+     * with ID = N.
+     *
      * @return
      * @throws IOException
      */
-    public CitationsNode[] loadCitationsGraph() throws IOException {
+    public CitationsNode[] loadCitationsGraph()
+            throws IOException {
         if (!(new File(_citationsGraphBinary)).exists()) {
             return null;
         }
@@ -276,13 +280,13 @@ public class CreateCitationsGraph {
             node.initializeOutNodes(outCitationsNum);
             for (int j = 0; j < outCitationsNum; j++) {
                 int outCitation = citationsBuf.getInt();
-                node.getOutNodes()[j] = outCitation;
+                node.get_outNodes()[j] = outCitation;
             }
             int inCitationsNum = citationsBuf.getInt();
             node.initializeInNodes(inCitationsNum);
             for (int j = 0; j < inCitationsNum; j++) {
                 int inCitation = citationsBuf.getInt();
-                node.getInNodes()[j] = inCitation;
+                node.get_inNodes()[j] = inCitation;
             }
         }
         graphReader.close();
@@ -290,23 +294,25 @@ public class CreateCitationsGraph {
     }
 
     /**
-     * Creates the file 'citations_graph' file in the citation graph directory specified in the config file.
+     * Creates the file 'citations_graph' file in the CITATIONS_GRAPH_PATH specified in the themis.config file
+     *
      * @param graph
      * @throws IOException
      */
-    public void writeCitationsGraph(CitationsNode[] graph) throws IOException {
+    public void writeCitationsGraph(CitationsNode[] graph)
+            throws IOException {
         BufferedWriter graphWriter = new BufferedWriter(new FileWriter(_citationsGraph));
 
         for (int i = 0; i < graph.length; i++) {
             CitationsNode node = graph[i];
             graphWriter.write(">>> Node id: " + i + "\n");
-            int[] inNodes = node.getInNodes();
+            int[] inNodes = node.get_inNodes();
             graphWriter.write("In Nodes [" + inNodes.length + "]: ");
             for (int j = 0; j < inNodes.length; j++) {
                 graphWriter.write(inNodes[j] + " ");
             }
             graphWriter.write("\n");
-            int[] outNodes = node.getOutNodes();
+            int[] outNodes = node.get_outNodes();
             graphWriter.write("Out Nodes [" + outNodes.length + "]: ");
             for (int j = 0; j < outNodes.length; j++) {
                 graphWriter.write(outNodes[j] + " ");
@@ -317,18 +323,18 @@ public class CreateCitationsGraph {
     }
 
     /**
-     * Creates the following files:
+     * In the CITATIONS_GRAPH_PATH specified in the themis.config file, it creates the following files:
      * 1) citations_stats
      * 2) in_nodes_true
      * 3) out_nodes_true
      * 4) in_nodes
      * 5) out_nodes
      *
-     * in the citation graph directory specified in the config file.
      * @param graph
      * @throws IOException
      */
-    public void calculateGraphStats(CitationsNode[] graph) throws IOException {
+    public void calculateGraphStats(CitationsNode[] graph)
+            throws IOException {
         BufferedWriter statsWriter = new BufferedWriter(new FileWriter(_citationsStats));
         BufferedWriter inEdgesTrueWriter = new BufferedWriter(new FileWriter(_inEdgesTrue));
         BufferedWriter outEdgesTrueWriter = new BufferedWriter(new FileWriter(_outEdgesTrue));
@@ -390,8 +396,8 @@ public class CreateCitationsGraph {
         int totalSelfRefOutEdges = 0;
 
         for (int i = 0; i < graph.length; i++) {
-            int[] currentInEdges = graph[i].getInNodes();
-            int[] currentOutEdges = graph[i].getOutNodes();
+            int[] currentInEdges = graph[i].get_inNodes();
+            int[] currentOutEdges = graph[i].get_outNodes();
 
             int selfOutReferences = 0;
             for (int node : currentOutEdges) {
@@ -458,7 +464,7 @@ public class CreateCitationsGraph {
             outEdgesHistogram.merge(OutEdges, 1, Integer::sum);
 
             for (int outEdge : currentOutEdges) {
-                int[] edges = graph[outEdge].getInNodes();
+                int[] edges = graph[outEdge].get_inNodes();
                 Set<Integer> inEdgesSet = new HashSet<>();
                 for (int j = 0; j < edges.length; j++) {
                     inEdgesSet.add(edges[j]);
@@ -469,7 +475,7 @@ public class CreateCitationsGraph {
             }
 
             for (int inEdge : currentInEdges) {
-                int[] edges = graph[inEdge].getOutNodes();
+                int[] edges = graph[inEdge].get_outNodes();
                 Set<Integer> outEdgesSet = new HashSet<>();
                 for (int j = 0; j < edges.length; j++) {
                     outEdgesSet.add(edges[j]);
@@ -532,7 +538,8 @@ public class CreateCitationsGraph {
     }
 
     /* Parses the corpus and creates a map of doc Id -> Integer */
-    private Map<String, Integer> getDocIDs(List<File> corpus) throws IOException {
+    private Map<String, Integer> getDocIDs(List<File> corpus)
+            throws IOException {
         Map<String, Integer> citationsIdsMap = new HashMap<>();
         int ID = 0;
         for (File file : corpus) {

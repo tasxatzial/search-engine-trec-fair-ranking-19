@@ -27,17 +27,29 @@ import java.util.*;
  * A simple ui to search the indexes
  */
 public class Search {
-    private Indexer _indexer;
+    private final Indexer _indexer;
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
+
+    /* the set of document props that will be retrieved */
     private Set<DocInfo.PROPERTY> _props;
 
-    public Search() throws ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+    /**
+     * Initializes the Indexer, the expansion dictionary and loads the index from the 'index' folder.
+     * Reads configuration options from themis.config file.
+     *
+     * @throws ExpansionDictionaryInitException
+     * @throws IndexNotLoadedException
+     * @throws ConfigLoadException
+     */
+    public Search()
+            throws ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _indexer = new Indexer();
         if (!_indexer.load()) {
             throw new IndexNotLoadedException();
         }
-        switch (_indexer.getConfig().getRetrievalModel()) {
+        String retrievalModel = _indexer.getConfig().getRetrievalModel();
+        switch (retrievalModel) {
             case "BM25":
                 _model = new OkapiBM25(_indexer);
                 break;
@@ -48,9 +60,11 @@ public class Search {
                 _model = new Existential(_indexer);
                 break;
         }
+        Themis.print("Default retrieval model: " + retrievalModel + "\n");
         _props = new HashSet<>();
         if (_indexer.getConfig().getUseQueryExpansion()) {
-            switch (_indexer.getConfig().getQueryExpansionModel()) {
+            String expansionModel = _indexer.getConfig().getQueryExpansionModel();
+            switch (expansionModel) {
                 case "Glove":
                     _queryExpansion = new Glove(_indexer.useStopwords());
                     break;
@@ -58,14 +72,17 @@ public class Search {
                     _queryExpansion = new EXTJWNL(_indexer.useStopwords());
                     break;
             }
+            Themis.print("Default query expansion model: " + expansionModel + "\n");
         }
         else {
             _queryExpansion = null;
+            Themis.print("Default query expansion model: None\n");
         }
     }
 
     /**
-     * Returns true if index is loaded
+     * Returns true iff index is loaded, false otherwise
+     *
      * @return
      */
     public boolean isIndexLoaded() {
@@ -73,19 +90,24 @@ public class Search {
     }
 
     /**
-     * Unloads an index from memory. Any further method calls of this Search, except printing results, will
-     * throw a SearchNoIndexException.
+     * Unloads an index from memory. Note that currently there is no method in this class to load an index
+     * except from creating a new Search instance.
+     *
      * @throws IOException
      */
-    public void unloadIndex() throws IOException {
+    public void unloadIndex()
+            throws IOException {
         _indexer.unload();
     }
 
     /**
      * Sets the retrieval model to the specified model
+     *
      * @param model
+     * @throws IndexNotLoadedException
      */
-    public void setRetrievalModel(ARetrievalModel.MODEL model) throws IndexNotLoadedException {
+    public void setRetrievalModel(ARetrievalModel.MODEL model)
+            throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -101,7 +123,8 @@ public class Search {
     }
 
     /**
-     * Returns the current retrieval model
+     * Returns the current retrieval model of this Search
+     *
      * @return
      */
     public ARetrievalModel.MODEL getRetrievalmodel() {
@@ -116,10 +139,15 @@ public class Search {
 
     /**
      * Sets the query expansion dictionary to the specified dictionary
+     *
      * @param dictionary
      * @throws IOException
+     * @throws ExpansionDictionaryInitException
+     * @throws IndexNotLoadedException
+     * @throws ConfigLoadException
      */
-    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary) throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
+            throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -135,7 +163,8 @@ public class Search {
     }
 
     /**
-     * Returns the current query expansion dictionary
+     * Returns the current query expansion dictionary of this Search
+     *
      * @return
      */
     public QueryExpansion.DICTIONARY getExpansionDictionary() {
@@ -150,9 +179,12 @@ public class Search {
 
     /**
      * Returns the timestamp of the loaded index
+     *
      * @return
+     * @throws IndexNotLoadedException If the index is not loaded
      */
-    public String getIndexTimestamp() throws IndexNotLoadedException {
+    public String getIndexTimestamp()
+            throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -161,16 +193,28 @@ public class Search {
 
     /**
      * Sets the retrieved document properties to the specified props
+     *
      * @param props
+     * @throws IndexNotLoadedException
      */
-    public void setDocumentProperties(Set<DocInfo.PROPERTY> props) throws IndexNotLoadedException {
+    public void setDocumentProperties(Set<DocInfo.PROPERTY> props)
+            throws IndexNotLoadedException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
         _props = props;
     }
 
-    public String getDocID(int intId) throws IndexNotLoadedException, UnsupportedEncodingException {
+    /**
+     * Returns the string doc ID from an int ID. This operation requires an already loaded index.
+     *
+     * @param intId
+     * @return
+     * @throws IndexNotLoadedException
+     * @throws UnsupportedEncodingException
+     */
+    public String getDocID(int intId)
+            throws IndexNotLoadedException, UnsupportedEncodingException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -178,97 +222,122 @@ public class Search {
     }
 
     /**
-     * Searches for a query and returns a ranked list of results.
+     * Queries the index and returns a ranked list of results. Equivalent to search(query, Integer.MAX_VALUE)
+     *
      * @param query
      * @return
+     * @throws ExpansionDictionaryInitException
+     * @throws IndexNotLoadedException
+     * @throws JWNLException
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query) throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
+    public List<Pair<DocInfo, Double>> search(String query)
+            throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         return search(query, Integer.MAX_VALUE);
     }
 
     /**
-     * Searches for a query and returns a ranked list of results. The results in the range
-     * [0, endResult] contain the document properties set by setDocumentProperties().
+     * Searches for a query and returns a ranked list of results. A maximum of endResult results are returned.
+     * This operation requires an already loaded index.
+     *
      * @param query
      * @param endResult From 0 to Integer.MAX_VALUE
      * @return
+     * @throws ExpansionDictionaryInitException
+     * @throws IndexNotLoadedException
+     * @throws JWNLException
      * @throws IOException
      */
-    public List<Pair<DocInfo, Double>> search(String query, int endResult) throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
+    public List<Pair<DocInfo, Double>> search(String query, int endResult)
+            throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
-        int maxNewTermsForEachTerm = 1; //for each term of the initial query, expand the query by one extra term
-        List<QueryTerm> finalQuery = new ArrayList<>();
 
-        //split query into terms and convert to lowercase
+        /* for each term of the initial query, keep 1 extra term from the query expansion */
+        int newTermsPerTerm = 1;
+
+        List<QueryTerm> newQuery = new ArrayList<>();
+
+        /* split query into tokens and convert to lowercase */
         List<String> splitQuery = ProcessText.split(query);
 
-        //apply stopwords/stemming and add terms to the final query
-        List<String> splitQueryProcessed = new ArrayList<>();
+        /* apply stopwords/stemming and collect the new terms in a new query */
         for (String term : splitQuery) {
             if (useStopwords && StopWords.isStopWord(term)) {
-                splitQueryProcessed.add(term);
                 continue;
             }
             if (useStemmer) {
                 String stemmedTerm = ProcessText.applyStemming(term);
-                splitQueryProcessed.add(stemmedTerm);
-                finalQuery.add(new QueryTerm(stemmedTerm, 1.0));
+                newQuery.add(new QueryTerm(stemmedTerm, 1.0));
             } else {
-                splitQueryProcessed.add(term);
-                finalQuery.add(new QueryTerm(term, 1.0));
+                newQuery.add(new QueryTerm(term, 1.0));
             }
         }
 
-        //expand the query and add terms to the final query
+        /* expand the new query based on an expansion dictionary and update the query */
         if (_queryExpansion != null) {
+
+            /* the expanded query consists of a list of lists */
             List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery);
+
             for (int i = 0; i < expandedQuery.size(); i++) {
-                String firstTerm = expandedQuery.get(i).get(0).getTerm().toLowerCase();
-                if (firstTerm.split(" ").length > 1) {
+
+                /* first item on the i-th list is the original term of the query */
+                String originalTerm = expandedQuery.get(i).get(0).get_term().toLowerCase();
+
+                /* proceed to the next list if the original term is stopword or is a multiple token string */
+                if (originalTerm.split(" ").length > 1) {
                     continue;
                 }
-                if (useStopwords && StopWords.isStopWord(firstTerm)) {
+                if (useStopwords && StopWords.isStopWord(originalTerm)) {
                     continue;
                 }
+
+                /* apply stemming to the original term */
                 if (useStemmer) {
-                    firstTerm = ProcessText.applyStemming(firstTerm);
+                    originalTerm = ProcessText.applyStemming(originalTerm);
                 }
+
+                /* get the expanded list of terms related to the original term (original term is first in the list) */
                 List<QueryTerm> expandedTermList = expandedQuery.get(i);
+
+                /* examine the list and keep at most newTermsPerTerm */
                 int count = 0;
                 for (int j = 1; j < expandedTermList.size(); j++) {
-                    if (count == maxNewTermsForEachTerm) {
+                    if (count == newTermsPerTerm) {
                         break;
                     }
-                    if (expandedTermList.get(j).getTerm().split(" ").length > 1) {
+                    if (expandedTermList.get(j).get_term().split(" ").length > 1) {
                         continue;
                     }
-                    String term = expandedTermList.get(j).getTerm().toLowerCase();
-                    if (useStopwords && StopWords.isStopWord(term)) {
+                    String newTerm = expandedTermList.get(j).get_term().toLowerCase();
+                    if (useStopwords && StopWords.isStopWord(newTerm)) {
                         continue;
                     }
                     if (useStemmer) {
-                        term = ProcessText.applyStemming(term);
+                        newTerm = ProcessText.applyStemming(newTerm);
                     }
-                    if (!firstTerm.equals(term)) {
-                        finalQuery.add(new QueryTerm(term, expandedTermList.get(j).getWeight()));
+
+                    /* Make sure none of the new terms are the same as the original term */
+                    if (!originalTerm.equals(newTerm)) {
+                        newQuery.add(new QueryTerm(newTerm, expandedTermList.get(j).get_weight()));
                         count++;
                     }
                 }
             }
         }
 
-        List<Pair<DocInfo, Double>> result = _model.getRankedResults(finalQuery, endResult);
+        List<Pair<DocInfo, Double>> result = _model.getRankedResults(newQuery, endResult);
         _indexer.updateDocInfo(result, _props);
         return result;
     }
 
     /**
-     * Returns the total number of results of the last query.
+     * Returns the total number of results of the last query
+     *
      * @return
      */
     public int getTotalResults() {
@@ -276,27 +345,35 @@ public class Search {
     }
 
     /**
-     * Prints a list of results in decreasing ranking order.
+     * Prints a list of ranked results
+     *
      * @param searchResults
+     * @throws UnsupportedEncodingException
+     * @throws IndexNotLoadedException
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults) throws UnsupportedEncodingException, IndexNotLoadedException {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults)
+            throws UnsupportedEncodingException, IndexNotLoadedException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
 
     /**
-     * Prints a list of results in decreasing ranking order from ranked position startResult to endResult.
-     * Only the results from ranked position startResult to endResult are displayed.
+     * Prints results from index startResult to endResult (inclusive).
+     * Equivalent to printResults(searchResults, 0, Integer.MAX_VALUE)
+     *
      * @param searchResults
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
+     * @throws UnsupportedEncodingException
+     * @throws IndexNotLoadedException
      */
-    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult) throws UnsupportedEncodingException, IndexNotLoadedException {
+    public void printResults(List<Pair<DocInfo, Double>> searchResults, int startResult, int endResult)
+            throws UnsupportedEncodingException, IndexNotLoadedException {
         if (searchResults.isEmpty()) {
             return;
         }
 
-        /* startResult and endResult might be out of the range of the actual results.
-        therefore we need to find the proper indexes of the first and last displayed result */
+        /* startResult and endResult might be out of the range in the list of results
+        therefore we need to find the correct indexes */
         int firstDisplayedResult = Math.max(startResult, 0);
         int lastDisplayedResult = Math.min(endResult, searchResults.size() - 1);
         if (firstDisplayedResult > lastDisplayedResult) {
@@ -312,7 +389,7 @@ public class Search {
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");
-            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.getId()) + "\n");
+            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.get_id()) + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 if (docInfo.hasProperty(docInfoProp)) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");

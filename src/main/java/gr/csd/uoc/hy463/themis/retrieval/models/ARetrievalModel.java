@@ -18,12 +18,19 @@ public abstract class ARetrievalModel {
     }
 
     protected Indexer _indexer;
-    protected int totalArticles;
-    protected int totalResults = 0;
+    protected int _totalDocuments;
+    protected int _totalResults = 0;
 
-    protected ARetrievalModel(Indexer indexer) throws IndexNotLoadedException {
+    /**
+     * Constructor.
+     *
+     * @param indexer
+     * @throws IndexNotLoadedException
+     */
+    protected ARetrievalModel(Indexer indexer)
+            throws IndexNotLoadedException {
         _indexer = indexer;
-        totalArticles = _indexer.getTotalArticles();
+        _totalDocuments = _indexer.getTotalDocuments();
     }
 
     /**
@@ -42,16 +49,24 @@ public abstract class ARetrievalModel {
      * The double is the score of the document as returned by the corresponding
      * retrieval model.
      *
-     * The list must be in descending order according to the score
+     * The list must be in descending order according to the score.
      *
-     * @param query list of query terms
+     * @param query
+     * @param endResult The returned list will have at most endResult results
      * @return
+     * @throws IOException
+     * @throws IndexNotLoadedException
      */
-    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult) throws IOException, IndexNotLoadedException;
+    public abstract List<Pair<DocInfo, Double>> getRankedResults(List<QueryTerm> query, int endResult)
+            throws IOException, IndexNotLoadedException;
 
     /**
-     * Sorts the specified results based on the citations pagerank scores and the retrieval model score.
+     * Sorts the specified results based on the citations pagerank scores and the retrieval model score
+     *
      * @param results
+     * @param citationsPagerank
+     * @param endResult
+     * @return
      */
     protected List<Pair<DocInfo, Double>> sort(List<Pair<DocInfo, Double>> results, double[] citationsPagerank, int endResult) {
         double pagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
@@ -73,7 +88,7 @@ public abstract class ARetrievalModel {
         for (int i = 0; i < results.size(); i++) {
             Pair<DocInfo, Double> pair = results.get(i);
             double modelScore = pair.getR();
-            double pagerankScore = citationsPagerank[pair.getL().getId()] / maxPagerankScore;
+            double pagerankScore = citationsPagerank[pair.getL().get_id()] / maxPagerankScore;
             double combinedScore = modelScore * modelWeight + pagerankScore * pagerankWeight;
             pair.setR(combinedScore);
         }
@@ -97,14 +112,16 @@ public abstract class ARetrievalModel {
 
     /**
      * Returns the total number of results of the last query
+     *
      * @return
      */
     public int getTotalResults() {
-        return totalResults;
+        return _totalResults;
     }
 
     /**
-     * Merges the weights of the equal terms in the specified query list and returns a new list
+     * Merges (adds) the weights of the equal terms in the specified query list and returns a new list
+     *
      * @param query
      * @return
      */
@@ -114,16 +131,16 @@ public abstract class ARetrievalModel {
             QueryTerm currentTerm = query.get(i);
             boolean found = false;
             for (int j = 0; j < i; j++) {
-                if (currentTerm.getTerm().equals(query.get(j).getTerm())) {
+                if (currentTerm.get_term().equals(query.get(j).get_term())) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                QueryTerm mergedTerm = new QueryTerm(currentTerm.getTerm(), currentTerm.getWeight());
+                QueryTerm mergedTerm = new QueryTerm(currentTerm.get_term(), currentTerm.get_weight());
                 for (int j = i + 1; j < query.size(); j++) {
-                    if (currentTerm.getTerm().equals(query.get(j).getTerm())) {
-                        mergedTerm.setWeight(mergedTerm.getWeight() + query.get(j).getWeight());
+                    if (currentTerm.get_term().equals(query.get(j).get_term())) {
+                        mergedTerm.set_weight(mergedTerm.get_weight() + query.get(j).get_weight());
                     }
                 }
                 mergedQuery.add(mergedTerm);

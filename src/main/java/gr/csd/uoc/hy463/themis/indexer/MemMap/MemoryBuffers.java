@@ -12,22 +12,26 @@ import java.util.List;
 /**
  * Implements the memory mapped file concept.
  */
-public abstract class MemBuffers {
+public abstract class MemoryBuffers {
     public enum MODE {
         READ, WRITE
     }
     protected List<ByteBuffer> _buffers;
     protected List<Long> _offsets;
-    protected RandomAccessFile _documents;
-    protected String _documentsPath;
+    protected RandomAccessFile _file;
+    protected String _filePath;
 
     /**
-     * Creates the appropriate buffers so that the file specified by filename is treated
-     * as a memory mapped file.
+     * Creates a list of ByteBuffers using the specified list of bufferOffsets. These are the file offsets
+     * that determine the size of each ByteBuffer. For example if the list is (0, 10, 20), two ByteBuffers
+     * will be created, one for bytes 1-10 and one for bytes 11-20.
+     *
      * @param bufferOffsets A list of file offsets
+     * @param mode READ or WRITE
      * @throws IOException
      */
-    protected void createBuffers(List<Long> bufferOffsets, MemBuffers.MODE mode) throws IOException {
+    protected void createBuffers(List<Long> bufferOffsets, MemoryBuffers.MODE mode)
+            throws IOException {
         if (bufferOffsets.size() < 2) {
             throw new IllegalArgumentException("offsets size < 2");
         }
@@ -35,14 +39,14 @@ public abstract class MemBuffers {
         _offsets = new ArrayList<>();
         FileChannel.MapMode openMode;
         if (mode == MODE.WRITE) {
-            _documents = new RandomAccessFile(_documentsPath, "rw");
+            _file = new RandomAccessFile(_filePath, "rw");
             openMode = FileChannel.MapMode.READ_WRITE;
         }
         else {
-            _documents = new RandomAccessFile(_documentsPath, "r");
+            _file = new RandomAccessFile(_filePath, "r");
             openMode = FileChannel.MapMode.READ_ONLY;
         }
-        FileChannel documentsChannel = _documents.getChannel();
+        FileChannel documentsChannel = _file.getChannel();
         for (int i = 0; i < bufferOffsets.size() - 1; i++) {
             MappedByteBuffer buffer = documentsChannel.map(openMode, bufferOffsets.get(i),
                     bufferOffsets.get(i + 1) - bufferOffsets.get(i)).load();
@@ -55,8 +59,9 @@ public abstract class MemBuffers {
     }
 
     /**
-     * Returns the buffer that corresponds to the specified offset. It also sets the
-     * position of the buffer so that we can start reading from this offset.
+     * Returns the ByteBuffer that contains specified offset. It also sets the
+     * position of the ByteBuffer so that we can start reading from the specified offset.
+     *
      * @param offset
      * @return
      */
@@ -72,53 +77,42 @@ public abstract class MemBuffers {
                 return buffer;
             }
         }
+
         return null;
     }
 
     /**
-     * Clears all resources and closes all files associated with this object.
+     * Unmaps the current file from memory and closes all the corresponding files
+     *
      * @throws IOException
      */
-    public void close() throws IOException {
+    public void close()
+            throws IOException {
         for (int i = 0; i < _buffers.size(); i++) {
             CloseDirectBuffer.closeDirectBuffer(_buffers.get(i));
         }
-        _documents.close();
+        _file.close();
         _offsets.clear();
     }
 
-    /**
-     * Returns the number of buffers that this object uses to map a file into memory
-     * @return
-     */
+    /* Returns the total number of Bytebuffers for the current mapped file */
     protected final int getTotalBuffers() {
         return _buffers.size();
     }
 
-    /**
-     * Returns the buffer that has the specified index
-     * @param index
-     * @return
-     */
+    /* Returns the ByteBuffer with the specified index */
     protected final ByteBuffer getBuffer(int index) {
         return _buffers.get(index);
     }
 
-    /**
-     * Returns the size of the specified buffer
-     * @param buffer
-     * @return
-     */
+    /* Returns the size of the specified buffer */
     protected final int getBufferSize(ByteBuffer buffer) {
         int i = _buffers.indexOf(buffer);
         return (int) (_offsets.get(i + 1) - _offsets.get(i));
     }
 
-    /**
-     * Returns the size of the file that corresponds to the current memory mapped file
-     * @return
-     */
+    /* Returns the size of the current mapped file */
     protected final long getDocumentsSize() {
-        return new File(_documentsPath).length();
+        return new File(_filePath).length();
     }
 }
