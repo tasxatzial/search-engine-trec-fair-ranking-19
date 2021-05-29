@@ -37,8 +37,6 @@ public class VSM extends ARetrievalModel {
         _totalResults = 0;
         for (int i = 0; i < _totalDocuments; i++) {
             _calculatedWeights[i] = null;
-            _documentWeights[i] = 0;
-            _citationsPagerank[i] = 0;
             _modelScore[i] = 0;
         }
 
@@ -133,8 +131,6 @@ public class VSM extends ARetrievalModel {
         }
 
         _totalResults = results.size();
-
-        //sort based on pagerank score and this model score
         return sort(results, _citationsPagerank, endResult);
     }
 }

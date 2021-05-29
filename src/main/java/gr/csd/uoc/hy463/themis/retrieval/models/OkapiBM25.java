@@ -16,8 +16,8 @@ import java.util.*;
  * Implementation of the Okapi retrieval model. BM25+ is used as the scoring function.
  */
 public class OkapiBM25 extends ARetrievalModel {
-    private double _k1 = 2.0;
-    private double _b = 0.75;
+    private final double _k1 = 2.0;
+    private final double _b = 0.75;
     private final double _avgdl;
     double[] _citationsPagerank;
     int[] _tokenCount;
@@ -41,8 +41,6 @@ public class OkapiBM25 extends ARetrievalModel {
         _totalResults = 0;
         for (int i = 0; i < _totalDocuments; i++) {
             _calculatedFreqs[i] = null;
-            _citationsPagerank[i] = 0;
-            _tokenCount[i] = 0;
             _modelScore[i] = 0;
         }
 
@@ -86,8 +84,9 @@ public class OkapiBM25 extends ARetrievalModel {
             }
             double score = 0;
             double[] freqs = _calculatedFreqs[i];
+            double B = _k1 * (1 - _b + (_b * _tokenCount[i]) / _avgdl);
             for (int j = 0; j < query.size(); j++) {
-                score += idfs[j] * (freqs[j] * (_k1 + 1) / (freqs[j] + _k1 * (1 - _b + (_b * _tokenCount[i]) / _avgdl)) + 1);
+                score += idfs[j] * (freqs[j] * (_k1 + 1) / (freqs[j] + B) + 1);
             }
             _modelScore[i] = score;
             if (score > maxScore) {
@@ -110,8 +109,6 @@ public class OkapiBM25 extends ARetrievalModel {
         }
 
         _totalResults = results.size();
-
-        //sort based on pagerank score and this model score
         return sort(results, _citationsPagerank, endResult);
     }
 }
