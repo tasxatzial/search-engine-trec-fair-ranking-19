@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,8 +17,8 @@ public abstract class MemoryBuffers {
     public enum MODE {
         READ, WRITE
     }
-    protected List<ByteBuffer> _buffers;
-    protected List<Long> _offsets;
+    protected ByteBuffer[] _buffers;
+    protected long[] _offsets = new long[0];
     protected RandomAccessFile _file;
     protected String _filePath;
 
@@ -26,17 +27,15 @@ public abstract class MemoryBuffers {
      * that determine the size of each ByteBuffer. For example if the list is (0, 10, 20), two ByteBuffers
      * will be created, one for bytes 1-10 and one for bytes 11-20.
      *
-     * @param bufferOffsets A list of file offsets
      * @param mode READ or WRITE
      * @throws IOException
      */
-    protected void createBuffers(List<Long> bufferOffsets, MemoryBuffers.MODE mode)
+    protected void createBuffers(MemoryBuffers.MODE mode)
             throws IOException {
-        if (bufferOffsets.size() < 2) {
+        if (_offsets.length < 2) {
             throw new IllegalArgumentException("offsets size < 2");
         }
-        _buffers = new ArrayList<>();
-        _offsets = new ArrayList<>();
+        _buffers = new ByteBuffer[_offsets.length - 1];
         FileChannel.MapMode openMode;
         if (mode == MODE.WRITE) {
             _file = new RandomAccessFile(_filePath, "rw");
@@ -47,14 +46,10 @@ public abstract class MemoryBuffers {
             openMode = FileChannel.MapMode.READ_ONLY;
         }
         FileChannel documentsChannel = _file.getChannel();
-        for (int i = 0; i < bufferOffsets.size() - 1; i++) {
-            MappedByteBuffer buffer = documentsChannel.map(openMode, bufferOffsets.get(i),
-                    bufferOffsets.get(i + 1) - bufferOffsets.get(i)).load();
-            _buffers.add(buffer);
-            _offsets.add(bufferOffsets.get(i));
-
+        for (int i = 0; i < _offsets.length - 1; i++) {
+            MappedByteBuffer buffer = documentsChannel.map(openMode, _offsets[i], getBufferSize(i)).load();
+            _buffers[i] = buffer;
         }
-        _offsets.add(bufferOffsets.get(bufferOffsets.size() - 1));
         documentsChannel.close();
     }
 
@@ -65,54 +60,52 @@ public abstract class MemoryBuffers {
      * @param offset
      * @return
      */
-    public ByteBuffer getBufferLong(long offset) {
-        if (offset < 0 || offset >= _offsets.get(_offsets.size() - 1)) {
-            return null;
+    public ByteBuffer memBuffer(long offset) {
+        if (offset < 0 || offset >= _offsets[_offsets.length - 1]) {
+            throw new IndexOutOfBoundsException();
         }
-        for (int i = _offsets.size() - 2; i >= 0; i--) {
-            long currentOffset = _offsets.get(i);
+        for (int i = _offsets.length - 2; i >= 0; --i) {
+            long currentOffset = _offsets[i];
             if (offset >= currentOffset) {
-                ByteBuffer buffer = _buffers.get(i);
+                ByteBuffer buffer = _buffers[i];
                 buffer.position((int) (offset - currentOffset));
                 return buffer;
             }
         }
-
         return null;
     }
 
     /**
-     * Unmaps the current file from memory and closes all the corresponding files
+     * Unmaps the current file from memory and closes all files
      *
      * @throws IOException
      */
     public void close()
             throws IOException {
-        for (int i = 0; i < _buffers.size(); i++) {
-            CloseDirectBuffer.closeDirectBuffer(_buffers.get(i));
+        for (ByteBuffer buffer : _buffers) {
+            CloseDirectBuffer.closeDirectBuffer(buffer);
         }
         _file.close();
-        _offsets.clear();
+        _offsets = new long[0];
     }
 
-    /* Returns the total number of Bytebuffers for the current mapped file */
-    protected final int getTotalBuffers() {
-        return _buffers.size();
+    /* Returns the size of the buffer at the specified index */
+    protected final int getBufferSize(int index) {
+        return (int) (_offsets[index + 1] - _offsets[index]);
     }
 
-    /* Returns the ByteBuffer with the specified index */
-    protected final ByteBuffer getBuffer(int index) {
-        return _buffers.get(index);
-    }
-
-    /* Returns the size of the specified buffer */
-    protected final int getBufferSize(ByteBuffer buffer) {
-        int i = _buffers.indexOf(buffer);
-        return (int) (_offsets.get(i + 1) - _offsets.get(i));
-    }
-
-    /* Returns the size of the current mapped file */
-    protected final long getDocumentsSize() {
+    /* Returns the size of the current memory mapped file */
+    protected final long getFileSize() {
         return new File(_filePath).length();
+    }
+
+    /* Returns the number of buffers */
+    protected int totalBuffers() {
+        return _buffers.length;
+    }
+
+    /* Returned the buffer at the specified index */
+    protected ByteBuffer getBuffer(int index) {
+        return _buffers[index];
     }
 }

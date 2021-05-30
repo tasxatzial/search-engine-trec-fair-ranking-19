@@ -117,12 +117,13 @@ public class Pagerank {
         We can now use an integer to refer to a document instead of its string docID */
         int documents = 0;
         long offset = 0;
+        long maxOffset = DocumentIDEntry.totalSize * (long) _totalDocuments;
         ByteBuffer buffer;
-        while ((buffer = documentIDBuffers.getBufferLong(offset)) != null) {
+        while (offset != maxOffset) {
+            buffer = documentIDBuffers.memBuffer(offset);
             buffer.get(docIdArray);
             String stringId = new String(docIdArray, 0, DocumentIDEntry.DOCID_SIZE, "ASCII");
-            citationsIntMap.put(stringId, documents);
-            documents++;
+            citationsIntMap.put(stringId, documents++);
             offset += DocumentIDEntry.totalSize;
         }
         documentIDBuffers.close();
@@ -315,7 +316,7 @@ public class Pagerank {
         DocumentBuffers documentMetaBuffers = new DocumentBuffers(documentsMetaPath, MemoryBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
 
         for (int i = 0; i < scores.length; i++) {
-            ByteBuffer buffer = documentMetaBuffers.getBufferLong(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
+            ByteBuffer buffer = documentMetaBuffers.memBuffer(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             buffer.putDouble(scores[i]);
             offset += DocumentMetaEntry.totalSize;
         }

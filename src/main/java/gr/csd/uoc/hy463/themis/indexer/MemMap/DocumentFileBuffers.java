@@ -23,33 +23,36 @@ public class DocumentFileBuffers extends MemoryBuffers {
     public DocumentFileBuffers(String documentsPath, MemoryBuffers.MODE mode, MemoryBuffers documentMetaBuffers)
             throws IOException {
         _filePath = documentsPath;
-        createBuffers(createBufferOffsets(documentMetaBuffers), mode);
+        createBufferOffsets(documentMetaBuffers);
+        createBuffers(mode);
     }
 
     /* Creates the necessary buffer offsets that can be used for splitting the file into ByteBuffers */
-    private List<Long> createBufferOffsets(MemoryBuffers documentMetaBuffers) {
+    private void createBufferOffsets(MemoryBuffers documentMetaBuffers) {
         int maxBufferSize = Integer.MAX_VALUE;
         List<Long> bufferOffsets = new ArrayList<>();
         bufferOffsets.add(0L);
-        long totalDocumentsSize = 0;
-        long documentOffset = 0;
-        for (int i = 0; i < documentMetaBuffers.getTotalBuffers(); i++) {
+        long fileSize = 0;
+        long offset = 0;
+        for (int i = 0; i < documentMetaBuffers.totalBuffers(); i++) {
             ByteBuffer buffer = documentMetaBuffers.getBuffer(i);
-            int bufferSize = documentMetaBuffers.getBufferSize(buffer);
-            for (int j = 0; j < bufferSize; j += DocumentMetaEntry.totalSize) {
+            for (int j = 0; j < documentMetaBuffers.getBufferSize(i); j += DocumentMetaEntry.totalSize) {
                 int documentSize = buffer.getInt(j + DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-                if (documentSize > maxBufferSize - totalDocumentsSize) {
-                    bufferOffsets.add(documentOffset);
-                    totalDocumentsSize = documentSize;
+                if (documentSize > maxBufferSize - fileSize) {
+                    bufferOffsets.add(offset);
+                    fileSize = documentSize;
                 }
                 else {
-                    totalDocumentsSize += documentSize;
+                    fileSize += documentSize;
                 }
-                documentOffset += documentSize;
+                offset += documentSize;
             }
         }
-        bufferOffsets.add(documentOffset);
+        bufferOffsets.add(offset);
 
-        return bufferOffsets;
+        _offsets = new long[bufferOffsets.size()];
+        for (int i = 0; i < bufferOffsets.size(); i++) {
+            _offsets[i] = bufferOffsets.get(i);
+        }
     }
 }

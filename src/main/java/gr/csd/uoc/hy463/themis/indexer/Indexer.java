@@ -815,9 +815,9 @@ public class Indexer {
             weight = Math.sqrt(weight) / maxTf;
 
             /* update the 'documents_meta' file */
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
             buffer.putDouble(weight);
-            buffer = __DOCMETA_BUFFERS__.getBufferLong(offset + DocumentMetaEntry.MAX_TF_OFFSET);
+            buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
             buffer.putInt(maxTf);
             offset += DocumentMetaEntry.totalSize;
         }
@@ -977,7 +977,7 @@ public class Indexer {
             throw new IndexNotLoadedException();
         }
         long docIdOffset = DocInfo.getDocIdOffset(intID);
-        ByteBuffer buffer = __DOCID_BUFFERS__.getBufferLong(docIdOffset);
+        ByteBuffer buffer = __DOCID_BUFFERS__.memBuffer(docIdOffset);
         buffer.get(__DOCUMENT_ID_ARRAY__);
 
         return new String(__DOCUMENT_ID_ARRAY__, 0, DocumentIDEntry.DOCID_SIZE, "ASCII");
@@ -1095,7 +1095,7 @@ public class Indexer {
                 /* go to the required offset and read all document data at once.
                 * The size of the data will be DocumentMetaEntry.totalSize */
                 documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_id());
-                ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentsMetaOffset);
+                ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(documentsMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__);
 
                 documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
@@ -1134,7 +1134,7 @@ public class Indexer {
                 * because some of them are required for fetching data from the 'documents' file */
                 if (documentsMetaOffset == -1) {
                     documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_id());
-                    ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(documentsMetaOffset);
+                    ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(documentsMetaOffset);
                     buffer.get(__DOCUMENT_META_ARRAY__);
                     documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
                     documentsOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
@@ -1268,7 +1268,7 @@ public class Indexer {
         double[] citationsPagerank = new double[intIDs.length];
         for (int i = 0; i < intIDs.length; i++) {
             long offset = DocInfo.getMetaOffset(intIDs[i]);
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
             buffer.get(__DOCUMENT_META_ARRAY__);
             citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             VSMweights[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
@@ -1293,7 +1293,7 @@ public class Indexer {
         double[] citationsPagerank = new double[intIDs.length];
         for (int i = 0; i < intIDs.length; i++) {
             long offset = DocInfo.getMetaOffset(intIDs[i]);
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.getBufferLong(offset);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
             buffer.get(__DOCUMENT_META_ARRAY__);
             citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             tokenCount[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);

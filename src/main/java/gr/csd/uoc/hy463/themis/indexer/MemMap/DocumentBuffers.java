@@ -1,11 +1,10 @@
 package gr.csd.uoc.hy463.themis.indexer.MemMap;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Implements the memory mapped file concept for the 'documents_id' and 'documents_meta' files
+ * Implements the memory mapped file concept for the 'documents_id' and 'documents_meta' files.
+ *
  */
 public class DocumentBuffers extends MemoryBuffers {
 
@@ -21,22 +20,23 @@ public class DocumentBuffers extends MemoryBuffers {
     public DocumentBuffers(String filePath, MemoryBuffers.MODE mode, int blockSize)
             throws IOException {
         _filePath = filePath;
-        createBuffers(createBufferOffsets(blockSize), mode);
+        createBufferOffsets(blockSize);
+        createBuffers(mode);
     }
 
     /* Creates the necessary buffer offsets that can be used for splitting the file into ByteBuffers */
-    private List<Long> createBufferOffsets(int size) {
-        long fileSize = getDocumentsSize();
-        int maxBufferSize = (Integer.MAX_VALUE / size) * size;
-        long totalBuffers = 1 + fileSize / Integer.MAX_VALUE;
+    private void createBufferOffsets(int blockSize) {
+        long fileSize = getFileSize();
+        int maxBufferSize = (Integer.MAX_VALUE / blockSize) * blockSize;
+        int totalBuffers = (int) (1 + fileSize / Integer.MAX_VALUE);
+        long[] bufferOffsets = new long[totalBuffers + 1];
         long offset = 0L;
-        List<Long> bufferOffsets = new ArrayList<>();
-        for (int i = 0; i < totalBuffers; i++) {
-            bufferOffsets.add(offset);
+        int i;
+        for (i = 0; i < totalBuffers; i++) {
+            bufferOffsets[i] = offset;
             offset += maxBufferSize;
         }
-        bufferOffsets.add(fileSize);
-
-        return bufferOffsets;
+        bufferOffsets[i] = fileSize;
+        _offsets = bufferOffsets;
     }
 }
