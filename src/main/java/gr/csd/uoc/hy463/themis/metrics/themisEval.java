@@ -119,6 +119,7 @@ public class themisEval {
         List<Double> ndcgs = new ArrayList<>();
         List<Pair<String, Time>> queryTime = new ArrayList<>();
         Time totalSearchTime = new Time(0);
+        long evalStartTime = System.nanoTime();
         long totalResults = 0;
         while ((line = judgementsReader.readLine()) != null) {
             Object obj;
@@ -188,6 +189,8 @@ public class themisEval {
             resultsAverageTime = new Time((totalSearchTime.getValue() / totalResults) * calculateBaseResults(totalResults));
         }
 
+        long evalEndTime = System.nanoTime();
+
         Themis.print("\n>>> End of evaluation\n");
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("Summary:\n\n");
@@ -204,7 +207,8 @@ public class themisEval {
         evaluationWriter.write("Average per query: " + queryAverageTime + "\n");
         evaluationWriter.write("Average per " + calculateBaseResults(totalResults) + " results: " + resultsAverageTime + "\n");
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
-        evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n");
+        evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n\n");
+        evaluationWriter.write("-> Evaluation time: " + new Time(evalEndTime - evalStartTime) + "\n");
         evaluationWriter.close();
         judgementsReader.close();
     }
