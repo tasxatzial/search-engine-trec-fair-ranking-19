@@ -30,18 +30,22 @@ public class Time {
             double secs = toSec(fromMin(mins) - fromMin(intMins));
             return intMins + "m " + roundToInt(secs) + "s";
         }
-        if (msec > toMsec(fromSec(10))) {
+        if (msec > toMsec(fromSec(20))) {
             double secs = toSec(_longValue);
             return roundToInt(secs) + "s";
         }
-        if (msec > toMsec(fromSec(1))) {
+        if (msec > toMsec(fromSec(2))) {
             double secs = toSec(_longValue);
             return roundToDecimal(secs, 1) + "s";
         }
-        if (msec > 10) {
+        if (msec > 100) {
+            double secs = toSec(_longValue);
+            return roundToDecimal(secs, 2) + "s";
+        }
+        if (msec > 20) {
             return roundToInt(msec) + "ms";
         }
-        if (msec > 1) {
+        if (msec > 2) {
             return roundToDecimal(msec, 1) + "ms";
         }
         return roundToDecimal(msec, 2) + "ms";
