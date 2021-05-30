@@ -17,7 +17,6 @@ import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 import net.sf.extjwnl.JWNLException;
 
 import java.io.IOException;
@@ -79,6 +78,7 @@ public class Search {
             _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
+        Themis.print("Citations Pagerank weight: " + _indexer.get_pagerankWeight() + "\n");
     }
 
     /**
@@ -355,6 +355,24 @@ public class Search {
     public void printResults(List<Result> searchResults)
             throws UnsupportedEncodingException, IndexNotLoadedException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Set the citations pagerank weight
+     *
+     * @param weight
+     */
+    public void setPagerankWeight(double weight) {
+        _indexer.set_pagerankWeight(weight);
+    }
+
+    /**
+     * Get the citations pagerank weight
+     *
+     * @return
+     */
+    public double getPagerankWeight() {
+        return _indexer.get_pagerankWeight();
     }
 
     /**

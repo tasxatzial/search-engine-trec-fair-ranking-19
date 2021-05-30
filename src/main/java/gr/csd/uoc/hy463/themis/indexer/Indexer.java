@@ -42,6 +42,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
+    private double _pagerankWeight;
 
     /* General configuration options */
     private final Config __CONFIG__;
@@ -100,6 +101,8 @@ public class Indexer {
      * The 'documents' file
      * The 'index_meta' file
      *
+     * Also initializes the citations pagerank weight to its default value.
+     *
      * @throws ConfigLoadException
      */
     public Indexer()
@@ -117,6 +120,7 @@ public class Indexer {
         __DOCUMENTS_META_FILENAME__ = __CONFIG__.getDocumentsMetaFileName();
         __DOCUMENTS_ID_FILENAME__ = __CONFIG__.getDocumentsIDFileName();
         __META_FILENAME__ = __CONFIG__.getMetaFileName();
+        _pagerankWeight = __CONFIG__.getPagerankPublicationsWeight();
     }
 
     /**
@@ -1504,5 +1508,23 @@ public class Indexer {
      */
     public String getPartialVocabularyPath(int index) {
         return getPartialIndexPath(index) + __VOCABULARY_FILENAME__;
+    }
+
+    /**
+     * Set the citations pagerank weight
+     *
+     * @param weight
+     */
+    public void set_pagerankWeight(double weight) {
+        _pagerankWeight = weight;
+    }
+
+    /**
+     * Get the citations pagerank weight
+     *
+     * @return
+     */
+    public double get_pagerankWeight() {
+        return _pagerankWeight;
     }
 }

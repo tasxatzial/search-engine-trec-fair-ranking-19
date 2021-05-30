@@ -5,7 +5,6 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -70,8 +69,8 @@ public abstract class ARetrievalModel {
      * @return
      */
     protected List<Result> sort(List<Result> results, double[] citationsPagerank, int endResult) {
-        double pagerankWeight = _indexer.getConfig().getPagerankPublicationsWeight();
-        double modelWeight = _indexer.getConfig().getRetrievalModelWeight();
+        double pagerankWeight = _indexer.get_pagerankWeight();
+        double modelWeight = 1 - pagerankWeight;
 
         //normalize pagerank scores
         double maxPagerankScore = 0;
