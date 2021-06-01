@@ -16,7 +16,6 @@ import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

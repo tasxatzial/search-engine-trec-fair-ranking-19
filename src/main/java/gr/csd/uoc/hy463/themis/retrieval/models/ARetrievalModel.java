@@ -70,30 +70,35 @@ public abstract class ARetrievalModel {
      */
     protected List<Result> sort(List<Result> results, double[] citationsPagerank, int endResult) {
         double pagerankWeight = _indexer.get_pagerankWeight();
-        double modelWeight = 1 - pagerankWeight;
+        boolean hasPagerank = Double.compare(pagerankWeight, 0.0) != 0;
 
-        //normalize pagerank scores
-        double maxPagerankScore = 0;
-        for (int i = 0; i < citationsPagerank.length; i++) {
-            if (citationsPagerank[i] > maxPagerankScore) {
-                maxPagerankScore = citationsPagerank[i];
+        if (hasPagerank) {
+            double maxPagerankScore = 0;
+            double modelWeight = 1 - pagerankWeight;
+            
+            //normalize pagerank scores
+            for (int i = 0; i < results.size(); i++) {
+                DocInfo docInfo = results.get(i).getDocInfo();
+                int id = docInfo.get_id();
+                if (citationsPagerank[id] > maxPagerankScore) {
+                    maxPagerankScore = citationsPagerank[id];
+                }
+            }
+            if (Double.compare(maxPagerankScore, 0.0) == 0) {
+                maxPagerankScore = 1;
+            }
+
+            //calculate the combined score
+            for (int i = 0; i < results.size(); i++) {
+                DocInfo docInfo = results.get(i).getDocInfo();
+                double modelScore = results.get(i).getScore();
+                double pagerankScore = citationsPagerank[docInfo.get_id()] / maxPagerankScore;
+                double combinedScore = modelScore * modelWeight + pagerankScore * pagerankWeight;
+                results.get(i).setScore(combinedScore);
             }
         }
 
-        if (Double.compare(maxPagerankScore, 0.0) == 0) {
-            maxPagerankScore = 1;
-        }
-
-        //calculate the combined score
-        for (int i = 0; i < results.size(); i++) {
-            DocInfo docInfo = results.get(i).getDocInfo();
-            double modelScore = results.get(i).getScore();
-            double pagerankScore = citationsPagerank[docInfo.get_id()] / maxPagerankScore;
-            double combinedScore = modelScore * modelWeight + pagerankScore * pagerankWeight;
-            results.get(i).setScore(combinedScore);
-        }
-
-        //sort results based on the combined score
+        //sort results (descending)
         Collections.sort(results);
 
         //return at most endResults results
