@@ -1,0 +1,116 @@
+>>> Indexing options:
+Stemmer: true
+Stopwords: true
+Pagerank damping factor: 0.85
+Pagerank threshold: 1.0E-8
+>>> Start indexing
+Parsing file: F:\s2\full_data\s2-corpus-00
+Parsing file: F:\s2\full_data\s2-corpus-01
+Parsing file: F:\s2\full_data\s2-corpus-02
+Parsing file: F:\s2\full_data\s2-corpus-03
+Parsing file: F:\s2\full_data\s2-corpus-04
+Parsing file: F:\s2\full_data\s2-corpus-05
+Parsing file: F:\s2\full_data\s2-corpus-06
+Parsing file: F:\s2\full_data\s2-corpus-07
+Parsing file: F:\s2\full_data\s2-corpus-08
+Parsing file: F:\s2\full_data\s2-corpus-09
+Parsing file: F:\s2\full_data\s2-corpus-10
+Parsing file: F:\s2\full_data\s2-corpus-11
+Parsing file: F:\s2\full_data\s2-corpus-12
+Parsing file: F:\s2\full_data\s2-corpus-13
+Parsing file: F:\s2\full_data\s2-corpus-14
+Parsing file: F:\s2\full_data\s2-corpus-15
+Parsing file: F:\s2\full_data\s2-corpus-16
+Parsing file: F:\s2\full_data\s2-corpus-17
+Parsing file: F:\s2\full_data\s2-corpus-18
+Parsing file: F:\s2\full_data\s2-corpus-19
+Parsing file: F:\s2\full_data\s2-corpus-20
+Parsing file: F:\s2\full_data\s2-corpus-21
+Parsing file: F:\s2\full_data\s2-corpus-22
+Parsing file: F:\s2\full_data\s2-corpus-23
+Parsing file: F:\s2\full_data\s2-corpus-24
+Parsing file: F:\s2\full_data\s2-corpus-25
+Parsing file: F:\s2\full_data\s2-corpus-26
+Parsing file: F:\s2\full_data\s2-corpus-27
+Parsing file: F:\s2\full_data\s2-corpus-28
+Parsing file: F:\s2\full_data\s2-corpus-29
+Parsing file: F:\s2\full_data\s2-corpus-30
+Parsing file: F:\s2\full_data\s2-corpus-31
+Parsing file: F:\s2\full_data\s2-corpus-32
+Parsing file: F:\s2\full_data\s2-corpus-33
+Parsing file: F:\s2\full_data\s2-corpus-34
+Parsing file: F:\s2\full_data\s2-corpus-35
+Parsing file: F:\s2\full_data\s2-corpus-36
+Parsing file: F:\s2\full_data\s2-corpus-37
+Parsing file: F:\s2\full_data\s2-corpus-38
+Parsing file: F:\s2\full_data\s2-corpus-39
+Parsing file: F:\s2\full_data\s2-corpus-40
+Parsing file: F:\s2\full_data\s2-corpus-41
+Parsing file: F:\s2\full_data\s2-corpus-42
+Parsing file: F:\s2\full_data\s2-corpus-43
+Parsing file: F:\s2\full_data\s2-corpus-44
+Parsing file: F:\s2\full_data\s2-corpus-45
+Parsing file: F:\s2\full_data\s2-corpus-46
+Documents files & partial vocabularies/postings created in 1h 39m
+>>> Start Merging of partial vocabularies
+Partial vocabularies merged in 1m 16s
+>>> Calculating VSM weights
+VSM weights calculated in 14m 8s
+>>> Start Merging of partial postings
+Partial postings merged in 2m 7s
+>>> Calculating Pagerank
+> Constructing graph
+Parsing file: F:\s2\full_data\s2-corpus-00
+Parsing file: F:\s2\full_data\s2-corpus-01
+Parsing file: F:\s2\full_data\s2-corpus-02
+Parsing file: F:\s2\full_data\s2-corpus-03
+Parsing file: F:\s2\full_data\s2-corpus-04
+Parsing file: F:\s2\full_data\s2-corpus-05
+Parsing file: F:\s2\full_data\s2-corpus-06
+Parsing file: F:\s2\full_data\s2-corpus-07
+Parsing file: F:\s2\full_data\s2-corpus-08
+Parsing file: F:\s2\full_data\s2-corpus-09
+Parsing file: F:\s2\full_data\s2-corpus-10
+Parsing file: F:\s2\full_data\s2-corpus-11
+Parsing file: F:\s2\full_data\s2-corpus-12
+Parsing file: F:\s2\full_data\s2-corpus-13
+Parsing file: F:\s2\full_data\s2-corpus-14
+Parsing file: F:\s2\full_data\s2-corpus-15
+Parsing file: F:\s2\full_data\s2-corpus-16
+Parsing file: F:\s2\full_data\s2-corpus-17
+Parsing file: F:\s2\full_data\s2-corpus-18
+Parsing file: F:\s2\full_data\s2-corpus-19
+Parsing file: F:\s2\full_data\s2-corpus-20
+Parsing file: F:\s2\full_data\s2-corpus-21
+Parsing file: F:\s2\full_data\s2-corpus-22
+Parsing file: F:\s2\full_data\s2-corpus-23
+Parsing file: F:\s2\full_data\s2-corpus-24
+Parsing file: F:\s2\full_data\s2-corpus-25
+Parsing file: F:\s2\full_data\s2-corpus-26
+Parsing file: F:\s2\full_data\s2-corpus-27
+Parsing file: F:\s2\full_data\s2-corpus-28
+Parsing file: F:\s2\full_data\s2-corpus-29
+Parsing file: F:\s2\full_data\s2-corpus-30
+Parsing file: F:\s2\full_data\s2-corpus-31
+Parsing file: F:\s2\full_data\s2-corpus-32
+Parsing file: F:\s2\full_data\s2-corpus-33
+Parsing file: F:\s2\full_data\s2-corpus-34
+Parsing file: F:\s2\full_data\s2-corpus-35
+Parsing file: F:\s2\full_data\s2-corpus-36
+Parsing file: F:\s2\full_data\s2-corpus-37
+Parsing file: F:\s2\full_data\s2-corpus-38
+Parsing file: F:\s2\full_data\s2-corpus-39
+Parsing file: F:\s2\full_data\s2-corpus-40
+Parsing file: F:\s2\full_data\s2-corpus-41
+Parsing file: F:\s2\full_data\s2-corpus-42
+Parsing file: F:\s2\full_data\s2-corpus-43
+Parsing file: F:\s2\full_data\s2-corpus-44
+Parsing file: F:\s2\full_data\s2-corpus-45
+Parsing file: F:\s2\full_data\s2-corpus-46
+Graph created in 38m 6s
+> Iterating
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 
+21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 
+41 42 43 44 45 
+Iterations completed in 4m 45s
+>>> End of indexing

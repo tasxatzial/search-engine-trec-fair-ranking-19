@@ -1,0 +1,3838 @@
+Index path: F:/s2/index2
+Index timestamp: 2021-05-30T18:11:40.464075100Z
+>>> Evaluation options:
+Retrieval model: VSM
+Query expansion: EXTJWNL
+Citations Pagerank weight: 0.0
+
+>>> Search query: Mal/Tirap
+Search time: 0.26s
+Results: 24270
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: federated learning
+Search time: 1.04s
+Results: 1305673
+Average precision: 0.5428571428571429
+nDCG: 0.6955762265703532
+
+>>> Search query: ehr phenotype framework
+Search time: 4.9s
+Results: 5809056
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: clarias batrachus heavy metals
+Search time: 0.54s
+Results: 391455
+Average precision: 0.8099999999999999
+nDCG: 0.9068250379649667
+
+>>> Search query: humanoid joint
+Search time: 0.64s
+Results: 625785
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: shafiq joty machine evaluation
+Search time: 2.5s
+Results: 2884104
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: gsm arduino
+Search time: 0.18s
+Results: 22659
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: nanocellulose oil palm empty fruit bunch
+Search time: 1.21s
+Results: 1007728
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: cifar
+Search time: 0.17s
+Results: 1554
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: ZAKAT ACCOUNTING
+Search time: 0.24s
+Results: 143136
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: “multi-project scheduling” “activity splitting” “ant colony optimization”
+Search time: 7.9s
+Results: 9041778
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: agency theory
+Search time: 2.0s
+Results: 2601493
+Average precision: 0.5
+nDCG: 0.6309297535714574
+
+>>> Search query: deep face recognition a survey
+Search time: 11.0s
+Results: 12931581
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: treatment self-regulation questionnaire (tsrq)
+Search time: 6.8s
+Results: 7838012
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: "Medical information" and "Media"
+Search time: 5.6s
+Results: 6680060
+Average precision: 0.8099999999999999
+nDCG: 0.9068250379649667
+
+>>> Search query: Distributed Control System  AND PLC
+Search time: 9.2s
+Results: 10771437
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: decision making neuroanatomy
+Search time: 1.68s
+Results: 1954937
+Average precision: 0.5666666666666667
+nDCG: 0.7045057227504283
+
+>>> Search query: camshaft
+Search time: 0.16s
+Results: 241
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: Containership
+Search time: 0.16s
+Results: 109
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: watson jean theory of human caring
+Search time: 6.4s
+Results: 7266732
+Average precision: 0.8541666666666666
+nDCG: 0.9438661545147249
+
+>>> Search query: doped zno rod solar cell
+Search time: 3.8s
+Results: 5760267
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: social media marketing
+Search time: 1.7s
+Results: 1917310
+Average precision: 0.7277777777777776
+nDCG: 0.8777173555755367
+
+>>> Search query: ai
+Search time: 0.23s
+Results: 128864
+Average precision: 0.3257216775599128
+nDCG: 0.5917352625578927
+
+>>> Search query: Does exogenous growth hormone improve athletic performance?
+Search time: 8.0s
+Results: 8974552
+Average precision: 0.3666666666666667
+nDCG: 0.5437713091520254
+
+>>> Search query: image recognition
+Search time: 1.51s
+Results: 1745478
+Average precision: 0.25013736263736264
+nDCG: 0.46865615766822283
+
+>>> Search query: GPR81 HCAR1
+Search time: 0.16s
+Results: 91
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: internet of things
+Search time: 0.98s
+Results: 854826
+Average precision: 0.775
+nDCG: 0.910853251331002
+
+>>> Search query: link prediction in online social networks
+Search time: 3.3s
+Results: 3544958
+Average precision: 0.961734693877551
+nDCG: 0.9888009031441519
+
+>>> Search query: near-infrared spectroscopy gold reflector direct contact analyser
+Search time: 2.9s
+Results: 3348757
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: human connectome project
+Search time: 4.4s
+Results: 5123283
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: pigeon feeding
+Search time: 0.61s
+Results: 491301
+Average precision: 0.5555555555555555
+nDCG: 0.6978817289434458
+
+>>> Search query: Employee churn
+Search time: 0.2s
+Results: 45664
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: the portrait of a lady
+Search time: 0.19s
+Results: 30639
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: dna base loss
+Search time: 2.6s
+Results: 3740778
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: one-shot learning
+Search time: 0.98s
+Results: 1341727
+Average precision: 0.41666666666666663
+nDCG: 0.6052602440527058
+
+>>> Search query: object detection
+Search time: 2.7s
+Results: 4022434
+Average precision: 0.34924242424242424
+nDCG: 0.5679485456410236
+
+>>> Search query: knowledge graph in cqa
+Search time: 1.91s
+Results: 2327480
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: no convex Wirtinger flow
+Search time: 0.98s
+Results: 1340887
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: vollmer microwave
+Search time: 0.26s
+Results: 193303
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: fibromyalgia
+Search time: 0.17s
+Results: 12309
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: Ohbuchi
+Search time: 0.16s
+Results: 373
+Average precision: 0.42063492063492064
+nDCG: 0.5931729515195113
+
+>>> Search query: chatbot
+Search time: 0.16s
+Results: 554
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: music critic
+Search time: 0.22s
+Results: 86646
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: Diesel engine connecting rod modeling and finite element analysis
+Search time: 8.0s
+Results: 9849013
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: drop down menus
+Search time: 0.63s
+Results: 781976
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: employee welfare
+Search time: 1.02s
+Results: 1071104
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: cybersecurity
+Search time: 0.17s
+Results: 3545
+Average precision: 0.5688888888888888
+nDCG: 0.7913132664397208
+
+>>> Search query: learning disability and tecnology
+Search time: 1.17s
+Results: 1200317
+Average precision: 0.75
+nDCG: 0.8318724637288826
+
+>>> Search query: Miniaturized directional coupler
+Search time: 0.68s
+Results: 499905
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: love
+Search time: 0.21s
+Results: 57405
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: elements of strategic planning
+Search time: 1.57s
+Results: 1925189
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: effect of media on children and adolescent social and moral development
+Search time: 9.2s
+Results: 10720365
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: described the exists situation of forest in bangladesh
+Search time: 2.1s
+Results: 3163889
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: neural abstractive summarization
+Search time: 1.4s
+Results: 1490704
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: comparing between lithostratigraphy and sequence stratigraphy
+Search time: 1.17s
+Results: 1676327
+Average precision: 0.24074074074074073
+nDCG: 0.45846073882962946
+
+>>> Search query: Do you think that HL7 messaging standard sufficient to support exchanging messages between an EHR and a clinical decision support system? Justify your reasons.
+Search time: 13.3s
+Results: 15714567
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Connect video with expressive image
+Search time: 1.96s
+Results: 2391710
+Average precision: 0.4444444444444444
+nDCG: 0.6039071644781282
+
+>>> Search query: orthic triangle
+Search time: 0.18s
+Results: 32634
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: project management
+Search time: 2.7s
+Results: 3122245
+Average precision: 0.5916666666666667
+nDCG: 0.7988614740430419
+
+>>> Search query: VBA
+Search time: 0.19s
+Results: 1039
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: Deterministic policy gradient algorithms
+Search time: 1.76s
+Results: 2028118
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: anti carcinogenic effect of milk peptides
+Search time: 4.1s
+Results: 5758178
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: inpainting
+Search time: 0.16s
+Results: 3348
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Java Native Interface
+Search time: 0.83s
+Results: 1056508
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: pedestrian detection dataset
+Search time: 2.1s
+Results: 2069526
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: smart home
+Search time: 0.83s
+Results: 1087221
+Average precision: 0.5043650793650793
+nDCG: 0.7529581624499966
+
+>>> Search query: anatomy
+Search time: 0.4s
+Results: 409109
+Average precision: 0.9428571428571428
+nDCG: 0.9818483242455303
+
+>>> Search query: semi implicit variational inference
+Search time: 0.55s
+Results: 646794
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: OpenPose
+Search time: 0.16s
+Results: 25
+Average precision: 0.25
+nDCG: 0.38685280723454163
+
+>>> Search query: external memory algorithm
+Search time: 2.4s
+Results: 3265763
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: advertising review
+Search time: 2.7s
+Results: 2855610
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: voice controlled wheel chair
+Search time: 0.9s
+Results: 1225292
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: dark tourism
+Search time: 0.43s
+Results: 458322
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: endovenous laser
+Search time: 0.65s
+Results: 815966
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: R-CNN
+Search time: 3.0s
+Results: 4769688
+Average precision: 0.4666666666666666
+nDCG: 0.6447841584694202
+
+>>> Search query: Brattka
+Search time: 0.16s
+Results: 108
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: projectile motion
+Search time: 0.67s
+Results: 558239
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: focal epilepsy
+Search time: 0.47s
+Results: 408468
+Average precision: 0.6458333333333333
+nDCG: 0.7486761295186739
+
+>>> Search query: enuresis
+Search time: 0.17s
+Results: 5575
+Average precision: 0.30952380952380953
+nDCG: 0.5109559939712154
+
+>>> Search query: machine learning algorithm
+Search time: 2.5s
+Results: 3639507
+Average precision: 0.24285714285714285
+nDCG: 0.44158011035778233
+
+>>> Search query: HVDC transmission cable
+Search time: 0.72s
+Results: 930588
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: iranian revolution
+Search time: 0.34s
+Results: 322523
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: first year engineering
+Search time: 3.9s
+Results: 4407466
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: decentralised governance
+Search time: 0.83s
+Results: 1100237
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: machine learning
+Search time: 1.42s
+Results: 1780800
+Average precision: 0.6983861714510536
+nDCG: 0.8986066688598751
+
+>>> Search query: app store availability
+Search time: 0.51s
+Results: 582323
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: FORTRAN
+Search time: 0.17s
+Results: 13186
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: SimpleQuestions
+Search time: 0.16s
+Results: 21
+Average precision: 0.5
+nDCG: 0.6131471927654585
+
+>>> Search query: ASP.NET and Web Services
+Search time: 1.46s
+Results: 2065562
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: emdr
+Search time: 0.16s
+Results: 731
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Siemens PLC
+Search time: 0.36s
+Results: 48973
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: the study of Sexism in the English language
+Search time: 8.4s
+Results: 11600846
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: rheumatoid arthritis
+Search time: 0.4s
+Results: 248419
+Average precision: 0.6428571428571428
+nDCG: 0.8175295903539447
+
+>>> Search query: Network in network
+Search time: 1.85s
+Results: 2327547
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Robot Terrain Classification
+Search time: 1.21s
+Results: 1708426
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: smart cities
+Search time: 0.3s
+Results: 267433
+Average precision: 0.4298611111111111
+nDCG: 0.6379893060953272
+
+>>> Search query: iterative auction
+Search time: 0.48s
+Results: 186844
+Average precision: 0.24444444444444446
+nDCG: 0.416181155548731
+
+>>> Search query: youtube addiction
+Search time: 0.44s
+Results: 449601
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: boost converter PFM
+Search time: 0.26s
+Results: 186892
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: cugola 2005 location
+Search time: 1.96s
+Results: 2603028
+Average precision: 0.41111111111111115
+nDCG: 0.5833416105149333
+
+>>> Search query: ebook
+Search time: 0.16s
+Results: 1605
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: google scholar
+Search time: 0.21s
+Results: 89791
+Average precision: 0.30952380952380953
+nDCG: 0.5109559939712154
+
+>>> Search query: tangible objects for touch screens
+Search time: 0.81s
+Results: 464099
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: image impainting
+Search time: 0.97s
+Results: 1161810
+Average precision: 0.5555555555555555
+nDCG: 0.6978817289434458
+
+>>> Search query: "Formal Verification" + "Machine Learning"
+Search time: 2.1s
+Results: 3052369
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: mask r-cnn
+Search time: 3.1s
+Results: 4824889
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: wearables context
+Search time: 0.93s
+Results: 911066
+Average precision: 0.8166666666666667
+nDCG: 0.9267582364714126
+
+>>> Search query: Hierarchical network
+Search time: 1.71s
+Results: 2476556
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: adiponectin
+Search time: 0.17s
+Results: 20606
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: hydrothermal carbon
+Search time: 4.7s
+Results: 6779686
+Average precision: 0.5666666666666667
+nDCG: 0.7045057227504283
+
+>>> Search query: sepsis alert override
+Search time: 0.26s
+Results: 190773
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: genomestrip
+Search time: 0.16s
+Results: 5
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: usb forensics
+Search time: 0.19s
+Results: 46299
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Control Strategies for the SBR Process
+Search time: 7.8s
+Results: 10347984
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: lennox gastaut cost rufinamide
+Search time: 0.81s
+Results: 1088165
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: TF affinity value yeast
+Search time: 2.4s
+Results: 2721970
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: Emotiv
+Search time: 0.16s
+Results: 426
+Average precision: 0.41111111111111115
+nDCG: 0.5833416105149333
+
+>>> Search query: linear regression
+Search time: 1.7s
+Results: 2474503
+Average precision: 0.43333333333333335
+nDCG: 0.6338412308988607
+
+>>> Search query: mysql 5
+Search time: 4.0s
+Results: 6376437
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: ultrasound
+Search time: 0.35s
+Results: 346549
+Average precision: 0.25
+nDCG: 0.4574945261898617
+
+>>> Search query: IMPACTS OF E-COMMERCE ON ECONOMICS
+Search time: 5.6s
+Results: 6671082
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: Example of Preprocessing with Khoja Stemmer algorithm
+Search time: 2.2s
+Results: 3025118
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Seismic performance factors used in ASCE 7
+Search time: 10.5s
+Results: 13660244
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: shopping online system
+Search time: 5.3s
+Results: 7750946
+Average precision: 0.375
+nDCG: 0.5802792108518124
+
+>>> Search query: burmese pythons affecting the everglades everglades
+Search time: 0.38s
+Results: 376063
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: e learning
+Search time: 5.1s
+Results: 7435724
+Average precision: 0.5595238095238095
+nDCG: 0.710675276578257
+
+>>> Search query: stock market
+Search time: 0.52s
+Results: 591458
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: wideband siw antenna
+Search time: 0.46s
+Results: 291882
+Average precision: 0.9266666666666665
+nDCG: 0.9747429528567878
+
+>>> Search query: to understand the current adoption of e-wallet by students
+Search time: 7.0s
+Results: 9379035
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Horse Racing Prediction at
+Search time: 0.49s
+Results: 562790
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: Stochastic Gradient Descent
+Search time: 1.37s
+Results: 1319745
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: ketamine
+Search time: 0.18s
+Results: 20405
+Average precision: 0.25
+nDCG: 0.4574945261898617
+
+>>> Search query: graph signal anomaly
+Search time: 1.96s
+Results: 2791605
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: LSTM RNN
+Search time: 0.17s
+Results: 9159
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Curriculum
+Search time: 0.82s
+Results: 1068168
+Average precision: 0.41666666666666663
+nDCG: 0.6052602440527058
+
+>>> Search query: Blockchain Oracle
+Search time: 0.2s
+Results: 41202
+Average precision: 0.7333333333333333
+nDCG: 0.8756458727267336
+
+>>> Search query: n-push oscillator
+Search time: 3.2s
+Results: 4778945
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: sorting algorithms
+Search time: 0.85s
+Results: 826933
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: celebrity worship
+Search time: 0.17s
+Results: 9729
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: "knowledge graph" "query type" detection
+Search time: 6.2s
+Results: 8373408
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: thermoplastic elastomer packaging films
+Search time: 0.69s
+Results: 555652
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Resonant Switched Capacitor Converter
+Search time: 0.41s
+Results: 338442
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: roadmap
+Search time: 0.18s
+Results: 15926
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: lewis acid zinc
+Search time: 2.1s
+Results: 3099579
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: chlamydia
+Search time: 0.18s
+Results: 29922
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: simulated annealing
+Search time: 0.58s
+Results: 420597
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: climate change
+Search time: 1.29s
+Results: 1856818
+Average precision: 0.3060876623376624
+nDCG: 0.513191256997103
+
+>>> Search query: Organic Farming non GMO
+Search time: 3.6s
+Results: 4163513
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: traction motor sonata
+Search time: 0.48s
+Results: 537197
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: clickbait
+Search time: 0.16s
+Results: 751
+Average precision: 0.5138888888888888
+nDCG: 0.6787622294601761
+
+>>> Search query: magneto electric dipole siw
+Search time: 0.81s
+Results: 1038351
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: peristaltic crawling inspection robot
+Search time: 2.0s
+Results: 3034066
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: low frequency
+Search time: 4.1s
+Results: 5074093
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: AGV
+Search time: 0.16s
+Results: 1599
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: boiling regimes
+Search time: 0.44s
+Results: 99611
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: Explainable AI
+Search time: 0.24s
+Results: 145678
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: visual dialog
+Search time: 0.81s
+Results: 1058389
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: transrapid
+Search time: 0.16s
+Results: 93
+Average precision: 0.6458333333333333
+nDCG: 0.7486761295186739
+
+>>> Search query: Patch Antenna
+Search time: 0.45s
+Results: 468685
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: soft robotic gripper
+Search time: 0.71s
+Results: 906078
+Average precision: 0.5654761904761905
+nDCG: 0.782714107203943
+
+>>> Search query: monte carlo
+Search time: 0.32s
+Results: 270792
+Average precision: 0.26666666666666666
+nDCG: 0.4556051495874604
+
+>>> Search query: cluster agroindustrial
+Search time: 0.47s
+Results: 530583
+Average precision: 0.41666666666666663
+nDCG: 0.5706417189553201
+
+>>> Search query: uses and gratifications theory
+Search time: 2.5s
+Results: 2984710
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: 3gpp history
+Search time: 1.19s
+Results: 1692455
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: net neutrality
+Search time: 0.31s
+Results: 285980
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: daunorubicin
+Search time: 0.17s
+Results: 13034
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: family solidarity
+Search time: 0.92s
+Results: 1271923
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: forensic medicine
+Search time: 1.77s
+Results: 2693996
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: ERβ
+Search time: 0.17s
+Results: 3029
+Average precision: 0.5333333333333333
+nDCG: 0.6797310500037655
+
+>>> Search query: scara dh
+Search time: 0.17s
+Results: 17213
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Fourteen points in a row alternating up and down
+Search time: 1.39s
+Results: 1480665
+Average precision: 0.1111111111111111
+nDCG: 0.23463936301137828
+
+>>> Search query: chinese chess
+Search time: 0.47s
+Results: 522888
+Average precision: 0.5333333333333333
+nDCG: 0.6797310500037655
+
+>>> Search query: dementia
+Search time: 0.25s
+Results: 175565
+Average precision: 0.6416666666666666
+nDCG: 0.8374713958478636
+
+>>> Search query: serine racemase and Ap-1
+Search time: 7.2s
+Results: 10598097
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: drone (UAVs) and health care
+Search time: 3.4s
+Results: 4563508
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: neural networks (computer) data mining supervised learning
+Search time: 9.8s
+Results: 12099904
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: "LSTM" "Autoencoders"
+Search time: 0.17s
+Results: 7083
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: single patch steering
+Search time: 3.3s
+Results: 3980487
+Average precision: 0.65
+nDCG: 0.787702056960637
+
+>>> Search query: spring mvc
+Search time: 0.25s
+Results: 154719
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: auto recloser functions
+Search time: 0.96s
+Results: 1331091
+Average precision: 0.3583333333333333
+nDCG: 0.5143371794949737
+
+>>> Search query: gossip
+Search time: 0.21s
+Results: 3178
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: rectangle detection
+Search time: 1.26s
+Results: 1781434
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: philosophy
+Search time: 0.24s
+Results: 117058
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: reactome
+Search time: 0.2s
+Results: 452
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: vaginal mesh implants
+Search time: 0.54s
+Results: 569070
+Average precision: 0.5555555555555555
+nDCG: 0.6978817289434458
+
+>>> Search query: Variational Autoencoder
+Search time: 0.19s
+Results: 45493
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: corexit
+Search time: 0.16s
+Results: 266
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: data-mining
+Search time: 6.5s
+Results: 8785549
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: GeoNLP
+Search time: 0.16s
+Results: 3
+Average precision: 0.5
+nDCG: 0.6366824387328317
+
+>>> Search query: visual attention
+Search time: 1.83s
+Results: 1823289
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: fpga network interconnect
+Search time: 1.62s
+Results: 2393709
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Interracial Marriage
+Search time: 0.54s
+Results: 628332
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: Serengeti Prides
+Search time: 0.16s
+Results: 811
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: heritage malta
+Search time: 0.29s
+Results: 217145
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: lda
+Search time: 0.17s
+Results: 14575
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: genetic algorithm
+Search time: 2.7s
+Results: 4084289
+Average precision: 0.4686507936507936
+nDCG: 0.6794676710974374
+
+>>> Search query: strategy
+Search time: 1.39s
+Results: 1443926
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: gerunds
+Search time: 0.16s
+Results: 93
+Average precision: 0.4444444444444444
+nDCG: 0.6039071644781282
+
+>>> Search query: deep learning accelerators
+Search time: 1.19s
+Results: 1688463
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: anomaly detection tensor
+Search time: 1.32s
+Results: 1903749
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: pid temperature control
+Search time: 3.4s
+Results: 5215100
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: linguistics
+Search time: 0.21s
+Results: 81987
+Average precision: 0.25
+nDCG: 0.43067655807339306
+
+>>> Search query: LSTM
+Search time: 0.17s
+Results: 5339
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: dyslexia
+Search time: 0.17s
+Results: 11682
+Average precision: 0.4303571428571428
+nDCG: 0.588330017340399
+
+>>> Search query: Efficiency of surface irrigation
+Search time: 2.9s
+Results: 3836075
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: love music
+Search time: 0.23s
+Results: 137948
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: Deep Learning
+Search time: 1.44s
+Results: 1672049
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: neurosciences and education or parenthood
+Search time: 0.76s
+Results: 992147
+Average precision: 0.5
+nDCG: 0.6448244864271548
+
+>>> Search query: single labeled text classification description
+Search time: 4.7s
+Results: 5741278
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: heart rate, temperature and heart attack dataset
+Search time: 3.9s
+Results: 5716147
+Average precision: 0.7333333333333333
+nDCG: 0.8756458727267336
+
+>>> Search query: Customer Engagement
+Search time: 0.33s
+Results: 301291
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: capital punishment
+Search time: 0.93s
+Results: 894150
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: LARS score
+Search time: 0.72s
+Results: 891649
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: MEG
+Search time: 0.33s
+Results: 306749
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: right insula cannabis use
+Search time: 4.3s
+Results: 6102812
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: harmful effects of ionized radiation
+Search time: 3.4s
+Results: 4732953
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: natural language processing
+Search time: 3.8s
+Results: 5554556
+Average precision: 0.52
+nDCG: 0.6962921102881966
+
+>>> Search query: coplanar waveguide aperture coupled
+Search time: 0.78s
+Results: 680965
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: hotel employee hrm
+Search time: 0.21s
+Results: 57094
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: PHP Controller
+Search time: 0.32s
+Results: 271974
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: emule pthc
+Search time: 0.17s
+Results: 202
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: transformer xl
+Search time: 1.04s
+Results: 1395174
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Shanghai Tower
+Search time: 0.37s
+Results: 373958
+Average precision: 0.5333333333333333
+nDCG: 0.6797310500037655
+
+>>> Search query: MDMA
+Search time: 0.17s
+Results: 4881
+Average precision: 0.7683333333333333
+nDCG: 0.8930068676327363
+
+>>> Search query: interleaved boost
+Search time: 0.21s
+Results: 95247
+Average precision: 0.8766666666666666
+nDCG: 0.9512312000626861
+
+>>> Search query: theory of mind
+Search time: 2.3s
+Results: 3093252
+Average precision: 0.22619047619047616
+nDCG: 0.4227898344066504
+
+>>> Search query: "Resilience index"
+Search time: 0.87s
+Results: 1185511
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: one shot learning
+Search time: 0.97s
+Results: 1341727
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: reverse osmosis nitrate removal
+Search time: 1.01s
+Results: 982602
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: usable mandatory access control for operating system
+Search time: 8.2s
+Results: 11195935
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: joint design
+Search time: 2.4s
+Results: 3348586
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: workplace spirituality
+Search time: 1.74s
+Results: 2573162
+Average precision: 0.3666666666666667
+nDCG: 0.5437713091520254
+
+>>> Search query: thermal odometry
+Search time: 0.42s
+Results: 442635
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: tattoo teenager
+Search time: 0.29s
+Results: 246022
+Average precision: 0.21666666666666667
+nDCG: 0.38364913903790027
+
+>>> Search query: praziquantel
+Search time: 0.17s
+Results: 5128
+Average precision: 0.7333333333333333
+nDCG: 0.8756458727267336
+
+>>> Search query: action recognition
+Search time: 5.0s
+Results: 6616450
+Average precision: 0.5796227581941868
+nDCG: 0.8020123649967049
+
+>>> Search query: EDF response-time analysis
+Search time: 11.0s
+Results: 13854735
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: WGAN
+Search time: 0.16s
+Results: 73
+Average precision: 0.5555555555555555
+nDCG: 0.7039180890341348
+
+>>> Search query: text mining
+Search time: 0.59s
+Results: 544869
+Average precision: 0.6666666666666666
+nDCG: 0.8451850618939638
+
+>>> Search query: conditional random fields + daily activities + smart home
+Search time: 3.1s
+Results: 3325292
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: cannabidiol
+Search time: 0.16s
+Results: 2857
+Average precision: 0.7944444444444445
+nDCG: 0.9221235176732561
+
+>>> Search query: aldh2 addiction
+Search time: 0.42s
+Results: 444046
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: user experience
+Search time: 1.28s
+Results: 1841380
+Average precision: 0.6349206349206349
+nDCG: 0.8332128630752804
+
+>>> Search query: kabbalah
+Search time: 0.16s
+Results: 369
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: siw rgw
+Search time: 0.17s
+Results: 3483
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: how sexist discourse contribute to gender discrimination
+Search time: 1.31s
+Results: 1821717
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: bacterial lipoprotein
+Search time: 0.6s
+Results: 740874
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: invoice
+Search time: 0.2s
+Results: 53015
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: catboost
+Search time: 0.16s
+Results: 5
+Average precision: 0.6666666666666666
+nDCG: 0.7653606369886218
+
+>>> Search query: freshman fifteen
+Search time: 0.17s
+Results: 4622
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: "code review" speed
+Search time: 3.3s
+Results: 3910772
+Average precision: 0.8541666666666666
+nDCG: 0.9438661545147249
+
+>>> Search query: Stigma cleft lip and palate
+Search time: 0.68s
+Results: 838708
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: linear grouping algorithm
+Search time: 4.9s
+Results: 6803546
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: SMPL
+Search time: 0.16s
+Results: 49
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: feminism
+Search time: 0.16s
+Results: 2835
+Average precision: 0.30952380952380953
+nDCG: 0.5109559939712154
+
+>>> Search query: fpga lut architecture
+Search time: 0.79s
+Results: 724964
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: echinacea angustifolia a herpes
+Search time: 0.23s
+Results: 105849
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: leadership
+Search time: 0.68s
+Results: 823568
+Average precision: 0.8125
+nDCG: 0.9279611693743142
+
+>>> Search query: DeepLabV3+
+Search time: 0.16s
+Results: 12
+Average precision: 0.3333333333333333
+nDCG: 0.5087403079104242
+
+>>> Search query: DC Motor Speed Regulation Closed-loop Control
+Search time: 5.1s
+Results: 7002335
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: kubernetes
+Search time: 0.16s
+Results: 142
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: SLAM
+Search time: 0.17s
+Results: 24443
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: Recurrent Neural Networks
+Search time: 2.2s
+Results: 2646512
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: IP Address Lookup
+Search time: 1.68s
+Results: 2423868
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: style of presentation of the results obtained using Coq
+Search time: 13.8s
+Results: 17749577
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: semantic similarity knowledge base
+Search time: 2.4s
+Results: 2990048
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: cmos cross coupled charge pump battery charger
+Search time: 2.9s
+Results: 3788905
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: bicluster
+Search time: 0.16s
+Results: 347
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: citronellol
+Search time: 0.16s
+Results: 684
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: image transformer
+Search time: 0.88s
+Results: 1204383
+Average precision: 0.40277777777777773
+nDCG: 0.6112833214150002
+
+>>> Search query: satellite navigation system
+Search time: 5.2s
+Results: 7538435
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: topology optimization Genetic
+Search time: 2.6s
+Results: 2914398
+Average precision: 0.5
+nDCG: 0.6309297535714574
+
+>>> Search query: fast fourier transform
+Search time: 0.79s
+Results: 999833
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: Scale-invariant feature transform
+Search time: 2.3s
+Results: 2890000
+Average precision: 0.49999999999999994
+nDCG: 0.6719882468370725
+
+>>> Search query: text mining on finance information
+Search time: 3.3s
+Results: 3685577
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: Public debt
+Search time: 0.72s
+Results: 946503
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: corporativism
+Search time: 0.16s
+Results: 10
+Average precision: 0.38888888888888884
+nDCG: 0.5307212739772434
+
+>>> Search query: handwriting recognition system
+Search time: 5.8s
+Results: 8377640
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: anomaly detection
+Search time: 1.65s
+Results: 1838513
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: neoliberalism
+Search time: 0.16s
+Results: 1387
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Nrf1
+Search time: 0.16s
+Results: 925
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: information literacy
+Search time: 2.1s
+Results: 3280543
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: fastgrnn
+Search time: 0.16s
+Results: 1
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: shared multi
+Search time: 0.96s
+Results: 1334796
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: GPR81 HCAR1 neonate
+Search time: 0.33s
+Results: 282587
+Average precision: 0.25
+nDCG: 0.39038004999210174
+
+>>> Search query: cyber security
+Search time: 0.73s
+Results: 951349
+Average precision: 0.3595238095238095
+nDCG: 0.5400753810454858
+
+>>> Search query: coaching planning
+Search time: 1.34s
+Results: 1120546
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: Welding of High Strength Steel
+Search time: 4.2s
+Results: 6491639
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Deci
+Search time: 0.16s
+Results: 1495
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: activl spinal disc
+Search time: 0.67s
+Results: 845422
+Average precision: 0.8766666666666666
+nDCG: 0.9512312000626861
+
+>>> Search query: osteosarcoma
+Search time: 0.18s
+Results: 27854
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: deepmask
+Search time: 0.16s
+Results: 6
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Natural Language Processing
+Search time: 4.0s
+Results: 5554556
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: Asynchronous Neighbor Discovery
+Search time: 1.03s
+Results: 1410053
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: single image dehazing
+Search time: 3.8s
+Results: 4591222
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: biostatistics
+Search time: 0.19s
+Results: 44792
+Average precision: 0.9666666666666666
+nDCG: 0.9896062251871525
+
+>>> Search query: tomosar
+Search time: 0.16s
+Results: 134
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: voice over lte
+Search time: 0.23s
+Results: 134677
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: sildenafil pregnant mouse
+Search time: 1.09s
+Results: 1112786
+Average precision: 0.41111111111111115
+nDCG: 0.5833416105149333
+
+>>> Search query: nanobiotechnology
+Search time: 0.16s
+Results: 2877
+Average precision: 0.7291666666666666
+nDCG: 0.8768488056296351
+
+>>> Search query: chinese checkers
+Search time: 0.46s
+Results: 515041
+Average precision: 0.4444444444444444
+nDCG: 0.6039071644781282
+
+>>> Search query: Iron sucrose in pregnancy
+Search time: 0.81s
+Results: 1012842
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: dcas9 yeast
+Search time: 0.27s
+Results: 203349
+Average precision: 0.9666666666666666
+nDCG: 0.9896062251871525
+
+>>> Search query: Soil microbial structure
+Search time: 4.9s
+Results: 6444485
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: siw bowtie antenna
+Search time: 0.3s
+Results: 252639
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: multi document summarization
+Search time: 1.41s
+Results: 2049761
+Average precision: 0.5166666666666667
+nDCG: 0.7529716549381369
+
+>>> Search query: metacognitive
+Search time: 0.17s
+Results: 5869
+Average precision: 0.8766666666666666
+nDCG: 0.9512312000626861
+
+>>> Search query: forward backward spatial smoothing
+Search time: 1.37s
+Results: 1144102
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: graph database
+Search time: 1.01s
+Results: 1357267
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: Perceived risk
+Search time: 1.86s
+Results: 2799693
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: explainable ai
+Search time: 0.24s
+Results: 145678
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: derated transformer
+Search time: 0.18s
+Results: 43720
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: node2vec
+Search time: 0.16s
+Results: 66
+Average precision: 0.25
+nDCG: 0.43067655807339306
+
+>>> Search query: siw circular
+Search time: 0.31s
+Results: 282640
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: cpw siw
+Search time: 0.17s
+Results: 8385
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: pile slop stability
+Search time: 0.6s
+Results: 735727
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: innovativeness
+Search time: 0.16s
+Results: 3083
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: spirotube
+Search time: 0.16s
+Results: 0
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: pregnancy
+Search time: 0.48s
+Results: 530827
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: Blockchain
+Search time: 0.16s
+Results: 3744
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: devops
+Search time: 0.16s
+Results: 693
+Average precision: 0.43977591036414565
+nDCG: 0.6756831780600151
+
+>>> Search query: feature extraction
+Search time: 2.4s
+Results: 2368227
+Average precision: 0.8509090909090908
+nDCG: 0.9485379968639579
+
+>>> Search query: transformational leadership
+Search time: 0.65s
+Results: 829596
+Average precision: 0.7875
+nDCG: 0.9176551163528843
+
+>>> Search query: ASP.NET
+Search time: 0.65s
+Results: 819674
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: colossus computer
+Search time: 1.62s
+Results: 2424602
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: metamaterial patch steering
+Search time: 0.44s
+Results: 470821
+Average precision: 0.5
+nDCG: 0.6713860725233042
+
+>>> Search query: blazegraph
+Search time: 0.16s
+Results: 6
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: journalistic search
+Search time: 0.62s
+Results: 784840
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: "corporate performance management" flexible
+Search time: 4.3s
+Results: 5400863
+Average precision: 0.6333333333333333
+nDCG: 0.8179809735263115
+
+>>> Search query: column ADC
+Search time: 0.42s
+Results: 377655
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: dementia dental
+Search time: 0.78s
+Results: 1029810
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: nutrition and talent identification sports
+Search time: 1.09s
+Results: 1520141
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: dividend policy
+Search time: 0.58s
+Results: 706023
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: IT business Alignment
+Search time: 0.94s
+Results: 864764
+Average precision: 0.8166666666666667
+nDCG: 0.9267582364714126
+
+>>> Search query: bug reporting online
+Search time: 0.88s
+Results: 1090839
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: raspberry pi facial expression
+Search time: 2.1s
+Results: 3183442
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: quantum computers
+Search time: 0.57s
+Results: 685620
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: autosis
+Search time: 0.16s
+Results: 21
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: liner shipping
+Search time: 0.27s
+Results: 190680
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: GAN
+Search time: 0.2s
+Results: 83372
+Average precision: 0.21666666666666667
+nDCG: 0.38364913903790027
+
+>>> Search query: dimexide osteomyelitis
+Search time: 0.18s
+Results: 30940
+Average precision: 0.5333333333333333
+nDCG: 0.6797310500037655
+
+>>> Search query: MEMS based switch for high power application
+Search time: 10.3s
+Results: 13402774
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: geography and economic development
+Search time: 3.4s
+Results: 4843077
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: bilingual whorf
+Search time: 0.17s
+Results: 14774
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: double sided cooling
+Search time: 0.93s
+Results: 1248728
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: bmw
+Search time: 0.16s
+Results: 1008
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: Linear block code，polar code，turbo code，Volume code
+Search time: 3.4s
+Results: 3697257
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: THERMOPLASTIC ELASTOMERS BATTERIES
+Search time: 0.19s
+Results: 55265
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: Recurrent Instance Segmentation
+Search time: 2.9s
+Results: 3944773
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: school
+Search time: 0.49s
+Results: 563460
+Average precision: 0.3333333333333333
+nDCG: 0.5
+
+>>> Search query: automatic color correction
+Search time: 0.87s
+Results: 1146555
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Thermoplastic Urethane
+Search time: 0.17s
+Results: 24295
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: palladium serotonin
+Search time: 0.35s
+Results: 346389
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: real time flood monitoring system
+Search time: 9.2s
+Results: 12332448
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Audio Steganography
+Search time: 0.35s
+Results: 335240
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: multi-camera tracking
+Search time: 1.34s
+Results: 1483242
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: eye movement sight horizontal movement and vertical movement
+Search time: 1.59s
+Results: 2200291
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: genesis 6 nephilim
+Search time: 3.9s
+Results: 5682500
+Average precision: 0.6666666666666666
+nDCG: 0.7653606369886218
+
+>>> Search query: webcast
+Search time: 0.16s
+Results: 395
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: ontology
+Search time: 0.23s
+Results: 127943
+Average precision: 0.5199999999999999
+nDCG: 0.6657041185227076
+
+>>> Search query: reliability bath tub curve
+Search time: 0.98s
+Results: 890503
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: dyslexia and music
+Search time: 0.22s
+Results: 93272
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: openpose
+Search time: 0.17s
+Results: 25
+Average precision: 0.25
+nDCG: 0.38685280723454163
+
+>>> Search query: Incidence of nail toxicity associated with chemotherapeutic drugs
+Search time: 4.4s
+Results: 6081978
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: employee satisfaction
+Search time: 0.3s
+Results: 254171
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: economics
+Search time: 0.23s
+Results: 133155
+Average precision: 0.6845238095238095
+nDCG: 0.8547529378296288
+
+>>> Search query: fault detection in dfig using fuzzy
+Search time: 7.5s
+Results: 10028144
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: corrective feedback
+Search time: 0.42s
+Results: 451166
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: floaters
+Search time: 0.16s
+Results: 1157
+Average precision: 0.6
+nDCG: 0.7227265726449518
+
+>>> Search query: carcinoid
+Search time: 0.17s
+Results: 17906
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: architecture
+Search time: 0.56s
+Results: 683477
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: emotional connotations of minor chords
+Search time: 0.8s
+Results: 572075
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: dimethyltryptamine
+Search time: 0.2s
+Results: 1931
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: why are cat so cute
+Search time: 0.34s
+Results: 275648
+Average precision: 0.5
+nDCG: 0.6448244864271548
+
+>>> Search query: skip adder
+Search time: 0.2s
+Results: 58467
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: physical web teaching
+Search time: 2.1s
+Results: 3137486
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: Recruitment
+Search time: 0.24s
+Results: 150274
+Average precision: 0.29166666666666663
+nDCG: 0.5
+
+>>> Search query: ntcir-13 stc2
+Search time: 1.24s
+Results: 1548370
+Average precision: 0.7333333333333333
+nDCG: 0.8756458727267336
+
+>>> Search query: cremation "latter-day saint"
+Search time: 1.04s
+Results: 1465364
+Average precision: 0.3333333333333333
+nDCG: 0.46927872602275655
+
+>>> Search query: "MMP-1" AND "CD-147"
+Search time: 7.8s
+Results: 10636641
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: pointcnn
+Search time: 0.19s
+Results: 2
+Average precision: 0.6666666666666666
+nDCG: 0.7653606369886218
+
+>>> Search query: Artificial Intelligence in Medicine
+Search time: 3.0s
+Results: 3718804
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: The missing memristor found
+Search time: 0.5s
+Results: 370455
+Average precision: 0.25
+nDCG: 0.43067655807339306
+
+>>> Search query: CaO-SiO2-MgO-Al2O3 system
+Search time: 5.0s
+Results: 7502293
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: preoperative psychological preparation
+Search time: 1.27s
+Results: 1270765
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: filtering information
+Search time: 2.2s
+Results: 3390892
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: toluene effects on brain
+Search time: 3.5s
+Results: 5409943
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: radix sort algorithm
+Search time: 2.5s
+Results: 3213243
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: XACML
+Search time: 0.16s
+Results: 2347
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: metonymy
+Search time: 0.16s
+Results: 547
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: web
+Search time: 0.5s
+Results: 585243
+Average precision: 0.5223665223665223
+nDCG: 0.71801346676604
+
+>>> Search query: Information security in electronic payment
+Search time: 3.3s
+Results: 4600769
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: hsv color
+Search time: 0.59s
+Results: 462871
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: drilling pcb
+Search time: 0.21s
+Results: 53099
+Average precision: 0.9266666666666665
+nDCG: 0.9747429528567878
+
+>>> Search query: Human Rights in Canada
+Search time: 3.3s
+Results: 5073634
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: GPON
+Search time: 0.16s
+Results: 509
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: why are rare species so common in tropical rainforests
+Search time: 2.9s
+Results: 4296726
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: neural networks
+Search time: 1.89s
+Results: 2293396
+Average precision: 0.3598484848484848
+nDCG: 0.5997479135548482
+
+>>> Search query: svm
+Search time: 0.19s
+Results: 54579
+Average precision: 0.26666666666666666
+nDCG: 0.4556051495874604
+
+>>> Search query: athira nambiar
+Search time: 0.16s
+Results: 1917
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: phase shifter microstrip
+Search time: 1.9s
+Results: 2810781
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: intelligible ai
+Search time: 0.23s
+Results: 132691
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: eating disorders
+Search time: 1.99s
+Results: 3073661
+Average precision: 0.41666666666666663
+nDCG: 0.5706417189553201
+
+>>> Search query: Azolla as protein source for rabbits
+Search time: 3.7s
+Results: 5169180
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: vibration testing [pdf]
+Search time: 1.42s
+Results: 2038718
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: Cross-Border E-Commerce
+Search time: 5.7s
+Results: 7449678
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: Ultrasound-guided vascular cannulation femoral
+Search time: 1.06s
+Results: 1432589
+Average precision: 0.4609523809523809
+nDCG: 0.6326891704378732
+
+>>> Search query: part of speech tagging
+Search time: 1.19s
+Results: 1033553
+Average precision: 0.4121789321789322
+nDCG: 0.610542323736598
+
+>>> Search query: structural functionalism
+Search time: 1.01s
+Results: 934139
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: smart phone
+Search time: 0.54s
+Results: 582949
+Average precision: 0.30952380952380953
+nDCG: 0.5109559939712154
+
+>>> Search query: similarty an utility
+Search time: 0.49s
+Results: 559949
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: serverless applications
+Search time: 1.16s
+Results: 1686018
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: falls
+Search time: 0.22s
+Results: 122596
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: CRISPR
+Search time: 0.17s
+Results: 13906
+Average precision: 0.26851851851851855
+nDCG: 0.5027233527036008
+
+>>> Search query: polypropylene simulation
+Search time: 4.0s
+Results: 5830865
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: few shot learning
+Search time: 1.28s
+Results: 1341727
+Average precision: 0.25
+nDCG: 0.43067655807339306
+
+>>> Search query: siw circular slot antenna
+Search time: 0.49s
+Results: 545353
+Average precision: 0.7345238095238096
+nDCG: 0.7982650576674577
+
+>>> Search query: gait analysis with kinect
+Search time: 4.6s
+Results: 6750692
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: pytorch
+Search time: 0.16s
+Results: 111
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: lifi
+Search time: 0.16s
+Results: 179
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: siw mixer
+Search time: 0.17s
+Results: 17487
+Average precision: 0.9666666666666666
+nDCG: 0.9896062251871525
+
+>>> Search query: Mutual Fund
+Search time: 1.91s
+Results: 2331841
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: "SoK" AND citation graph
+Search time: 0.6s
+Results: 727513
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: Pest and disease graphic image recognition
+Search time: 5.1s
+Results: 7140363
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: BSO film on MgO
+Search time: 0.31s
+Results: 270452
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: resnet object detection
+Search time: 3.0s
+Results: 4023225
+Average precision: 0.4797979797979797
+nDCG: 0.6616232641454407
+
+>>> Search query: midostaurin structure
+Search time: 4.0s
+Results: 5944376
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: nucleic acid prr nanoparticles
+Search time: 2.4s
+Results: 2980184
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: query expansion
+Search time: 0.81s
+Results: 1058463
+Average precision: 0.9666666666666666
+nDCG: 0.9896062251871525
+
+>>> Search query: biomagnification
+Search time: 0.16s
+Results: 1366
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: business environments
+Search time: 1.05s
+Results: 1072472
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: sequence stratigraphy
+Search time: 0.87s
+Results: 1191376
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: trading volume limit order
+Search time: 3.9s
+Results: 4571027
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: Bowtie slotted dual-band SIW antenna
+Search time: 2.5s
+Results: 3310189
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: knowledge graph
+Search time: 2.4s
+Results: 2326765
+Average precision: 0.3738095238095238
+nDCG: 0.5772180291864624
+
+>>> Search query: ITIC  PC70BM
+Search time: 0.16s
+Results: 320
+Average precision: 0.6666666666666666
+nDCG: 0.7653606369886218
+
+>>> Search query: pubmed
+Search time: 0.21s
+Results: 106225
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: Alpine skiing training
+Search time: 0.97s
+Results: 1343803
+Average precision: 0.5555555555555555
+nDCG: 0.6978817289434458
+
+>>> Search query: libsvm
+Search time: 0.16s
+Results: 416
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: supply chain
+Search time: 1.13s
+Results: 1584663
+Average precision: 0.4583333333333333
+nDCG: 0.6462302129493455
+
+>>> Search query: Near infrared spectroscopy    Chinese medicine quality testing
+Search time: 6.3s
+Results: 7621766
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: social media and crime
+Search time: 1.31s
+Results: 1856044
+Average precision: 0.5777777777777777
+nDCG: 0.7920874914199383
+
+>>> Search query: Generative Adversarial Networks
+Search time: 0.87s
+Results: 1140849
+Average precision: 0.29166666666666663
+nDCG: 0.5
+
+>>> Search query: deep learning
+Search time: 1.54s
+Results: 1672049
+Average precision: 0.8415497028210719
+nDCG: 0.9498461453269549
+
+>>> Search query: modulated microstrip line
+Search time: 1.06s
+Results: 1484183
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: Maximum Power Point Tracking
+Search time: 3.3s
+Results: 4406843
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Skepticism of neuroscience research paradigm explanation
+Search time: 5.0s
+Results: 6330892
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: multicolor interferometer
+Search time: 0.18s
+Results: 29094
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: control overhead at osi layer
+Search time: 4.3s
+Results: 5200881
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: halo digital goniometer
+Search time: 0.65s
+Results: 822279
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: text cluster
+Search time: 0.86s
+Results: 887349
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: natural gas gathering
+Search time: 2.5s
+Results: 3692708
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: 磺胺嘧啶solution
+Search time: 0.16s
+Results: 0
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: freckles
+Search time: 0.16s
+Results: 688
+Average precision: 0.8099999999999999
+nDCG: 0.9068250379649667
+
+>>> Search query: convolutional neural network
+Search time: 2.9s
+Results: 3471316
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: uist selection technique
+Search time: 2.6s
+Results: 3305419
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: mammal
+Search time: 0.34s
+Results: 308600
+Average precision: 0.3333333333333333
+nDCG: 0.5249810332008934
+
+>>> Search query: polycom
+Search time: 0.16s
+Results: 55
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: learning analytics
+Search time: 0.78s
+Results: 1045399
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: topic modeling
+Search time: 1.42s
+Results: 2032031
+Average precision: 0.325
+nDCG: 0.5012658353418871
+
+>>> Search query: lepanthes
+Search time: 0.16s
+Results: 17
+Average precision: 0.3666666666666667
+nDCG: 0.5437713091520254
+
+>>> Search query: monetary crisis
+Search time: 0.24s
+Results: 150397
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: wacc
+Search time: 0.16s
+Results: 152
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: tensorflow
+Search time: 0.16s
+Results: 958
+Average precision: 0.25
+nDCG: 0.4574945261898617
+
+>>> Search query: Historical background of confidentiality in medicine
+Search time: 4.2s
+Results: 5147312
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: Lactococcus lactis ssp. lactis biovar diacetylactis
+Search time: 0.19s
+Results: 30385
+Average precision: 0.6458333333333333
+nDCG: 0.7486761295186739
+
+>>> Search query: Monte Carlo particle numbering scheme
+Search time: 1.79s
+Results: 2200846
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: smart contracts
+Search time: 0.28s
+Results: 220011
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: focal plane
+Search time: 0.45s
+Results: 503071
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: Topic Model
+Search time: 4.9s
+Results: 6394219
+Average precision: 0.3404761904761905
+nDCG: 0.5330476224182167
+
+>>> Search query: photocatalyst
+Search time: 0.17s
+Results: 6846
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: #NAME?
+Search time: 0.16s
+Results: 0
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: mindfulness, depression
+Search time: 0.38s
+Results: 385753
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: YOLOv3
+Search time: 0.16s
+Results: 20
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: Layout-dependent proximity effects in deep nanoscale CMOS
+Search time: 4.9s
+Results: 6189418
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: microplastic in zooplankton effect the marine population
+Search time: 5.4s
+Results: 6617236
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: cylinder pressure detection
+Search time: 2.2s
+Results: 3058539
+Average precision: 0.325
+nDCG: 0.5012658353418871
+
+>>> Search query: "eshre"
+Search time: 0.16s
+Results: 511
+Average precision: 0.3333333333333333
+nDCG: 0.5249810332008934
+
+>>> Search query: anaphora long distance reference
+Search time: 3.7s
+Results: 4344631
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: TensorFlow
+Search time: 0.16s
+Results: 958
+Average precision: 0.24074074074074073
+nDCG: 0.47019133619277015
+
+>>> Search query: sqlizer
+Search time: 0.16s
+Results: 3
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: ethereum
+Search time: 0.16s
+Results: 1275
+Average precision: 0.29166666666666663
+nDCG: 0.4824755593907551
+
+>>> Search query: texture mapping
+Search time: 3.1s
+Results: 4343576
+Average precision: 0.4797979797979797
+nDCG: 0.6616232641454407
+
+>>> Search query: horn antenna frequency
+Search time: 2.1s
+Results: 1968041
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: HCI Biology
+Search time: 0.94s
+Results: 1295313
+Average precision: 0.49652777777777773
+nDCG: 0.6821597128635729
+
+>>> Search query: quantum
+Search time: 0.43s
+Results: 477747
+Average precision: 0.7916666666666666
+nDCG: 0.9134015924715544
+
+>>> Search query: self-esteem
+Search time: 1.08s
+Results: 1509583
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: Reinforcement Learning
+Search time: 1.98s
+Results: 2942905
+Average precision: 0.4944295900178253
+nDCG: 0.7051730819665357
+
+>>> Search query: HOPE spiritual assessment
+Search time: 1.82s
+Results: 1699890
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: scrapy
+Search time: 0.16s
+Results: 17
+Average precision: 0.25
+nDCG: 0.38685280723454163
+
+>>> Search query: prep stigma
+Search time: 0.56s
+Results: 670698
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: wet Diaper Detector
+Search time: 0.75s
+Results: 965746
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: treatments for kleptomania
+Search time: 0.49s
+Results: 557352
+Average precision: 0.4666666666666666
+nDCG: 0.6447841584694202
+
+>>> Search query: backpropagation
+Search time: 0.17s
+Results: 23302
+Average precision: 0.41666666666666663
+nDCG: 0.6052602440527058
+
+>>> Search query: Ketamine
+Search time: 0.17s
+Results: 20405
+Average precision: 0.28690476190476194
+nDCG: 0.4860089900278708
+
+>>> Search query: cumagun
+Search time: 0.16s
+Results: 23
+Average precision: 0.8333333333333334
+nDCG: 0.892210845475489
+
+>>> Search query: 1
+Search time: 8.2s
+Results: 10486961
+Average precision: 0.16666666666666666
+nDCG: 0.3562071871080222
+
+>>> Search query: Belief function
+Search time: 2.8s
+Results: 4302879
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: high frequency trading
+Search time: 5.9s
+Results: 7161975
+Average precision: 0.5333333333333333
+nDCG: 0.6797310500037655
+
+>>> Search query: lgbt homelessness
+Search time: 0.17s
+Results: 7213
+Average precision: 0.5
+nDCG: 0.6131471927654585
+
+>>> Search query: pediatric penis amputation
+Search time: 0.84s
+Results: 780982
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: ashp and pharmacotherapy
+Search time: 0.22s
+Results: 92595
+Average precision: 0.5682539682539682
+nDCG: 0.7890424563070348
+
+>>> Search query: siw wideband antenna
+Search time: 0.34s
+Results: 291882
+Average precision: 0.8766666666666666
+nDCG: 0.9512312000626861
+
+>>> Search query: digital heritage fusion
+Search time: 1.23s
+Results: 1301840
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: pine seedlings containers
+Search time: 0.22s
+Results: 116174
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: similarity measures
+Search time: 1.22s
+Results: 1250424
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: relation extraction
+Search time: 1.79s
+Results: 2034801
+Average precision: 0.22883597883597884
+nDCG: 0.4634899751584279
+
+>>> Search query: snack skin fish
+Search time: 1.09s
+Results: 1016853
+Average precision: 0.7333333333333333
+nDCG: 0.8756458727267336
+
+>>> Search query: Reinforcement learning for robots using neural networks
+Search time: 10.6s
+Results: 12290189
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: progressive web apps
+Search time: 0.77s
+Results: 1012869
+Average precision: 0.3873015873015873
+nDCG: 0.5726073975563165
+
+>>> Search query: Matrix Factorization
+Search time: 0.77s
+Results: 1027633
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: "awareness raising" sensitiz*
+Search time: 0.51s
+Results: 379712
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: Data Mining research papers on based on association rules
+Search time: 14.6s
+Results: 17700885
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: AI  scientific information search
+Search time: 3.9s
+Results: 4968815
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: zeolite X
+Search time: 4.2s
+Results: 5854688
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: histopathological study of cholecystectomies
+Search time: 7.9s
+Results: 10611775
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: etl documentation
+Search time: 0.39s
+Results: 403440
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: cycling probe
+Search time: 1.25s
+Results: 1283558
+Average precision: 0.4666666666666666
+nDCG: 0.6508205185601093
+
+>>> Search query: shoes
+Search time: 0.65s
+Results: 553803
+Average precision: 0.6666666666666666
+nDCG: 0.7653606369886218
+
+>>> Search query: intersection
+Search time: 0.21s
+Results: 54635
+Average precision: 0.7345238095238096
+nDCG: 0.7982650576674577
+
+>>> Search query: semantic analysis (computer science)
+Search time: 8.7s
+Results: 9921162
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: VSLAM
+Search time: 0.16s
+Results: 148
+Average precision: 0.4444444444444444
+nDCG: 0.6039071644781282
+
+>>> Search query: Microcrack toughening in alumina zirconia.
+Search time: 0.18s
+Results: 29997
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: marketing innovation
+Search time: 0.31s
+Results: 272887
+Average precision: 0.5249999999999999
+nDCG: 0.6533933590057492
+
+>>> Search query: cyberbullying
+Search time: 0.16s
+Results: 1608
+Average precision: 0.6271825396825397
+nDCG: 0.8148744686404846
+
+>>> Search query: nurses medication interruption safety vests
+Search time: 2.4s
+Results: 3633829
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: deicing cables
+Search time: 0.18s
+Results: 28119
+Average precision: 0.33134920634920634
+nDCG: 0.5391065605018964
+
+>>> Search query: Impact of Pollution on Animal Products
+Search time: 2.4s
+Results: 3124204
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Wasserstein gan
+Search time: 0.21s
+Results: 84870
+Average precision: 0.325
+nDCG: 0.5012658353418871
+
+>>> Search query: sophorolipid
+Search time: 0.16s
+Results: 181
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: real estate investment
+Search time: 1.43s
+Results: 1661164
+Average precision: 0.45
+nDCG: 0.6240505200038378
+
+>>> Search query: assisted reproduction ethical issues
+Search time: 1.12s
+Results: 1555987
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: face recognition with open cv
+Search time: 3.6s
+Results: 4246087
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Multi-Modulus Blind Equalization Algorithm
+Search time: 2.5s
+Results: 3381167
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: behaviour change in environmental campaigns
+Search time: 4.0s
+Results: 4705432
+Average precision: 0.5888888888888889
+nDCG: 0.7122630665145961
+
+>>> Search query: Lehman law
+Search time: 0.38s
+Results: 372180
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: jérôme ruel
+Search time: 0.18s
+Results: 37209
+Average precision: 0.6458333333333333
+nDCG: 0.7486761295186739
+
+>>> Search query: software defined networking
+Search time: 2.3s
+Results: 3020662
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: alista
+Search time: 0.16s
+Results: 11
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: global warming
+Search time: 0.82s
+Results: 1082414
+Average precision: 0.3206349206349206
+nDCG: 0.5051284895111404
+
+>>> Search query: infrared multispectral image registration
+Search time: 1.55s
+Results: 1682721
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: self-confidence MBTI
+Search time: 1.23s
+Results: 1754341
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: AUTOIMMUNE LYMPHOPROLIFERATIVE SYNDROME
+Search time: 1.99s
+Results: 2633283
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: Checking App Behavior Against App Descriptions
+Search time: 1.71s
+Results: 2529832
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: PEAK EXPIRATORY FLOW   FORMULA
+Search time: 3.0s
+Results: 4012990
+Average precision: 0.8766666666666666
+nDCG: 0.9512312000626861
+
+>>> Search query: diphallia
+Search time: 0.16s
+Results: 73
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: wide baseline image matching
+Search time: 2.2s
+Results: 2938301
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: global carbon cycle
+Search time: 6.3s
+Results: 8178463
+Average precision: 0.8403642653642653
+nDCG: 0.9520316824681774
+
+>>> Search query: Deterministic Policy Gradient Algorithms
+Search time: 2.1s
+Results: 2028118
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: lstm
+Search time: 0.17s
+Results: 5339
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: depression
+Search time: 0.37s
+Results: 379131
+Average precision: 0.38798701298701305
+nDCG: 0.6265177829621755
+
+>>> Search query: capital structure
+Search time: 4.2s
+Results: 6052833
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: flipper classroom
+Search time: 0.2s
+Results: 64949
+Average precision: 0.5
+nDCG: 0.6131471927654585
+
+>>> Search query: renyi differential privacy
+Search time: 0.66s
+Results: 844655
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: coplanar waveguide slot coupling
+Search time: 0.58s
+Results: 461172
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: user interface design
+Search time: 2.6s
+Results: 3780967
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: flexible membrane airfoils
+Search time: 1.12s
+Results: 1606395
+Average precision: 0.7416666666666666
+nDCG: 0.8826130928198888
+
+>>> Search query: Unsupervised relation extraction
+Search time: 1.44s
+Results: 2079985
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: evolving systems
+Search time: 2.6s
+Results: 3496666
+Average precision: 0.6388888888888888
+nDCG: 0.7328286204777911
+
+>>> Search query: genomics limma
+Search time: 0.21s
+Results: 91947
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: jsp
+Search time: 0.17s
+Results: 7712
+Average precision: 0.5833333333333333
+nDCG: 0.6934264036172708
+
+>>> Search query: magnetic levitation
+Search time: 0.64s
+Results: 810875
+Average precision: 0.8333333333333333
+nDCG: 0.9197207891481877
+
+>>> Search query: psyllium husk and constipation
+Search time: 0.2s
+Results: 51204
+Average precision: 0.8875
+nDCG: 0.9558295932317544
+
+>>> Search query: harvard business review
+Search time: 2.3s
+Results: 3190175
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: lstm relation
+Search time: 0.63s
+Results: 791558
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: multi-factor authentication
+Search time: 4.2s
+Results: 5821118
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: chimpanzee
+Search time: 0.17s
+Results: 8468
+Average precision: 0.3833333333333333
+nDCG: 0.5508095940041027
+
+>>> Search query: Gazebo
+Search time: 0.16s
+Results: 357
+Average precision: 0.7000000000000001
+nDCG: 0.8529278650606569
+
+>>> Search query: Self-Confidence
+Search time: 1.22s
+Results: 1753881
+Average precision: 0.5011904761904762
+nDCG: 0.6444638628256742
+
+>>> Search query: techniques of mobile data offloading
+Search time: 7.8s
+Results: 10339695
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: dataset
+Search time: 0.26s
+Results: 196575
+Average precision: 0.625
+nDCG: 0.8194270280062368
+
+>>> Search query: Gradient-Based Learning Applied to Document Recognition
+Search time: 7.8s
+Results: 10485112
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: SVM 机器学习
+Search time: 0.19s
+Results: 54581
+Average precision: 0.6666666666666666
+nDCG: 0.8315546295836226
+
+>>> Search query: text to speech
+Search time: 1.41s
+Results: 1339117
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: outliers trajectory
+Search time: 0.32s
+Results: 252374
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: automation  machine learning
+Search time: 1.4s
+Results: 1961075
+Average precision: 0.5
+nDCG: 0.6309297535714574
+
+>>> Search query: string similarity
+Search time: 0.37s
+Results: 365003
+Average precision: 0.8041666666666667
+nDCG: 0.9047172294870753
+
+>>> Search query: external wall insulation
+Search time: 1.08s
+Results: 1164901
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: eastern philosophy of medicine
+Search time: 1.91s
+Results: 2889589
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: multiple dancer
+Search time: 1.74s
+Results: 2087263
+Average precision: 0.4666666666666666
+nDCG: 0.6508205185601093
+
+>>> Search query: cGANs with Projection Discriminator
+Search time: 0.63s
+Results: 779754
+Average precision: 0.5
+nDCG: 0.6131471927654585
+
+>>> Search query: indoor reconstruction
+Search time: 0.39s
+Results: 402606
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Thiahelicene transistor
+Search time: 0.21s
+Results: 102467
+Average precision: 0.0
+nDCG: 0.0
+
+>>> Search query: protein dynamics epr
+Search time: 3.4s
+Results: 4852818
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: youtube as exploitation
+Search time: 2.8s
+Results: 3841531
+Average precision: 0.5666666666666667
+nDCG: 0.7365896932159579
+
+>>> Search query: blueborne
+Search time: 0.16s
+Results: 2
+Average precision: 0.3333333333333333
+nDCG: 0.46927872602275655
+
+>>> Search query: digital controller for DC motor position control system
+Search time: 9.7s
+Results: 12031731
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: volta battery
+Search time: 0.23s
+Results: 135057
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: active sensing "value of information" autonomous planning
+Search time: 6.5s
+Results: 8496909
+Average precision: 0.7708333333333333
+nDCG: 0.8927537907700458
+
+>>> Search query: Clean Robot Path planning
+Search time: 2.4s
+Results: 3417515
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: bert bidirectional
+Search time: 0.2s
+Results: 74857
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: computer
+Search time: 1.85s
+Results: 2294569
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: "cultural heritage" AND "semantic web"
+Search time: 0.94s
+Results: 1236703
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: hydrogels microfluidic reactor
+Search time: 0.23s
+Results: 120800
+Average precision: 0.41944444444444445
+nDCG: 0.6027819274910589
+
+>>> Search query: pipeline inspection
+Search time: 2.0s
+Results: 2705930
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: invasion assay
+Search time: 0.89s
+Results: 1207750
+Average precision: 0.7555555555555555
+nDCG: 0.8854598815714875
+
+>>> Search query: requirements engineering
+Search time: 2.7s
+Results: 2912034
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: Grain depot information platform
+Search time: 3.6s
+Results: 4962624
+Average precision: 0.8333333333333334
+nDCG: 0.932521091954824
+
+>>> Search query: Sleep Habits in adolescents
+Search time: 0.53s
+Results: 619658
+Average precision: 0.8541666666666666
+nDCG: 0.9438661545147249
+
+>>> Search query: gcpw patch antenna
+Search time: 0.59s
+Results: 468823
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: parameter sweep
+Search time: 0.68s
+Results: 665852
+Average precision: 0.525
+nDCG: 0.7095272044910246
+
+>>> Search query: survey
+Search time: 7.5s
+Results: 10546355
+Average precision: 0.5873015873015873
+nDCG: 0.7928654229965443
+
+>>> Search query: word embeddings
+Search time: 0.47s
+Results: 399538
+Average precision: 0.5142857142857142
+nDCG: 0.6919586048659573
+
+>>> Search query: taping/ clubfeet
+Search time: 0.17s
+Results: 3417
+Average precision: 0.75
+nDCG: 0.8772153153380494
+
+>>> Search query: Goal-Oriented chatbot
+Search time: 1.68s
+Results: 2027652
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: amino acid life span
+Search time: 4.5s
+Results: 5687036
+Average precision: 0.9166666666666666
+nDCG: 0.9674679834891693
+
+>>> Search query: spare part inventory management
+Search time: 1.91s
+Results: 2849965
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Financing system
+Search time: 5.6s
+Results: 7529407
+Average precision: 0.6791666666666667
+nDCG: 0.7606395682357036
+
+>>> Search query: mix marketing
+Search time: 0.26s
+Results: 188875
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: parking
+Search time: 0.17s
+Results: 10090
+Average precision: 0.4444444444444444
+nDCG: 0.6039071644781282
+
+>>> Search query: printed dipole integrated balun wifi
+Search time: 0.73s
+Results: 949877
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: smoreg
+Search time: 0.16s
+Results: 19
+Average precision: 0.5
+nDCG: 0.6366824387328317
+
+>>> Search query: hydraulic elevator
+Search time: 0.21s
+Results: 84937
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Ubisoft
+Search time: 0.16s
+Results: 48
+Average precision: 0.75
+nDCG: 0.8318724637288826
+
+>>> Search query: normalizar texto
+Search time: 0.16s
+Results: 897
+Average precision: 0.25
+nDCG: 0.39038004999210174
+
+>>> Search query: To learn image super-resolution, use a GAN to learn how to do image degradation first
+Search time: 6.1s
+Results: 7041545
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: blockchain
+Search time: 0.17s
+Results: 3744
+Average precision: 0.7994977244977245
+nDCG: 0.9306707170528487
+
+>>> Search query: CSR in Europe
+Search time: 0.33s
+Results: 307961
+Average precision: 0.8055555555555555
+nDCG: 0.9060254355346824
+
+>>> Search query: selection combining diversity technique
+Search time: 3.2s
+Results: 3886782
+Average precision: 0.8666666666666667
+nDCG: 0.9469024295259745
+
+>>> Search query: cognitive control motivation adolescence
+Search time: 3.6s
+Results: 5038536
+Average precision: 0.5
+nDCG: 0.6509209298071325
+
+>>> Search query: visual scene understanding in autonomous driving
+Search time: 3.1s
+Results: 4528370
+Average precision: 0.6916666666666667
+nDCG: 0.8485833840018001
+
+>>> Search query: anytime stereo
+Search time: 0.2s
+Results: 52479
+Average precision: 0.5
+nDCG: 0.6309297535714574
+
+>>> Search query: aslr
+Search time: 0.18s
+Results: 251
+Average precision: 0.7
+nDCG: 0.8503449055347547
+
+>>> Search query: abc
+Search time: 0.18s
+Results: 36179
+Average precision: 0.37499999999999994
+nDCG: 0.6083702572430433
+
+>>> Search query: vaccine risk
+Search time: 2.3s
+Results: 2823044
+Average precision: 0.8099999999999999
+nDCG: 0.9068250379649667
+
+>>> Search query: Return on  investment
+Search time: 0.35s
+Results: 337956
+Average precision: 0.5555555555555555
+nDCG: 0.6978817289434458
+
+>>> Search query: measure spatial autocorrelation
+Search time: 1.9s
+Results: 2376834
+Average precision: 0.95
+nDCG: 0.9828920819566879
+
+>>> Search query: graphs multicoloring
+Search time: 0.23s
+Results: 138681
+Average precision: 0.5
+nDCG: 0.6653497124326151
+
+>>> Search query: extracurricular activities
+Search time: 0.77s
+Results: 1032403
+Average precision: 0.4777777777777777
+nDCG: 0.6182885020492787
+
+>>> Search query: bullying
+Search time: 0.18s
+Results: 9411
+Average precision: 0.3595238095238095
+nDCG: 0.5400753810454858
+
+>>> Search query: ls-dyna composite
+Search time: 0.31s
+Results: 285422
+Average precision: 0.6666666666666666
+nDCG: 0.8385465274895064
+
+>>> Search query: video games
+Search time: 0.62s
+Results: 773499
+Average precision: 1.0
+nDCG: 1.0
+
+>>> Search query: Fom-2 marker assisted selection
+Search time: 8.6s
+Results: 11055105
+Average precision: 0.9166666666666666
+nDCG: 0.9709286432396583
+
+>>> Search query: Quick shift SLIC
+Search time: 0.56s
+Results: 661630
+Average precision: 0.7222222222222222
+nDCG: 0.8710785440003371
+
+>>> Search query: condensed matter lecture notes
+Search time: 0.7s
+Results: 868091
+Average precision: 0.9666666666666666
+nDCG: 0.9896062251871525
+
+------------------------------------------------
+Summary:
+
+-> Average precision
+Average: 0.7001791933828383
+Min: 0.0
+Max: 1.0
+
+-> nDCG
+Average: 0.8039829595427813
+Min: 0.0
+Max: 1.0
+
+-> Search time
+Total: 17m 47s
+Average per query: 1.68s
+Average per 1000000 results: 0.8s
+Min: 0.16s for query: Ubisoft
+Max: 14.6s for query: Data Mining research papers on based on association rules
+
+-> Evaluation time: 30m 55s
