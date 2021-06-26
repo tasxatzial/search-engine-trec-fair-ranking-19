@@ -7,7 +7,6 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,16 +17,18 @@ import java.util.*;
 public class VSM extends ARetrievalModel {
     double[][] _calculatedWeights;
     double[] _documentWeights;
-    double[] _citationsPagerank;
     double[] _modelScore;
+    int[] _maxTfs;
 
     public VSM(Indexer index)
             throws IndexNotLoadedException {
         super(index);
         _calculatedWeights = new double[_totalDocuments][];
         _documentWeights = new double[_totalDocuments];
-        _citationsPagerank = new double[_totalDocuments];
         _modelScore = new double[_totalDocuments];
+        VSMprops props = _indexer.getVSMprops();
+        _documentWeights = props.get_VSMweights();
+        _maxTfs = props.get_MaxTfs();
     }
 
     @Override
@@ -78,23 +79,17 @@ public class VSM extends ARetrievalModel {
         for (int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
             int[] intIDs = postings.get_intID();
-            VSMprops props = _indexer.getVSMprops(intIDs);
-            double[] i_VSMWeight = props.get_VSMweights();
-            double[] i_citationsPagerank = props.get_CitationsPagerank();
-            int[] maxTfs = props.get_MaxTfs();
             int[] tfs = postings.get_tfs();
             double weight = query.get(i).get_weight();
             double idf = Math.log(_totalDocuments / (1.0 + dfs[i]));
             for (int j = 0; j < dfs[i]; j++) {
                 int id = intIDs[j];
-                _documentWeights[id] = i_VSMWeight[j];
-                _citationsPagerank[id] = i_citationsPagerank[j];
                 double[] weights = _calculatedWeights[id];
                 if (weights == null) {
                     weights = new double[query.size()];
                     _calculatedWeights[id] = weights;
                 }
-                double tf = (tfs[j] * weight) / maxTfs[j];
+                double tf = (tfs[j] * weight) / _maxTfs[id];
                 weights[i] += tf * idf;
             }
         }
@@ -131,6 +126,6 @@ public class VSM extends ARetrievalModel {
         }
 
         _totalResults = results.size();
-        return sort(results, _citationsPagerank, endResult);
+        return sort(results, endResult);
     }
 }

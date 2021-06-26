@@ -1256,53 +1256,66 @@ public class Indexer {
 
     /**
      * Returns a VSMprops object that has all essential props required by the Vector space model.
-     * See class VSMprops.
      *
-     * @param intIDs array of intIDs of the documents
      * @return
      * @throws IndexNotLoadedException
      */
-    public VSMprops getVSMprops(int[] intIDs)
+    public VSMprops getVSMprops()
             throws IndexNotLoadedException {
         if (!loaded()) {
             throw new IndexNotLoadedException();
         }
-        int[] maxTfs = new int[intIDs.length];
-        double[] VSMweights = new double[intIDs.length];
-        double[] citationsPagerank = new double[intIDs.length];
-        for (int i = 0; i < intIDs.length; i++) {
-            long offset = DocInfo.getMetaOffset(intIDs[i]);
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
-            buffer.get(__DOCUMENT_META_ARRAY__);
-            citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
-            VSMweights[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
-            maxTfs[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
+        int documents = Integer.parseInt(_INDEX_META__.get("documents"));
+        int[] maxTfs = new int[documents];
+        double[] VSMweights = new double[documents];
+        for (int i = 0; i < documents; i++) {
+            long offset = DocInfo.getMetaOffset(i);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            VSMweights[i] = buffer.getDouble();
+            buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
+            maxTfs[i] = buffer.getInt();
         }
-        return new VSMprops(maxTfs, citationsPagerank, VSMweights);
+        return new VSMprops(maxTfs, VSMweights);
     }
 
     /**
      * Returns a OKAPIprops object that has the essential props required by the Okapi model.
-     * See class OKAPIprops.
      *
-     * @param intIDs array of intIDs of the documents
      * @return
      */
-    public OKAPIprops getOKAPIprops(int[] intIDs)
+    public OKAPIprops getOKAPIprops()
             throws IndexNotLoadedException {
         if (!loaded()) {
             throw new IndexNotLoadedException();
         }
-        int[] tokenCount = new int[intIDs.length];
-        double[] citationsPagerank = new double[intIDs.length];
-        for (int i = 0; i < intIDs.length; i++) {
-            long offset = DocInfo.getMetaOffset(intIDs[i]);
+        int documents = Integer.parseInt(_INDEX_META__.get("documents"));
+        int[] tokenCount = new int[documents];
+        for (int i = 0; i < documents; i++) {
+            long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.TOKEN_COUNT_OFFSET;
             ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
-            buffer.get(__DOCUMENT_META_ARRAY__);
-            citationsPagerank[i] = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
-            tokenCount[i] = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
+            tokenCount[i] = buffer.getInt();
         }
-        return new OKAPIprops(tokenCount, citationsPagerank);
+        return new OKAPIprops(tokenCount);
+    }
+
+    /**
+     * Returns an array of the Pagerank scores of the documents.
+     * @return
+     * @throws IndexNotLoadedException
+     */
+    public double[] getPagerank()
+            throws IndexNotLoadedException {
+        if (!loaded()) {
+            throw new IndexNotLoadedException();
+        }
+        int documents = Integer.parseInt(_INDEX_META__.get("documents"));
+        double[] pagerank = new double[documents];
+        for (int i = 0; i < documents; ++i) {
+            long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET;
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
+            pagerank[i] = buffer.getDouble();
+        }
+        return pagerank;
     }
 
     /**

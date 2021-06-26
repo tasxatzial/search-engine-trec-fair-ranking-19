@@ -7,7 +7,6 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,7 +18,6 @@ public class OkapiBM25 extends ARetrievalModel {
     private final double _k1 = 2.0;
     private final double _b = 0.75;
     private final double _avgdl;
-    double[] _citationsPagerank;
     int[] _tokenCount;
     double[] _modelScore;
     double[][] _calculatedFreqs;
@@ -28,10 +26,11 @@ public class OkapiBM25 extends ARetrievalModel {
             throws IndexNotLoadedException {
         super(index);
         _calculatedFreqs = new double[_totalDocuments][];
-        _citationsPagerank = new double[_totalDocuments];
         _tokenCount = new int[_totalDocuments];
         _modelScore = new double[_totalDocuments];
         _avgdl = _indexer.getAvgdl();
+        OKAPIprops props = _indexer.getOKAPIprops();
+        _tokenCount = props.get_tokenCount();
     }
 
     @Override
@@ -53,15 +52,10 @@ public class OkapiBM25 extends ARetrievalModel {
         for(int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
             int[] intIDs = postings.get_intID();
-            OKAPIprops props = _indexer.getOKAPIprops(intIDs);
-            double[] i_citationsPagerank = props.get_citationsPagerank();
-            int[] i_tokenCount = props.get_tokenCount();
             int[] tfs = postings.get_tfs();
             double weight = query.get(i).get_weight();
             for (int j = 0; j < dfs[i]; j++) {
                 int id = intIDs[j];
-                _citationsPagerank[id] = i_citationsPagerank[j];
-                _tokenCount[id] = i_tokenCount[j];
                 double[] freqs = _calculatedFreqs[id];
                 if (freqs == null) {
                     freqs = new double[query.size()];
@@ -109,6 +103,6 @@ public class OkapiBM25 extends ARetrievalModel {
         }
 
         _totalResults = results.size();
-        return sort(results, _citationsPagerank, endResult);
+        return sort(results, endResult);
     }
 }
