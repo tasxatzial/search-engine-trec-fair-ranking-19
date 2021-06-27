@@ -4,7 +4,6 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
@@ -22,6 +21,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
 
@@ -164,8 +165,8 @@ public class themisEval {
             ndcg = (Double.isNaN(ndcg)) ? Double.NaN : ndcg;
             ndcgs.add(ndcg);
 
-            evaluationWriter.write("Average precision: " + avep + "\n");
-            evaluationWriter.write("nDCG: " + ndcg + "\n\n");
+            evaluationWriter.write("Average precision: " + round(avep, 4) + "\n");
+            evaluationWriter.write("nDCG: " + round(ndcg, 4) + "\n\n");
             evaluationWriter.flush();
         }
 
@@ -193,13 +194,13 @@ public class themisEval {
         evaluationWriter.write("------------------------------------------------\n");
         evaluationWriter.write("-> Summary\n\n");
         evaluationWriter.write("[Average precision]\n");
-        evaluationWriter.write("Average: " + averageAvep + "\n");
-        evaluationWriter.write("Min: " + minAvep + "\n");
-        evaluationWriter.write("Max: " + maxAvep + "\n\n");
+        evaluationWriter.write("Average: " + round(averageAvep, 4) + "\n");
+        evaluationWriter.write("Min: " + round(minAvep, 4) + "\n");
+        evaluationWriter.write("Max: " + round(maxAvep, 4) + "\n\n");
         evaluationWriter.write("[nDCG]\n");
-        evaluationWriter.write("Average: " + averageNdcg + "\n");
-        evaluationWriter.write("Min: " + minNdcg + "\n");
-        evaluationWriter.write("Max: " + maxNdcg + "\n\n");
+        evaluationWriter.write("Average: " + round(averageNdcg, 4) + "\n");
+        evaluationWriter.write("Min: " + round(minNdcg, 4) + "\n");
+        evaluationWriter.write("Max: " + round(maxNdcg, 4) + "\n\n");
         evaluationWriter.write("-> Search time\n");
         evaluationWriter.write("Total: " + totalSearchTime + "\n");
         evaluationWriter.write("Average per query: " + queryAverageTime + "\n");
@@ -387,5 +388,12 @@ public class themisEval {
             return 1000000;
         }
         return resultsSize;
+    }
+
+    /* rounds to the given number of decimalPlaces */
+    private static double round(double d, int decimalPlace) {
+        BigDecimal bd = new BigDecimal(Double.toString(d));
+        bd = bd.setScale(decimalPlace, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }
