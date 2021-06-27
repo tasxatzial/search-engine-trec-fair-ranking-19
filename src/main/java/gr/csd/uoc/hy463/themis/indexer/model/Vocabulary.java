@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 /**
  * Holds two things about a term:
  * 1) DF = document frequency of this term = in how many documents this term is found
- * 2) Posting offset = offset to the 'postings' file
+ * 2) Offset to the 'postings' file
  */
 public class Vocabulary {
     private final int _df;

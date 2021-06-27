@@ -48,6 +48,7 @@ public class Search {
         if (!_indexer.load()) {
             throw new IndexNotLoadedException();
         }
+        Themis.print("-> Initializing search...\n");
         String retrievalModel = _indexer.getConfig().getRetrievalModel();
         switch (retrievalModel) {
             case "BM25":
@@ -78,7 +79,8 @@ public class Search {
             _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
-        Themis.print("Citations Pagerank weight: " + _indexer.get_pagerankWeight() + "\n");
+        Themis.print("Default citations pagerank weight: " + _indexer.get_pagerankWeight() + "\n");
+        Themis.print("Ready\n\n");
     }
 
     /**

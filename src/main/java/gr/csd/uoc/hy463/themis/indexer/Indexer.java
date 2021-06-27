@@ -180,7 +180,7 @@ public class Indexer {
         long documentsOffset = 0;
 
         /* maximum number of documents in a partial index */
-        int maxIndexDocuments = __CONFIG__.getPartialIndexSize();
+        int indexMaxDocuments = __CONFIG__.getPartialIndexSize();
 
         /* create a list of files of the collection */
         File folder = new File(path);
@@ -193,7 +193,7 @@ public class Indexer {
 
         /* save the final index configuration options */
         _INDEX_META__ = new HashMap<>();
-        Themis.print(">>> Indexing options:\n");
+        Themis.print("-> Indexing options:\n");
         _INDEX_META__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
         Themis.print("Stemmer: " + __CONFIG__.getUseStemmer() + "\n");
         _INDEX_META__.put("use_stopwords", String.valueOf(__CONFIG__.getUseStopwords()));
@@ -203,7 +203,7 @@ public class Indexer {
         _INDEX_META__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
         Themis.print("Pagerank threshold: " + __CONFIG__.getPagerankThreshold() + "\n");
 
-        Themis.print(">>> Start indexing\n");
+        Themis.print("-> Start indexing\n");
         long startTime = System.nanoTime();
 
         /* sort the files of the collection (determines the parsing order) */
@@ -277,7 +277,7 @@ public class Indexer {
 
                     /* check if a dump of the current index is needed */
                     docIntID++;
-                    if (docIntID % maxIndexDocuments == 0) {
+                    if (docIntID % indexMaxDocuments == 0) {
                         index.dump();
                         indexID++;
                         index = new Index(this, indexID);
@@ -287,9 +287,9 @@ public class Indexer {
             }
         }
 
-        /* remove the last index when the total number of documents is a multiple of maxIndexDocuments.
+        /* remove the last index when the total number of documents is a multiple of indexMaxDocuments.
         This means we created a new index but there are no documents left */
-        if (docIntID != 0 && docIntID % maxIndexDocuments == 0) {
+        if (docIntID != 0 && docIntID % indexMaxDocuments == 0) {
             indexID--;
         }
         else {
@@ -360,7 +360,7 @@ public class Indexer {
             Themis.print("[Error deleting index tmp folder]\n");
         }
 
-        Themis.print(">>> End of indexing\n");
+        Themis.print("-> End of indexing\n");
     }
 
     /* Merges the partial 'vocabulary' files found in the 'index_tmp/*' folders where '*' is a
@@ -368,7 +368,7 @@ public class Indexer {
     in the 'index' folder.
 
     If there is only 1 partial index, we cannot simply copy the 'vocabulary' file to the final location
-    because it is missing the offsets to the 'postings' file. However the offsets can be determined by using the
+    because it is missing the offsets to the 'postings' file. The offsets can be determined by using the
     following information:
     1) For each term we know its DF
     2) Each posting occupies the same fixed space in the 'postings' file.
@@ -380,8 +380,10 @@ public class Indexer {
     private void mergeVocabularies(int indexID)
             throws IOException {
         long startTime =  System.nanoTime();
-        Themis.print(">>> Start Merging of partial vocabularies\n");
+        Themis.print("-> Merging partial vocabularies...\n");
 
+        /* If there is only one partial index, each line in the vocabulary file must
+        * be appended with the offset to the 'postings' file */
         if (indexID == 0) {
             String partialVocabularyPath = getPartialVocabularyPath(0);
             BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
@@ -397,8 +399,9 @@ public class Indexer {
             }
             vocabularyReader.close();
             vocabularyWriter.close();
-        } else {
-            /* merge the partial 'vocabulary' files in case there are >1 partial indexes */
+        }
+        /* merge the partial 'vocabulary' files in case there are >1 partial indexes */
+        else {
             combinePartialVocabularies(indexID);
         }
         Themis.print("Partial vocabularies merged in " + new Time(System.nanoTime() - startTime) + "\n");
@@ -406,8 +409,8 @@ public class Indexer {
 
     /* Merges the partial 'vocabulary' files when there are more than 1 partial indexes.
 
-    Also writes the 'term_df' file in the 'index_tmp' folder. It will come in handy later when the partial 'posting'
-    files are merged.
+    Also writes the 'term_df' file in the 'index_tmp' folder. It will come in handy later when the partial
+    'postings' files are merged.
 
     Merge process for the 'vocabulary' files:
     Assume we have K 'vocabulary' files. They can be merged in one go using the following procedure:
@@ -431,12 +434,12 @@ public class Indexer {
     7) Finally, we write to the final 'vocabulary' file a <term, DF, postings file offset> line for the min
     lexicographical term and we repeat the procedure until all partial 'vocabulary' files have been parsed.
     */
-    private void combinePartialVocabularies(int indexID)
+    private void combinePartialVocabularies(int maxIndexID)
             throws IOException {
 
         /* open the partial 'vocabulary' file found in every 'index_tmp/index_id' folder */
-        BufferedReader[] vocabularyReader = new BufferedReader[indexID + 1];
-        for (int i = 0; i <= indexID; i++) {
+        BufferedReader[] vocabularyReader = new BufferedReader[maxIndexID + 1];
+        for (int i = 0; i <= maxIndexID; i++) {
             String partialVocabularyPath = getPartialVocabularyPath(i);
             vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
         }
@@ -459,7 +462,7 @@ public class Indexer {
         *
         * First, put the objects in a priority queue */
         PriorityQueue<PartialVocabulary> vocabularyQueue = new PriorityQueue<>();
-        for (int i = 0; i <= indexID; i++) {
+        for (int i = 0; i <= maxIndexID; i++) {
             minTermObj = getNextVocabularyEntry(vocabularyReader[i], i);
             if (minTermObj != null) {
                 vocabularyQueue.add(minTermObj);
@@ -505,7 +508,7 @@ public class Indexer {
         }
 
         /* close any open files */
-        for (int i = 0; i <= indexID; i++) {
+        for (int i = 0; i <= maxIndexID; i++) {
             vocabularyReader[i].close();
         }
         vocabularyWriter.close();
@@ -568,19 +571,21 @@ public class Indexer {
     }
 
     /* Merges the partial 'postings' files found in the 'index_tmp/*' folders where '*' is a
-    number from 0 to indexID (inclusive). Creates the final 'postings' file (random access file)
+    number from 0 to maxIndexID (inclusive). Creates the final 'postings' file (random access file)
     in the 'index' folder */
-    private void mergePostings(int indexID)
+    private void mergePostings(int maxIndexID)
             throws IOException {
 
         /* If there is only one partial index, move the posting file in the final 'index' folder */
         long startTime =  System.nanoTime();
-        Themis.print(">>> Start Merging of partial postings\n");
-        if (indexID == 0) {
+        Themis.print("-> Merging partial postings...\n");
+        if (maxIndexID == 0) {
             String partialPostingPath = getPartialPostingPath(0);
             Files.move(Paths.get(partialPostingPath), Paths.get(getPostingsPath()), StandardCopyOption.REPLACE_EXISTING);
-        } else {
-            combinePartialPostings(indexID);
+        }
+        /* merge the partial 'postings' files in case there are >1 partial indexes */
+        else {
+            combinePartialPostings(maxIndexID);
         }
         Themis.print("Partial postings merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
@@ -781,7 +786,7 @@ public class Indexer {
     private void updateVSMweights()
             throws IOException {
         long startTime = System.nanoTime();
-        Themis.print(">>> Calculating VSM weights\n");
+        Themis.print("-> Calculating VSM weights...\n");
 
         /* load the vocabulary terms and the DF */
         BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
@@ -846,13 +851,13 @@ public class Indexer {
      */
     public boolean load()
             throws IndexNotLoadedException {
-        Themis.print(">>> Index path: " + __INDEX_PATH__ + "\n");
+        Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
         try {
             /* load index configuration options */
             _INDEX_META__ = loadMeta();
             Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
             Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
-            Themis.print(">>> Loading index...");
+            Themis.print("-> Loading index...");
 
             /* load 'vocabulary' file */
             __VOCABULARY__ = new HashMap<>();
@@ -881,7 +886,7 @@ public class Indexer {
         catch (IOException e) {
             throw new IndexNotLoadedException();
         }
-        Themis.print("DONE\n");
+        Themis.print("Done\n");
 
         return true;
     }
@@ -946,10 +951,10 @@ public class Indexer {
      */
     public void deleteIndex()
             throws IOException {
-        Themis.print(">>> Deleting previous index...");
+        Themis.print("-> Deleting previous index...");
         deleteDir(new File(getIndexPath()));
         deleteDir(new File(getIndexTmpPath()));
-        Themis.print("DONE\n");
+        Themis.print("Done\n");
     }
 
     /**

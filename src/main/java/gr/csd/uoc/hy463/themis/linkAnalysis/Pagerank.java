@@ -58,14 +58,13 @@ public class Pagerank {
     public void citationsPagerank()
             throws PagerankException {
         try {
-            Themis.print(">>> Calculating Pagerank\n");
             long startTime = System.nanoTime();
-            Themis.print("> Constructing graph\n");
+            Themis.print("-> Constructing pagerank graph...\n");
             dumpCitations();
             PagerankNode[] graph = initCitationsGraph();
             Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
             startTime = System.nanoTime();
-            Themis.print("> Iterating\n");
+            Themis.print("-> Iterating pagerank...\n");
             double[] scores = computeCitationsPagerank(graph);
             Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
             writeCitationsScores(scores);
@@ -256,7 +255,7 @@ public class Pagerank {
         boolean maybeConverged = false;
         int iteration = 1;
         while (!maybeConverged) {
-            if (iteration != 1 && iteration % 20 == 1) {
+            if (iteration != 1 && iteration % 10 == 1) {
                 Themis.print("\n");
             }
             Themis.print(iteration + " ");
@@ -314,7 +313,6 @@ public class Pagerank {
         long offset = 0;
         String documentsMetaPath = _indexer.getDocumentsMetaFilePath();
         DocumentBuffers documentMetaBuffers = new DocumentBuffers(documentsMetaPath, MemoryBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
-
         for (int i = 0; i < scores.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.memBuffer(offset + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
             buffer.putDouble(scores[i]);

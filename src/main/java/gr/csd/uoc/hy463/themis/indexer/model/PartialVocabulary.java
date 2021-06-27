@@ -5,8 +5,8 @@ import java.util.Comparator;
 /**
  * This class is used during the merging of the partial vocabularies. It holds the following data:
  * - Term
- * - DF = document frequency of this term = in how many documents this term is found
- * - Partial index ID = Term is found in this partial index
+ * - DF = document frequency of this term = in how many documents this vocabulary term is found
+ * - Partial index ID = A vocabulary term is found in this partial index
  */
 public class PartialVocabulary implements Comparable<PartialVocabulary> {
     private final String _term;

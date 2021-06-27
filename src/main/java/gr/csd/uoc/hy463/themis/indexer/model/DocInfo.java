@@ -4,7 +4,7 @@ import java.util.*;
 
 /**
  * This class holds any information we might want to communicate with the retrieval model.
- * The DocInfo.PROPERTY corresponds to the JSON names of the documents.
+ * The DocInfo.PROPERTY corresponds to the JSON field names of the documents.
  */
 public class DocInfo {
     public enum PROPERTY {

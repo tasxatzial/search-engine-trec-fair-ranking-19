@@ -1,8 +1,8 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Holds the name of a DocInfo property and the frequency of a term in the corresponding data. See also class
- * DocInfo.
+ * Holds the name of a DocInfo property and the frequency of a term in the corresponding data.
+ * See also class DocInfo.
  */
 public class DocInfoFrequency {
     DocInfo.PROPERTY _prop;

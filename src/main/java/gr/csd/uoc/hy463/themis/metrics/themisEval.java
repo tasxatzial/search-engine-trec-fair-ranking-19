@@ -92,15 +92,15 @@ public class themisEval {
 
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_PATH__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_PATH__), "UTF-8"));
-        Themis.print(">>> Starting evaluation\n");
+        Themis.print("-> Starting evaluation\n");
         Themis.print("Saving evaluation results in " + __EVALUATION_PATH__ + "\n");
-        Themis.print(">>> Evaluation options:\n");
+        Themis.print("-> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Citations Pagerank weight: " + _search.getPagerankWeight() + "\n\n");
         evaluationWriter.write("Index path: " + __CONFIG__.getIndexPath() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
-        evaluationWriter.write(">>> Evaluation options:\n");
+        evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         evaluationWriter.write("Citations Pagerank weight: " + _search.getPagerankWeight() + "\n\n");
@@ -140,8 +140,8 @@ public class themisEval {
             }
 
             //perform a search
-            evaluationWriter.write(">>> Search query: " + query + "\n");
-            Themis.print("> Search query: " + query + "\n");
+            evaluationWriter.write("Query: " + query + "\n");
+            Themis.print("Query: " + query + "\n");
             long startTime = System.nanoTime();
             List<Result> results = _search.search(query);
             long endTime = System.nanoTime();
@@ -189,14 +189,14 @@ public class themisEval {
 
         long evalEndTime = System.nanoTime();
 
-        Themis.print("\n>>> End of evaluation\n");
+        Themis.print("\n-> End of evaluation\n");
         evaluationWriter.write("------------------------------------------------\n");
-        evaluationWriter.write("Summary:\n\n");
-        evaluationWriter.write("-> Average precision\n");
+        evaluationWriter.write("-> Summary\n\n");
+        evaluationWriter.write("[Average precision]\n");
         evaluationWriter.write("Average: " + averageAvep + "\n");
         evaluationWriter.write("Min: " + minAvep + "\n");
         evaluationWriter.write("Max: " + maxAvep + "\n\n");
-        evaluationWriter.write("-> nDCG\n");
+        evaluationWriter.write("[nDCG]\n");
         evaluationWriter.write("Average: " + averageNdcg + "\n");
         evaluationWriter.write("Min: " + minNdcg + "\n");
         evaluationWriter.write("Max: " + maxNdcg + "\n\n");
@@ -206,13 +206,14 @@ public class themisEval {
         evaluationWriter.write("Average per " + calculateBaseResults(totalResults) + " results: " + resultsAverageTime + "\n");
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
         evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n\n");
-        evaluationWriter.write("-> Evaluation time: " + new Time(evalEndTime - evalStartTime) + "\n");
+        evaluationWriter.write("-> Total time: " + new Time(evalEndTime - evalStartTime) + "\n");
         evaluationWriter.close();
         judgementsReader.close();
     }
 
     /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeAveP(List<Result> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
+    private double computeAveP(List<Result> results, Map<String, Long> relevanceMap)
+            throws UnsupportedEncodingException, IndexNotLoadedException {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -243,7 +244,8 @@ public class themisEval {
     }
 
     /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeNdcg(List<Result> results, Map<String, Long> relevanceMap) throws UnsupportedEncodingException, IndexNotLoadedException {
+    private double computeNdcg(List<Result> results, Map<String, Long> relevanceMap)
+            throws UnsupportedEncodingException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;
