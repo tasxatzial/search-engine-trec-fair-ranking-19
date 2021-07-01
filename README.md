@@ -27,9 +27,9 @@ The total size of the final index was 40.2GB and maximum disk usage during the p
 
 635 queries from a judgements file were used for the evaluation of the engine.
 
-The average of the average precision scores was ~0.7. The average of the nDCG scores was ~0.8. These numbers change slightly depending on the search parameters (retrieval model/query expansion/pagerank).
+The average of the average precision scores is between 70.03 and 71.69. The average of the nDCG scores is between 80.46 and 81.8. These numbers depend on the search parameters (retrieval model/query expansion/pagerank).
 
-Search times (single thread) for 1M documents appear to be between 0.54s (Okapi model, no query expansion, 0 weight for pagerank score) and 0.89s (Okapi & VSM models, Glove query expansion, 0.25 weight for pagerank score).
+Average search times (single thread) for 1M documents appear to be between 0.5s and 0.82s, again depending on the search parameters.
 
 ## Results
 
@@ -76,7 +76,7 @@ Configuration options for indexing/searching/evaluation can be changed in the th
 Note that any changes to the config file are taken into account only when:
 
 * A new index is created.
-* The index is loaded in memory.
+* An index is loaded in memory.
 
 ## Screenshots
 
