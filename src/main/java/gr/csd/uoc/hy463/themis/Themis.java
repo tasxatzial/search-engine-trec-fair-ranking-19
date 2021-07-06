@@ -113,6 +113,40 @@ public class Themis {
         }
     }
 
+    /* Runs a complete set of evaluations that includes all different options.
+    * Pagerank possible values are 0 and 0.25 */
+    private void runfullEval()
+            throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+        _search = new Search();
+        _search.search("1");
+        _search.setPagerankWeight(0);
+        themisEval eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval.start();
+        _search.setPagerankWeight(0.25);
+        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval.start();
+        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval.start();
+    }
+
     /**
      * Prints a string to view or to console if view is null.
      *
