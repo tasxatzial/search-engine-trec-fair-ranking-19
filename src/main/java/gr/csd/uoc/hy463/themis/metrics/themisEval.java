@@ -98,13 +98,13 @@ public class themisEval {
         Themis.print("-> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
-        Themis.print("Citations Pagerank weight: " + _search.getPagerankWeight() + "\n\n");
+        Themis.print("Citations Pagerank weight: " + _search.getCitationsPagerankWeight() + "\n\n");
         evaluationWriter.write("Index path: " + __CONFIG__.getIndexPath() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
-        evaluationWriter.write("Citations Pagerank weight: " + _search.getPagerankWeight() + "\n\n");
+        evaluationWriter.write("Citations Pagerank weight: " + _search.getCitationsPagerankWeight() + "\n\n");
 
         evaluate(judgementsReader, evaluationWriter);
     }

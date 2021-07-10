@@ -34,7 +34,7 @@ public class Glove extends QueryExpansion {
      */
     public Glove(boolean useStopwords)
             throws ExpansionDictionaryInitException, ConfigLoadException {
-        Themis.print(">>> Initializing Glove...");
+        Themis.print("-> Initializing Glove...");
         Config __CONFIG__;
         try {
             __CONFIG__ = new Config();
@@ -52,7 +52,7 @@ public class Glove extends QueryExpansion {
         _nearest = 1;
 
         _useStopwords = useStopwords;
-        Themis.print("DONE\n");
+        Themis.print("Done\n");
     }
 
     /**

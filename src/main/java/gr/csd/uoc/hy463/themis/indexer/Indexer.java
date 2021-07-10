@@ -42,7 +42,8 @@ import org.apache.logging.log4j.Logger;
  */
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
-    private double _pagerankWeight;
+    private double _citationsPagerankWeight;
+    private double[] _citationsPagerank;
 
     /* General configuration options */
     private final Config __CONFIG__;
@@ -120,7 +121,6 @@ public class Indexer {
         __DOCUMENTS_META_FILENAME__ = __CONFIG__.getDocumentsMetaFileName();
         __DOCUMENTS_ID_FILENAME__ = __CONFIG__.getDocumentsIDFileName();
         __META_FILENAME__ = __CONFIG__.getMetaFileName();
-        _pagerankWeight = __CONFIG__.getPagerankPublicationsWeight();
     }
 
     /**
@@ -841,10 +841,11 @@ public class Indexer {
 
     /**
      * Loads the index from the 'index' folder. The following take place:
-     * 1) The 'vocabulary' file is loaded in memory
-     * 2) The 'postings' and 'documents' file are opened
-     * 3) The 'documents_id' and 'documents_meta' files are memory mapped
-     * 4) The index configuration options from 'index_meta' file are loaded in memory
+     * 1) The 'vocabulary' file is loaded in memory.
+     * 2) The 'postings' and 'documents' file are opened.
+     * 3) The 'documents_id' and 'documents_meta' files are memory mapped.
+     * 4) The index configuration options from 'index_meta' file are loaded in memory.
+     * 5) The pagerank scores of the citations are loaded in memory.
      *
      * @return
      * @throws IndexNotLoadedException
@@ -882,6 +883,16 @@ public class Indexer {
             __DOCID_BUFFERS__ = new DocumentBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentIDEntry.totalSize);
             __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
             __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
+
+            /* load pagerank scores */
+            _citationsPagerankWeight = __CONFIG__.getPagerankPublicationsWeight();
+            int documents = Integer.parseInt(_INDEX_META__.get("documents"));
+            _citationsPagerank = new double[documents];
+            for (int i = 0; i < documents; ++i) {
+                long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET;
+                ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
+                _citationsPagerank[i] = buffer.getDouble();
+            }
         }
         catch (IOException e) {
             throw new IndexNotLoadedException();
@@ -942,6 +953,7 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
+        _citationsPagerank = null;
     }
 
     /**
@@ -1200,7 +1212,8 @@ public class Indexer {
                 __DOCUMENTS__ != null &&
                 __DOCMETA_BUFFERS__ != null &&
                 __DOCID_BUFFERS__ != null &&
-                _INDEX_META__ != null;
+                _INDEX_META__ != null &&
+                _citationsPagerank != null;
     }
 
     /**
@@ -1301,26 +1314,6 @@ public class Indexer {
             tokenCount[i] = buffer.getInt();
         }
         return new OKAPIprops(tokenCount);
-    }
-
-    /**
-     * Returns an array of the Pagerank scores of the documents.
-     * @return
-     * @throws IndexNotLoadedException
-     */
-    public double[] getPagerank()
-            throws IndexNotLoadedException {
-        if (!loaded()) {
-            throw new IndexNotLoadedException();
-        }
-        int documents = Integer.parseInt(_INDEX_META__.get("documents"));
-        double[] pagerank = new double[documents];
-        for (int i = 0; i < documents; ++i) {
-            long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET;
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
-            pagerank[i] = buffer.getDouble();
-        }
-        return pagerank;
     }
 
     /**
@@ -1533,8 +1526,8 @@ public class Indexer {
      *
      * @param weight
      */
-    public void set_pagerankWeight(double weight) {
-        _pagerankWeight = weight;
+    public void set_citationsPagerankWeight(double weight) {
+        _citationsPagerankWeight = weight;
     }
 
     /**
@@ -1542,7 +1535,15 @@ public class Indexer {
      *
      * @return
      */
-    public double get_pagerankWeight() {
-        return _pagerankWeight;
+    public double get_citationsPagerankWeight() {
+        return _citationsPagerankWeight;
+    }
+
+    /**
+     * Get the citations pagerank scores
+     * @return
+     */
+    public double[] get_citationsPagerank() {
+        return _citationsPagerank;
     }
 }

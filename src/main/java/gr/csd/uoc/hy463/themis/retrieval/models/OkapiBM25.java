@@ -33,7 +33,6 @@ public class OkapiBM25 extends ARetrievalModel {
         _tokenCount = props.get_tokenCount();
     }
 
-    @Override
     public List<Result> getRankedResults(List<QueryTerm> query, int endResult)
             throws IOException, IndexNotLoadedException {
         List<Result> results = new ArrayList<>();

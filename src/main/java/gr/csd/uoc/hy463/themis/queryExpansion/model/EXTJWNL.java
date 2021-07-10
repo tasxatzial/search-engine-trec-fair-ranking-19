@@ -32,7 +32,7 @@ public class EXTJWNL extends QueryExpansion {
      */
     public EXTJWNL(boolean useStopwords)
             throws ExpansionDictionaryInitException {
-        Themis.print(">>> Initializing extJWNL...");
+        Themis.print("-> Initializing extJWNL...");
         try {
             _dictionary = Dictionary.getDefaultResourceInstance();
         } catch (JWNLException e) {
@@ -42,7 +42,7 @@ public class EXTJWNL extends QueryExpansion {
             _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
         }
         _useStopwords = useStopwords;
-        Themis.print("DONE\n");
+        Themis.print("Done\n");
     }
 
     /**

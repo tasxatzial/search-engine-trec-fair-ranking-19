@@ -114,12 +114,12 @@ public class Themis {
     }
 
     /* Runs a complete set of evaluations that includes all different options.
-    * Pagerank possible values are 0 and 0.25 */
-    private void runfullEval()
+    * Pagerank weight for the document pagerank scores takes values 0 and 0.25 */
+    private static void runfullEval()
             throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _search = new Search();
-        _search.search("1");
-        _search.setPagerankWeight(0);
+        _search.search("1"); // warm-up
+        _search.setCitationsPagerankWeight(0);
         themisEval eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
         eval.start();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
@@ -132,7 +132,7 @@ public class Themis {
         eval.start();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
         eval.start();
-        _search.setPagerankWeight(0.25);
+        _search.setCitationsPagerankWeight(0.25);
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
         eval.start();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
@@ -477,7 +477,7 @@ public class Themis {
             /* get the query text from the GUI text box */
             String query = _view.get_searchField().getText();
             long startTime = System.nanoTime();
-            print(">>> Searching for: " + query + " ... ");
+            print(">>> Searching for: " + query + " ...\n");
 
             /* maximum results that should be returned */
             int endResult = 50;
@@ -491,7 +491,7 @@ public class Themis {
                     /* return top endResult results when the retrieval model is VSM/Okapi */
                     results = _search.search(_view.get_searchField().getText(), endResult);
                 }
-                print("DONE\nSearch time: " + new Time(System.nanoTime() - startTime) + "\n");
+                print("Search time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + _search.getTotalResults() + " results\n");
                 if (_search.getTotalResults() != 0 && _search.getRetrievalmodel() != ARetrievalModel.MODEL.EXISTENTIAL) {
                     print("Returning top " + Math.min(_search.getTotalResults(), endResult) + " results\n");

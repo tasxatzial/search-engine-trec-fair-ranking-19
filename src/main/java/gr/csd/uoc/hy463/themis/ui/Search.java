@@ -79,7 +79,7 @@ public class Search {
             _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
-        Themis.print("Default citations pagerank weight: " + _indexer.get_pagerankWeight() + "\n");
+        Themis.print("Default citations pagerank weight: " + _indexer.get_citationsPagerankWeight() + "\n");
         Themis.print("Ready\n\n");
     }
 
@@ -364,8 +364,8 @@ public class Search {
      *
      * @param weight
      */
-    public void setPagerankWeight(double weight) {
-        _indexer.set_pagerankWeight(weight);
+    public void setCitationsPagerankWeight(double weight) {
+        _indexer.set_citationsPagerankWeight(weight);
     }
 
     /**
@@ -373,8 +373,8 @@ public class Search {
      *
      * @return
      */
-    public double getPagerankWeight() {
-        return _indexer.get_pagerankWeight();
+    public double getCitationsPagerankWeight() {
+        return _indexer.get_citationsPagerankWeight();
     }
 
     /**
