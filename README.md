@@ -4,8 +4,6 @@ themis is a search engine for scientific articles.
 
 It was built to index and query the collection of documents from the 2019 [TREC Fair Ranking Track](https://fair-trec.github.io/). The entire collection consists of 47 million articles, total size 108GB. The collection indexed was the one released on 2019-01-31.
 
-Other releases may or may not work with this engine and may require a few modifications.
-
 ## Features
 
 * Three retrieval models: Boolean, Vector Space, Okapi.
@@ -19,7 +17,7 @@ Other releases may or may not work with this engine and may require a few modifi
 
 ## Indexing
 
-Indexing took 2h:30m (single thread) on a i9-9900k with 64GB DDR4 RAM and 1GB SSD. Both stemming and stopwords were enabled. 235 partial indexes were created, these were then merged to create the final index.
+Indexing took 2h:30m on a i9-9900k with 64GB DDR4 RAM and 1TB SSD (single thread). Both stemming and stopwords were enabled. 235 partial indexes were created, these were then merged to create the final index.
 
 The total size of the final index was 40.2GB and maximum disk usage during the process was 56.2GB.
 
@@ -27,9 +25,11 @@ The total size of the final index was 40.2GB and maximum disk usage during the p
 
 635 queries from a judgements file were used for the evaluation of the engine.
 
-The average of the average precision scores is between 70.03 and 71.69. The average of the nDCG scores is between 80.46 and 81.8. These numbers depend on the search parameters (retrieval model/query expansion/pagerank).
+* The average of the average precision scores is between 70.03 and 71.69.
+* The average of the nDCG scores is between 80.46 and 81.8.
+* Average search times for 1M documents was between 0.5s and 0.84s (single thread).
 
-Average search times (single thread) for 1M documents appear to be between 0.5s and 0.84s, again depending on the search parameters.
+These numbers depend on the search parameters (retrieval model/query expansion/pagerank).
 
 ## Results
 
@@ -46,7 +46,9 @@ A lot of effort went into optimizations:
 
 ## Compile
 
-This is a Maven project. Install Maven, then from the command line switch to the 'trec-search-engine' root folder and execute:
+Requirements: Java (8 or 11) & Maven 3.6.3
+
+Install Java and Maven, then from the command line switch to the 'trec-search-engine' root folder and execute:
 
     mvn dependency:copy-dependencies
     mvn package
@@ -84,4 +86,4 @@ See [screenshots](screenshots/).
 
 ## Contributions
 
-Parts of the project were contributed by [Panagiotis Padadakos](https://github.com/papadako).
+Initial parts of the project were contributed by [Panagiotis Padadakos](https://github.com/papadako).
