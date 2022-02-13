@@ -46,26 +46,26 @@ A lot of effort went into optimizations:
 
 ## Compile
 
-Requirements: Java (8 or 11) & Maven 3.6.3
+Java (8 or 11) & Maven 3.6.3
 
-Install Java and Maven, then from the command line switch to the 'trec-search-engine' root folder and execute:
+From the command line switch to the root folder of the project and execute:
 
     mvn dependency:copy-dependencies
     mvn package
 
-The first command should copy all .jar dependecies in the 'trec-search-engine/target/dependency' folder. The second command should build the final executable jar file in the 'trec-search-engine/target' folder.
+The first command should copy all .jar dependecies in the 'target/dependency' folder. The second command should build the final executable jar file in the 'target' folder.
 
 ## Run
 
 ### Running the project without a GUI
 
-Write the code that will be executed in the main function of the class gr.csd.uoc.hy463.themis.Themis. Compile the project as specified in the [compile](#Compile) section. Finally, switch to the 'trec-search-engine/target' folder and run the project as:
+Write the code that will be executed in the main function of the class gr.csd.uoc.hy463.themis.Themis. Compile the project as specified in the [compile](#Compile) section. Finally, switch to the 'target' folder and run the project as:
 
     java -Xmx32G -jar fairness-trec-2020-1.0-SNAPSHOT.jar
 
 ### Running the project with a GUI
 
-The GUI gives us access to most of the needed functionality. To enable the GUI, switch to the 'trec-search-engine/target' folder and run the project as:
+The GUI gives us access to most of the needed functionality. To enable the GUI, switch to the 'target' folder and run the project as:
 
     java -Xmx32G -jar fairness-trec-2020-1.0-SNAPSHOT.jar gui
 
