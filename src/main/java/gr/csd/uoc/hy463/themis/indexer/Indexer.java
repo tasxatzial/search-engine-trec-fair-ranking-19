@@ -417,27 +417,26 @@ public class Indexer {
     1) Open all files and keep in PartialVocabulary objects the <term, DF, index ID> of the
     first line from each file. Since the files are sorted, we know that the min lexicographical term will
     correspond to one (or more) of those PartialVocabulary objects.
-    2) Instead of performing a linear search to find the min lexicographical term among the K objects, we
-    use a priority queue java struct and add the objects to it. Adding/removing costs log(K). Also removing
-    an object will give us the min lexicographical term if the queue is sorted based on their term field.
+    2) Instead of performing a linear search to find the min lexicographical term among the K objects, we add them
+    to a min priority queue sorted by term. Adding/removing costs log(K).
     3) We now have the min lexicographical term but the same term might appear in many files.
-    If so, some of the other objects in the queue must correspond to the same term (think why). Therefore we
+    If so, other objects in the queue must also correspond to the same term. Therefore, we
     keep removing objects from the queue until we get a different term. Each time an object is removed,
-    we add to the queue a new object from the partial index with the same ID.
+    we add to the queue a new PartialVocabulary object from the partial index with the same ID.
     4) All the objects that we removed from the queue in the previous step are added to a list which is sorted
     by the index ID. We then write the <index ID, DF> pairs from the list to the 'term_df' file in a single line.
     Note that the partial index ID will appear in increasing order.
-    5) Since we have all objects for the min lexicographical term, we can sum their DF and get the final DF of
-    the term.
+    5) Since we have all objects that correspond to the min lexicographical term, we can sum their DF and find the
+    final DF of the term.
     6) Determining the offset to the 'postings' file is done the same way as when there is only one index to merge.
     See the mergeVocabularies() function.
     7) Finally, we write to the final 'vocabulary' file a <term, DF, postings file offset> line for the min
-    lexicographical term and we repeat the procedure until all partial 'vocabulary' files have been parsed.
+    lexicographical term, and we repeat the procedure until all partial 'vocabulary' files have been parsed.
     */
     private void combinePartialVocabularies(int maxIndexID)
             throws IOException {
 
-        /* open the partial 'vocabulary' file found in every 'index_tmp/index_id' folder */
+        /* open the partial 'vocabulary' file of every partial index */
         BufferedReader[] vocabularyReader = new BufferedReader[maxIndexID + 1];
         for (int i = 0; i <= maxIndexID; i++) {
             String partialVocabularyPath = getPartialVocabularyPath(i);
@@ -453,14 +452,9 @@ public class Indexer {
         /* starting offset to the final 'postings' file */
         long postingsOffset = 0;
 
-        /* Keep the min lexicographical term in a PartialVocabulary object. The object also has the DF of the term
-        * and knows the partial index this term belongs to */
         PartialVocabulary minTermObj;
 
-        /* Read the first line from each 'vocabulary' file and create PartialVocabulary objects. The min
-        * lexicographical term will be in one or more of those objects since all files have their terms sorted.
-        *
-        * First, put the objects in a priority queue */
+        /* Read the first line from each 'vocabulary' file, create PartialVocabulary objects and put them in a priority queue */
         PriorityQueue<PartialVocabulary> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i <= maxIndexID; i++) {
             minTermObj = getNextVocabularyEntry(vocabularyReader[i], i);
@@ -469,31 +463,29 @@ public class Indexer {
             }
         }
 
-        /* put in equalTerms list all PartialVocabulary objects that correspond to the same min lexicographical term */
+        /* list of all PartialVocabulary objects that correspond to the same min lexicographical term */
         List<PartialVocabulary> equalTerms = new ArrayList<>();
 
         /* the current min lexicographical term */
-        String prevMinTerm = null;
+        String currMinTerm = null;
 
-        /* Get an object from the queue. Queue is sorted by the term name so we'll get one that has the
-        * min lexicographical term */
+        /* poll the queue of PartialVocabulary objects */
         while((minTermObj = vocabularyQueue.poll()) != null) {
 
-            /* if the current term is not equal to the previous term, we must process
-            the equalTerms list and write the previous term to the final 'vocabulary' file. Also
-            update the 'term_df' file */
-            if (!minTermObj.get_term().equals(prevMinTerm) && !equalTerms.isEmpty()) {
+            /* if the polled term is not equal to the min term, we must process the equalTerms
+            list and write the min term to the final 'vocabulary' file. Also update the 'term_df' file */
+            if (!minTermObj.get_term().equals(currMinTerm) && !equalTerms.isEmpty()) {
                 postingsOffset = dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
             }
 
-            /* save the current term for the next iteration */
-            prevMinTerm = minTermObj.get_term();
+            /* update the new min term with the one from the last polled term */
+            currMinTerm = minTermObj.get_term();
 
-            /* put the current object in the equalTerms list */
+            /* put the last polled object in the equalTerms list */
             equalTerms.add(minTermObj);
 
-            /* finally add a new object to the queue. It should be created from the next line of the 'vocabulary'
-            * file of the current object */
+            /* read the next line of the 'vocabulary' file that corresponds to the last polled object and add a new
+            PartialVocabulary object to the queue */
             int currIndexID = minTermObj.get_indexID();
             PartialVocabulary nextObj = getNextVocabularyEntry(vocabularyReader[currIndexID], currIndexID);
             if (nextObj != null) {
@@ -502,7 +494,7 @@ public class Indexer {
         }
 
         /* all 'vocabulary' files have been parsed at this moment. Process the equalTerms list and
-        and write the remaining term to the final vocabulary file */
+        and write the remaining terms to the final 'vocabulary' file */
         if (!equalTerms.isEmpty()) {
             dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
         }
@@ -563,7 +555,7 @@ public class Indexer {
         /* write a new line in the final vocabulary file */
         vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + postingsOffset + '\n');
 
-        /* calculate the postings offset for the call of the method */
+        /* calculate the postings offset for the next call of the method */
         postingsOffset +=  df * (long) Posting.totalSize;
 
         equalTerms.clear();
