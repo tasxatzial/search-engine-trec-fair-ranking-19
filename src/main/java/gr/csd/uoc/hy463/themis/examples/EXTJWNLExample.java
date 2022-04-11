@@ -14,6 +14,8 @@ import java.util.List;
 
 /**
  * Class that showcases example of external java wordnet library usage
+ *
+ * @author Panagiotis Papadakos (papadako@ics.forth.gr)
  */
 public class EXTJWNLExample {
 

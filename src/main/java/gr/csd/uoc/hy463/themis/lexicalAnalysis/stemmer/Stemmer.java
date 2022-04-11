@@ -1,14 +1,18 @@
  /*
-    !! Code from mitos web search engine !!
+    !! Code from mitos web search engine, old hy463 project !!
  */
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
+/**
+ * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ */
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english.EnglishStemmer;
 import javax.swing.*;
 
 /*
  * Stemmer Class. A Singleton class responsible for stemming tokes.
  * This code is only for English!
+ *
  */
 public class Stemmer {
 
@@ -66,4 +70,3 @@ public class Stemmer {
     }
 
 } // class Stemmer
-

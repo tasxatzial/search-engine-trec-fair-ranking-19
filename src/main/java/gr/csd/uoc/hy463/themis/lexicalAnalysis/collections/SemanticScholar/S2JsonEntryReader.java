@@ -16,6 +16,9 @@ import java.util.List;
 /**
  * Class responsible for reading textual entries from the JSON description of the documents
  * of the collection
+ *
+ * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class S2JsonEntryReader {
     private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);

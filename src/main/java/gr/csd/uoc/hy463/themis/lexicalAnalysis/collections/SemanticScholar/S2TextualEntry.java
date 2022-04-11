@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * Class that holds all textual information read from an entry of the collection
  * It is used by the S2JSONEntryReader
+ *
+ * @author Panagiotis Papadakos <papadako at ics.forth.gr>
  */
 public class S2TextualEntry {
     private String __ID__ = null;

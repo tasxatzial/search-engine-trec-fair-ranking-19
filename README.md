@@ -84,6 +84,6 @@ Note that any changes to the config file are taken into account only when:
 
 See [screenshots](screenshots/).
 
-## Contributions
+## Contributors
 
 Initial parts of the project were contributed by [Panagiotis Padadakos](https://github.com/papadako).
