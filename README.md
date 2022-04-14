@@ -27,7 +27,7 @@ The total size of the final index was 40.2GB and maximum disk usage during the p
 
 * The average of the average precision scores is between 70.03 and 71.69.
 * The average of the nDCG scores is between 80.46 and 81.8.
-* Average search times for 1M documents was between 0.5s and 0.84s (single thread).
+* Average search time for finding the top 1 million documents was between 0.5s and 0.84s (single thread).
 
 These numbers depend on the search parameters (retrieval model/query expansion/pagerank).
 
