@@ -12,37 +12,39 @@ import java.util.TreeMap;
 
 /**
  * Creates a histogram of the number of occurrences of each character in the collection.
- * The histogram is then written to a file.
  *
- * Used to find the most frequently occurring characters.
+ * Can be used to find the most frequent characters.
  */
-public class S2TextualEntryCharHistogram {
+public class S2TextualEntryHistogram {
 
     /**
-     * Reads the JSON entries from the files in the specified datasetPath and creates a histogram of the number of
-     * occurrences of each character. One histogram is generated per JSON name.
+     * Reads the JSON entries contained in the files located in inPath and creates a histogram of the number of
+     * occurrences of each character (one histogram per JSON property).
      *
-     * @param datasetPath The source folder path. Files have one JSON per line which can be parsed as a textual entry.
-     * @param outPath The histogram will be saved in this folder
+     * @param inPath Path of files that contain JSON
+     * @param outPath Save path of the histograms
      * @throws IOException
      */
-    public static void createCharMap(String datasetPath, String outPath)
+    public static void createHistograms(String inPath, String outPath)
             throws IOException {
-        BufferedWriter charWriter = new BufferedWriter(new OutputStreamWriter
+        BufferedWriter outFile = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(outPath), "UTF-8"));
 
-        /* the dataset file that is being parsed */
+        /* the file that is being parsed */
         BufferedReader currentDataFile;
 
-        File folder = new File(datasetPath);
+        File folder = new File(inPath);
         File[] files = folder.listFiles();
         if (files == null) {
             return;
         }
         String json;
+
+        /* the parsed file has one JSON per line that can be parsed into a S2TextualEntry */
         S2TextualEntry entry;
 
-        /* a character map for each field of the textual entry */
+        /* a character map for each field of the S2TextualEntry. A map contains
+           pairs of <character, frequency>  */
         Map<Integer, Integer> titles = new HashMap<>();
         Map<Integer, Integer> abstracts = new HashMap<>();
         Map<Integer, Integer> entities = new HashMap<>();
@@ -58,51 +60,51 @@ public class S2TextualEntryCharHistogram {
                 entry = S2JsonEntryReader.readTextualEntry(json);
 
                 String entryTitle = entry.getTitle();
-                addToCharMap(titles, entryTitle);
+                addToHistogram(titles, entryTitle);
 
                 String entryAbstract = entry.getPaperAbstract();
-                addToCharMap(abstracts, entryAbstract);
+                addToHistogram(abstracts, entryAbstract);
 
                 List<String> entryEntity = entry.getEntities();
                 for (String s : entryEntity) {
-                    addToCharMap(entities, s);
+                    addToHistogram(entities, s);
                 }
 
                 List<String> entryFieldOfStudy = entry.getFieldsOfStudy();
                 for (String s : entryFieldOfStudy) {
-                    addToCharMap(fieldsOfStudy, s);
+                    addToHistogram(fieldsOfStudy, s);
                 }
 
                 List<Pair<String, List<String>>> entryAuthorName = entry.getAuthors();
                 for (Pair<String, List<String>> stringListPair : entryAuthorName) {
-                    addToCharMap(authorNames, stringListPair.getL());
+                    addToHistogram(authorNames, stringListPair.getL());
                 }
 
                 String entryVenue = entry.getVenue();
-                addToCharMap(venues, entryVenue);
+                addToHistogram(venues, entryVenue);
 
                 String entryJournalName = entry.getJournalName();
-                addToCharMap(journalNames, entryJournalName);
+                addToHistogram(journalNames, entryJournalName);
 
                 List<String> entrySource = entry.getSources();
                 for (String s : entrySource) {
-                    addToCharMap(sources, s);
+                    addToHistogram(sources, s);
                 }
             }
         }
-        writeField(charWriter, DocInfo.PROPERTY.TITLE, titles);
-        writeField(charWriter, DocInfo.PROPERTY.ABSTRACT, abstracts);
-        writeField(charWriter, DocInfo.PROPERTY.ENTITIES, entities);
-        writeField(charWriter, DocInfo.PROPERTY.FIELDS_OF_STUDY, fieldsOfStudy);
-        writeField(charWriter, DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
-        writeField(charWriter, DocInfo.PROPERTY.VENUE, venues);
-        writeField(charWriter, DocInfo.PROPERTY.JOURNAL_NAME, journalNames);
-        writeField(charWriter, DocInfo.PROPERTY.SOURCES, sources);
-        charWriter.close();
+        writeHistogram(outFile, DocInfo.PROPERTY.TITLE, titles);
+        writeHistogram(outFile, DocInfo.PROPERTY.ABSTRACT, abstracts);
+        writeHistogram(outFile, DocInfo.PROPERTY.ENTITIES, entities);
+        writeHistogram(outFile, DocInfo.PROPERTY.FIELDS_OF_STUDY, fieldsOfStudy);
+        writeHistogram(outFile, DocInfo.PROPERTY.AUTHORS_NAMES, authorNames);
+        writeHistogram(outFile, DocInfo.PROPERTY.VENUE, venues);
+        writeHistogram(outFile, DocInfo.PROPERTY.JOURNAL_NAME, journalNames);
+        writeHistogram(outFile, DocInfo.PROPERTY.SOURCES, sources);
+        outFile.close();
     }
 
-    /* adds all characters of the specified string to the character map */
-    private static void addToCharMap(Map<Integer, Integer> charMap, String field) {
+    /* expands the histogram by taking into account the characters in the field string */
+    private static void addToHistogram(Map<Integer, Integer> charMap, String field) {
         for (int pos = 0; pos < field.length(); ) {
             int cp = field.codePointAt(pos);
             int count = Character.charCount(cp);
@@ -111,14 +113,14 @@ public class S2TextualEntryCharHistogram {
         }
     }
 
-    /* writes to file the character map associated with the specified DocInfo property */
-    private static void writeField(BufferedWriter writer, DocInfo.PROPERTY property, Map<Integer, Integer> charMap)
+    /* writes the histogram to outFile */
+    private static void writeHistogram(BufferedWriter outFile, DocInfo.PROPERTY property, Map<Integer, Integer> charMap)
             throws IOException {
         Map<Integer, Integer> sortedCharMap = new TreeMap<>(new MapValueComparator(charMap));
         sortedCharMap.putAll(charMap);
-        writer.write("--------------------" + property + "------------------\n");
+        outFile.write("--------------------" + property + "------------------\n");
         for (Map.Entry<Integer, Integer> c : sortedCharMap.entrySet()) {
-            writer.write(new String(Character.toChars(c.getKey()))  + " " + c.getValue() + "\n");
+            outFile.write(new String(Character.toChars(c.getKey()))  + " " + c.getValue() + "\n");
         }
     }
 }

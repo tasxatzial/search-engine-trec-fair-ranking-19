@@ -4,9 +4,10 @@ import java.util.*;
 
 /**
  * This class holds any information we might want to communicate with the retrieval model.
- * The DocInfo.PROPERTY corresponds to the JSON field names of the documents.
+ * Each instance corresponds to a document.
  */
 public class DocInfo {
+    /* names of all possible document properties */
     public enum PROPERTY {
         TITLE,
         ABSTRACT,
@@ -26,14 +27,14 @@ public class DocInfo {
         DOCUMENT_SIZE
     }
 
-    /* Keep an integer as the ID of each Object */
-    private final int _id;
+    /* The unique ID of each instance */
+    private final int _docID;
 
-    /* the JSON properties this object currently has */
+    /* The properties for this instance along with their corresponding values */
     private final Map<PROPERTY, Object> _props = new HashMap<>(0);
 
-    public DocInfo(int id) {
-        _id = id;
+    public DocInfo(int docID) {
+        _docID = docID;
     }
 
     public void setProperty(DocInfo.PROPERTY prop, Object value) {
@@ -52,32 +53,32 @@ public class DocInfo {
         return _props.containsKey(prop);
     }
 
-    public int get_id() {
-        return _id;
+    public int get_docID() {
+        return _docID;
     }
 
     /**
-     * Returns the offset to the documents_meta file from the specified int ID
+     * Returns the offset to DOCUMENTS_META_FILENAME
      *
-     * @param id
+     * @param docID
      * @return
      */
-    public static long getMetaOffset(int id) {
-        return (long) id * DocumentMetaEntry.totalSize;
+    public static long getMetaOffset(int docID) {
+        return (long) docID * DocumentMetaEntry.SIZE;
     }
 
     /**
-     * Returns the offset to the documents_id file from the specified int ID
+     * Returns the offset to DOCUMENTS_ID_FILENAME
      *
-     * @param id
+     * @param docID
      * @return
      */
-    public static long getDocIdOffset(int id) {
-        return (long) id * DocumentIDEntry.totalSize;
+    public static long getDocIDOffset(int docID) {
+        return (long) docID * DocumentStringID.SIZE;
     }
 
     /**
-     * Returns a copy of the JSON properties that this DocInfo currently has
+     * Returns a copy of the keys of the _props map.
      *
      * @return
      */

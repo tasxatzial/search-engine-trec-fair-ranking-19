@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Class that showcases example of BERT usage
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class BertExample {
 

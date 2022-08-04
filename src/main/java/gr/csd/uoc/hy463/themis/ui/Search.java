@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
- * A simple ui to search the indexes
+ * Perform a search.
  */
 public class Search {
     private final Indexer _indexer;
@@ -35,7 +35,7 @@ public class Search {
     private Set<DocInfo.PROPERTY> _props;
 
     /**
-     * Initializes the Indexer, the expansion dictionary and loads the index from the 'index' folder.
+     * Initializes the Indexer, the expansion dictionary, and loads the index from INDEX_PATH.
      * Reads configuration options from themis.config file.
      *
      * @throws ExpansionDictionaryInitException
@@ -72,6 +72,8 @@ public class Search {
                 case "extJWNL":
                     _queryExpansion = new EXTJWNL(_indexer.useStopwords());
                     break;
+                default:
+                    throw new ExpansionDictionaryInitException();
             }
             Themis.print("Default query expansion model: " + expansionModel + "\n");
         }
@@ -79,22 +81,23 @@ public class Search {
             _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
-        Themis.print("Default citations pagerank weight: " + _indexer.get_citationsPagerankWeight() + "\n");
+        Themis.print("Default Pagerank weight (documents): " + _indexer.getDocumentPagerankWeight() + "\n");
         Themis.print("Ready\n\n");
     }
 
     /**
-     * Returns true iff index is loaded, false otherwise
+     * Returns true if index is loaded, false otherwise
      *
      * @return
      */
     public boolean isIndexLoaded() {
-        return _indexer.loaded();
+        return _indexer.isloaded();
     }
 
     /**
-     * Unloads an index from memory. Note that currently there is no method in this class to load an index
-     * except from creating a new Search instance.
+     * Unloads the index from memory.
+     *
+     * Note: Currently there is no method in this class that re-loads the index.
      *
      * @throws IOException
      */
@@ -209,19 +212,19 @@ public class Search {
     }
 
     /**
-     * Returns the string doc ID from an int ID. This operation requires an already loaded index.
+     * Returns the string ID from an int ID
      *
-     * @param intId
+     * @param docID
      * @return
      * @throws IndexNotLoadedException
      * @throws UnsupportedEncodingException
      */
-    public String getDocID(int intId)
+    public String getDocID(int docID)
             throws IndexNotLoadedException, UnsupportedEncodingException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
-        return _indexer.getDocID(intId);
+        return _indexer.getDocID(docID);
     }
 
     /**
@@ -240,8 +243,7 @@ public class Search {
     }
 
     /**
-     * Searches for a query and returns a ranked list of results. A maximum of endResult results are returned.
-     * This operation requires an already loaded index.
+     * Queries the index and returns a ranked list of results. A maximum of endResult results are returned.
      *
      * @param query
      * @param endResult From 0 to Integer.MAX_VALUE
@@ -259,8 +261,8 @@ public class Search {
         boolean useStopwords = _indexer.useStopwords();
         boolean useStemmer = _indexer.useStemmer();
 
-        /* for each term of the initial query, keep 1 extra term from the query expansion */
-        int newTermsPerTerm = 1;
+        /* for each term of the initial query, keep 1 extra term from the expanded query */
+        int extraTerms = 1;
 
         List<QueryTerm> newQuery = new ArrayList<>();
 
@@ -280,16 +282,20 @@ public class Search {
             }
         }
 
-        /* expand the new query based on an expansion dictionary and update the query */
+        /* finally, use the expansion dictionary */
         if (_queryExpansion != null) {
 
-            /* the expanded query consists of a list of lists */
+            /* the expanded query is a list of lists */
             List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery);
 
+            /* process the list, each item is a list and corresponds to term of the query */
             for (int i = 0; i < expandedQuery.size(); i++) {
 
-                /* first item on the i-th list is the original term of the query */
-                String originalTerm = expandedQuery.get(i).get(0).get_term().toLowerCase();
+                /* get the expanded list of terms for the i-th term */
+                List<QueryTerm> expandedTermList = expandedQuery.get(i);
+
+                /* first item should be the original term from the query */
+                String originalTerm = expandedTermList.get(0).get_term().toLowerCase();
 
                 /* proceed to the next list if the original term is stopword or is a multiple token string */
                 if (originalTerm.split(" ").length > 1) {
@@ -304,13 +310,10 @@ public class Search {
                     originalTerm = ProcessText.applyStemming(originalTerm);
                 }
 
-                /* get the expanded list of terms related to the original term (original term is first in the list) */
-                List<QueryTerm> expandedTermList = expandedQuery.get(i);
-
-                /* examine the list and keep at most newTermsPerTerm */
+                /* keep at most extraTerms from the expanded list */
                 int count = 0;
                 for (int j = 1; j < expandedTermList.size(); j++) {
-                    if (count == newTermsPerTerm) {
+                    if (count == extraTerms) {
                         break;
                     }
                     if (expandedTermList.get(j).get_term().split(" ").length > 1) {
@@ -360,21 +363,21 @@ public class Search {
     }
 
     /**
-     * Set the citations pagerank weight
+     * Sets the weight for the pagerank scores of the documents
      *
      * @param weight
      */
-    public void setCitationsPagerankWeight(double weight) {
-        _indexer.set_citationsPagerankWeight(weight);
+    public void setDocumentPagerankWeight(double weight) {
+        _indexer.setDocumentPagerankWeight(weight);
     }
 
     /**
-     * Get the citations pagerank weight
+     * Gets the weight for the pagerank scores of the documents
      *
      * @return
      */
-    public double getCitationsPagerankWeight() {
-        return _indexer.get_citationsPagerankWeight();
+    public double getDocumentPagerankWeight() {
+        return _indexer.getDocumentPagerankWeight();
     }
 
     /**
@@ -393,8 +396,8 @@ public class Search {
             return;
         }
 
-        /* startResult and endResult might be out of the range in the list of results
-        therefore we need to find the correct indexes */
+        /* startResult and endResult can be anything therefore we need to compute the correct
+        * values based on the actual results */
         int firstDisplayedResult = Math.max(startResult, 0);
         int lastDisplayedResult = Math.min(endResult, searchResults.size() - 1);
         if (firstDisplayedResult > lastDisplayedResult) {
@@ -410,7 +413,7 @@ public class Search {
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");
-            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.get_id()) + "\n");
+            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.get_docID()) + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 if (docInfo.hasProperty(docInfoProp)) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");

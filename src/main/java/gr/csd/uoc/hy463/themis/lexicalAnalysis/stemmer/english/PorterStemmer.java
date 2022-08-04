@@ -3,7 +3,6 @@
  */
 
  /*
-
    Porter stemmer in Java. The original paper is in
 
        Porter, 1980, An algorithm for suffix stripping, Program, Vol. 14,
@@ -33,19 +32,17 @@
    from Brian Goetz of Quiotix Corporation (brian@quiotix.com).
 
    Release 4
-
  */
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english;
 
-/**
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
- */
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
  *
  * The Stemmer class transforms a word into its root form. The input word can be
  * provided a character at time (by calling add()), or at once by calling one of
  * the various stem(something) methods.
+ *
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 class PorterStemmer {
 

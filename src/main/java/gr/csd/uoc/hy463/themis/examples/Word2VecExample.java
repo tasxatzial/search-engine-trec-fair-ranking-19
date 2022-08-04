@@ -12,7 +12,7 @@ import java.util.Collection;
 /**
  * Class that showcases example of word2vec models, deep learning model from google
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class Word2VecExample {
 
@@ -22,7 +22,7 @@ public class Word2VecExample {
 
         Config __CONFIG__ = new Config();  // reads info from themis.config file
 
-        File googleNewsModel = new File(__CONFIG__.getWord2VecModelFileName());
+        File googleNewsModel = new File(__CONFIG__.getWord2VecModelPath());
         // This will take some time!
         // Classic model pre-trained Google News corpus (3 billion running words)
         // https://code.google.com/archive/p/word2vec/

@@ -12,7 +12,7 @@ import java.util.Collection;
 /**
  * Class that showcases example of Glove usage
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class GloveExample {
 
@@ -21,7 +21,7 @@ public class GloveExample {
     public static void main(String[] args) throws Exception {
         Config __CONFIG__ = new Config();  // reads info from themis.config file
 
-        File gloveModel = new File(__CONFIG__.getGloveModelFileName());
+        File gloveModel = new File(__CONFIG__.getGloveModelPath());
         // This will take some time!
         // Wikipedia 2014 + Gigaword 5  from https://nlp.stanford.edu/projects/glove/
         __LOGGER__.info("Loading  model! This will take some time and memory. Please wait...");

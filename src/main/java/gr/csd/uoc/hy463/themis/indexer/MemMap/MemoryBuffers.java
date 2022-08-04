@@ -6,9 +6,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Implements the memory mapped file concept.
@@ -23,9 +20,9 @@ public abstract class MemoryBuffers {
     protected String _filePath;
 
     /**
-     * Creates a list of ByteBuffers using the specified list of bufferOffsets. These are the file offsets
-     * that determine the size of each ByteBuffer. For example if the list is (0, 10, 20), two ByteBuffers
-     * will be created, one for bytes 1-10 and one for bytes 11-20.
+     * Initializes the array of _buffers using the array of _offsets. These are the file offsets
+     * that determine the size of each buffer. For example if the offsets array is (0, 10, 20), two buffers
+     * will be created, one for bytes 0-9 and one for bytes 10-19.
      *
      * @param mode READ or WRITE
      * @throws IOException
@@ -54,13 +51,13 @@ public abstract class MemoryBuffers {
     }
 
     /**
-     * Returns the ByteBuffer that contains specified offset. It also sets the
-     * position of the ByteBuffer so that we can start reading from the specified offset.
+     * Returns the buffer that contains the data at the given file offset. It also sets the
+     * position of the buffer so that we can start reading the data that begins at offset.
      *
      * @param offset
      * @return
      */
-    public ByteBuffer memBuffer(long offset) {
+    public ByteBuffer getMemBuffer(long offset) {
         if (offset < 0 || offset >= _offsets[_offsets.length - 1]) {
             throw new IndexOutOfBoundsException();
         }
@@ -76,7 +73,7 @@ public abstract class MemoryBuffers {
     }
 
     /**
-     * Unmaps the current file from memory and closes all files
+     * Unmaps the memory mapped file and closes all files
      *
      * @throws IOException
      */
@@ -89,12 +86,17 @@ public abstract class MemoryBuffers {
         _offsets = new long[0];
     }
 
-    /* Returns the size of the buffer at the specified index */
+    /* Returns the size of buffer[index] (in bytes) */
     protected final int getBufferSize(int index) {
         return (int) (_offsets[index + 1] - _offsets[index]);
     }
 
-    /* Returns the size of the current memory mapped file */
+    /* Returns the buffer[index] */
+    protected ByteBuffer getBuffer(int index) {
+        return _buffers[index];
+    }
+
+    /* Returns the size of the memory mapped file (in bytes) */
     protected final long getFileSize() {
         return new File(_filePath).length();
     }
@@ -102,10 +104,5 @@ public abstract class MemoryBuffers {
     /* Returns the number of buffers */
     protected int totalBuffers() {
         return _buffers.length;
-    }
-
-    /* Returned the buffer at the specified index */
-    protected ByteBuffer getBuffer(int index) {
-        return _buffers[index];
     }
 }

@@ -1,37 +1,35 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Holds the required data for an entry in the 'postings' file:
- * - TF = frequency of the term in the relevant document
- * - The int ID of the relevant document
+ * Stores the required data for an entry in POSTINGS_FILENAME:
+ * - TF (frequency of a term in the relevant document)
+ * - The ID of the relevant document
  */
 public class Posting {
-    private final int _tf;
-    private final int _intID;
+    private final int _TF;
+    private final int _docID;
 
-    /* sizes of individual records in an entry e.g. TF has size 4
-     * Records appear in the file in the same order as here */
+    /* int => 4 bytes */
     public static int TF_SIZE = 4;
-    public static int INTID_SIZE = 4;
-
-    /* offset of individual records in an entry e.g. TF has offset 0
-    Records appear in the file in the same order as here */
     public static int TF_OFFSET = 0;
-    public static int INTID_OFFSET = 4;
+
+    /* int => 4 bytes */
+    public static int DOCID_SIZE = 4;
+    public static int DOCID_OFFSET = 4;
 
     /* total size of all records in an entry */
-    public static int totalSize = TF_SIZE + INTID_SIZE;
+    public static int SIZE = TF_SIZE + DOCID_SIZE;
 
-    public Posting(int tf, int intID) {
-        _tf = tf;
-        _intID = intID;
+    public Posting(int TF, int docID) {
+        _TF = TF;
+        _docID = docID;
     }
 
-    public int get_tf() {
-        return _tf;
+    public int getTF() {
+        return _TF;
     }
 
-    public int get_intID() {
-        return _intID;
+    public int getDocID() {
+        return _docID;
     }
 }

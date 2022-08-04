@@ -17,18 +17,18 @@ import java.util.List;
  * Class responsible for reading textual entries from the JSON description of the documents
  * of the collection
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class S2JsonEntryReader {
     private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);
 
     /**
-     * Method that reads the doc Id from a JSON string
+     * Method that reads the doc ID from a JSON string
      * @param jsonToRead
      * @return
      */
-    public static S2TextualEntry readDocIdEntry(String jsonToRead) {
+    public static S2TextualEntry readDocIDEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
         try {
@@ -37,9 +37,8 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the id for example
-            String id = (String) jsonObject.get("id");
-            entry.setId(id);
+            String ID = (String) jsonObject.get("id");
+            entry.setID(ID);
         } catch (ParseException e) {
             __LOGGER__.error(e.getMessage());
         }
@@ -47,7 +46,7 @@ public class S2JsonEntryReader {
     }
 
     /**
-     * Method that reads all textual information from a JSON string
+     * Method that reads all textual information from a JSON string (except IN and OUT citations)
      * @param jsonToRead
      * @return
      */
@@ -60,9 +59,9 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the id
-            String id = (String) jsonObject.get("id");
-            entry.setId(id);
+            // Get the ID
+            String ID = (String) jsonObject.get("id");
+            entry.setID(ID);
 
             // Get the title
             String titleCheck = (String) jsonObject.get("title");
@@ -102,15 +101,15 @@ public class S2JsonEntryReader {
                     JSONObject authorInfo = (JSONObject) authorsList.get(i);
                     String authorName = (String) authorInfo.get("name");
                     // Now get all the ids
-                    JSONArray idsList = (JSONArray) authorInfo.get("ids");
-                    List<String> ids = new ArrayList<>();
-                    if(idsList != null) {
-                        for (int j = 0; j < idsList.size(); j++) {
-                            String ID = (String) idsList.get(j);
-                            ids.add(ID);
+                    JSONArray IDsList = (JSONArray) authorInfo.get("ids");
+                    List<String> IDs = new ArrayList<>();
+                    if(IDsList != null) {
+                        for (int j = 0; j < IDsList.size(); j++) {
+                            ID = (String) IDsList.get(j);
+                            IDs.add(ID);
                         }
                     }
-                    Pair author = new Pair(authorName, ids);
+                    Pair author = new Pair(authorName, IDs);
                     authors.add(author);
                 }
             }
@@ -149,7 +148,7 @@ public class S2JsonEntryReader {
     }
 
     /**
-     * Method that reads the In and Out citations from a JSON string
+     * Method that reads the IN and OUT citations from a JSON string
      * @param jsonToRead
      * @return
      */
@@ -162,9 +161,9 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the id for example
-            String id = (String) jsonObject.get("id");
-            entry.setId(id);
+            // Get the ID for example
+            String ID = (String) jsonObject.get("id");
+            entry.setID(ID);
 
             // Read out citations. A JSONArray
             JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");

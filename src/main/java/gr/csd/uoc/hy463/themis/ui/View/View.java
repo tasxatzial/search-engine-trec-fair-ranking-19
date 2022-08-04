@@ -82,7 +82,7 @@ public class View extends JFrame {
         UIManager.put("RadioButtonMenuItem.font", font);
         initMenu();
         pack();
-        setTitle("Themis search engine v1");
+        setTitle("Themis search engine v1.0");
         setSize(800, 600); //initial frame size
         _mainPane = new JLayeredPane();
         initTitleArea();
@@ -273,7 +273,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Sets the proper bounds of the search results area
+     * Sets the proper bounds of the results area
      */
     public void setSearchViewBounds() {
         if (!_searchInitialized) {
@@ -312,7 +312,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Clears the query text box
+     * Clears the search box
      */
     public void clearQuery() {
         if (_searchField != null) {
@@ -321,7 +321,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Shows a yes/no selection dialog.
+     * Shows a yes/no selection dialog
      *
      * @param message A question
      * @return true if the yes button is clicked, false otherwise.
@@ -339,7 +339,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Prints the provided text to the results text area
+     * Prints the given text to the results area
      * @param text
      * @throws IOException
      */
@@ -463,7 +463,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Checks the menu radio button that corresponds to the specified retrieval model
+     * Checks the menu radio button that corresponds to the given retrieval model
      * @param model
      */
     public void checkRetrievalModel(ARetrievalModel.MODEL model) {
@@ -476,7 +476,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Checks the menu radio button that corresponds to the specified query expansion dictionary
+     * Checks the menu radio button that corresponds to the given query expansion dictionary
      * @param dictionary
      */
     public void checkExpansionDictionary(QueryExpansion.DICTIONARY dictionary) {

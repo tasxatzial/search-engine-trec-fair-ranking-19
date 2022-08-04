@@ -1,57 +1,56 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.indexer.model.DocInfoFrequency;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
- * Creates the map of term frequencies from a S2TextualEntry
+ * Create a map of term -> TF (term frequency) from a S2TextualEntry.
  */
-public class S2TextualEntryTermFrequencies {
+public class S2TextualEntryTokens {
     private final boolean _useStemmer;
     private final boolean _useStopwords;
 
-    public S2TextualEntryTermFrequencies(boolean useStemmer, boolean useStopwords) {
+    public S2TextualEntryTokens(boolean useStemmer, boolean useStopwords) {
         _useStemmer = useStemmer;
         _useStopwords = useStopwords;
     }
 
     /**
-     * Creates the map of term frequencies from a S2TextualEntry
+     * Creates a map of term -> TF from a S2TextualEntry.
      *
      * @param entry
      * @return
      */
-    public Map<String, Integer> createWordsMap(S2TextualEntry entry) {
-        Map<String, Integer> termTF = new HashMap<>();
+    public Map<String, Integer> createTFMap(S2TextualEntry entry) {
+        Map<String, Integer> TFs = new HashMap<>();
 
-        addToWordsMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , termTF);
-        addToWordsMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, termTF);
+        addToTFMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , TFs);
+        addToTFMap(entry.getPaperAbstract(), DocInfo.PROPERTY.ABSTRACT, TFs);
         for (String entity : entry.getEntities()) {
-            addToWordsMap(entity, DocInfo.PROPERTY.ENTITIES, termTF);
+            addToTFMap(entity, DocInfo.PROPERTY.ENTITIES, TFs);
         }
         for (String fieldsOfStudy : entry.getFieldsOfStudy()) {
-            addToWordsMap(fieldsOfStudy, DocInfo.PROPERTY.FIELDS_OF_STUDY, termTF);
+            addToTFMap(fieldsOfStudy, DocInfo.PROPERTY.FIELDS_OF_STUDY, TFs);
         }
         for (Pair<String, List<String>> author : entry.getAuthors()) {
-            addToWordsMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, termTF);
+            addToTFMap(author.getL(), DocInfo.PROPERTY.AUTHORS_NAMES, TFs);
         }
-        addToWordsMap(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, termTF);
-        addToWordsMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, termTF);
-        addToWordsMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, termTF);
+        addToTFMap(Integer.toString(entry.getYear()), DocInfo.PROPERTY.YEAR, TFs);
+        addToTFMap(entry.getVenue(), DocInfo.PROPERTY.VENUE, TFs);
+        addToTFMap(entry.getJournalName(), DocInfo.PROPERTY.JOURNAL_NAME, TFs);
         for (String source : entry.getSources()) {
-            addToWordsMap(source, DocInfo.PROPERTY.SOURCES, termTF);
+            addToTFMap(source, DocInfo.PROPERTY.SOURCES, TFs);
         }
-        return termTF;
+        return TFs;
     }
 
-    /* Splits a string into tokens, applies stemming/stopwords, and adds the result to the map of term frequencies */
-    private void addToWordsMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> termTF) {
+    /* Splits a string into tokens (terms), applies stemming & stopwords, and finds the frequency TF of each term.
+    * It then adds all <term, TF> pairs to the given map */
+    private void addToTFMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> TFs) {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
@@ -63,16 +62,16 @@ public class S2TextualEntryTermFrequencies {
             if (_useStemmer) {
                 currentToken = ProcessText.applyStemming(currentToken);
             }
-            Integer tf = termTF.get(currentToken);
+            Integer tf = TFs.get(currentToken);
             if (tf != null) {
-                termTF.put(currentToken, tf + 1);
+                TFs.put(currentToken, tf + 1);
             } else {
-                termTF.put(currentToken, 1);
+                TFs.put(currentToken, 1);
             }
         }
     }
 
-    /* Returns the split pattern for the specified DocInfo property */
+    /* Returns the split pattern for the given DocInfo property. */
     private static String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:

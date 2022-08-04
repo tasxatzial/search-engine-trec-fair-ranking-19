@@ -6,7 +6,6 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.utils.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -39,7 +38,7 @@ public class Existential extends ARetrievalModel {
         //merge weights for the same terms
         query = mergeTerms(query);
 
-        int[] dfs = _indexer.getDf(query);
+        int[] dfs = _indexer.getDF(query);
         for (int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
             int[] intIDs = postings.get_intID();

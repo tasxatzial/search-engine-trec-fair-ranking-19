@@ -27,8 +27,8 @@ public class VSM extends ARetrievalModel {
         _documentWeights = new double[_totalDocuments];
         _modelScore = new double[_totalDocuments];
         VSMprops props = _indexer.getVSMprops();
-        _documentWeights = props.get_VSMweights();
-        _maxTfs = props.get_MaxTfs();
+        _documentWeights = props.getVSMweights();
+        _maxTfs = props.getMaxTfs();
     }
 
     @Override
@@ -47,7 +47,7 @@ public class VSM extends ARetrievalModel {
             queryFrequencies.merge(queryTerm.get_term(), queryTerm.get_weight(), Double::sum);
         }
 
-        //max frequency of the terms
+        //query max term frequency
         double queryMaxFrequency = 0;
         for (double frequency : queryFrequencies.values()) {
             if (frequency > queryMaxFrequency) {
@@ -58,7 +58,7 @@ public class VSM extends ARetrievalModel {
         //merge weights for the same terms
         query = mergeTerms(query);
 
-        int[] dfs = _indexer.getDf(query);
+        int[] dfs = _indexer.getDF(query);
 
         //tf * idf of terms
         double[] queryWeights = new double[query.size()];
@@ -78,12 +78,12 @@ public class VSM extends ARetrievalModel {
         //calculate vsm weights
         for (int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
-            int[] intIDs = postings.get_intID();
+            int[] docIDs = postings.get_intID();
             int[] tfs = postings.get_tfs();
             double weight = query.get(i).get_weight();
             double idf = Math.log(_totalDocuments / (1.0 + dfs[i]));
             for (int j = 0; j < dfs[i]; j++) {
-                int id = intIDs[j];
+                int id = docIDs[j];
                 double[] weights = _calculatedWeights[id];
                 if (weights == null) {
                     weights = new double[query.size()];
@@ -115,7 +115,7 @@ public class VSM extends ARetrievalModel {
             maxScore = 1;
         }
         
-        //normalize to [0, 1]
+        //normalize scores to [0, 1]
         for (int i = 0; i < _calculatedWeights.length; i++) {
             if (_calculatedWeights[i] == null) {
                 continue;

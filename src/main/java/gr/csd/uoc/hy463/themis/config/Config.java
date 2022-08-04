@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * Class that holds configuration options for the themis system
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class Config {
@@ -39,12 +39,12 @@ public class Config {
      *
      * @return
      */
-    public boolean valid() {
+    public boolean isValid() {
         return !__PROP__.isEmpty();
     }
 
     /**
-     * a property about the index path
+     * Returns the path of the final index folder
      *
      * @return
      */
@@ -53,7 +53,8 @@ public class Config {
     }
 
     /**
-     * a property about the temporary index path
+     * Returns the path of the temp index folder
+     *
      * @return
      */
     public String getIndexTmpPath() {
@@ -61,7 +62,7 @@ public class Config {
     }
 
     /**
-     * a property about the dataset path
+     * Returns the path of the collection folder
      *
      * @return
      */
@@ -70,7 +71,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of the vocabulary file
+     * Returns the name of the vocabulary file
      *
      * @return
      */
@@ -79,7 +80,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of postings file
+     * Returns the name of the postings file
      *
      * @return
      */
@@ -88,7 +89,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of documents file
+     * Returns the name of the documents file
      *
      * @return
      */
@@ -97,7 +98,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of documents meta file
+     * Returns the name of the documents metadata file
      *
      * @return
      */
@@ -106,7 +107,7 @@ public class Config {
     }
 
     /**
-     * Returns the filename of documents docID file
+     * Returns the name of the documents ID file
      *
      * @return
      */
@@ -115,12 +116,12 @@ public class Config {
     }
 
     /**
-     * Returns the filename of the index meta file
+     * Returns the name of the index options/metadata file
      *
      * @return
      */
-    public String getMetaFileName() {
-        return __PROP__.getProperty("META_FILENAME");
+    public String getIndexMetaFileName() {
+        return __PROP__.getProperty("INDEX_META_FILENAME");
     }
 
     /**
@@ -133,7 +134,7 @@ public class Config {
     }
 
     /**
-     * Returns the weight for the retrieval model
+     * Returns the weight of the scores from the retrieval model
      *
      * @return
      */
@@ -142,25 +143,26 @@ public class Config {
     }
 
     /**
-     * Returns the weight for the publications pagerank weight
+     * Returns the weight of the pagerank scores of the documents
      *
      * @return
      */
-    public double getPagerankPublicationsWeight() {
+    public double getDocumentPagerankWeight() {
         return Double.parseDouble(__PROP__.getProperty("PAGERANK_PUBLICATIONS_WEIGHT"));
     }
 
     /**
-     * Returns the weight for the authors pagerank weight
+     * Returns the weight of the pagerank scores of the authors
      *
      * @return
      */
-    public double getPagerankAuthorsWeight() {
+    public double getAuthorPagerankWeight() {
         return Double.parseDouble(__PROP__.getProperty("PAGERANK_AUTHORS_WEIGHT"));
     }
 
     /**
      * Returns the threshold that determines when the pagerank scores have converged
+     *
      * @return
      */
     public double getPagerankThreshold() {
@@ -169,6 +171,7 @@ public class Config {
 
     /**
      * Returns the pagerank damping factor
+     *
      * @return
      */
     public double getPagerankDampingFactor() {
@@ -176,7 +179,7 @@ public class Config {
     }
 
     /**
-     * Returns if we should user the stemmer
+     * Returns true if the stemmer should be used when creating the index
      *
      * @return
      */
@@ -185,7 +188,7 @@ public class Config {
     }
 
     /**
-     * Returns if we should use the stopwords
+     * Returns true if the list of stopwords should be used when creating the index
      *
      * @return
      */
@@ -194,7 +197,9 @@ public class Config {
     }
 
     /**
-     * Returns the directory that will have the files related to the citations graph
+     * Returns the directory that has the files related to the citations graph. This has nothing
+     * to do with the Pagerank graph.
+     *
      * @return
      */
     public String getCitationsGraphPath() {
@@ -202,7 +207,7 @@ public class Config {
     }
 
     /**
-     * number of max number of files per each partial index
+     * Number of max number of documents per each partial index
      *
      * @return
      */
@@ -216,25 +221,25 @@ public class Config {
     }
 
     /**
-     * Returns the path to the compressed word2vec model
+     * Returns the path to the compressed word2vec model file
      *
      * @return
      */
-    public String getWord2VecModelFileName() {
-        return __PROP__.getProperty("WORD2VEC_FILENAME");
+    public String getWord2VecModelPath() {
+        return __PROP__.getProperty("WORD2VEC_PATH");
     }
 
     /**
-     * Returns the path to the compressed glove model
+     * Returns the path to the compressed glove model file
      *
      * @return
      */
-    public String getGloveModelFileName() {
-        return __PROP__.getProperty("GLOVE_FILENAME");
+    public String getGloveModelPath() {
+        return __PROP__.getProperty("GLOVE_PATH");
     }
 
     /**
-     * Returns the path to the compressed glove model
+     * Returns the path to the judgements file for the evaluation of the index
      *
      * @return
      */
@@ -243,7 +248,8 @@ public class Config {
     }
 
     /**
-     * Returns the path to the filename of the evaluation results
+     * Returns the name of the evaluation results file
+     *
      * @return
      */
     public String getEvaluationFilename() {
@@ -251,7 +257,8 @@ public class Config {
     }
 
     /**
-     * Returns if an query expansion model will be used
+     * Returns true if a query expansion model should be used when querying the index
+     *
      * @return
      */
     public boolean getUseQueryExpansion() {
@@ -260,6 +267,7 @@ public class Config {
 
     /**
      * Returns the name of the query expansion model
+     *
      * @return
      */
     public String getQueryExpansionModel() {
@@ -321,9 +329,6 @@ public class Config {
                 return bytes * ((long) Float.parseFloat(parts.get(0)));
             }
         }
-
         return bytes;
     }
-
-
 }

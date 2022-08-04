@@ -6,7 +6,7 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english;
 /**
  * English Stemmer
  *
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class EnglishStemmer {
 

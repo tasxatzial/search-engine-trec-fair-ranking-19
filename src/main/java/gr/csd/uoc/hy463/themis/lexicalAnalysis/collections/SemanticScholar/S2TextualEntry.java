@@ -2,14 +2,12 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
- * Class that holds all textual information read from an entry of the collection
+ * Class that holds all textual information read from an entry of the collection (document).
  * It is used by the S2JSONEntryReader
  *
- * @author Panagiotis Papadakos <papadako at ics.forth.gr>
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class S2TextualEntry {
     private String __ID__ = null;
@@ -25,12 +23,12 @@ public class S2TextualEntry {
     private List<String> __IN_CITATIONS__ = null;
     private List<String> __OUT_CITATIONS__ = null;
 
-    public String getId() {
+    public String getID() {
         return __ID__;
     }
 
-    public void setId(String id) {
-        this.__ID__ = id;
+    public void setID(String ID) {
+        this.__ID__ = ID;
     }
 
     public String getTitle() {

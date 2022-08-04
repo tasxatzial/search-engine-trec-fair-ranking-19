@@ -27,8 +27,8 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Runs the evaluation for the specified retrieval model and query expansion dictionary
- * specified in the constructor
+ * Runs an evaluation. The retrieval model and query expansion dictionary are
+ * specified in the constructor.
  */
 public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
@@ -59,9 +59,9 @@ public class themisEval {
     }
 
     /**
-     * Initiates the evaluation: Parses the 'judgements' file, performs a search for each query, and writes results
-     * to an 'evaluation' file in the 'index' folder.
-     * The begin date of the evaluation is appended to name of the file.
+     * Runs the evaluation: Parses JUDGEMENTS_FILE, performs a search for each query, and writes results
+     * to EVALUATION_FILENAME located in INDEX_PATH.
+     * EVALUATION_FILENAME has the current date appended to its name.
      *
      * @throws IndexNotLoadedException
      * @throws IOException
@@ -69,10 +69,10 @@ public class themisEval {
      * @throws JWNLException
      * @throws ConfigLoadException
      */
-    public void start()
+    public void run()
             throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
-        String __JUDGEMENTS_PATH__ = __CONFIG__.getJudgmentsPath();
-        if (!(new File(__JUDGEMENTS_PATH__).exists())) {
+        String __JUDGEMENTS_FILE__ = __CONFIG__.getJudgmentsPath();
+        if (!(new File(__JUDGEMENTS_FILE__).exists())) {
             __LOGGER__.info("No judgements file found!");
             Themis.print("No judgements file found!\n");
             return;
@@ -89,22 +89,22 @@ public class themisEval {
         _search.setRetrievalModel(_model);
         _search.setExpansionDictionary(_dictionary);
         _search.setDocumentProperties(new HashSet<>());
-        String __EVALUATION_PATH__ =  __CONFIG__.getIndexPath() + "/" + evaluationFilename;
+        String __EVALUATION_FILE__ =  __CONFIG__.getIndexPath() + "/" + evaluationFilename;
 
-        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_PATH__), "UTF-8"));
-        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_PATH__), "UTF-8"));
+        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
+        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");
-        Themis.print("Saving evaluation results in " + __EVALUATION_PATH__ + "\n");
+        Themis.print("Saving evaluation results in " + __EVALUATION_FILE__ + "\n");
         Themis.print("-> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
-        Themis.print("Citations Pagerank weight: " + _search.getCitationsPagerankWeight() + "\n\n");
+        Themis.print("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
         evaluationWriter.write("Index path: " + __CONFIG__.getIndexPath() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
-        evaluationWriter.write("Citations Pagerank weight: " + _search.getCitationsPagerankWeight() + "\n\n");
+        evaluationWriter.write("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
 
         evaluate(judgementsReader, evaluationWriter);
     }
@@ -133,7 +133,7 @@ public class themisEval {
             JSONArray documentsArray = (JSONArray) jsonObject.get("documents");
             String query = (String) jsonObject.get("query");
 
-            //construct a map of (docId, binary relevance value) for this query
+            //construct a map of [(string) doc ID -> relevance] for this query
             Map<String, Long> relevanceMap = new HashMap<>();
             for (Object o : documentsArray) {
                 JSONObject doc = (JSONObject) o;
@@ -212,7 +212,7 @@ public class themisEval {
         judgementsReader.close();
     }
 
-    /* calculates the average precision given a ranked list of results and a map of (docId, binary relevance value) */
+    /* calculates the average precision given a ranked list of results and a map of [(string) doc ID -> relevance] */
     private double computeAveP(List<Result> results, Map<String, Long> relevanceMap)
             throws UnsupportedEncodingException, IndexNotLoadedException {
         double avep = 0;
@@ -229,7 +229,7 @@ public class themisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().get_id());
+            String docId = _search.getDocID(result.getDocInfo().get_docID());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -244,8 +244,8 @@ public class themisEval {
         return avep;
     }
 
-    /* calculates the nDCG given a ranked list of results and a map of (docId, binary relevance value) */
-    private double computeNdcg(List<Result> results, Map<String, Long> relevanceMap)
+    /* calculates the nDCG given a ranked list of results and a map of [(string) doc ID -> relevance] */
+    private double computeNdcg(List<Result> results, Map<String, Long> docRelevance)
             throws UnsupportedEncodingException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
@@ -253,7 +253,7 @@ public class themisEval {
         int nonSkippedDocuments = 0;
         int relevantDocuments = 0;
 
-        for (long relevance : relevanceMap.values()) {
+        for (long relevance : docRelevance.values()) {
             if (relevance == 1) {
                 relevantDocuments++;
             }
@@ -262,8 +262,8 @@ public class themisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().get_id());
-            Long isJudged = relevanceMap.get(docId);
+            String docId = _search.getDocID(result.getDocInfo().get_docID());
+            Long isJudged = docRelevance.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
                 if (isJudged == 1) {
@@ -379,7 +379,7 @@ public class themisEval {
         return new Time(time.getValue() / list.size());
     }
 
-    /* returns the X as in 'time per X results' based on the specified results size */
+    /* returns the X as in 'time per X results' */
     private static long calculateBaseResults(long resultsSize) {
         if (resultsSize == 0) {
             return 0;
@@ -390,10 +390,10 @@ public class themisEval {
         return resultsSize;
     }
 
-    /* rounds to the given number of decimalPlaces */
-    private static double round(double d, int decimalPlace) {
-        BigDecimal bd = new BigDecimal(Double.toString(d));
-        bd = bd.setScale(decimalPlace, RoundingMode.HALF_UP);
+    /* rounds num to digits decimal places */
+    private static double round(double num, int digits) {
+        BigDecimal bd = new BigDecimal(Double.toString(num));
+        bd = bd.setScale(digits, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
 }

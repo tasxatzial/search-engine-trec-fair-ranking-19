@@ -34,9 +34,8 @@ public abstract class ARetrievalModel {
     }
 
     /**
-     * Method that evaluates the query and returns a list of pairs with
-     * the ranked results. In that list the properties specified in props are retrieved only for the
-     * documents with indexes from 0 to endDoc.
+     * Method that evaluates the query and returns a list of Results sorted by their scores (descending).
+     * The list will contain a maximum endResult number of results.
      *
      * There are various policies to be faster when doing this if we do not want
      * to compute the scores of all queries.
@@ -49,8 +48,6 @@ public abstract class ARetrievalModel {
      * The double is the score of the document as returned by the corresponding
      * retrieval model.
      *
-     * The list must be in descending order according to the score.
-     *
      * @param query
      * @param endResult The returned list will have at most endResult results
      * @return
@@ -61,7 +58,9 @@ public abstract class ARetrievalModel {
             throws IOException, IndexNotLoadedException;
 
     /**
-     * Sorts the specified results based on the citations pagerank scores and the retrieval model score
+     * Sorts the specified results. Uses the pagerank scores of the documents and the scores from the
+     * retrieval model.
+     * The list will contain a maximum of endResult number of results.
      *
      * @param results
      * @param endResult
@@ -69,19 +68,19 @@ public abstract class ARetrievalModel {
      */
     protected List<Result> sort(List<Result> results, int endResult)
             throws IndexNotLoadedException {
-        double citationsPagerankWeight = _indexer.get_citationsPagerankWeight();
-        boolean hasPagerank = Double.compare(citationsPagerankWeight, 0.0) != 0;
+        double documentPagerankWeight = _indexer.getDocumentPagerankWeight();
+        boolean hasPagerank = Double.compare(documentPagerankWeight, 0.0) != 0;
         if (hasPagerank) {
-            double[] _citationsPagerank = _indexer.get_citationsPagerank();
+            double[] documentsPagerank = _indexer.getDocumentsPagerank();
             double maxPagerankScore = 0;
-            double modelWeight = 1 - citationsPagerankWeight;
+            double modelWeight = 1 - documentPagerankWeight;
 
             //normalize pagerank scores
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
-                int id = docInfo.get_id();
-                if (_citationsPagerank[id] > maxPagerankScore) {
-                    maxPagerankScore = _citationsPagerank[id];
+                int id = docInfo.get_docID();
+                if (documentsPagerank[id] > maxPagerankScore) {
+                    maxPagerankScore = documentsPagerank[id];
                 }
             }
             if (Double.compare(maxPagerankScore, 0.0) == 0) {
@@ -92,8 +91,8 @@ public abstract class ARetrievalModel {
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
                 double modelScore = results.get(i).getScore();
-                double pagerankScore = _citationsPagerank[docInfo.get_id()] / maxPagerankScore;
-                double combinedScore = modelScore * modelWeight + pagerankScore * citationsPagerankWeight;
+                double pagerankScore = documentsPagerank[docInfo.get_docID()] / maxPagerankScore;
+                double combinedScore = modelScore * modelWeight + pagerankScore * documentPagerankWeight;
                 results.get(i).setScore(combinedScore);
             }
         }
@@ -116,7 +115,7 @@ public abstract class ARetrievalModel {
     }
 
     /**
-     * Returns the total number of results of the last query
+     * Returns the total number of results in the last query
      *
      * @return
      */
@@ -125,7 +124,7 @@ public abstract class ARetrievalModel {
     }
 
     /**
-     * Merges (adds) the weights of the equal terms in the specified query list and returns a new list
+     * Merges (adds) the weights of the equal terms and returns a new list
      *
      * @param query
      * @return

@@ -26,7 +26,9 @@ import java.io.*;
 import java.util.*;
 
 /**
- * The main class. Results are printed in console but we also have an option of using a GUI which can be
+ * The main class.
+ *
+ * Results are printed in console but we also have an option to use a GUI that can be
  * enabled by passing 'gui' as first argument of the main function.
  */
 public class Themis {
@@ -38,14 +40,14 @@ public class Themis {
     private static ActionListener _searchButtonListener = null;
     private static TASK _task = null;
 
-    /* one of the 4 available tasks. Each time of of them is running, the GUI will not let us run as second task */
+    /* one of the 4 available tasks. The GUI lets us run only one task at a time. */
     private enum TASK {
         CREATE_INDEX, LOAD_INDEX, SEARCH, EVALUATE
     }
 
     public static void main(String[] args) {
 
-        /* check if 'gui' has been passed as an argument. If so display the GUI */
+        /* Display the GUI if 'gui' has been passed as a program argument */
         if (args.length > 0 && args[0].equals("gui")) {
             _view = new View();
 
@@ -100,11 +102,11 @@ public class Themis {
                 props.add(DocInfo.PROPERTY.TITLE);
                 _search.setDocumentProperties(props);
 
-                /* retrieve info for the results that have index 0-7 for query 'test' */
+                /* Query 'test' and retrieve info for the top 8 results */
                 List<Result> results = _search.search("test", 8);
 
-                /* print results that have index 5-20. If there are only 10 results, it would print
-                results 5-7 */
+                /* print results that have index 5-20 (included). If there are only 10 results,
+                it would print those with index 5-7 */
                 _search.printResults(results, 5, 20);
             }
             catch (Exception ex) {
@@ -113,38 +115,38 @@ public class Themis {
         }
     }
 
-    /* Runs a complete set of evaluations that includes all different options.
-    * Pagerank weight for the document pagerank scores takes values 0 and 0.25 */
+    /* Runs the complete set of evaluations.
+       Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runfullEval()
             throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _search = new Search();
         _search.search("1"); // warm-up
-        _search.setCitationsPagerankWeight(0);
+        _search.setDocumentPagerankWeight(0);
         themisEval eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
-        eval.start();
-        _search.setCitationsPagerankWeight(0.25);
+        eval.run();
+        _search.setDocumentPagerankWeight(0.25);
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
-        eval.start();
+        eval.run();
         eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
-        eval.start();
+        eval.run();
     }
 
     /**
@@ -222,8 +224,8 @@ public class Themis {
 
     /* The listener for the items on the "evaluate" sub menu */
     private static class evaluateListener implements ActionListener {
-        private ARetrievalModel.MODEL _model;
-        private QueryExpansion.DICTIONARY _dictionary;
+        private final ARetrievalModel.MODEL _model;
+        private final QueryExpansion.DICTIONARY _dictionary;
         public evaluateListener(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
            _model = model;
            _dictionary = dictionary;
@@ -243,8 +245,8 @@ public class Themis {
 
     /* runs when one of the "evaluate" menu items is clicked */
     private static class Evaluate_runnable implements Runnable {
-        private ARetrievalModel.MODEL _model;
-        private QueryExpansion.DICTIONARY _dictionary;
+        private final ARetrievalModel.MODEL _model;
+        private final QueryExpansion.DICTIONARY _dictionary;
 
         public Evaluate_runnable(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
             _model = model;
@@ -277,7 +279,7 @@ public class Themis {
             }
             try {
                 themisEval eval = new themisEval(_search, _model, _dictionary);
-                eval.start();
+                eval.run();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("Evaluation failed\n");

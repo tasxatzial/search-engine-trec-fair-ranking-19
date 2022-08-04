@@ -7,8 +7,8 @@ import java.util.StringTokenizer;
 /**
  * This class provides utilities for string processing:
  * 1) Stem a term
- * 2) Split a string into lowercase tokens using a predefined set of delimiters
- * 3) Split a string into tokens using the space character
+ * 2) Split a query into tokens and convert to lowercase. Uses a predefined set of delimiters.
+ * 3) Split a string using the space character as delimiter
  */
 public class ProcessText {
 
@@ -52,7 +52,7 @@ public class ProcessText {
      *
      * @param str
      */
-    public static List<String> splitString(String str) {
+    public static List<String> splitSpace(String str) {
         StringBuilder sb = new StringBuilder();
         List<String> words = new ArrayList<>();
         char[] strArray = str.toCharArray();

@@ -3,9 +3,6 @@
  */
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
-/**
- * @author Panagiotis Papadakos (papadako@ics.forth.gr)
- */
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.english.EnglishStemmer;
 import javax.swing.*;
 
@@ -13,6 +10,7 @@ import javax.swing.*;
  * Stemmer Class. A Singleton class responsible for stemming tokes.
  * This code is only for English!
  *
+ * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class Stemmer {
 

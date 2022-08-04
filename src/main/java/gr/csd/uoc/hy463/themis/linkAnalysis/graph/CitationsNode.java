@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
 
 /**
- * Class that holds two arrays that have the int indices of In nodes and Out nodes. Used for holding
+ * Class that holds two arrays that have the int IDs of In nodes and Out nodes. Used for holding
  * the In and Out citations of a document.
  */
 public class CitationsNode {

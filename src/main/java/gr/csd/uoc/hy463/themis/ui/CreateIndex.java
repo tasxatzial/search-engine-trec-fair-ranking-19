@@ -26,8 +26,8 @@ public class CreateIndex {
     }
 
     /**
-     * Starts the indexing. The final index files will be saved in the 'index' folder. The temporary files will be
-     * saved in the 'index_tmp' folder, however they will have been deleted at the end of the indexing process.
+     * Starts the indexing. The final index files will be saved in the INDEX_PATH folder. The temporary files will be
+     * saved in the INDEX_TMP_PATH folder, however they will be been deleted at the end of the indexing process.
      *
      * @throws IOException
      * @throws PagerankException
@@ -38,7 +38,7 @@ public class CreateIndex {
     }
 
     /**
-     * Deletes the 'index' and 'index_tmp' folders
+     * Deletes the INDEX_PATH and INDEX_TMP_PATH folders
      *
      * @throws IOException
      */
@@ -48,11 +48,11 @@ public class CreateIndex {
     }
 
     /**
-     * Returns true iff the 'index' folder is empty, false otherwise
+     * Returns true if the INDEX_PATH folder is empty, false otherwise
      *
      * @return
      */
     public boolean isIndexDirEmpty() {
-        return _indexer.isIndexDirEmpty();
+        return _indexer.areIndexDirEmpty();
     }
 }

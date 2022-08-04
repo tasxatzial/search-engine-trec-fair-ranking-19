@@ -13,34 +13,34 @@ import java.util.*;
 public class CitationsGraph {
     private final String __DATASET_PATH__;
 
-    /* graph file in binary format */
+    /* graph filename in binary format */
     private final String _citationsGraphBinary;
 
-    /* graph file in human readable format */
+    /* graph filename in human-readable format */
     private final String _citationsGraph;
 
-    /* graph statistics file for the citations that exist in the collection */
+    /* graph statistics filename for the citations that exist in the collection */
     private final String _citationsStats;
 
-    /* histogram info file: Number of In edges -> Number of documents (duplicates and self references excluded) */
+    /* histogram filename: Number of In edges -> Number of documents (duplicates and self references excluded) */
     private final String _inEdgesTrue;
 
-    /* histogram info file: Number of Out edges -> Number of documents (duplicates and self references excluded) */
+    /* histogram filename: Number of Out edges -> Number of documents (duplicates and self references excluded) */
     private final String _outEdgesTrue;
 
-    /* histogram info file: Number of In edges -> Number of documents */
+    /* histogram filename: Number of In edges -> Number of documents */
     private final String _inEdges;
 
-    /* histogram info file: Number of Out edges -> Number of documents */
+    /* histogram filename: Number of Out edges -> Number of documents */
     private final String _outEdges;
 
-    /* histogram info file for the citations that do not exist in the collection: Number of In edges -> Number of documents */
+    /* histogram filename for the citations that do not exist in the collection: Number of In edges -> Number of documents */
     private final String _inEdgesNotFound;
 
-    /* histogram info file for the citations that do not exist in the collection: Number of Out edges -> Number of documents */
+    /* histogram filename for the citations that do not exist in the collection: Number of Out edges -> Number of documents */
     private final String _outEdgesNotFound;
 
-    /* graph statistics file for the citations that do not exist in the collection */
+    /* graph statistics filename for the citations that do not exist in the collection */
     private final String _citationsNotFoundStats;
 
     public CitationsGraph()
@@ -62,10 +62,9 @@ public class CitationsGraph {
     }
 
     /**
-     * Creates the file 'citations_graph_binary' file in the citation graph directory specified in the config file.
-     * The dataset files are parsed lexicographically. Entry N of this file corresponds to
-     * the Nth document that was parsed and it contains in the following order:
-     * 1) Total size of the In, Out citation data -> int (4 bytes)
+     * Creates the 'citations_graph_binary' file in the citation graph directory specified in the config file.
+     * Entry N of this file corresponds to the Nth document that was parsed and contains in the following order:
+     * 1) Total size of the In & Out citation data -> int (4 bytes)
      * 2) Number of Out citations -> int (4 bytes)
      * 3) Out citations -> a list of int
      * 4) Number of In citations -> int (4 bytes)
@@ -73,7 +72,7 @@ public class CitationsGraph {
      *
      * The last 4 bytes of the file contain the total number of documents.
      *
-     * Also the following files are created:
+     * Also, the following files are created:
      * 1) citations_not_found_stats
      * 2) in_edges_not_found
      * 3) out_edges_not_found
@@ -98,7 +97,7 @@ public class CitationsGraph {
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        //parse the collection and create a docID -> Integer map
+        //parse the collection and create a [string ID -> int ID] map
         Map<String, Integer> citationsIdsMap = getDocIDs(corpus);
 
         Files.deleteIfExists(Paths.get(_citationsGraphBinary));
@@ -196,7 +195,7 @@ public class CitationsGraph {
                     totalNotFoundOutEdges += notFoundOutCitations;
                     outCitationsDataBuf.putInt(0, numOutCitations);
 
-                    //finally, write the arrays to the file
+                    //write the arrays to the 'citations_graph_binary' file
                     graphWriter.write(outCitationsData);
                     graphWriter.write(inCitationsData);
 
@@ -206,13 +205,14 @@ public class CitationsGraph {
             }
         }
 
-        //write the total document number to file
+        //finally, write the number of documents to the 'citations_graph_binary' file
         byte[] totalDocumentsArr = new byte[4];
         ByteBuffer.wrap(totalDocumentsArr).putInt(totalDocuments);
         graphWriter.write(totalDocumentsArr);
         graphWriter.close();
 
-        //finally, write info related to not found citations to file
+        /* finally, write info related to not found citations to files
+        'citations_not_found_stats', 'in_edges_not_found', 'out_edges_not_found' */
         List<Integer> sortedNotFoundOutEdges = new ArrayList<>(notFoundOutEdgesHistogram.keySet());
         Collections.sort(sortedNotFoundOutEdges);
         List<Integer> sortedNotFoundInEdges = new ArrayList<>(notFoundInEdgesHistogram.keySet());
@@ -294,7 +294,7 @@ public class CitationsGraph {
     }
 
     /**
-     * Creates the file 'citations_graph' file in the CITATIONS_GRAPH_PATH specified in the themis.config file
+     * Creates the 'citations_graph' file in the CITATIONS_GRAPH_PATH specified in the themis.config file
      *
      * @param graph
      * @throws IOException
@@ -323,7 +323,7 @@ public class CitationsGraph {
     }
 
     /**
-     * In the CITATIONS_GRAPH_PATH specified in the themis.config file, it creates the following files:
+     * Creates the following files in the CITATIONS_GRAPH_PATH specified in the themis.config file:
      * 1) citations_stats
      * 2) in_nodes_true
      * 3) out_nodes_true
@@ -537,7 +537,7 @@ public class CitationsGraph {
         statsWriter.close();
     }
 
-    /* Parses the corpus and creates a map of doc Id -> Integer */
+    /* Parses the corpus and creates a map of [string ID -> int ID] */
     private Map<String, Integer> getDocIDs(List<File> corpus)
             throws IOException {
         Map<String, Integer> citationsIdsMap = new HashMap<>();
@@ -547,9 +547,9 @@ public class CitationsGraph {
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
                 while ((json = currentDataFile.readLine()) != null) {
-                    S2TextualEntry entry = S2JsonEntryReader.readDocIdEntry(json);
-                    String docId = entry.getId();
-                    citationsIdsMap.put(docId, ID);
+                    S2TextualEntry entry = S2JsonEntryReader.readDocIDEntry(json);
+                    String docID = entry.getID();
+                    citationsIdsMap.put(docID, ID);
                     ID++;
                 }
                 currentDataFile.close();

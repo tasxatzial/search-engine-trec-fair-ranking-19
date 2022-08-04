@@ -11,40 +11,27 @@ import gr.csd.uoc.hy463.themis.indexer.model.TermPostings;
 import gr.csd.uoc.hy463.themis.indexer.model.Posting;
 
 /**
- * This class holds all information related to a specific partial index.
- * It also knows how to write it to the appropriate files.
+ * This class stores all information about a partial index.
+ * It also knows how to dump it to the appropriate files.
  */
 public class Index {
-
-    /* the ID of this index */
     private final int _indexID;
-
-    /* an Indexer instance */
     private final Indexer _indexer;
 
-    /* store any information about the index in memory. Each term is associated with a TermPostings object
-    * which is essentially a list of pairs consisting of:
-    * 1) TF = frequency of the term in a relevant document
-    * 2) ID = the ID of the relevant document
-    */
+    /* use a map to store the index data */
     private Map<String, TermPostings> __INDEX__ = null;
 
-    /* sorted list of the terms */
     private List<String> __SORTED_TERMS__ = null;
 
-    public Index(Indexer indexer, int id) {
+    public Index(Indexer indexer, int ID) {
         _indexer = indexer;
-        _indexID = id;
+        _indexID = ID;
         __INDEX__ = new HashMap<>();
     }
 
     /**
-     * This method is responsible for dumping all information held by this index
-     * to the filesystem in the 'index_tmp/index_id' folder where 'index_id' is the ID of this index.
-     *
-     * Specifically for each index two files are created:
-     * 1) A partial 'vocabulary' file
-     * 2) A partial 'postings' file
+     * Dumps all index data to 'INDEX_TMP_PATH/index_id/' and creates the VOCABULARY_FILENAME
+     * and POSTINGS_FILENAME files in the same folder.
      *
      * @throws IOException
      */
@@ -52,99 +39,93 @@ public class Index {
             throws IOException {
         __SORTED_TERMS__ = new ArrayList<>(__INDEX__.keySet());
 
-        /* sort the index before dumping to the disk. This is the only time this index is sorted */
+        /* sort the terms right before dumping to disk */
         Collections.sort(__SORTED_TERMS__);
 
-        String vocabularyName = _indexer.getPartialVocabularyPath(_indexID);
-        String postingsName = _indexer.getPartialPostingPath(_indexID);
+        String vocabularyPath = _indexer.getPartialVocabularyPath(_indexID);
+        String postingsPath = _indexer.getPartialPostingsPath(_indexID);
 
-        Files.createDirectories(Paths.get(vocabularyName).getParent());
-        Files.createDirectories(Paths.get(postingsName).getParent());
-        dumpVocabulary(vocabularyName);
-        dumpPostings(postingsName);
+        Files.createDirectories(Paths.get(vocabularyPath).getParent());
+        Files.createDirectories(Paths.get(postingsPath).getParent());
+        dumpVocabulary(vocabularyPath);
+        dumpPostings(postingsPath);
     }
 
     /**
-     * Adds the map of term frequencies in the document specified by intID to this index (in memory).
-     * Also writes this information to the 'doc_tf' file (one line per document):
-     * term1 TF1 term2 TF2 ...
+     * Adds to this index the TFMap for the document that has the given docID.
+     * Also writes this information to 'INDEX_TMP_PATH/doc_tf' as a sequence of <term1, TF1, term2, TF2, ...>
+     * (one line per document)
      *
      * Returns the total number of frequencies in the document.
      *
-     * @param termTF The map of term frequencies
-     * @param docTfWriter
-     * @param intID The intID of the related document
+     * @param TFMap Map of term frequencies
+     * @param docTFWriter
+     * @param docID ID of the relevant document
      * @throws IOException
      * @return
      */
-    public int add(Map<String, Integer> termTF, BufferedWriter docTfWriter, int intID)
+    public int add(Map<String, Integer> TFMap, BufferedWriter docTFWriter, int docID)
             throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int totalTf = 0;
-        for (Map.Entry<String, Integer> entry : termTF.entrySet()) {
-            int tf = entry.getValue();
-            String key = entry.getKey();
-            TermPostings indexStruct = __INDEX__.get(key);
-            totalTf += tf;
-            if (indexStruct != null) {
-                indexStruct.get_postings().add(new Posting(tf, intID));
+        StringBuilder SB = new StringBuilder();
+        int TFSum = 0;
+        for (Map.Entry<String, Integer> entry : TFMap.entrySet()) {
+            int TF = entry.getValue();
+            String term = entry.getKey();
+            TermPostings termPostings = __INDEX__.get(term);
+            TFSum += TF;
+            if (termPostings != null) {
+                termPostings.addPosting(new Posting(TF, docID));
             }
             else {
-                indexStruct = new TermPostings();
-                indexStruct.get_postings().add(new Posting(tf, intID));
-                __INDEX__.put(key, indexStruct);
+                termPostings = new TermPostings();
+                termPostings.addPosting(new Posting(TF, docID)); // adds to a list
+                __INDEX__.put(term, termPostings);
             }
-            sb.append(key).append(' ').append(tf).append(' ');
+            SB.append(term).append(' ').append(TF).append(' ');
         }
-        sb.append('\n');
-        docTfWriter.write(sb.toString());
-        return totalTf;
+        SB.append('\n');
+        docTFWriter.write(SB.toString());
+        return TFSum;
     }
 
-    /* Dumps the vocabulary data from the index stored in memory to the 'vocabulary' file indicated by the
-     * specified filename.
-     * This is a normal sequential file. Separated by space are written in each line:
+    /* Dumps the appropriate vocabulary data to the given filePath (normal sequential file). Each line contains:
      * 1) Term
-     * 2) DF = document frequency of this term = in how many documents this term is found
+     * 2) DF (document frequency of this term)
      *
-     * Terms appear in the file lexicographically sorted. Also, DF is only for the total documents that have
-     * been parsed in this index.
+     * Terms appear in the file in lexicographic order.
      * */
-    private void dumpVocabulary(String filename)
+    private void dumpVocabulary(String filePath)
             throws IOException {
-        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF-8"));
+        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"));
         for (String term : __SORTED_TERMS__) {
-            int df = __INDEX__.get(term).get_df();
-            vocabularyWriter.write(term + ' ' + df + '\n');
+            int DF = __INDEX__.get(term).getDF();
+            vocabularyWriter.write(term + ' ' + DF + '\n');
         }
         vocabularyWriter.close();
     }
 
-    /* Dumps the postings data from the index stored in memory to the 'postings' file indicated by the
-     * specified filename.
-     * This is random access file. For each term a block of postings is written. Each posting corresponds to a
-     * relevant document and consists (in the following order) of:
-     * 1) TF = frequency of the term in a relevant document -> int (4 bytes)
-     * 2) ID = the ID of the relevant document -> int (4 bytes)
+    /* Dumps the appropriate postings data to the given filePath (random access file).
+     * For each term in the index, a block of postings is written to the file. Each posting consists of:
+     * 1) TF (frequency of the term in the relevant document)
+     * 2) ID (ID of the relevant document)
      *
-     * The blocks of postings appear in the file sorted based on the order of the terms in the vocabulary file.
-     * e.g. 1st block is for the first vocabulary term, 2nd block is for the 2nd term etc.
+     * The blocks of postings in the file will be sorted based on the sorting of terms:
+     * 1st block is for the first vocabulary term, 2nd block is for the 2nd term etc.
      *
-     * Also, the ID of the documents in each postings block appear in increasing order since they match the
-     * document parsing order.
+     * The ID of the documents in each block will appear sorted based on the document parsing order.
      * */
-    private void dumpPostings(String filename)
+    private void dumpPostings(String filePath)
             throws IOException {
-        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(filename, "rw").getFD()));
+        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(filePath, "rw").getFD()));
         for (String term : __SORTED_TERMS__) {
-            List<Posting> postings = __INDEX__.get(term).get_postings();
-            byte[] postingsArray = new byte[postings.size() * Posting.totalSize];
+            List<Posting> postings = __INDEX__.get(term).getPostings();
+            byte[] postingsArray = new byte[postings.size() * Posting.SIZE];
             ByteBuffer postingsBuf = ByteBuffer.wrap(postingsArray);
             int offset = 0;
             for (Posting posting : postings) {
-                postingsBuf.putInt(offset, posting.get_tf());
-                postingsBuf.putInt(offset + Posting.INTID_OFFSET, posting.get_intID());
-                offset += Posting.totalSize;
+                postingsBuf.putInt(offset, posting.getTF());
+                postingsBuf.putInt(offset + Posting.DOCID_OFFSET, posting.getDocID());
+                offset += Posting.SIZE;
             }
             postingsWriter.write(postingsArray);
         }

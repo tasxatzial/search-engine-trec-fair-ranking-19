@@ -18,6 +18,9 @@ import java.util.List;
 
 /**
  * Expands a query using the extJWNL dictionary
+ *
+ * @author Panagiotis Papadakos (github.com/papadako)
+ * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class EXTJWNL extends QueryExpansion {
     private MaxentTagger _maxentTagger;

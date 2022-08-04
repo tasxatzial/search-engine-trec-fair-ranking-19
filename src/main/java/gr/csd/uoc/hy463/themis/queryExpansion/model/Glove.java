@@ -42,7 +42,7 @@ public class Glove extends QueryExpansion {
         catch (IOException e) {
             throw new ConfigLoadException();
         }
-        File gloveModel = new File(__CONFIG__.getGloveModelFileName());
+        File gloveModel = new File(__CONFIG__.getGloveModelPath());
         if (!gloveModel.exists()) {
             throw new ExpansionDictionaryInitException();
         }

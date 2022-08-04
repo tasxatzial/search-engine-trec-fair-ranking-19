@@ -4,13 +4,13 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBlockBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemoryBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTermFrequencies;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTokens;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
@@ -38,71 +38,49 @@ import org.apache.logging.log4j.Logger;
  * a) Create the appropriate indexes given a specific directory with files (in
  * our case the Semantic Scholar collection)
  * b) Given a path load the indexes and provide information about the
- * indexed data, that can be used for implementing any kind of retrieval models
+ * indexed data. Can be used for implementing any kind of retrieval models.
  */
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
-    private double _citationsPagerankWeight;
-    private double[] _citationsPagerank;
-
-    /* General configuration options */
+    private double _documentPagerankWeight;
+    private double[] _documentsPagerank;
     private final Config __CONFIG__;
 
-    /* The final 'index' folder name */
+    /* The full path of the final index folder */
     private final String __INDEX_PATH__;
 
-    /* The name of the files in the final index */
+    /* The name of the files in the final index folder */
     private final String __VOCABULARY_FILENAME__;
     private final String __POSTINGS_FILENAME__;
     private final String __DOCUMENTS_FILENAME__ ;
     private final String __DOCUMENTS_META_FILENAME__;
     private final String __DOCUMENTS_ID_FILENAME__;
+    private final String __INDEX_META_FILENAME__;
 
-    /* Index configuration options */
+    /* Metadata/options related to the final index */
     private Map<String, String> _INDEX_META__ = null;
 
-    /* The 'index_meta' file name */
-    private final String __META_FILENAME__;
+    /* Use this struct to load VOCABULARY_FILENAME into memory */
+    private HashMap<String, VocabularyEntry> __VOCABULARY__ = null;
 
-    /* The final 'vocabulary' file */
-    private HashMap<String, Vocabulary> __VOCABULARY__ = null;
-
-    /* The final 'postings' file */
+    /* The final POSTINGS_FILENAME and DOCUMENTS_FILENAME */
     private RandomAccessFile __POSTINGS__ = null;
-
-    /* The final 'documents' file */
     private RandomAccessFile __DOCUMENTS__ = null;
 
-    /* Object for using the 'documents_meta' file as a memory mapped file */
-    private DocumentBuffers __DOCMETA_BUFFERS__ = null;
-
-    /* Object for using the 'documents_id' file as a memory mapped file */
-    private DocumentBuffers __DOCID_BUFFERS__ = null;
-
-    /* Stores all document information read from the 'documents_meta' file. See DocumentMetaEntry class */
+    /* Use DOCUMENTS_META_FILENAME as a memory mapped file */
+    private DocumentBlockBuffers __DOCMETA_BUFFERS__ = null;
     private byte[] __DOCUMENT_META_ARRAY__;
     private ByteBuffer __DOCUMENT_META_BUFFER__;
 
-    /* Stores the document docID (string) read from the 'documents_id' file. See DocumentIDEntry class */
+    /* Use DOCUMENTS_ID_FILENAME as a memory mapped file */
+    private DocumentBlockBuffers __DOCID_BUFFERS__ = null;
     private byte[] __DOCUMENT_ID_ARRAY__;
-    private ByteBuffer __DOCUMENT_ID_BUFFER__;
+    private ByteBuffer __DOCUMENT_ID_BUFFER__; /* currently unused */
 
     /**
      * Constructor.
      *
-     * Reads general configuration options from themis.config file.
-     *
-     * Initializes the filenames in the final index.
-     * Specifically the names of:
-     * The 'index' folder
-     * The 'vocabulary' file
-     * The 'postings' file
-     * The 'documents_meta' file
-     * The 'documents_id' file
-     * The 'documents' file
-     * The 'index_meta' file
-     *
-     * Also initializes the citations pagerank weight to its default value.
+     * Reads configuration options from themis.config file and initializes the filenames in the final index.
      *
      * @throws ConfigLoadException
      */
@@ -120,11 +98,11 @@ public class Indexer {
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
         __DOCUMENTS_META_FILENAME__ = __CONFIG__.getDocumentsMetaFileName();
         __DOCUMENTS_ID_FILENAME__ = __CONFIG__.getDocumentsIDFileName();
-        __META_FILENAME__ = __CONFIG__.getMetaFileName();
+        __INDEX_META_FILENAME__ = __CONFIG__.getIndexMetaFileName();
     }
 
     /**
-     * Indexes the collection found in the 'dataset' folder. See also method index(path).
+     * Indexes the collection found in DATASET_PATH.
      *
      * @throws IOException
      * @throws PagerankException
@@ -135,22 +113,13 @@ public class Indexer {
     }
 
     /**
-     * Indexes the collection found in the specified path. Final index is stored in the 'index' folder.
-     *
-     * If the number of files is larger than the PARTIAL_INDEX_MAX_DOCS_SIZE then we have to dump all data read up
-     * to now to a partial index in 'index_tmp/index_id' folder and continue with a new index.
-     * After creating all partial indexes then we have to merge them to create the final index.
-     *
-     * All partial indexes are stored in the 'index_tmp' folder and will have been deleted at the end of the
-     * indexing process.
-     *
-     * When this methods returns, the following files will be present in the 'index' folder.
-     * 1) A 'vocabulary' file
-     * 2) A 'postings' file
-     * 3) A 'documents_id' file
-     * 4) A 'documents_meta' file
-     * 5) A 'documents' file
-     * 6) A 'index_meta' file for the index configuration options
+     * Indexes the collection found in the given path and writes the final index to INDEX_PATH. Will immediately
+     * abort if INDEX_PATH is not empty.
+     * INDEX_TMP_PATH will be used to store any temp files including the partial indexes.
+     * If PARTIAL_INDEX_MAX_DOCS_SIZE is less than the number of documents in the collection then more
+     * than 1 partial indexes will be created. Each partial index will contain data from at most
+     * PARTIAL_INDEX_MAX_DOCS_SIZE documents. Finally, all partial indexes are merged and the final index
+     * is created.
      *
      * @param path
      * @throws IOException
@@ -158,31 +127,28 @@ public class Indexer {
      */
     public void index(String path)
             throws IOException, PagerankException {
-        if (!isIndexDirEmpty()) {
+        if (!areIndexDirEmpty()) {
             __LOGGER__.error("Previous index found. Aborting...");
             Themis.print("Previous index found. Aborting...\n");
             return;
         }
 
-        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
+        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
-        /* the path of the 'index_tmp' folder */
-        String indexTmpPath = getIndexTmpPath();
+        /* the ID of each document. The N-th parsed document will have ID = N (starting from 0) */
+        int docID = 0;
 
-        /* the int ID of each document => the N-th parsed JSON entry has ID = N (starting from 0) */
-        int docIntID = 0;
+        /* the total number of tokens in the collection (required by the Okapi retrieval model) */
+        long tokenCount = 0;
 
-        /* the total number of tokens in the collection, required for the Okapi retrieval model */
-        long totalTokens = 0;
-
-        /* offset to the 'documents' file */
+        /* offset to DOCUMENTS_FILENAME */
         long documentsOffset = 0;
 
         /* maximum number of documents in a partial index */
-        int indexMaxDocuments = __CONFIG__.getPartialIndexSize();
+        int maxDocsPerIndex = __CONFIG__.getPartialIndexSize();
 
-        /* create a list of files of the collection */
+        /* create the list of files in the collection */
         File folder = new File(path);
         File[] files = folder.listFiles();
         if (files == null || files.length == 0) {
@@ -191,7 +157,7 @@ public class Indexer {
             return;
         }
 
-        /* save the final index configuration options */
+        /* initialize metadata/options related to the final index */
         _INDEX_META__ = new HashMap<>();
         Themis.print("-> Indexing options:\n");
         _INDEX_META__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
@@ -206,24 +172,24 @@ public class Indexer {
         Themis.print("-> Start indexing\n");
         long startTime = System.nanoTime();
 
-        /* sort the files of the collection (determines the parsing order) */
+        /* sort the files in the collection => determines the parsing order and thus the ID of each document */
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        /* instantiate the object that calculates the frequencies map for the terms in a S2TextualEntry */
-        S2TextualEntryTermFrequencies termFrequencies = new S2TextualEntryTermFrequencies(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
+        /* instantiate the object that calculates the frequencies of the tokens in a document */
+        S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
-        /* create the final 'index' folder */
+        /* create the final index folder INDEX_PATH */
         Files.createDirectories(Paths.get(__INDEX_PATH__));
 
-        /* create the 'index_tmp' folder where all temporary files will be stored */
-        Files.createDirectories(Paths.get(indexTmpPath));
+        /* create INDEX_TMP_PATH where all partial indexes and temporary files will be stored */
+        Files.createDirectories(Paths.get(getIndexTmpPath()));
 
-        /* any info related to this index is written to 'index_meta' file in the 'index' folder */
+        /* open INDEX_META_FILENAME (normal sequential file) */
         BufferedWriter metaWriter = new BufferedWriter(new FileWriter(getMetaPath()));
 
-        /* 'documents', 'documents_id', 'documents_meta' files will be saved in the 'index' folder */
+        /* open DOCUMENTS_FILENAME, DOCUMENTS_ID_FILENAME, DOCUMENTS_META_FILENAME (random access files) */
         RandomAccessFile documents = new RandomAccessFile(getDocumentsFilePath(), "rw");
         BufferedOutputStream documents_out = new BufferedOutputStream(new FileOutputStream(documents.getFD()));
         RandomAccessFile documentsMeta = new RandomAccessFile(getDocumentsMetaFilePath(), "rw");
@@ -231,9 +197,10 @@ public class Indexer {
         RandomAccessFile documentsID = new RandomAccessFile(getDocumentsIDFilePath(), "rw");
         BufferedOutputStream documentsID_out = new BufferedOutputStream(new FileOutputStream(documentsID.getFD()));
 
-        /* The 'doc_tf' file in 'index_tmp' folder will store the <term, TF> of every term that appears in
-        each document (one line per document). Will be used during the calculation of VSM weights */
-        BufferedWriter docTfWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTfPath()), "UTF-8"));
+        /* A 'doc_tf' file will be stored in INDEX_TMP_PATH (normal sequential file).
+        Contains a sequence of <term1, TF1, term2, TF2, ...> (one line per document).
+        Will be used during the calculation of VSM weights */
+        BufferedWriter docTFWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTFPath()), "UTF-8"));
 
         /* initialize a partial index */
         int indexID = 0;
@@ -243,82 +210,77 @@ public class Indexer {
         for (File file : corpus) {
             if (file.isFile()) {
                 Themis.print("Parsing file: " + file + "\n");
-                BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+                BufferedReader currFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
 
-                /* for each JSON entry */
-                while ((json = currentDataFile.readLine()) != null) {
+                /* for each document */
+                while ((json = currFile.readLine()) != null) {
 
                     /* Extract all textual info into a S2TextualEntry */
                     S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
 
                     /* create the frequencies map for the terms of the S2TextualEntry */
-                    Map<String, Integer> termTF = termFrequencies.createWordsMap(entry);
+                    Map<String, Integer> TFMap = textualEntryTokens.createTFMap(entry);
 
-                    /* update the partial index (in memory) and the 'doc_tf' file */
-                    int documentTokens = index.add(termTF, docTfWriter, docIntID);
+                    /* update the partial index and 'INDEX_TMP_PATH/doc_tf' */
+                    int documentTokens = index.add(TFMap, docTFWriter, docID);
 
-                    /* update the number of tokens */
-                    totalTokens += documentTokens;
+                    /* update the total number of tokens */
+                    tokenCount += documentTokens;
 
-                    /* update the 'documents' file */
+                    /* update DOCUMENTS_FILENAME */
                     long prevDocumentsOffset = documentsOffset;
                     documentsOffset = dumpDocuments(documents_out, entry, documentsOffset);
 
-                    /* size of an entry in the 'documents' file */
+                    /* size of the entry in DOCUMENTS_FILENAME */
                     int documentSize = (int) (documentsOffset - prevDocumentsOffset);
 
-                    /* update the 'documents_meta' file. Use an integer as the ID of the document
-                    * instead of the string docID */
-                    dumpDocumentsMeta(documentsMeta_out, docIntID, documentTokens, documentSize, prevDocumentsOffset);
+                    /* update DOCUMENTS_META_FILENAME */
+                    dumpDocumentsMeta(documentsMeta_out, docID, documentTokens, documentSize, prevDocumentsOffset);
 
-                    /* update the 'documents_id' file. Write only the string docID in this file */
+                    /* update DOCUMENTS_ID_FILENAME */
                     dumpDocumentsID(documentsID_out, entry);
 
-                    /* check if a dump of the current index is needed */
-                    docIntID++;
-                    if (docIntID % indexMaxDocuments == 0) {
+                    /* check if a dump of the current partial index is needed */
+                    docID++;
+                    if (docID % maxDocsPerIndex == 0) {
                         index.dump();
                         indexID++;
                         index = new Index(this, indexID);
                     }
                 }
-                currentDataFile.close();
+                currFile.close();
             }
         }
 
-        /* remove the last index when the total number of documents is a multiple of indexMaxDocuments.
-        This means we created a new index but there are no documents left */
-        if (docIntID != 0 && docIntID % indexMaxDocuments == 0) {
+        /* if we just created a new index but there are no documents left then remove it */
+        if (docID != 0 && docID % maxDocsPerIndex == 0) {
             indexID--;
         }
         else {
-            /* dump the remaining index data */
-            index.dump();
+            index.dump(); //dump last index
         }
 
         documents_out.close();
         documentsMeta_out.close();
         documentsID_out.close();
-        docTfWriter.close();
+        docTFWriter.close();
 
         /* calculate avgdl for the Okapi retrieval model */
-        double avgdl = (0.0 + totalTokens) / docIntID;
+        double avgdl = (0.0 + tokenCount) / docID;
 
-        /* save the remaining final index configuration options */
-        _INDEX_META__.put("documents", String.valueOf(docIntID));
+        /* save the remaining metadata/options related to the final index and dump them to INDEX_META_FILENAME */
+        _INDEX_META__.put("documents", String.valueOf(docID));
         _INDEX_META__.put("avgdl", String.valueOf(avgdl));
         _INDEX_META__.put("timestamp", Instant.now().toString());
-
-        /* finally, dump all final index configuration options to the 'index_meta' file */
         for (Map.Entry<String, String> pair : _INDEX_META__.entrySet()) {
             metaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
         }
         metaWriter.close();
 
-        Themis.print("Documents files & partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
+        Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
 
-        /* merge the partial 'vocabulary' files and delete them */
+        /* merge the partial VOCABULARY_FILENAME and delete them */
         mergeVocabularies(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
@@ -329,30 +291,29 @@ public class Indexer {
             Themis.print("[Error deleting partial vocabularies]\n");
         }
 
-        /* calculate VSM weights, update the 'document_meta' file, and delete the 'doc_tf' file */
-        updateVSMweights();
-        deleteDir(new File(getDocTfPath()));
+        /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_PATH/doc_tf' */
+        updateVSMWeights();
+        deleteDir(new File(getDocTFPath()));
 
-        /* merge the partial 'postings' files and delete them */
+        /* merge the partial POSTINGS_FILENAME and delete them */
         mergePostings(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
-                deleteDir(new File(getPartialPostingPath(i)));
+                deleteDir(new File(getPartialPostingsPath(i)));
             }
         } catch (IOException e) {
             __LOGGER__.error("Error deleting partial postings");
             Themis.print("[Error deleting partial postings]\n");
         }
 
-        /* also delete the 'term_df' file that has been created during the merge of the 'vocabulary' files in
-        the 'index_tmp' folder */
-        deleteDir(new File(getTermDfPath()));
+        /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merge of the vocabulary files) */
+        deleteDir(new File(getTermDFPath()));
 
-        /* compute the citations pagerank scores and update the 'documents_meta' file */
+        /* compute the document pagerank scores and update DOCUMENTS_META_FILENAME */
         Pagerank pagerank = new Pagerank(this);
-        pagerank.citationsPagerank();
+        pagerank.documentsPagerank();
 
-        /* finally, delete the 'index_tmp' folder */
+        /* delete INDEX_TMP_PATH */
         try {
             deleteDir(new File(getIndexTmpPath()));
         } catch (IOException e) {
@@ -363,99 +324,103 @@ public class Indexer {
         Themis.print("-> End of indexing\n");
     }
 
-    /* Merges the partial 'vocabulary' files found in the 'index_tmp/*' folders where '*' is a
-    number from 0 to indexID (inclusive). Creates the final 'vocabulary' file (normal sequential file)
-    in the 'index' folder.
-
-    If there is only 1 partial index, we cannot simply copy the 'vocabulary' file to the final location
-    because it is missing the offsets to the 'postings' file. The offsets can be determined by using the
-    following information:
-    1) For each term we know its DF
-    2) Each posting occupies the same fixed space in the 'postings' file.
-    So:
-    (1st term offset)  = 0
-    (2nd term offset) = (1st term offset) + (1st term DF)x(posting size)
-    (3rd term offset) = (2nd term offset) + (2nd term DF)x(posting size)
-    etc. */
-    private void mergeVocabularies(int indexID)
+    /* Merges the partial VOCABULARY_FILENAME found in 'INDEX_TMP_PATH/$/'  where '$' is a
+    number from 0 to maxIndexID (inclusive). Creates the final VOCABULARY_FILENAME (normal sequential file)
+    in INDEX_PATH */
+    private void mergeVocabularies(int maxIndexID)
             throws IOException {
         long startTime =  System.nanoTime();
         Themis.print("-> Merging partial vocabularies...\n");
 
-        /* If there is only one partial index, each line in the vocabulary file must
-        * be appended with the offset to the 'postings' file */
-        if (indexID == 0) {
-            String partialVocabularyPath = getPartialVocabularyPath(0);
-            BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
-            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
-            String line;
-            String[] split;
-            long offset = 0;
-            while ((line = vocabularyReader.readLine()) != null) {
-                split = line.split(" ");
-                int df = Integer.parseInt(split[1]);
-                vocabularyWriter.write(split[0] + ' ' + split[1] + ' ' + offset + '\n');
-                offset +=  df * (long) Posting.totalSize;
-            }
-            vocabularyReader.close();
-            vocabularyWriter.close();
+        /* when there's only 1 partial index */
+        if (maxIndexID == 0) {
+            finalizePartialVocabulary();
         }
-        /* merge the partial 'vocabulary' files in case there are >1 partial indexes */
         else {
-            combinePartialVocabularies(indexID);
+            mergePartialVocabularies(maxIndexID);
         }
         Themis.print("Partial vocabularies merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
-    /* Merges the partial 'vocabulary' files when there are more than 1 partial indexes.
+    /* Merges the partial VOCABULARY_FILENAME when there's only 1 partial index.
 
-    Also writes the 'term_df' file in the 'index_tmp' folder. It will come in handy later when the partial
-    'postings' files are merged.
+    To do this, we cannot simply copy VOCABULARY_FILENAME to its final location
+    because it is missing the offsets to POSTINGS_FILENAME. However, the offsets can be determined
+    using the following information:
+    1) For each term we know its DF
+    2) Each entry in POSTINGS_FILENAME has the same size
+    So:
+    (1st term offset)  = 0
+    (2nd term offset) = (1st term offset) + (1st term DF)x(POSTING.SIZE)
+    (3rd term offset) = (2nd term offset) + (2nd term DF)x(POSTING.SIZE)
+    etc.
+     */
+    private void finalizePartialVocabulary()
+            throws IOException {
+        String partialVocabularyPath = getPartialVocabularyPath(0);
+        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
+        String line;
+        String[] split;
+        long offset = 0;
+        while ((line = vocabularyReader.readLine()) != null) {
+            split = line.split(" ");
+            int df = Integer.parseInt(split[1]);
+            vocabularyWriter.write(split[0] + ' ' + split[1] + ' ' + offset + '\n');
+            offset +=  df * (long) Posting.SIZE;
+        }
+        vocabularyReader.close();
+        vocabularyWriter.close();
+    }
 
-    Merge process for the 'vocabulary' files:
-    Assume we have K 'vocabulary' files. They can be merged in one go using the following procedure:
-    1) Open all files and keep in PartialVocabulary objects the <term, DF, index ID> of the
-    first line from each file. Since the files are sorted, we know that the min lexicographical term will
-    correspond to one (or more) of those PartialVocabulary objects.
-    2) Instead of performing a linear search to find the min lexicographical term among the K objects, we add them
-    to a min priority queue sorted by term. Adding/removing costs log(K).
-    3) We now have the min lexicographical term but the same term might appear in many files.
-    If so, other objects in the queue must also correspond to the same term. Therefore, we
-    keep removing objects from the queue until we get a different term. Each time an object is removed,
-    we add to the queue a new PartialVocabulary object from the partial index with the same ID.
-    4) All the objects that we removed from the queue in the previous step are added to a list which is sorted
-    by the index ID. We then write the <index ID, DF> pairs from the list to the 'term_df' file in a single line.
-    Note that the partial index ID will appear in increasing order.
+    /* Merges the partial VOCABULARY_FILENAME when there's more than 1 partial index.
+
+    Also creates 'INDEX_TMP_PATH/term_df'. Will be used when merging the partial POSTINGS_FILENAME.
+
+    Merge process:
+    Assume we have K files.
+    1) Open all files and create PartialVocabularyEntry objects to store the first line from each file.
+    Since the files are sorted, we know that the min lexicographical term will correspond to
+    one (or more) of those objects.
+    2) Instead of performing a linear search to find the min term among K objects, we add them
+    to a min priority queue sorted by term. Adding/removing subsequent objects costs log(K).
+    3) We can use the queue to get the min lexicographical term but the same term might appear in many files.
+    Therefore, we keep removing from the queue until we get a different term. Each time an object is removed,
+    we add to the queue a new PartialVocabulary object from the partial index with the same index.
+    4) All objects that have been removed from the queue in the previous step are added to a list which is sorted
+    by the ID of the index (increasing). We then write all <index ID, DF> pairs to 'INDEX_TMP_PATH/term_df'
+    (one line per term).
     5) Since we have all objects that correspond to the min lexicographical term, we can sum their DF and find the
     final DF of the term.
-    6) Determining the offset to the 'postings' file is done the same way as when there is only one index to merge.
-    See the mergeVocabularies() function.
-    7) Finally, we write to the final 'vocabulary' file a <term, DF, postings file offset> line for the min
-    lexicographical term, and we repeat the procedure until all partial 'vocabulary' files have been parsed.
+    6) See the doc in finalizePartialVocabulary() for an explanation of how to determine the offset to
+    POSTINGS_FILENAME.
+    7) Finally, we write to the final VOCABULARY_FILENAME a <term, DF, offset> line for the min
+    lexicographical term, and repeat the procedure from 2) until all partial VOCABULARY_FILENAME have been parsed.
     */
-    private void combinePartialVocabularies(int maxIndexID)
+    private void mergePartialVocabularies(int maxIndexID)
             throws IOException {
-
-        /* open the partial 'vocabulary' file of every partial index */
+        /* open all partial VOCABULARY_FILENAME */
         BufferedReader[] vocabularyReader = new BufferedReader[maxIndexID + 1];
         for (int i = 0; i <= maxIndexID; i++) {
             String partialVocabularyPath = getPartialVocabularyPath(i);
             vocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
         }
 
-        /* the final 'vocabulary' file will be saved in the 'index' folder */
+        /* open final VOCABULARY_FILENAME */
         BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
 
-        /* the 'term_df' file will be saved in the 'index_tmp' folder */
-        BufferedWriter termDfWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getTermDfPath()), "ASCII"));
+        /* open 'INDEX_TMP_PATH/term_df' */
+        BufferedWriter termDFWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getTermDFPath()), "ASCII"));
 
-        /* starting offset to the final 'postings' file */
+        /* starting offset to the final POSTINGS_FILENAME */
         long postingsOffset = 0;
 
-        PartialVocabulary minTermObj;
+        /* object that corresponds to a min lexicographical term */
+        PartialVocabularyEntry minTermObj;
 
-        /* Read the first line from each 'vocabulary' file, create PartialVocabulary objects and put them in a priority queue */
-        PriorityQueue<PartialVocabulary> vocabularyQueue = new PriorityQueue<>();
+        /* Read the first line from each partial VOCABULARY_FILENAME, create PartialVocabularyEntry objects,
+        and put them in a priority queue */
+        PriorityQueue<PartialVocabularyEntry> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i <= maxIndexID; i++) {
             minTermObj = getNextVocabularyEntry(vocabularyReader[i], i);
             if (minTermObj != null) {
@@ -463,40 +428,40 @@ public class Indexer {
             }
         }
 
-        /* list of all PartialVocabulary objects that correspond to the same min lexicographical term */
-        List<PartialVocabulary> equalTerms = new ArrayList<>();
+        /* list of all objects that correspond to the same min lexicographical term */
+        List<PartialVocabularyEntry> equalTerms = new ArrayList<>();
 
         /* the current min lexicographical term */
         String currMinTerm = null;
 
-        /* poll the queue of PartialVocabulary objects */
+        /* poll the queue */
         while((minTermObj = vocabularyQueue.poll()) != null) {
 
-            /* if the polled term is not equal to the min term, we must process the equalTerms
-            list and write the min term to the final 'vocabulary' file. Also update the 'term_df' file */
-            if (!minTermObj.get_term().equals(currMinTerm) && !equalTerms.isEmpty()) {
-                postingsOffset = dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
+            /* if the term of the polled object is not equal to the min term, we must process the list
+            and update the final VOCABULARY_FILENAME. Also update 'INDEX_TMP_PATH/term_df' */
+            if (!minTermObj.getTerm().equals(currMinTerm) && !equalTerms.isEmpty()) {
+                postingsOffset = dumpEqualTerms(equalTerms, vocabularyWriter, termDFWriter, postingsOffset);
             }
 
-            /* update the new min term with the one from the last polled term */
-            currMinTerm = minTermObj.get_term();
+            /* set the min term to the one from the last polled object */
+            currMinTerm = minTermObj.getTerm();
 
-            /* put the last polled object in the equalTerms list */
+            /* put the last polled object in the list */
             equalTerms.add(minTermObj);
 
-            /* read the next line of the 'vocabulary' file that corresponds to the last polled object and add a new
-            PartialVocabulary object to the queue */
-            int currIndexID = minTermObj.get_indexID();
-            PartialVocabulary nextObj = getNextVocabularyEntry(vocabularyReader[currIndexID], currIndexID);
+            /* read the next line of the partial VOCABULARY_FILENAME that contained the last polled
+            object and add a new object to the queue */
+            int currIndexID = minTermObj.getIndexID();
+            PartialVocabularyEntry nextObj = getNextVocabularyEntry(vocabularyReader[currIndexID], currIndexID);
             if (nextObj != null) {
                 vocabularyQueue.add(nextObj);
             }
         }
 
-        /* all 'vocabulary' files have been parsed at this moment. Process the equalTerms list and
-        and write the remaining terms to the final 'vocabulary' file */
+        /* all partial VOCABULARY_FILENAME have been parsed. Process the list and write the remaining terms
+        to the final VOCABULARY_FILENAME */
         if (!equalTerms.isEmpty()) {
-            dumpEqualTerms(equalTerms, vocabularyWriter, termDfWriter, postingsOffset);
+            dumpEqualTerms(equalTerms, vocabularyWriter, termDFWriter, postingsOffset);
         }
 
         /* close any open files */
@@ -504,125 +469,116 @@ public class Indexer {
             vocabularyReader[i].close();
         }
         vocabularyWriter.close();
-        termDfWriter.close();
+        termDFWriter.close();
     }
 
-    /* Reads the next line from the 'vocabulary' file in the partial index with the specified ID and returns a new
-    PartialVocabulary object */
-    private PartialVocabulary getNextVocabularyEntry(BufferedReader vocabularyReader, int indexID)
+    /* Reads the next line from the partial VOCABULARY_FILENAME that is part of the partial index with
+     the given ID and returns a new PartialVocabularyEntry object */
+    private PartialVocabularyEntry getNextVocabularyEntry(BufferedReader vocabularyReader, int indexID)
             throws IOException {
         String line = vocabularyReader.readLine();
         if (line != null) {
             String[] fields = line.split(" ");
-            return new PartialVocabulary(fields[0], Integer.parseInt(fields[1]), indexID);
+            return new PartialVocabularyEntry(fields[0], Integer.parseInt(fields[1]), indexID);
         }
         return null;
     }
 
-    /* Writes a new line in the final 'vocabulary' file (one line per term). A line has (in the following order):
-    1) Term
-    2) DF = document frequency of this term = in how many documents this term is found
-    3) Postings offset = Offset to the 'postings' file
+    /* Processes the given list and writes a new line to the final VOCABULARY_FILENAME. Also, updates
+    'INDEX_TMP_PATH/term_df' with a new line.
 
-    -> The term is any term from the object list since all terms are the same.
-    -> The DF is the sum of the DF from each object in the list.
-    -> The specified postingsOffset has been returned by the previous call of this method and is equal to:
-         (postings offset of prev term) + (DF of previous term)x(posting size)
-
-    Also writes a sequence of <partial index ID, DF> for the term to the 'term_df' file. This file will be used
-    during the merging of the partial 'postings' files. Note that line N in the 'vocabulary' file corresponds
-    to line N in the 'term_df' file.
-
-    The method also clears the specified equalTerms list.
-
-    Returns an offset to the 'postings' file that will be used during the next call of the method */
-    private long dumpEqualTerms(List<PartialVocabulary> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long postingsOffset)
+    Returns the new offset to POSTINGS_FILENAME that will be used during the next call of the method */
+    private long dumpEqualTerms(List<PartialVocabularyEntry> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long postingsOffset)
             throws IOException {
-        int df = 0;
+        int DF = 0;
 
-        /* sort the equalTerms list based on the partial index ID */
-        equalTerms.sort(PartialVocabulary.idComparator);
+        /* sort the list based on the index ID (increasing) */
+        equalTerms.sort(PartialVocabularyEntry.IDComparator);
 
-        /* calculate final DF, also write in the 'term_df' the sequence of (partial index ID, DF) for current term */
+        /* calculate final DF, also write to 'INDEX_TMP_PATH/term_df' a sequence of <index ID, DF>
+        for the current term */
         StringBuilder sb = new StringBuilder();
-        for (PartialVocabulary equalTerm : equalTerms) {
-            df += equalTerm.get_df();
-            sb.append(equalTerm.get_indexID()).append(' ').append(equalTerm.get_df()).append(' ');
+        for (PartialVocabularyEntry equalTerm : equalTerms) {
+            DF += equalTerm.getDF();
+            sb.append(equalTerm.getIndexID()).append(' ').append(equalTerm.getDF()).append(' ');
         }
         sb.append('\n');
         termDfWriter.write(sb.toString());
 
-        /* write a new line in the final vocabulary file */
-        vocabularyWriter.write(equalTerms.get(0).get_term() + ' ' + df + ' ' + postingsOffset + '\n');
+        /* write a new line to the final VOCABULARY_FILENAME */
+        vocabularyWriter.write(equalTerms.get(0).getTerm() + ' ' + DF + ' ' + postingsOffset + '\n');
 
-        /* calculate the postings offset for the next call of the method */
-        postingsOffset +=  df * (long) Posting.totalSize;
+        /* calculate the new offset to POSTINGS_FILENAME */
+        postingsOffset +=  DF * (long) Posting.SIZE;
 
         equalTerms.clear();
         return postingsOffset;
     }
 
-    /* Merges the partial 'postings' files found in the 'index_tmp/*' folders where '*' is a
-    number from 0 to maxIndexID (inclusive). Creates the final 'postings' file (random access file)
-    in the 'index' folder */
+    /* Merges the partial POSTINGS_FILENAME found in 'INDEX_TMP_PATH/$/' where '$' is a
+    number from 0 to maxIndexID (inclusive). Creates the final POSTINGS_FILENAME (random access file)
+    in INDEX_PATH */
     private void mergePostings(int maxIndexID)
             throws IOException {
 
-        /* If there is only one partial index, move the posting file in the final 'index' folder */
+        /* If there is only one partial index, just move POSTINGS_FILENAME to INDEX_PATH */
         long startTime =  System.nanoTime();
         Themis.print("-> Merging partial postings...\n");
         if (maxIndexID == 0) {
-            String partialPostingPath = getPartialPostingPath(0);
+            String partialPostingPath = getPartialPostingsPath(0);
             Files.move(Paths.get(partialPostingPath), Paths.get(getPostingsPath()), StandardCopyOption.REPLACE_EXISTING);
         }
-        /* merge the partial 'postings' files in case there are >1 partial indexes */
         else {
-            combinePartialPostings(maxIndexID);
+            mergePartialPostings(maxIndexID);
         }
         Themis.print("Partial postings merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
-    /* Merges the partial 'postings' files when there are more than 1 partial indexes.
+    /* Merges all partial POSTINGS_FILENAME when there's more than 1 partial index.
     *
-    * The merging is straightforward. The 'term_df' file is parsed one line at a time, each line consists of
-    * a sequence of <partial index ID, DF>. Line N corresponds to line N in the 'vocabulary' file and for the term in
-    * that line we can find:
-    * 1) The partial index ID that contains the postings of the term.
-    * 2) The size of the postings in the partial index ID = (DF)x(posting size)
+    * Merge process:
+    * We'll rely on 'INDEX_TMP_PATH/term_df' that has been created during the merging of the partial
+    * VOCABULARY_FILENAME. This is the known information so far:
     *
-    * Each line in 'term_df' is parsed and all postings for a term are collected and written to the final
-    * 'postings' file.
+    * 1) Each line in 'INDEX_TMP_PATH/term_df' consists of a sequence of <index ID, DF> with the ID
+    * appearing in increasing order (done in function Indexer.dumpEqualTerms())
+    * 2) Line N in 'INDEX_TMP_PATH/term_df' corresponds to line N in VOCABULARY_FILENAME file
+    * (done in function Indexer.dumpEqualTerms())
+    * 3) The blocks of postings in each partial POSTINGS_FILENAME are already sorted based on the
+    * sorting of terms in the corresponding partial VOCABULARY_FILENAME (done in function Index.dumpPostings())
+    * 4) The postings in each postings block are already sorted based on the ID of the relevant documents
+    * (done in function Indexer.index())
     *
-    * Note that the partial index ID already appear in the 'term_df' file in increasing order. But this order also
-    * tells us the document parsing order. So if (index ID1) < (index ID2), all postings for a term in partial
-    * index ID1 will have document ID < document ID in partial index ID2. That means if we visit the partial
-    * 'postings' file based on the order indicated in the 'term_df' line, the document ID in the final postings block
-    * of the final 'postings' file will also appear sorted.
-    * */
-    private void combinePartialPostings(int indexID)
+    * So for each term in the VOCABULARY_FILENAME file we can easily find:
+    * 1) All partial indexes that contain its postings
+    * 2) The size of its postings => (Sum of DF)x(POSTING.SIZE)
+    * 3) The offset of the postings block for the next term
+    */
+    private void mergePartialPostings(int maxIndexID)
             throws IOException {
-
-        /* open the partial 'postings' file found in every 'index_tmp/index_id' folder */
-        BufferedInputStream[] postingsStream = new BufferedInputStream[indexID + 1];
-        for (int i = 0; i <= indexID; i++) {
-            String partialPostingPath = getPartialPostingPath(i);
+        /* open all partial POSTINGS_FILENAME */
+        BufferedInputStream[] postingsStream = new BufferedInputStream[maxIndexID + 1];
+        for (int i = 0; i <= maxIndexID; i++) {
+            String partialPostingPath = getPartialPostingsPath(i);
             postingsStream[i] = new BufferedInputStream(new FileInputStream(new RandomAccessFile(partialPostingPath, "rw").getFD()));
         }
 
-        /* the final 'postings' file will be saved in the 'index' folder */
+        /* open final POSTINGS_FILENAME */
         BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(getPostingsPath(), "rw").getFD()));
 
-        /* the 'term_df' file that has a sequence of <partial index ID, DF> in each line (one line per term) */
-        BufferedReader termDfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getTermDfPath()), "ASCII"));
+        /* open 'INDEX_TMP_PATH/term_df' */
+        BufferedReader termDFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getTermDFPath()), "ASCII"));
 
-        /* parse each line of the file, grab the postings from the appropriate partial 'postings' file, and
-        * write them to the final 'postings' file */
+        /* parse each line of 'INDEX_TMP_PATH/term_df', grab the postings from the appropriate
+        partial POSTINGS_FILENAME, and write them to the final POSTINGS_FILENAME */
         String line;
-        while ((line = termDfReader.readLine()) != null) {
-            List<String> split = ProcessText.splitString(line);
+        while ((line = termDFReader.readLine()) != null) {
+            List<String> split = ProcessText.splitSpace(line);
             for (int i = 0; i < split.size(); i+=2) {
-                byte[] postings = new byte[Integer.parseInt(split.get(i + 1)) * Posting.totalSize];
-                postingsStream[Integer.parseInt(split.get(i))].read(postings);
+                int DF = Integer.parseInt(split.get(i + 1));
+                int indexID = Integer.parseInt(split.get(i));
+                byte[] postings = new byte[DF * Posting.SIZE];
+                postingsStream[indexID].read(postings);
                 postingsWriter.write(postings);
             }
         }
@@ -632,31 +588,21 @@ public class Indexer {
             bufferedInputStream.close();
         }
         postingsWriter.close();
-        termDfReader.close();
+        termDFReader.close();
     }
 
-    /* Writes the necessary meta info for a document to the 'documents_meta' file (random access file).
-     * The total size of the records is fixed for each document and equal to DocumentMetaEntry.totalSize
+    /* Writes an entry to DOCUMENTS_META_FILENAME (random access file).
+     * See class DocumentMetaEntry.
      *
-     * This is a random access file. It stores in the following order:
-     * 1) The int ID of the document (int => 4 bytes)
-     * 2) The weight (norm) of the document (double => 8 bytes)
-     * 3) The max TF in the document (int => 4 bytes)
-     * 4) Length of document (int => 4 bytes). This is the number of document tokens in the 'documents' file.
-     * 5) PageRank Score (double => 8 bytes)
-     * 6) Average author rank (double => 8 bytes). Currently unused.
-     * 7) Size of the document (int => 4 bytes). This is the size of the document in the 'documents' file.
-     * 8) Offset to the 'documents' file (long => 8 bytes)
-     *
-     * PageRank, weight, max TF, average author rank are all initialized to 0
+     * Note: {PageRank, VSM weight, Max TF, Avg author rank} are all initialized to 0
      * */
-    private void dumpDocumentsMeta(BufferedOutputStream out, int intID, int documentTokens, int documentSize, long documentsOffset)
+    private void dumpDocumentsMeta(BufferedOutputStream out, int docID, int documentTokens, int documentSize, long documentsOffset)
             throws IOException {
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.INTID_OFFSET, intID);
+        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCID_OFFSET, docID);
         __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET, documentTokens);
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET, 0);
+        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET, 0);
         __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET, documentSize);
         __DOCUMENT_META_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentsOffset);
@@ -664,93 +610,83 @@ public class Indexer {
         out.write(__DOCUMENT_META_ARRAY__);
     }
 
-    /* Writes the string doc ID of a document to the 'documents_id' file (random access file).
-     *
-     * doc ID (40 ASCII chars => 40 bytes)
-     * */
-    private void dumpDocumentsID(BufferedOutputStream out, S2TextualEntry textualEntry) throws IOException {
-        out.write(textualEntry.getId().getBytes("ASCII"));
+    /* Writes the string ID of a S2TextualEntry to DOCUMENTS_ID_FILENAME (random access file) */
+    private void dumpDocumentsID(BufferedOutputStream out, S2TextualEntry textualEntry)
+            throws IOException {
+        out.write(textualEntry.getID().getBytes("ASCII"));
     }
 
-    /* Writes the necessary info for a document to the 'documents' file (random access file)
+    /* Writes an entry to DOCUMENTS_FILENAME (random access file).
+     * See class DocumentEntry.
      *
-     * It stores in the following order:
-     * 1) Year (short => 2 bytes)
-     * 2) [Title] size (int => 4 bytes)
-     * 3) [Author_1,Author_2, ...,Author_k] size (int => 4 bytes)
-     * 4) [AuthorID_1, AuthorID_2, ... ,Author_ID_k] size (int => 4 bytes)
-     * 5) [Journal name] size (short => 2 bytes / UTF-8)
-     * 6) Title (variable bytes / UTF-8)
-     * 7) Author_1,Author_2, ...,Author_k (variable bytes / UTF-8)
-     * 8) AuthorID_1, AuthorID_2, ...,Author_ID_k (variable bytes / ASCII)
-     * 9) Journal name (variable bytes / UTF-8)
+     * Author names are separated by commas.
+     * Author IDs are separated by commas.
      *
-     * Authors are separated by a comma.
-     * Authors ID are separated by a comma.
+     * Returns the new offset to DOCUMENTS_FILENAME.
      * */
-    private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, long offset)
+    private long dumpDocuments(BufferedOutputStream out, S2TextualEntry textualEntry, long documentsOffset)
             throws IOException {
-        int totalSize = 0;
+        int entrySize = 0;
 
         /* title */
         byte[] title = textualEntry.getTitle().getBytes("UTF-8");
         byte[] titleSize = ByteBuffer.allocate(DocumentEntry.TITLE_SIZE_SIZE).putInt(title.length).array();
-        totalSize += title.length + DocumentEntry.TITLE_SIZE_SIZE;
+        entrySize += title.length + DocumentEntry.TITLE_SIZE_SIZE;
 
-        /* authors, authors ids */
+        /* authors, authors IDs */
         List<Pair<String, List<String>>> authors;
         StringBuilder sb_authorNames;
-        StringBuilder sb_authorIds;
+        StringBuilder sb_authorIDs;
 
         authors = textualEntry.getAuthors();
         sb_authorNames = new StringBuilder();
-        sb_authorIds = new StringBuilder();
+        sb_authorIDs = new StringBuilder();
         for (int i = 0; i < authors.size(); i++) {
             sb_authorNames.append(authors.get(i).getL());
-            sb_authorIds.append(authors.get(i).getR());
+            sb_authorIDs.append(authors.get(i).getR());
             if (i != authors.size() - 1) {
                 sb_authorNames.append(',');
-                sb_authorIds.append(',');
+                sb_authorIDs.append(',');
             }
         }
 
         byte[] authorNames = sb_authorNames.toString().getBytes("UTF-8");
         byte[] authorNamesSize = ByteBuffer.allocate(DocumentEntry.AUTHOR_NAMES_SIZE_SIZE).putInt(authorNames.length).array();
-        totalSize += authorNames.length + DocumentEntry.AUTHOR_NAMES_SIZE_SIZE;
+        entrySize += authorNames.length + DocumentEntry.AUTHOR_NAMES_SIZE_SIZE;
 
-        byte[] authorIds = sb_authorIds.toString().getBytes("ASCII");
-        byte[] authorIdsSize = ByteBuffer.allocate(DocumentEntry.AUTHOR_IDS_SIZE_SIZE).putInt(authorIds.length).array();
-        totalSize += authorIds.length + DocumentEntry.AUTHOR_IDS_SIZE_SIZE;
+        byte[] authorIDs = sb_authorIDs.toString().getBytes("ASCII");
+        byte[] authorIDsSize = ByteBuffer.allocate(DocumentEntry.AUTHOR_IDS_SIZE_SIZE).putInt(authorIDs.length).array();
+        entrySize += authorIDs.length + DocumentEntry.AUTHOR_IDS_SIZE_SIZE;
 
         /* year */
         byte[] year = ByteBuffer.allocate(DocumentEntry.YEAR_SIZE).putShort((short) textualEntry.getYear()).array();
-        totalSize += DocumentEntry.YEAR_SIZE;
+        entrySize += DocumentEntry.YEAR_SIZE;
 
         /* journal name */
         byte[] journalName = textualEntry.getJournalName().getBytes("UTF-8");
         byte[] journalNameSize = ByteBuffer.allocate(DocumentEntry.JOURNAL_NAME_SIZE_SIZE).putShort((short) journalName.length).array();
-        totalSize += journalName.length + DocumentEntry.JOURNAL_NAME_SIZE_SIZE;
+        entrySize += journalName.length + DocumentEntry.JOURNAL_NAME_SIZE_SIZE;
 
         /* write first the fixed size fields */
         out.write(year);
         out.write(titleSize);
         out.write(authorNamesSize);
-        out.write(authorIdsSize);
+        out.write(authorIDsSize);
         out.write(journalNameSize);
 
         /* write the variable size fields */
         out.write(title);
         out.write(authorNames);
-        out.write(authorIds);
+        out.write(authorIDs);
         out.write(journalName);
 
-        return totalSize + offset;
+        return entrySize + documentsOffset;
     }
 
-    /* Deletes the specified indexPath folder */
-    private boolean deleteDir(File indexPath)
+    /* Deletes the given folder */
+    private boolean deleteDir(File path)
             throws IOException {
-        File[] contents = indexPath.listFiles();
+        File[] contents = path.listFiles();
         if (contents != null) {
             for (File file : contents) {
                 if (!deleteDir(file)) {
@@ -758,29 +694,22 @@ public class Indexer {
                 }
             }
         }
-        return Files.deleteIfExists(indexPath.toPath());
+        return Files.deleteIfExists(path.toPath());
     }
 
     /* Calculates the document weight (used by the Vector space model) and the max TF in each document
-    and writes them to the 'documents_meta' file.
+    and writes them to DOCUMENTS_META_FILENAME.
 
-    To calculate the weight we need two things:
-    1) The DF of each term in a document
-    2) The TF of each term in a document
-
-    -> The DF is easily obtained since we already have the final 'vocabulary' file finalized.
-    -> The 'doc_tf' file contains a sequence of <term, TF> for every term in the document.
-
-    This process takes place after the merging of the partial 'vocabulary' files and before the merging of the
-    partial 'postings' files. This is done as to minimize the disk usage before merging the postings since the
-    'doc_tf' file is already quite large.
+    To calculate the weight of a document we need:
+    1) The DF of each term : Easily obtained from the final VOCABULARY_FILENAME.
+    2) The TF of each term: 'INDEX_TMP_PATH/doc_tf' already contains a sequence of <term, TF>.
     */
-    private void updateVSMweights()
+    private void updateVSMWeights()
             throws IOException {
         long startTime = System.nanoTime();
         Themis.print("-> Calculating VSM weights...\n");
 
-        /* load the vocabulary terms and the DF */
+        /* load VOCABULARY_FILENAME */
         BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
         Map<String, Integer> vocabulary = new HashMap<>();
         String line;
@@ -791,40 +720,40 @@ public class Indexer {
         }
         vocabularyReader.close();
 
-        /* open the required files: 'documents_meta' and 'doc_tf' */
-        __DOCMETA_BUFFERS__ = new DocumentBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.WRITE, DocumentMetaEntry.totalSize);
-        BufferedReader docTfReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTfPath()), "UTF-8"));
+        /* open DOCUMENTS_META_FILENAME and 'INDEX_TMP_PATH/doc_tf' */
+        __DOCMETA_BUFFERS__ = new DocumentBlockBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
+        BufferedReader docTFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTFPath()), "UTF-8"));
 
-        int totalArticles = Integer.parseInt(_INDEX_META__.get("documents"));
-        double logArticles = Math.log(totalArticles);
+        int totalDocuments = Integer.parseInt(_INDEX_META__.get("documents"));
+        double logDocuments = Math.log(totalDocuments);
         long offset = 0;
 
-        /* read a line from the 'doc_tf' file and calculate the weight */
-        while ((line = docTfReader.readLine()) != null) {
-            List<String> splitList = ProcessText.splitString(line);
+        /* read a line from the 'INDEX_TMP_PATH/doc_tf' and calculate the weight */
+        while ((line = docTFReader.readLine()) != null) {
+            List<String> splitList = ProcessText.splitSpace(line);
             double weight = 0;
-            int maxTf = 0;
+            int maxTF = 0;
             for (int i = 0; i < splitList.size(); i += 2) {
-                int df = vocabulary.get(splitList.get(i));
-                int tf = Integer.parseInt(splitList.get(i + 1));
-                if (tf > maxTf) {
-                    maxTf = tf;
+                int DF = vocabulary.get(splitList.get(i));
+                int TF = Integer.parseInt(splitList.get(i + 1));
+                if (TF > maxTF) {
+                    maxTF = TF;
                 }
-                double x = tf * (logArticles - Math.log(df));
+                double x = TF * (logDocuments - Math.log(DF));
                 weight += x * x;
             }
-            weight = Math.sqrt(weight) / maxTf;
+            weight = Math.sqrt(weight) / maxTF;
 
-            /* update the 'documents_meta' file */
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            /* update DOCUMENTS_META_FILENAME */
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
             buffer.putDouble(weight);
-            buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
-            buffer.putInt(maxTf);
-            offset += DocumentMetaEntry.totalSize;
+            buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
+            buffer.putInt(maxTF);
+            offset += DocumentMetaEntry.SIZE;
         }
 
         /* close files */
-        docTfReader.close();
+        docTFReader.close();
         __DOCMETA_BUFFERS__.close();
         __DOCMETA_BUFFERS__ = null;
 
@@ -832,12 +761,11 @@ public class Indexer {
     }
 
     /**
-     * Loads the index from the 'index' folder. The following take place:
-     * 1) The 'vocabulary' file is loaded in memory.
-     * 2) The 'postings' and 'documents' file are opened.
-     * 3) The 'documents_id' and 'documents_meta' files are memory mapped.
-     * 4) The index configuration options from 'index_meta' file are loaded in memory.
-     * 5) The pagerank scores of the citations are loaded in memory.
+     * Loads the index from INDEX_PATH. The following actions take place:
+     * 1) VOCABULARY_FILENAME and INDEX_META_FILENAME are loaded in memory.
+     * 2) POSTINGS_FILENAME and DOCUMENTS_FILENAME are opened.
+     * 3) DOCUMENTS_ID_FILENAME and DOCUMENTS_META_FILENAME are memory mapped.
+     * 4) The Pagerank scores of the documents are loaded in memory.
      *
      * @return
      * @throws IndexNotLoadedException
@@ -846,44 +774,43 @@ public class Indexer {
             throws IndexNotLoadedException {
         Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
         try {
-            /* load index configuration options */
-            _INDEX_META__ = loadMeta();
+            /* load index configuration options from INDEX_META_FILENAME */
+            _INDEX_META__ = loadIndexMeta();
             Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
             Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
             Themis.print("-> Loading index...");
 
-            /* load 'vocabulary' file */
+            /* load VOCABULARY_FILENAME */
             __VOCABULARY__ = new HashMap<>();
             String line;
             String[] fields;
-
             BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
             while ((line = vocabularyReader.readLine()) != null) {
                 fields = line.split(" ");
-                __VOCABULARY__.put(fields[0], new Vocabulary(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
+                __VOCABULARY__.put(fields[0], new VocabularyEntry(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
             }
             vocabularyReader.close();
 
-            /* open 'postings', 'documents' files */
+            /* open POSTINGS_FILENAME and DOCUMENTS_FILENAME */
             __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
             __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
 
-            /* memory map the 'documents_meta', 'documents_id' files */
-            __DOCMETA_BUFFERS__ = new DocumentBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.totalSize);
-            __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.totalSize];
+            /* memory map DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME */
+            __DOCMETA_BUFFERS__ = new DocumentBlockBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
+            __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
             __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-            __DOCID_BUFFERS__ = new DocumentBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentIDEntry.totalSize);
-            __DOCUMENT_ID_ARRAY__ = new byte[DocumentIDEntry.totalSize];
+            __DOCID_BUFFERS__ = new DocumentBlockBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
+            __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
             __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
 
-            /* load pagerank scores */
-            _citationsPagerankWeight = __CONFIG__.getPagerankPublicationsWeight();
+            /* load Pagerank scores of the documents */
+            _documentPagerankWeight = __CONFIG__.getDocumentPagerankWeight();
             int documents = Integer.parseInt(_INDEX_META__.get("documents"));
-            _citationsPagerank = new double[documents];
+            _documentsPagerank = new double[documents];
             for (int i = 0; i < documents; ++i) {
-                long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET;
-                ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
-                _citationsPagerank[i] = buffer.getDouble();
+                long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
+                ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset);
+                _documentsPagerank[i] = buffer.getDouble();
             }
         }
         catch (IOException e) {
@@ -895,12 +822,12 @@ public class Indexer {
     }
 
     /**
-     * Loads the index configuration options from the 'index_meta' file in the 'index' folder
+     * Loads index metadata/options from INDEX_META_FILENAME.
      *
      * @return
      * @throws IOException
      */
-    public Map<String, String> loadMeta()
+    public Map<String, String> loadIndexMeta()
             throws IOException {
         Map<String, String> meta;
         BufferedReader indexMetaReader = new BufferedReader(new FileReader(getMetaPath()));
@@ -918,10 +845,6 @@ public class Indexer {
 
     /**
      * Clears all references to the loaded index so that the memory can be garbage collected.
-     * The following take place:
-     * 1) The 'postings', 'documents', 'documents_id', 'documents_meta' files are closed and their
-     *    references are nullified
-     * 2) The references to the data from the 'vocabulary' and 'index_meta' files are nullified.
      *
      * @throws IOException
      */
@@ -945,11 +868,11 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
-        _citationsPagerank = null;
+        _documentsPagerank = null;
     }
 
     /**
-     * Deletes the 'index' and 'index_tmp' folders.
+     * Deletes INDEX_PATH and INDEX_TMP_PATH.
      *
      * @throws IOException
      */
@@ -962,10 +885,10 @@ public class Indexer {
     }
 
     /**
-     * Returns false iff the 'index' and 'index_tmp' directories are not empty, true otherwise.
+     * Returns true if INDEX_PATH and INDEX_TMP_PATH are empty, false otherwise.
      * @return
      */
-    public boolean isIndexDirEmpty() {
+    public boolean areIndexDirEmpty() {
         File file = new File(__INDEX_PATH__);
         File[] fileList = file.listFiles();
         if (fileList != null && fileList.length != 0) {
@@ -977,34 +900,33 @@ public class Indexer {
     }
 
     /**
-     * Returns the string doc ID of a document based on the specified int ID.
+     * Returns the string ID of a document given its int ID.
      *
-     * @param intID
+     * @param docID
      * @return
      * @throws UnsupportedEncodingException
      * @throws IndexNotLoadedException
      */
-    public String getDocID(int intID)
+    public String getDocID(int docID)
             throws UnsupportedEncodingException, IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
-        long docIdOffset = DocInfo.getDocIdOffset(intID);
-        ByteBuffer buffer = __DOCID_BUFFERS__.memBuffer(docIdOffset);
+        long docIdOffset = DocInfo.getDocIDOffset(docID);
+        ByteBuffer buffer = __DOCID_BUFFERS__.getMemBuffer(docIdOffset);
         buffer.get(__DOCUMENT_ID_ARRAY__);
 
-        return new String(__DOCUMENT_ID_ARRAY__, 0, DocumentIDEntry.DOCID_SIZE, "ASCII");
+        return new String(__DOCUMENT_ID_ARRAY__, 0, DocumentStringID.SIZE, "ASCII");
     }
 
     /**
-     * Reads the 'documents' and 'documents_meta' files and adds the properties specified by props to each of
-     * the DocInfo objects.
+     * Reads DOCUMENTS_FILENAME and DOCUMENTS_META_FILENAME and adds the properties specified
+     * by the given props to each of the DocInfo objects of the results.
      *
      * Pre-condition:
-     * This method will return the expected result only if the first DocInfo object has the same props as the
-     * rest of the objects. This is for efficiency purposes.
+     * The first DocInfo object must have the same props as the rest of the objects (for efficiency purposes)
      *
-     * When this method returns, only the specified props will be present in every DocInfo object.
+     * When the method returns, only the given props will be present in every DocInfo object.
      *
      * @param props
      * @throws IOException
@@ -1012,7 +934,7 @@ public class Indexer {
      */
     public void updateDocInfo(List<Result> results, Set<DocInfo.PROPERTY> props)
             throws IOException, IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         if (results.size() == 0) {
@@ -1022,11 +944,11 @@ public class Indexer {
         /* get the props of the first DocInfo */
         Set<DocInfo.PROPERTY> firstProps = results.get(0).getDocInfo().get_props();
 
-        /* find the props that will be deleted from each Docinfo */
+        /* find the props that will be deleted from each DocInfo */
         Set<DocInfo.PROPERTY> delProps = new HashSet<>(firstProps);
         delProps.removeAll(props);
 
-        /* find the props that will be added to each Docinfo */
+        /* find the props that will be added to each DocInfo */
         Set<DocInfo.PROPERTY> addProps = new HashSet<>(props);
         addProps.removeAll(firstProps);
 
@@ -1034,7 +956,7 @@ public class Indexer {
             return;
         }
 
-        /* flags for each prop that may be added */
+        /* add & remove flags for each prop */
         boolean ADD_CITATIONS_PAGERANK = addProps.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK);
         boolean ADD_VSM_WEIGHT = addProps.contains(DocInfo.PROPERTY.VSM_WEIGHT);
         boolean ADD_MAX_TF = addProps.contains(DocInfo.PROPERTY.MAX_TF);
@@ -1047,7 +969,6 @@ public class Indexer {
         boolean ADD_YEAR = addProps.contains(DocInfo.PROPERTY.YEAR);
         boolean ADD_DOC_SIZE = addProps.contains(DocInfo.PROPERTY.DOCUMENT_SIZE);
 
-        /* flags for each prop that may be deleted */
         boolean DEL_CITATIONS_PAGERANK = delProps.contains(DocInfo.PROPERTY.CITATIONS_PAGERANK);
         boolean DEL_VSM_WEIGHT = delProps.contains(DocInfo.PROPERTY.VSM_WEIGHT);
         boolean DEL_MAX_TF = delProps.contains(DocInfo.PROPERTY.MAX_TF);
@@ -1063,7 +984,7 @@ public class Indexer {
         for (Result result : results) {
             DocInfo docInfo = result.getDocInfo();
 
-            /* delete props */
+            /* delete props is straightforward */
             if (DEL_CITATIONS_PAGERANK) {
                 docInfo.clearProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK);
             }
@@ -1102,21 +1023,20 @@ public class Indexer {
             long documentsOffset = 0;
             int documentSize = 0;
 
-            /* read the 'documents_meta' file (memory accessed) and add props */
+            /* add props from DOCUMENTS_META_FILENAME (memory accessed) */
             if (ADD_CITATIONS_PAGERANK || ADD_VSM_WEIGHT || ADD_MAX_TF || ADD_TOKEN_COUNT || ADD_AVG_AUTHOR_RANK || ADD_DOC_SIZE) {
 
-                /* go to the required offset and read all document data at once.
-                * The size of the data will be DocumentMetaEntry.totalSize */
-                documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_id());
-                ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(documentsMetaOffset);
+                /* go to the appropriate offset and read all document metadata */
+                documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_docID());
+                ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__);
 
                 documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
                 documentsOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
 
-                /* now add the props */
+                /* add the props */
                 if (ADD_CITATIONS_PAGERANK) {
-                    double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.CITATIONS_PAGERANK_OFFSET);
+                    double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK, pagerank);
                 }
                 if (ADD_VSM_WEIGHT) {
@@ -1140,34 +1060,33 @@ public class Indexer {
                 }
             }
 
-            /* read the 'documents' file (disk accessed) and add props */
+            /* add props from DOCUMENTS_FILENAME (memory accessed) */
             if (ADD_TITLE || ADD_AUTHORS_NAMES || ADD_JOURNAL_NAME || ADD_AUTHORS_IDS || ADD_YEAR) {
 
-                /* In case we haven't already read data from the 'documents_meta' file, we need to do it now
-                * because some of them are required for fetching data from the 'documents' file */
+                /* In case we haven't already read props from DOCUMENTS_META_FILENAME, we need to do it now
+                * because some of them are required for fetching props from DOCUMENTS_FILENAME */
                 if (documentsMetaOffset == -1) {
-                    documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_id());
-                    ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(documentsMetaOffset);
+                    documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_docID());
+                    ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
                     buffer.get(__DOCUMENT_META_ARRAY__);
                     documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
                     documentsOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
                 }
 
-                /* go to the required offset in 'documents' file and read all document data at once.
-                 * The size of the data will be documentSize */
+                /* go to the appropriate offset and read all document props */
                 byte[] __DOCUMENT_ARRAY__ = new byte[documentSize];
                 ByteBuffer __DOCUMENT_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ARRAY__);
                 __DOCUMENTS__.seek(documentsOffset);
                 __DOCUMENTS__.readFully(__DOCUMENT_ARRAY__, 0, documentSize);
 
-                /* now add the props */
+                /* add the props */
                 if (ADD_YEAR) {
                     short year = __DOCUMENT_BUFFER__.getShort(DocumentEntry.YEAR_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.YEAR, year);
                 }
                 int titleSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.TITLE_SIZE_OFFSET);
                 int authorNamesSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_NAMES_SIZE_OFFSET);
-                int authorIdsSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_IDS_SIZE_OFFSET);
+                int authorIDsSize = __DOCUMENT_BUFFER__.getInt(DocumentEntry.AUTHOR_IDS_SIZE_OFFSET);
                 short journalNameSize = __DOCUMENT_BUFFER__.getShort(DocumentEntry.JOURNAL_NAME_SIZE_OFFSET);
                 int offset;
                 if (ADD_TITLE) {
@@ -1181,11 +1100,11 @@ public class Indexer {
                 }
                 if (ADD_AUTHORS_IDS) {
                     offset = DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize;
-                    String authorIds = new String(__DOCUMENT_ARRAY__, offset, authorIdsSize, "ASCII");
-                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIds);
+                    String authorIDs = new String(__DOCUMENT_ARRAY__, offset, authorIDsSize, "ASCII");
+                    docInfo.setProperty(DocInfo.PROPERTY.AUTHORS_IDS, authorIDs);
                 }
                 if (ADD_JOURNAL_NAME) {
-                    offset = DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize + authorIdsSize;
+                    offset = DocumentEntry.TITLE_OFFSET + titleSize + authorNamesSize + authorIDsSize;
                     String journalName = new String(__DOCUMENT_ARRAY__, offset, journalNameSize, "UTF-8");
                     docInfo.setProperty(DocInfo.PROPERTY.JOURNAL_NAME, journalName);
                 }
@@ -1194,46 +1113,45 @@ public class Indexer {
     }
 
     /**
-     * Returns true iff the index has been loaded, false otherwise.
+     * Returns true if the index has been loaded, false otherwise.
      *
      * @return
      */
-    public boolean loaded() {
+    public boolean isloaded() {
         return  __VOCABULARY__ != null &&
                 __POSTINGS__ != null &&
                 __DOCUMENTS__ != null &&
                 __DOCMETA_BUFFERS__ != null &&
                 __DOCID_BUFFERS__ != null &&
                 _INDEX_META__ != null &&
-                _citationsPagerank != null;
+                _documentsPagerank != null;
     }
 
     /**
-     * Returns an array of the document frequencies (DF) for the terms in the specified list
+     * Returns an array of DF (document frequency) for the terms in the given list
      *
      * @param query
      * @return
      * @throws IndexNotLoadedException
      */
-    public int[] getDf(List<QueryTerm> query)
+    public int[] getDF(List<QueryTerm> query)
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         int[] dfs = new int[query.size()];
-        Vocabulary vocabularyValue;
+        VocabularyEntry vocabularyEntry;
         for (int i = 0; i < query.size(); i++) {
-            vocabularyValue = __VOCABULARY__.get(query.get(i).get_term());
-            if (vocabularyValue != null) {
-                dfs[i] = vocabularyValue.get_df();
+            vocabularyEntry = __VOCABULARY__.get(query.get(i).get_term());
+            if (vocabularyEntry != null) {
+                dfs[i] = vocabularyEntry.getDF();
             }
         }
         return dfs;
     }
 
     /**
-     * Returns a Postings object that represents the postings of a term in the 'postings' file.
-     * See class Postings.
+     * Returns a Postings object that represents the postings of a term in POSTINGS_FILENAME.
      *
      * @param term
      * @return
@@ -1242,50 +1160,50 @@ public class Indexer {
      */
     public Postings getPostings(String term)
             throws IOException, IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
-        Vocabulary vocabularyValue = __VOCABULARY__.get(term);
-        if (vocabularyValue == null) {
+        VocabularyEntry vocabularyEntry = __VOCABULARY__.get(term);
+        if (vocabularyEntry == null) {
             return new Postings(new int[0], new int[0]);
         }
 
-        int df = vocabularyValue.get_df();
-        __POSTINGS__.seek(vocabularyValue.get_postingsOffset());
-        byte[] postings = new byte[df * Posting.totalSize];
+        int DF = vocabularyEntry.getDF();
+        __POSTINGS__.seek(vocabularyEntry.getPostingsOffset());
+        byte[] postings = new byte[DF * Posting.SIZE];
         __POSTINGS__.readFully(postings);
-        ByteBuffer bb = ByteBuffer.wrap(postings);
-        int[] intIDs = new int[df];
-        int[] tfs = new int[df];
-        for (int i = 0; i < df; i++) {
-            tfs[i] = bb.getInt();
-            intIDs[i] = bb.getInt();
+        ByteBuffer BB = ByteBuffer.wrap(postings);
+        int[] docIDs = new int[DF];
+        int[] TFs = new int[DF];
+        for (int i = 0; i < DF; i++) {
+            TFs[i] = BB.getInt();
+            docIDs[i] = BB.getInt();
         }
-        return new Postings(tfs, intIDs);
+        return new Postings(TFs, docIDs);
     }
 
     /**
-     * Returns a VSMprops object that has all essential props required by the Vector space model.
+     * Returns a VSMprops object that has the essential props required by the Vector space model.
      *
      * @return
      * @throws IndexNotLoadedException
      */
     public VSMprops getVSMprops()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
-        int[] maxTfs = new int[documents];
+        int[] maxTFs = new int[documents];
         double[] VSMweights = new double[documents];
         for (int i = 0; i < documents; i++) {
             long offset = DocInfo.getMetaOffset(i);
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset + DocumentMetaEntry.VSM_WEIGHT_OFFSET);
             VSMweights[i] = buffer.getDouble();
-            buffer = __DOCMETA_BUFFERS__.memBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
-            maxTfs[i] = buffer.getInt();
+            buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
+            maxTFs[i] = buffer.getInt();
         }
-        return new VSMprops(maxTfs, VSMweights);
+        return new VSMprops(maxTFs, VSMweights);
     }
 
     /**
@@ -1295,70 +1213,70 @@ public class Indexer {
      */
     public OKAPIprops getOKAPIprops()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
         int[] tokenCount = new int[documents];
         for (int i = 0; i < documents; i++) {
             long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.TOKEN_COUNT_OFFSET;
-            ByteBuffer buffer = __DOCMETA_BUFFERS__.memBuffer(offset);
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset);
             tokenCount[i] = buffer.getInt();
         }
         return new OKAPIprops(tokenCount);
     }
 
     /**
-     * Returns the total number of documents in the loaded index
+     * Returns the total number of indexed documents.
      *
      * @return
      * @throws IndexNotLoadedException
      */
     public int getTotalDocuments()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         return Integer.parseInt(_INDEX_META__.get("documents"));
     }
 
     /**
-     * Returns the avgdl of the loaded index, used by the Okapi retrieval model
+     * Returns the average number of tokens in the loaded index (required by the Okapi retrieval model).
      *
      * @return
      * @throws IndexNotLoadedException
      */
-    public double getAvgdl()
+    public double getAvgDL()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         return Double.parseDouble(_INDEX_META__.get("avgdl"));
     }
 
     /**
-     * Returns true iff stopwords are enabled for the loaded index, false otherwise
+     * Returns true if the loaded index has been created with stopwords enabled, false otherwise.
      *
      * @return
      * @throws IndexNotLoadedException
      */
     public Boolean useStopwords()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         return Boolean.parseBoolean(_INDEX_META__.get("use_stopwords"));
     }
 
     /**
-     * Returns true iff stemming is enabled for the loaded index, false otherwise
+     * Returns true if the loaded index has been created with stemming enabled, false otherwise.
      *
      * @return
      * @throws IndexNotLoadedException
      */
     public Boolean useStemmer()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         return Boolean.parseBoolean(_INDEX_META__.get("use_stemmer"));
@@ -1366,18 +1284,19 @@ public class Indexer {
 
     /**
      * Returns the timestamp of the loaded index
+     *
      * @return
      */
     public String getIndexTimestamp()
             throws IndexNotLoadedException {
-        if (!loaded()) {
+        if (!isloaded()) {
             throw new IndexNotLoadedException();
         }
         return _INDEX_META__.get("timestamp");
     }
 
     /**
-     * Returns the general configuration options used by this Indexer
+     * Returns the general configuration options used by this Indexer.
      *
      * @return
      */
@@ -1386,7 +1305,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'index' folder as specified in the general configuration options
+     * Returns the INDEX_PATH.
      *
      * @return
      */
@@ -1395,7 +1314,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'dataset' folder as specified in the general configuration options
+     * Returns the DATASET_PATH.
      *
      * @return
      */
@@ -1404,7 +1323,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'index_tmp' folder as specified in the general configuration options
+     * Returns the INDEX_TMP_PATH.
      *
      * @return
      */
@@ -1413,8 +1332,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'vocabulary' file of the index as specified in the general configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of VOCABULARY_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
@@ -1423,8 +1341,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'postings' file of the index as specified in the general configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of POSTINGS_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
@@ -1433,8 +1350,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'documents' file of the index as specified in the general configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of DOCUMENTS_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
@@ -1443,9 +1359,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'documents_meta' file of the index as specified in the general
-     * configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of DOCUMENTS_META_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
@@ -1454,8 +1368,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'documents_id' file of the index as specified in the general configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of DOCUMENTS_ID_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
@@ -1464,78 +1377,73 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the 'index_meta' file of the index as specified in the general configuration options.
-     * This file is in the 'index' folder.
+     * Returns the full path of INDEX_META_FILENAME. The file is in INDEX_PATH.
      *
      * @return
      */
     public String getMetaPath() {
-        return __INDEX_PATH__ + "/" + __META_FILENAME__;
+        return __INDEX_PATH__ + "/" + __INDEX_META_FILENAME__;
     }
 
-    /* Returns the full path of the 'term_df' file. This file is in the 'index_tmp' folder */
-    private String getTermDfPath() {
+    /* Returns the full path of 'INDEX_TMP_PATH/term_df' */
+    private String getTermDFPath() {
         return getIndexTmpPath() + "term_df";
     }
 
-    /* Returns the full path of the 'doc_df' file. This file is in the 'index_tmp' folder */
-    private String getDocTfPath() {
+    /* Returns the full path of 'INDEX_TMP_PATH/doc_df' */
+    private String getDocTFPath() {
         return getIndexTmpPath() + "doc_tf";
     }
 
-    /* Returns the full path of a partial index specified by the given id.
-    * This folder should be the 'index_tmp/index' */
-    private String getPartialIndexPath(int index) {
-        return getIndexTmpPath() + index + "/";
+    /* Returns the full path of the partial index folder 'INDEX_TMP_PATH/ID/' */
+    private String getPartialIndexPath(int ID) {
+        return getIndexTmpPath() + ID + "/";
     }
 
     /**
-     * Returns the full path of the 'postings' file in the partial index specified by the given index.
-     * This file has the same name as the 'postings' file specified in the general configuration options
-     * and is in the 'index_tmp/index' folder.
+     * Returns the full path of the partial postings 'INDEX_TMP_PATH/ID/POSTINGS_FILENAME'
      *
-     * @param index
+     * @param ID
      * @return
      */
-    public String getPartialPostingPath(int index) {
-        return getPartialIndexPath(index) + __POSTINGS_FILENAME__;
+    public String getPartialPostingsPath(int ID) {
+        return getPartialIndexPath(ID) + __POSTINGS_FILENAME__;
     }
 
     /**
-     * Returns the full path of the 'vocabulary' file in the partial index specified by the given index.
-     * This file has the same name as the 'vocabulary' file specified in the general configuration options
-     * and is in the 'index_tmp/index' folder.
+     * Returns the full path of the partial vocabulary 'INDEX_TMP_PATH/ID/VOCABULARY_FILENAME'
      *
-     * @param index
+     * @param ID
      * @return
      */
-    public String getPartialVocabularyPath(int index) {
-        return getPartialIndexPath(index) + __VOCABULARY_FILENAME__;
+    public String getPartialVocabularyPath(int ID) {
+        return getPartialIndexPath(ID) + __VOCABULARY_FILENAME__;
     }
 
     /**
-     * Set the citations pagerank weight
+     * Sets the weight for the Pagerank scores of the documents
      *
      * @param weight
      */
-    public void set_citationsPagerankWeight(double weight) {
-        _citationsPagerankWeight = weight;
+    public void setDocumentPagerankWeight(double weight) {
+        _documentPagerankWeight = weight;
     }
 
     /**
-     * Get the citations pagerank weight
+     * Gets the weight for the pagerank scores of the documents
      *
      * @return
      */
-    public double get_citationsPagerankWeight() {
-        return _citationsPagerankWeight;
+    public double getDocumentPagerankWeight() {
+        return _documentPagerankWeight;
     }
 
     /**
-     * Get the citations pagerank scores
+     * Gets the pagerank scores of the documents
+     *
      * @return
      */
-    public double[] get_citationsPagerank() {
-        return _citationsPagerank;
+    public double[] getDocumentsPagerank() {
+        return _documentsPagerank;
     }
 }

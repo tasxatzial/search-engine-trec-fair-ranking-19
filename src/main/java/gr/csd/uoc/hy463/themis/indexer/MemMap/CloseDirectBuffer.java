@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 /**
- * Closes all ByteBuffers so that the file can be unmapped from memory
+ * Closes all ByteBuffers so that the file can be manually unmapped from memory
  */
 public class CloseDirectBuffer {
     public static void closeDirectBuffer(ByteBuffer cb) {

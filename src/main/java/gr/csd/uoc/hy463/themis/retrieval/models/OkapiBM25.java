@@ -28,9 +28,9 @@ public class OkapiBM25 extends ARetrievalModel {
         _calculatedFreqs = new double[_totalDocuments][];
         _tokenCount = new int[_totalDocuments];
         _modelScore = new double[_totalDocuments];
-        _avgdl = _indexer.getAvgdl();
+        _avgdl = _indexer.getAvgDL();
         OKAPIprops props = _indexer.getOKAPIprops();
-        _tokenCount = props.get_tokenCount();
+        _tokenCount = props.getTokenCount();
     }
 
     public List<Result> getRankedResults(List<QueryTerm> query, int endResult)
@@ -45,16 +45,16 @@ public class OkapiBM25 extends ARetrievalModel {
         //merge weights for the same terms
         query = mergeTerms(query);
 
-        int[] dfs = _indexer.getDf(query);
+        int[] dfs = _indexer.getDF(query);
 
         //calculate frequencies
         for(int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
-            int[] intIDs = postings.get_intID();
+            int[] docIDs = postings.get_intID();
             int[] tfs = postings.get_tfs();
             double weight = query.get(i).get_weight();
             for (int j = 0; j < dfs[i]; j++) {
-                int id = intIDs[j];
+                int id = docIDs[j];
                 double[] freqs = _calculatedFreqs[id];
                 if (freqs == null) {
                     freqs = new double[query.size()];
@@ -91,7 +91,7 @@ public class OkapiBM25 extends ARetrievalModel {
             maxScore = 1;
         }
 
-        //normalize to [0, 1]
+        //normalize scores to [0, 1]
         for (int i = 0; i < _calculatedFreqs.length; i++) {
             if (_calculatedFreqs[i] == null) {
                 continue;
