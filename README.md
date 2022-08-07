@@ -6,11 +6,15 @@ It was built to index and query the collection of documents from the 2019 [TREC 
 
 ## Features
 
-* Three retrieval models: Boolean, Vector Space, Okapi.
+* Three retrieval models:
+  * Boolean
+  * Vector Space
+  * Okapi
 * Query expansion using deep learning models:
   * Statistical Dictionary [Glove](https://nlp.stanford.edu/projects/glove/).
   * Lexical Dictionary [WordNet](https://wordnet.princeton.edu/) ([extJWNL](http://extjwnl.sourceforge.net/) library).
-* Pagerank analysis of the citations. Final document ranking is determined by both the retrieval model score and the Pagerank score.
+* Calculation of Pagerank scores.
+* Final document ranking is determined using both the retrieval model score and the Pagerank score.
 * Option to use stemming.
 * Option to use a list of stopwords.
 * Evaluation of the engine using a judgements file.
@@ -18,8 +22,6 @@ It was built to index and query the collection of documents from the 2019 [TREC 
 ## Indexing
 
 Indexing took 2h:30m on a i9-9900k with 64GB DDR4 RAM and 1TB SSD (single thread). Both stemming and stopwords were enabled. 235 partial indexes were created, these were then merged to create the final index.
-
-The total size of the final index was 40.2GB and maximum disk usage during the process was 56.2GB.
 
 ## Evaluation
 
@@ -33,11 +35,11 @@ These numbers depend on the search parameters (retrieval model/query expansion/p
 
 ## Results
 
-The [results](results/) folder contains a complete log of the indexing & evaluation results including a simple analysis of the pagerank graph structure of the citations.
+The [results](results/) folder contains a complete log of the indexing & evaluation results including a simple analysis of the graph structure of the citations.
 
 ## Efficiency
 
-A lot of effort went into optimizations:
+This is a single threaded program. A lot of effort went into optimizations:
 
 * Fast creation of the index files.
 * Low disk/mem usage during the creation of the index files.
