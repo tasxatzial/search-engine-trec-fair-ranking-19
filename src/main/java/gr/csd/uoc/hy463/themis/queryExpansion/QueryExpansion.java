@@ -16,7 +16,7 @@ public abstract class QueryExpansion {
 
     /**
      * Expands a given query using an expansion dictionary. The first term in each List<QueryTerm>
-     * must be the original term
+     * should be the original term.
      *
      * @param query
      * @return

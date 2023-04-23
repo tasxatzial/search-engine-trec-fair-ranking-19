@@ -42,7 +42,7 @@ public class OkapiBM25 extends ARetrievalModel {
             _modelScore[i] = 0;
         }
 
-        //merge weights for the same terms
+        //keep only one term if it appears multiple times
         query = mergeTerms(query);
 
         int[] dfs = _indexer.getDF(query);

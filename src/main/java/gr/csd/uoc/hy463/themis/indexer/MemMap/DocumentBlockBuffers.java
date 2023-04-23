@@ -3,8 +3,8 @@ package gr.csd.uoc.hy463.themis.indexer.MemMap;
 import java.io.IOException;
 
 /**
- * Memory map DOCUMENTS_META_FILENAME or DOCUMENTS_ID_FILENAME.
- * The entries in these files have a fixed size DocumentMetaEntry.SIZE and DocumentStringID.SIZE
+ * Class used for memory mapping of DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME.
+ * Each entry in these files has a fixed size DocumentMetaEntry.SIZE and DocumentStringID.SIZE
  * respectively.
  */
 public class DocumentBlockBuffers extends MemoryBuffers {
@@ -14,9 +14,7 @@ public class DocumentBlockBuffers extends MemoryBuffers {
      *
      * @param filePath The full path of the file
      * @param mode READ or WRITE
-     * @param blockSize The size of an entry in the file. Possible values:
-     *             1) DocumentMetaEntry.totalSize
-     *             2) DocumentStringID.SIZE
+     * @param blockSize The size of an entry in the file
      * @throws IOException
      */
     public DocumentBlockBuffers(String filePath, MemoryBuffers.MODE mode, int blockSize)

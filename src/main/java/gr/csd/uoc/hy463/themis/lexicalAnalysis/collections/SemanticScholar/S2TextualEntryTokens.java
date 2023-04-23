@@ -8,7 +8,7 @@ import gr.csd.uoc.hy463.themis.utils.Pair;
 import java.util.*;
 
 /**
- * Create a map of term -> TF (term frequency) from a S2TextualEntry.
+ * Create a map of [term -> TF (term frequency)] from a {@link S2TextualEntry}.
  */
 public class S2TextualEntryTokens {
     private final boolean _useStemmer;
@@ -20,7 +20,7 @@ public class S2TextualEntryTokens {
     }
 
     /**
-     * Creates a map of term -> TF from a S2TextualEntry.
+     * Creates a map of [term -> TF (term frequency)] from a S2TextualEntry.
      *
      * @param entry
      * @return
@@ -48,7 +48,7 @@ public class S2TextualEntryTokens {
         return TFs;
     }
 
-    /* Splits a string into tokens (terms), applies stemming & stopwords, and finds the frequency TF of each term.
+    /* Splits a string into terms, applies stemming & stopwords, and finds the TF of each term.
     * It then adds all <term, TF> pairs to the given map */
     private void addToTFMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> TFs) {
         String delimiter = getDelimiter(prop);
@@ -71,7 +71,7 @@ public class S2TextualEntryTokens {
         }
     }
 
-    /* Returns the split pattern for the given DocInfo property. */
+    /* Returns the split pattern for the given DocInfo property */
     private static String getDelimiter(DocInfo.PROPERTY prop) {
         switch (prop) {
             case TITLE: case ABSTRACT:

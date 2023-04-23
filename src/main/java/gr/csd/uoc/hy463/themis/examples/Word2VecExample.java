@@ -11,8 +11,6 @@ import java.util.Collection;
 
 /**
  * Class that showcases example of word2vec models, deep learning model from google
- *
- * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class Word2VecExample {
 

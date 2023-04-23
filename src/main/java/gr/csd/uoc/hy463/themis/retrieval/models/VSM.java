@@ -41,11 +41,14 @@ public class VSM extends ARetrievalModel {
             _modelScore[i] = 0;
         }
 
-        //frequencies of the terms
+        //merge weights if a term appears multiple times
         Map<String, Double> queryFrequencies = new HashMap<>(query.size());
         for (QueryTerm queryTerm : query) {
             queryFrequencies.merge(queryTerm.get_term(), queryTerm.get_weight(), Double::sum);
         }
+
+        //keep only one term if it appears multiple times
+        query = mergeTerms(query);
 
         //query max term frequency
         double queryMaxFrequency = 0;
@@ -54,9 +57,6 @@ public class VSM extends ARetrievalModel {
                 queryMaxFrequency = frequency;
             }
         }
-
-        //merge weights for the same terms
-        query = mergeTerms(query);
 
         int[] dfs = _indexer.getDF(query);
 
@@ -75,7 +75,7 @@ public class VSM extends ARetrievalModel {
         }
         queryNorm = Math.sqrt(queryNorm);
 
-        //calculate vsm weights
+        //calculate VSM weights
         for (int i = 0; i < query.size(); i++) {
             Postings postings = _indexer.getPostings(query.get(i).get_term());
             int[] docIDs = postings.get_intID();

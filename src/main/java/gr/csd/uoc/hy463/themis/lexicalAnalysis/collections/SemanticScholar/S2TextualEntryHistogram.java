@@ -11,27 +11,24 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Creates a histogram of the number of occurrences of each character in the collection.
- *
+ * Creates a histogram of the number of occurrences of each character in the documents.
  * Can be used to find the most frequent characters.
  */
 public class S2TextualEntryHistogram {
 
     /**
-     * Reads the JSON entries contained in the files located in inPath and creates a histogram of the number of
-     * occurrences of each character (one histogram per JSON property).
-     *
-     * @param inPath Path of files that contain JSON
+     * Reads the files located in inPath and creates a histogram of the number of
+     * occurrences of each character (one histogram per document property).
+
+     * @param inPath Path of the collection files
      * @param outPath Save path of the histograms
      * @throws IOException
      */
     public static void createHistograms(String inPath, String outPath)
             throws IOException {
-        BufferedWriter outFile = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(outPath), "UTF-8"));
-
-        /* the file that is being parsed */
+        BufferedWriter outFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outPath), "UTF-8"));
         BufferedReader currentDataFile;
+        S2TextualEntry entry;
 
         File folder = new File(inPath);
         File[] files = folder.listFiles();
@@ -40,11 +37,7 @@ public class S2TextualEntryHistogram {
         }
         String json;
 
-        /* the parsed file has one JSON per line that can be parsed into a S2TextualEntry */
-        S2TextualEntry entry;
-
-        /* a character map for each field of the S2TextualEntry. A map contains
-           pairs of <character, frequency>  */
+        /* a map for each field of the S2TextualEntry. Each map contains <character, frequency> pairs */
         Map<Integer, Integer> titles = new HashMap<>();
         Map<Integer, Integer> abstracts = new HashMap<>();
         Map<Integer, Integer> entities = new HashMap<>();
@@ -103,7 +96,7 @@ public class S2TextualEntryHistogram {
         outFile.close();
     }
 
-    /* expands the histogram by taking into account the characters in the field string */
+    /* Takes into account the characters from the given string and updates the histogram */
     private static void addToHistogram(Map<Integer, Integer> charMap, String field) {
         for (int pos = 0; pos < field.length(); ) {
             int cp = field.codePointAt(pos);

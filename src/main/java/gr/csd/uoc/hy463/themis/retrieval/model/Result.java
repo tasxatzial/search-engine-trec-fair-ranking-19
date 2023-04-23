@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis.retrieval.model;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 
 /**
- * Represents a query result. Has a DocInfo instance and a score.
+ * Represents a query result. Has a {@link DocInfo} instance and a score.
  */
 public class Result implements Comparable<Result> {
     private final DocInfo docInfo;

@@ -56,8 +56,8 @@ public class Glove extends QueryExpansion {
     }
 
     /**
-     * Expands the specified list of terms. Each term is expanded by its 1 nearest term and each new term
-     * gets a weight of 0.5.
+     * Expands the specified list of terms. Each term is expanded by its 1 nearest term.
+     * New terms get a weight of 0.5.
      *
      * @param query
      * @return

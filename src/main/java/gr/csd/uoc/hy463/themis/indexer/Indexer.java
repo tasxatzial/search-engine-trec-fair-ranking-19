@@ -35,9 +35,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * The basic indexer class. This class is responsible for two tasks:
  *
- * a) Create the appropriate indexes given a specific directory with files (in
- * our case the Semantic Scholar collection)
- * b) Given a path load the indexes and provide information about the
+ * a) Create the appropriate indexes given a specific directory with files.
+ * b) Given a path, load the indexes and provide information about the
  * indexed data. Can be used for implementing any kind of retrieval models.
  */
 public class Indexer {
@@ -60,7 +59,7 @@ public class Indexer {
     /* Metadata/options related to the final index */
     private Map<String, String> _INDEX_META__ = null;
 
-    /* Use this struct to load VOCABULARY_FILENAME into memory */
+    /* Use a map to load VOCABULARY_FILENAME */
     private HashMap<String, VocabularyEntry> __VOCABULARY__ = null;
 
     /* The final POSTINGS_FILENAME and DOCUMENTS_FILENAME */
@@ -80,7 +79,7 @@ public class Indexer {
     /**
      * Constructor.
      *
-     * Reads configuration options from themis.config file and initializes the filenames in the final index.
+     * Reads configuration options from themis.config file and sets the names of the files in the final index.
      *
      * @throws ConfigLoadException
      */
@@ -113,13 +112,13 @@ public class Indexer {
     }
 
     /**
-     * Indexes the collection found in the given path and writes the final index to INDEX_PATH. Will immediately
-     * abort if INDEX_PATH is not empty.
-     * INDEX_TMP_PATH will be used to store any temp files including the partial indexes.
-     * If PARTIAL_INDEX_MAX_DOCS_SIZE is less than the number of documents in the collection then more
-     * than 1 partial indexes will be created. Each partial index will contain data from at most
-     * PARTIAL_INDEX_MAX_DOCS_SIZE documents. Finally, all partial indexes are merged and the final index
-     * is created.
+     * Indexes the collection found in the given path and writes the final index to INDEX_PATH.
+     * Immediately aborts if INDEX_PATH is not empty.
+     *
+     * All temp files will be saved in INDEX_TMP_PATH and will be deleted at the end of the process.
+     * If PARTIAL_INDEX_MAX_DOCS_SIZE is less than the number of documents then >1 partial indexes will be created.
+     * Each partial index will contain data from at most PARTIAL_INDEX_MAX_DOCS_SIZE documents.
+     * Finally, all partial indexes are merged to create the final index.
      *
      * @param path
      * @throws IOException
@@ -136,7 +135,7 @@ public class Indexer {
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
 
-        /* the ID of each document. The N-th parsed document will have ID = N (starting from 0) */
+        /* the (int) ID of each document. The N-th parsed document will have ID = N (starting from 0) */
         int docID = 0;
 
         /* the total number of tokens in the collection (required by the Okapi retrieval model) */
@@ -157,7 +156,7 @@ public class Indexer {
             return;
         }
 
-        /* initialize metadata/options related to the final index */
+        /* initialize the metadata/options of the final index */
         _INDEX_META__ = new HashMap<>();
         Themis.print("-> Indexing options:\n");
         _INDEX_META__.put("use_stemmer", String.valueOf(__CONFIG__.getUseStemmer()));
@@ -172,12 +171,12 @@ public class Indexer {
         Themis.print("-> Start indexing\n");
         long startTime = System.nanoTime();
 
-        /* sort the files in the collection => determines the parsing order and thus the ID of each document */
+        /* sort the files in the collection, this determines the parsing order and thus the (int) ID of each document */
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        /* instantiate the object that calculates the frequencies of the tokens in a document */
+        /* use this object for calculating the frequencies of the tokens in a document */
         S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
         /* create the final index folder INDEX_PATH */
@@ -213,7 +212,6 @@ public class Indexer {
                 BufferedReader currFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
 
-                /* for each document */
                 while ((json = currFile.readLine()) != null) {
 
                     /* Extract all textual info into a S2TextualEntry */
@@ -232,7 +230,7 @@ public class Indexer {
                     long prevDocumentsOffset = documentsOffset;
                     documentsOffset = dumpDocuments(documents_out, entry, documentsOffset);
 
-                    /* size of the entry in DOCUMENTS_FILENAME */
+                    /* size of the entry in DOCUMENTS_FILENAME for the currently parsed document */
                     int documentSize = (int) (documentsOffset - prevDocumentsOffset);
 
                     /* update DOCUMENTS_META_FILENAME */
@@ -253,7 +251,7 @@ public class Indexer {
             }
         }
 
-        /* if we just created a new index but there are no documents left then remove it */
+        /* if a new index has just been created but there are no documents left then remove it */
         if (docID != 0 && docID % maxDocsPerIndex == 0) {
             indexID--;
         }
@@ -266,10 +264,10 @@ public class Indexer {
         documentsID_out.close();
         docTFWriter.close();
 
-        /* calculate avgdl for the Okapi retrieval model */
+        /* calculate the avgdl (average number of tokens) for the Okapi retrieval model */
         double avgdl = (0.0 + tokenCount) / docID;
 
-        /* save the remaining metadata/options related to the final index and dump them to INDEX_META_FILENAME */
+        /* calculate the remaining metadata/options of the final index and write everything to INDEX_META_FILENAME */
         _INDEX_META__.put("documents", String.valueOf(docID));
         _INDEX_META__.put("avgdl", String.valueOf(avgdl));
         _INDEX_META__.put("timestamp", Instant.now().toString());
@@ -280,7 +278,7 @@ public class Indexer {
 
         Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
 
-        /* merge the partial VOCABULARY_FILENAME and delete them */
+        /* merge all partial VOCABULARY_FILENAME and delete them */
         mergeVocabularies(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
@@ -295,7 +293,7 @@ public class Indexer {
         updateVSMWeights();
         deleteDir(new File(getDocTFPath()));
 
-        /* merge the partial POSTINGS_FILENAME and delete them */
+        /* merge all partial POSTINGS_FILENAME and delete them */
         mergePostings(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
@@ -306,7 +304,7 @@ public class Indexer {
             Themis.print("[Error deleting partial postings]\n");
         }
 
-        /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merge of the vocabulary files) */
+        /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merging of the partial vocabulary files) */
         deleteDir(new File(getTermDFPath()));
 
         /* compute the document pagerank scores and update DOCUMENTS_META_FILENAME */
@@ -324,15 +322,15 @@ public class Indexer {
         Themis.print("-> End of indexing\n");
     }
 
-    /* Merges the partial VOCABULARY_FILENAME found in 'INDEX_TMP_PATH/$/'  where '$' is a
-    number from 0 to maxIndexID (inclusive). Creates the final VOCABULARY_FILENAME (normal sequential file)
-    in INDEX_PATH */
+    /* Merges all partial VOCABULARY_FILENAME and creates the final VOCABULARY_FILENAME
+    (normal sequential file) in INDEX_PATH */
     private void mergeVocabularies(int maxIndexID)
             throws IOException {
         long startTime =  System.nanoTime();
         Themis.print("-> Merging partial vocabularies...\n");
 
-        /* when there's only 1 partial index */
+        /* we need to consider two cases: when there's only 1 partial index (no merging), and
+        * when there are >1 partial indexes */
         if (maxIndexID == 0) {
             finalizePartialVocabulary();
         }
@@ -342,11 +340,10 @@ public class Indexer {
         Themis.print("Partial vocabularies merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
-    /* Merges the partial VOCABULARY_FILENAME when there's only 1 partial index.
+    /* Merges all partial VOCABULARY_FILENAME when there's only 1 partial index. In this case the only thing we
+    need to do is to calculate the offsets to POSTINGS_FILENAME.
 
-    To do this, we cannot simply copy VOCABULARY_FILENAME to its final location
-    because it is missing the offsets to POSTINGS_FILENAME. However, the offsets can be determined
-    using the following information:
+    Calculation of the offsets is easy:
     1) For each term we know its DF
     2) Each entry in POSTINGS_FILENAME has the same size
     So:
@@ -373,9 +370,8 @@ public class Indexer {
         vocabularyWriter.close();
     }
 
-    /* Merges the partial VOCABULARY_FILENAME when there's more than 1 partial index.
-
-    Also creates 'INDEX_TMP_PATH/term_df'. Will be used when merging the partial POSTINGS_FILENAME.
+    /* Merges all partial VOCABULARY_FILENAME when there's >1 partial index. Also creates 'INDEX_TMP_PATH/term_df',
+    this file contains all <index ID, DF> for each term and will be used when merging all partial POSTINGS_FILENAME.
 
     Merge process:
     Assume we have K files.
@@ -415,11 +411,10 @@ public class Indexer {
         /* starting offset to the final POSTINGS_FILENAME */
         long postingsOffset = 0;
 
-        /* object that corresponds to a min lexicographical term */
+        /* entry that corresponds to a min lexicographical term */
         PartialVocabularyEntry minTermObj;
 
-        /* Read the first line from each partial VOCABULARY_FILENAME, create PartialVocabularyEntry objects,
-        and put them in a priority queue */
+        /* Read the first line from each partial VOCABULARY_FILENAME and put the entries in a priority queue */
         PriorityQueue<PartialVocabularyEntry> vocabularyQueue = new PriorityQueue<>();
         for (int i = 0; i <= maxIndexID; i++) {
             minTermObj = getNextVocabularyEntry(vocabularyReader[i], i);
@@ -428,29 +423,28 @@ public class Indexer {
             }
         }
 
-        /* list of all objects that correspond to the same min lexicographical term */
+        /* also, initialize a list with all entries that correspond to the same min lexicographical term */
         List<PartialVocabularyEntry> equalTerms = new ArrayList<>();
 
         /* the current min lexicographical term */
         String currMinTerm = null;
 
-        /* poll the queue */
         while((minTermObj = vocabularyQueue.poll()) != null) {
 
-            /* if the term of the polled object is not equal to the min term, we must process the list
-            and update the final VOCABULARY_FILENAME. Also update 'INDEX_TMP_PATH/term_df' */
+            /* if the term of the polled entry is not equal to the current min term, we must process the current
+            list of entries and update the final VOCABULARY_FILENAME. Also update 'INDEX_TMP_PATH/term_df' */
             if (!minTermObj.getTerm().equals(currMinTerm) && !equalTerms.isEmpty()) {
                 postingsOffset = dumpEqualTerms(equalTerms, vocabularyWriter, termDFWriter, postingsOffset);
             }
 
-            /* set the min term to the one from the last polled object */
+            /* set the new min term to the one from the last polled entry */
             currMinTerm = minTermObj.getTerm();
 
-            /* put the last polled object in the list */
+            /* put the last polled entry in the list */
             equalTerms.add(minTermObj);
 
             /* read the next line of the partial VOCABULARY_FILENAME that contained the last polled
-            object and add a new object to the queue */
+            entry and add a new entry to the queue */
             int currIndexID = minTermObj.getIndexID();
             PartialVocabularyEntry nextObj = getNextVocabularyEntry(vocabularyReader[currIndexID], currIndexID);
             if (nextObj != null) {
@@ -458,8 +452,8 @@ public class Indexer {
             }
         }
 
-        /* all partial VOCABULARY_FILENAME have been parsed. Process the list and write the remaining terms
-        to the final VOCABULARY_FILENAME */
+        /* all partial VOCABULARY_FILENAME have been parsed. Process the list of remaining entries and write
+        what is left to the final VOCABULARY_FILENAME */
         if (!equalTerms.isEmpty()) {
             dumpEqualTerms(equalTerms, vocabularyWriter, termDFWriter, postingsOffset);
         }
@@ -472,8 +466,8 @@ public class Indexer {
         termDFWriter.close();
     }
 
-    /* Reads the next line from the partial VOCABULARY_FILENAME that is part of the partial index with
-     the given ID and returns a new PartialVocabularyEntry object */
+    /* Reads the next line from the partial VOCABULARY_FILENAME with the given ID and returns a new
+    PartialVocabularyEntry */
     private PartialVocabularyEntry getNextVocabularyEntry(BufferedReader vocabularyReader, int indexID)
             throws IOException {
         String line = vocabularyReader.readLine();
@@ -484,19 +478,19 @@ public class Indexer {
         return null;
     }
 
-    /* Processes the given list and writes a new line to the final VOCABULARY_FILENAME. Also, updates
-    'INDEX_TMP_PATH/term_df' with a new line.
+    /* Processes the given list of entries (all of them correspond to the same min term) and writes a new line
+    to the final VOCABULARY_FILENAME. Also updates 'INDEX_TMP_PATH/term_df' with a new line for the min term.
 
-    Returns the new offset to POSTINGS_FILENAME that will be used during the next call of the method */
+    Returns the new offset to POSTINGS_FILENAME. It will be used in the next call of the method */
     private long dumpEqualTerms(List<PartialVocabularyEntry> equalTerms, BufferedWriter vocabularyWriter, BufferedWriter termDfWriter, long postingsOffset)
             throws IOException {
         int DF = 0;
 
-        /* sort the list based on the index ID (increasing) */
+        /* sort the list based on the index ID (increasing). This is required so that the postings
+        * of the term appear sorted based on the (int) doc ID */
         equalTerms.sort(PartialVocabularyEntry.IDComparator);
 
-        /* calculate final DF, also write to 'INDEX_TMP_PATH/term_df' a sequence of <index ID, DF>
-        for the current term */
+        /* calculate final DF, also write to 'INDEX_TMP_PATH/term_df' all <index ID, DF> for the current term */
         StringBuilder sb = new StringBuilder();
         for (PartialVocabularyEntry equalTerm : equalTerms) {
             DF += equalTerm.getDF();
@@ -515,9 +509,8 @@ public class Indexer {
         return postingsOffset;
     }
 
-    /* Merges the partial POSTINGS_FILENAME found in 'INDEX_TMP_PATH/$/' where '$' is a
-    number from 0 to maxIndexID (inclusive). Creates the final POSTINGS_FILENAME (random access file)
-    in INDEX_PATH */
+    /* Merges all partial POSTINGS_FILENAME and creates the final POSTINGS_FILENAME
+    (random access file) in INDEX_PATH */
     private void mergePostings(int maxIndexID)
             throws IOException {
 
@@ -534,24 +527,24 @@ public class Indexer {
         Themis.print("Partial postings merged in " + new Time(System.nanoTime() - startTime) + "\n");
     }
 
-    /* Merges all partial POSTINGS_FILENAME when there's more than 1 partial index.
+    /* Merges all partial POSTINGS_FILENAME when there's >1 partial index.
     *
     * Merge process:
-    * We'll rely on 'INDEX_TMP_PATH/term_df' that has been created during the merging of the partial
+    * We'll use 'INDEX_TMP_PATH/term_df' that has been created during the merging of all partial
     * VOCABULARY_FILENAME. This is the known information so far:
     *
     * 1) Each line in 'INDEX_TMP_PATH/term_df' consists of a sequence of <index ID, DF> with the ID
     * appearing in increasing order (done in function Indexer.dumpEqualTerms())
-    * 2) Line N in 'INDEX_TMP_PATH/term_df' corresponds to line N in VOCABULARY_FILENAME file
+    * 2) Line N in 'INDEX_TMP_PATH/term_df' corresponds to line N in VOCABULARY_FILENAME
     * (done in function Indexer.dumpEqualTerms())
     * 3) The blocks of postings in each partial POSTINGS_FILENAME are already sorted based on the
     * sorting of terms in the corresponding partial VOCABULARY_FILENAME (done in function Index.dumpPostings())
-    * 4) The postings in each postings block are already sorted based on the ID of the relevant documents
+    * 4) Each postings block has its postings already sorted based on the (int) ID of the relevant documents
     * (done in function Indexer.index())
     *
-    * So for each term in the VOCABULARY_FILENAME file we can easily find:
+    * So, for each term in the VOCABULARY_FILENAME file we can easily find:
     * 1) All partial indexes that contain its postings
-    * 2) The size of its postings => (Sum of DF)x(POSTING.SIZE)
+    * 2) The size of its postings: (Sum of DF)x(POSTING.SIZE)
     * 3) The offset of the postings block for the next term
     */
     private void mergePartialPostings(int maxIndexID)
@@ -591,10 +584,9 @@ public class Indexer {
         termDFReader.close();
     }
 
-    /* Writes an entry to DOCUMENTS_META_FILENAME (random access file).
-     * See class DocumentMetaEntry.
+    /* Writes an entry to DOCUMENTS_META_FILENAME (random access file). See class DocumentMetaEntry.
      *
-     * Note: {PageRank, VSM weight, Max TF, Avg author rank} are all initialized to 0
+     * PageRank, VSM weight, Max TF, Avg author rank are all initialized to 0
      * */
     private void dumpDocumentsMeta(BufferedOutputStream out, int docID, int documentTokens, int documentSize, long documentsOffset)
             throws IOException {
@@ -616,11 +608,8 @@ public class Indexer {
         out.write(textualEntry.getID().getBytes("ASCII"));
     }
 
-    /* Writes an entry to DOCUMENTS_FILENAME (random access file).
-     * See class DocumentEntry.
-     *
-     * Author names are separated by commas.
-     * Author IDs are separated by commas.
+    /* Writes an entry to DOCUMENTS_FILENAME (random access file). See class DocumentEntry.
+     * Author names are separated by commas. Author IDs are separated by commas.
      *
      * Returns the new offset to DOCUMENTS_FILENAME.
      * */
@@ -762,10 +751,10 @@ public class Indexer {
 
     /**
      * Loads the index from INDEX_PATH. The following actions take place:
-     * 1) VOCABULARY_FILENAME and INDEX_META_FILENAME are loaded in memory.
+     * 1) VOCABULARY_FILENAME and INDEX_META_FILENAME are loaded.
      * 2) POSTINGS_FILENAME and DOCUMENTS_FILENAME are opened.
      * 3) DOCUMENTS_ID_FILENAME and DOCUMENTS_META_FILENAME are memory mapped.
-     * 4) The Pagerank scores of the documents are loaded in memory.
+     * 4) The Pagerank scores of the documents are loaded.
      *
      * @return
      * @throws IndexNotLoadedException
@@ -844,7 +833,7 @@ public class Indexer {
     }
 
     /**
-     * Clears all references to the loaded index so that the memory can be garbage collected.
+     * Clears all references to the loaded index.
      *
      * @throws IOException
      */
@@ -921,12 +910,13 @@ public class Indexer {
 
     /**
      * Reads DOCUMENTS_FILENAME and DOCUMENTS_META_FILENAME and adds the properties specified
-     * by the given props to each of the DocInfo objects of the results.
+     * by the given props to each of the {@link Result}s.
      *
-     * Pre-condition:
-     * The first DocInfo object must have the same props as the rest of the objects (for efficiency purposes)
+     * For efficiency purposes, the function expects that all Results already have the same props (pre-condition).
+     * It proceeds by comparing the existing props of the first Result to the new props. Each Result will receive
+     * only the props that are not already present in it, and will get rid of any props that are not in the new props.
      *
-     * When the method returns, only the given props will be present in every DocInfo object.
+     * If the pre-condition is valid, only the given props will be present in every Result when the method returns.
      *
      * @param props
      * @throws IOException
@@ -1023,7 +1013,7 @@ public class Indexer {
             long documentsOffset = 0;
             int documentSize = 0;
 
-            /* add props from DOCUMENTS_META_FILENAME (memory accessed) */
+            /* add props from DOCUMENTS_META_FILENAME */
             if (ADD_CITATIONS_PAGERANK || ADD_VSM_WEIGHT || ADD_MAX_TF || ADD_TOKEN_COUNT || ADD_AVG_AUTHOR_RANK || ADD_DOC_SIZE) {
 
                 /* go to the appropriate offset and read all document metadata */
@@ -1060,7 +1050,7 @@ public class Indexer {
                 }
             }
 
-            /* add props from DOCUMENTS_FILENAME (memory accessed) */
+            /* add props from DOCUMENTS_FILENAME */
             if (ADD_TITLE || ADD_AUTHORS_NAMES || ADD_JOURNAL_NAME || ADD_AUTHORS_IDS || ADD_YEAR) {
 
                 /* In case we haven't already read props from DOCUMENTS_META_FILENAME, we need to do it now
@@ -1151,7 +1141,7 @@ public class Indexer {
     }
 
     /**
-     * Returns a Postings object that represents the postings of a term in POSTINGS_FILENAME.
+     * Returns a {@link Postings} object that represents the postings of a term in POSTINGS_FILENAME.
      *
      * @param term
      * @return
@@ -1183,7 +1173,7 @@ public class Indexer {
     }
 
     /**
-     * Returns a VSMprops object that has the essential props required by the Vector space model.
+     * Returns a {@link VSMprops} object that has the essential props required by the Vector space model.
      *
      * @return
      * @throws IndexNotLoadedException
@@ -1207,7 +1197,7 @@ public class Indexer {
     }
 
     /**
-     * Returns a OKAPIprops object that has the essential props required by the Okapi model.
+     * Returns a {@link OKAPIprops} object that has the essential props required by the Okapi model.
      *
      * @return
      */
@@ -1241,7 +1231,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the average number of tokens in the loaded index (required by the Okapi retrieval model).
+     * Returns the average number of tokens contained in the loaded index (required by the Okapi retrieval model).
      *
      * @return
      * @throws IndexNotLoadedException
@@ -1401,7 +1391,7 @@ public class Indexer {
     }
 
     /**
-     * Returns the full path of the partial postings 'INDEX_TMP_PATH/ID/POSTINGS_FILENAME'
+     * Returns the full path of the partial posting 'INDEX_TMP_PATH/ID/POSTINGS_FILENAME'
      *
      * @param ID
      * @return

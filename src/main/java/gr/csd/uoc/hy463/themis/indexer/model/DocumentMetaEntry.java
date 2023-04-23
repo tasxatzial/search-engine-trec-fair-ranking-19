@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 /**
  * Represents info about an entry in DOCUMENTS_META_FILENAME.
  *
- * For example, the ID of a document is 4 bytes and can be found in position 0 of the entry.
+ * For example, the (int) ID of a document is 4 bytes and can be found in position 0.
  */
 public class DocumentMetaEntry {
     /* The ID of the document (int => 4 bytes) */

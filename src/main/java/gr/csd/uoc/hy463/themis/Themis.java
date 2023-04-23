@@ -28,7 +28,7 @@ import java.util.*;
 /**
  * The main class.
  *
- * Results are printed in console but we also have an option to use a GUI that can be
+ * Results are printed in console, but we also have an option to use a GUI. It can be
  * enabled by passing 'gui' as first argument of the main function.
  */
 public class Themis {
@@ -64,7 +64,7 @@ public class Themis {
                 }
             });
 
-            /* listeners for when the GUI window is resized */
+            /* resize listeners for the GUI window (does not include maximizing) */
             _view.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
                     _view.setOnlyResultsBounds();
@@ -73,7 +73,7 @@ public class Themis {
                 }
             });
 
-            /* listeners for when the GUI window is maximized */
+            /* toggle maximize listeners for the GUI window */
             _view.addWindowStateListener(e -> _view.setOnlyResultsBounds());
             _view.addWindowStateListener(e -> _view.setTitleAreaBounds());
             _view.addWindowStateListener(e -> _view.setSearchViewBounds());
@@ -98,15 +98,15 @@ public class Themis {
                 _search = new Search();
                 Set<DocInfo.PROPERTY> props = new HashSet<>();
 
-                /* we want to fetch the titles */
+                /* fetch the titles */
                 props.add(DocInfo.PROPERTY.TITLE);
                 _search.setDocumentProperties(props);
 
                 /* Query 'test' and retrieve info for the top 8 results */
                 List<Result> results = _search.search("test", 8);
 
-                /* print results that have index 5-20 (included). If there are only 10 results,
-                it would print those with index 5-7 */
+                /* print results with index 5-20 (included). If there are only 10 results,
+                it would print those with index 5-9 */
                 _search.printResults(results, 5, 20);
             }
             catch (Exception ex) {
@@ -115,8 +115,7 @@ public class Themis {
         }
     }
 
-    /* Runs the complete set of evaluations.
-       Weight for the document pagerank scores takes values 0 and 0.25 */
+    /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runfullEval()
             throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _search = new Search();

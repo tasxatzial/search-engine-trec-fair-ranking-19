@@ -17,11 +17,10 @@ import gr.csd.uoc.hy463.themis.indexer.model.Posting;
 public class Index {
     private final int _indexID;
     private final Indexer _indexer;
+    private List<String> __SORTED_TERMS__ = null;
 
     /* use a map to store the index data */
     private Map<String, TermPostings> __INDEX__ = null;
-
-    private List<String> __SORTED_TERMS__ = null;
 
     public Index(Indexer indexer, int ID) {
         _indexer = indexer;
@@ -31,7 +30,7 @@ public class Index {
 
     /**
      * Dumps all index data to 'INDEX_TMP_PATH/index_id/' and creates the VOCABULARY_FILENAME
-     * and POSTINGS_FILENAME files in the same folder.
+     * and POSTINGS_FILENAME files in the same directory.
      *
      * @throws IOException
      */
@@ -52,11 +51,11 @@ public class Index {
     }
 
     /**
-     * Adds to this index the TFMap for the document that has the given docID.
+     * Adds to this index the map of [term -> TF] for the document that has the given (int) doc ID.
      * Also writes this information to 'INDEX_TMP_PATH/doc_tf' as a sequence of <term1, TF1, term2, TF2, ...>
      * (one line per document)
      *
-     * Returns the total number of frequencies in the document.
+     * Returns the sum of all frequencies in the document, in other words, the total number of tokens.
      *
      * @param TFMap Map of term frequencies
      * @param docTFWriter
@@ -78,7 +77,7 @@ public class Index {
             }
             else {
                 termPostings = new TermPostings();
-                termPostings.addPosting(new Posting(TF, docID)); // adds to a list
+                termPostings.addPosting(new Posting(TF, docID));
                 __INDEX__.put(term, termPostings);
             }
             SB.append(term).append(' ').append(TF).append(' ');
@@ -88,11 +87,12 @@ public class Index {
         return TFSum;
     }
 
-    /* Dumps the appropriate vocabulary data to the given filePath (normal sequential file). Each line contains:
+    /* Dumps the appropriate vocabulary data to the given filePath (normal sequential file).
+     * Each line contains:
      * 1) Term
      * 2) DF (document frequency of this term)
      *
-     * Terms appear in the file in lexicographic order.
+     * Terms are saved in lexicographic order.
      * */
     private void dumpVocabulary(String filePath)
             throws IOException {
@@ -105,12 +105,12 @@ public class Index {
     }
 
     /* Dumps the appropriate postings data to the given filePath (random access file).
-     * For each term in the index, a block of postings is written to the file. Each posting consists of:
+     * For each term, a block of postings is written to the file. Each posting consists of:
      * 1) TF (frequency of the term in the relevant document)
-     * 2) ID (ID of the relevant document)
+     * 2) doc ID (int ID of the relevant document)
      *
      * The blocks of postings in the file will be sorted based on the sorting of terms:
-     * 1st block is for the first vocabulary term, 2nd block is for the 2nd term etc.
+     * 1st block is for the 1st vocabulary term, 2nd block is for the 2nd term etc.
      *
      * The ID of the documents in each block will appear sorted based on the document parsing order.
      * */

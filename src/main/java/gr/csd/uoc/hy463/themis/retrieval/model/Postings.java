@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis.retrieval.model;
 /**
  * Class that holds the postings of a term, organized in two arrays of the same size:
  * - Array of ID of the documents that have the term
- * - Array of TF (frequency of the term in the corresponding document)
+ * - Array of TF (frequency of the term in the corresponding documents)
  */
 public class Postings {
     private final int[] _tfs;

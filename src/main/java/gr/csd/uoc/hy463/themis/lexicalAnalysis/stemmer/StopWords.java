@@ -2,8 +2,6 @@ package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
 /**
  * Class responsible for identifying stopwords
- *
- * @author Panagiotis Papadakos (github.com/papadako)
  */
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

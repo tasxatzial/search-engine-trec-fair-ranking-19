@@ -15,16 +15,13 @@ import java.util.List;
 
 /**
  * Class responsible for reading textual entries from the JSON description of the documents
- * of the collection
- *
- * @author Panagiotis Papadakos (github.com/papadako)
- * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class S2JsonEntryReader {
     private static final Logger __LOGGER__ = LogManager.getLogger(S2JsonEntryReader.class);
 
     /**
-     * Method that reads the doc ID from a JSON string
+     * Reads the doc ID from a JSON string
+     *
      * @param jsonToRead
      * @return
      */
@@ -46,7 +43,8 @@ public class S2JsonEntryReader {
     }
 
     /**
-     * Method that reads all textual information from a JSON string (except IN and OUT citations)
+     * Reads all textual information from a JSON string (except IN and OUT citations)
+     *
      * @param jsonToRead
      * @return
      */
@@ -148,7 +146,8 @@ public class S2JsonEntryReader {
     }
 
     /**
-     * Method that reads the IN and OUT citations from a JSON string
+     * Reads the IN and OUT citations from a JSON string
+     *
      * @param jsonToRead
      * @return
      */
@@ -161,7 +160,7 @@ public class S2JsonEntryReader {
             // This should be a JSON object.
             JSONObject jsonObject = (JSONObject) obj;
 
-            // Get the ID for example
+            // Get the ID
             String ID = (String) jsonObject.get("id");
             entry.setID(ID);
 
@@ -191,47 +190,6 @@ public class S2JsonEntryReader {
     }
 
     public static void main(String[] args) throws IOException {
-        Config config = new Config();
-
-        // Get all filenames in collection
-        // This code was used to extract all titles in the collection
-        /*String datasetPath = config.getDatasetPath();
-        Set<String> result = Stream.of(new File(datasetPath).listFiles())
-                .filter(file -> !file.isDirectory())
-                .map(File::getName)
-                .collect(Collectors.toSet());
-
-            String titlesDir = "/home/papadako/titles/";
-            File dir = new File(titlesDir);
-            if(!dir.exists()) {
-                dir.mkdir();
-            }
-
-            // for each file name
-            for(String file : result) {
-                BufferedReader reader = new BufferedReader(new FileReader(datasetPath + file));
-                String publication = reader.readLine();
-                while(publication != null) {
-                    S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(publication);
-                    String title = entry.getTitle();
-                    String id = entry.getId();
-
-                    // Create directory using the first 3 characters
-                    // since we reach limits of common filesystem due to the huge
-                    // number of files
-                    File dirInternal = new File(titlesDir + id.substring(0, 3));
-                    if(!dirInternal.exists()) {
-                        dirInternal.mkdir();
-                    }
-
-                    FileWriter fileWriter = new FileWriter(dirInternal + "/" + id);
-                    fileWriter.write(title);
-                    fileWriter.close();
-                    publication = reader.readLine();
-                }
-            }*/
-
-
         String json = "{\n"
                 + "	\"entities\": [],\n"
                 + "	\"journalVolume\": \"\",\n"
@@ -264,7 +222,6 @@ public class S2JsonEntryReader {
                 + "	\"venue\": \"\"\n"
                 + "}";
 
-        System.out.println(json);
         System.out.println(S2JsonEntryReader.readTextualEntry(json));
         System.out.println(S2JsonEntryReader.readCitationsEntry(json));
     }

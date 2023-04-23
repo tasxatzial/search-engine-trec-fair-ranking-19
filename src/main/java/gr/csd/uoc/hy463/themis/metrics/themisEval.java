@@ -27,23 +27,20 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Runs an evaluation. The retrieval model and query expansion dictionary are
- * specified in the constructor.
+ * Runs an evaluation given a retrieval model and query expansion dictionary.
  */
 public class themisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Search _search;
-
-    /* general configuration options */
     private final Config __CONFIG__;
-
     private final ARetrievalModel.MODEL _model;
     private final QueryExpansion.DICTIONARY _dictionary;
 
     /**
      * Constructor.
      *
-     * Reads general configuration options from themis.config file.
+     * Reads configuration options from themis.config file and sets the
+     * retrieval model and query expansion dictionary for this instance.
      *
      * @param search
      * @param model
@@ -59,9 +56,10 @@ public class themisEval {
     }
 
     /**
-     * Runs the evaluation: Parses JUDGEMENTS_FILE, performs a search for each query, and writes results
-     * to EVALUATION_FILENAME located in INDEX_PATH.
-     * EVALUATION_FILENAME has the current date appended to its name.
+     * Initializes and runs the evaluation:
+     * 1) Parses JUDGEMENTS_FILE
+     * 2) Performs a search for each query
+     * 3) Writes results to EVALUATION_FILENAME located in INDEX_PATH. The file will have the current date appended to it.
      *
      * @throws IndexNotLoadedException
      * @throws IOException
@@ -109,7 +107,7 @@ public class themisEval {
         evaluate(judgementsReader, evaluationWriter);
     }
 
-    /* Runs the evaluation based on the configured parameters */
+    /* Runs the evaluation */
     private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter)
             throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException {
         String line;
@@ -149,7 +147,7 @@ public class themisEval {
 
             totalResults += results.size();
 
-            //calculate the elapsed time for the search
+            //calculate the elapsed time for this query
             Time time = new Time(endTime - startTime);
             totalSearchTime.addTime(time);
             queryTime.add(new Pair<>(query, time));
@@ -170,7 +168,7 @@ public class themisEval {
             evaluationWriter.flush();
         }
 
-        //calculate some stats for this evaluation
+        //calculate the final stats
         double averageAvep = calculateAverage(aveps);
         double minAvep = findMin(aveps);
         double maxAvep = findMax(aveps);

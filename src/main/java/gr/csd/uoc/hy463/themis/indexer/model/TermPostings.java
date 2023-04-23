@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  Stores the postings of a term (a list of entries in POSTINGS_FILENAME).
+ *  Stores the {@link Posting}s of a term. These correspond to the entries in POSTINGS_FILENAME for this term.
  */
 public class TermPostings {
     private final List<Posting> _postings;

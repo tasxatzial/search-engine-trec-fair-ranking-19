@@ -21,11 +21,10 @@ import java.util.*;
  */
 public class Pagerank {
     private final Indexer _indexer;
-
-    /* The full path of the Pagerank graph file for the citations */
-    private final String __CITATIONS_GRAPH_PATH__;
-
     private final int _totalDocuments;
+
+    /* The full path of the Pagerank graph file */
+    private final String __CITATIONS_GRAPH_PATH__;
 
     /**
      * Constructor.
@@ -36,9 +35,9 @@ public class Pagerank {
     public Pagerank(Indexer indexer)
             throws IOException {
         _indexer = indexer;
-
-        /* Save the Pagerank graph file for the citations to 'INDEX_PATH/graph' */
         String indexPath = _indexer.getConfig().getIndexPath();
+
+        /* Save location of the graph file is 'INDEX_PATH/graph' */
         __CITATIONS_GRAPH_PATH__ = indexPath + "/graph";
 
         /* Read the total number of documents from INDEX_META_FILENAME */
@@ -48,8 +47,8 @@ public class Pagerank {
 
     /**
      * Parses the collection and:
-     * 1) Writes to 'INDEX_PATH/graph' the necessary citation data for the Pagerank algorithm.
-     * 2) Loads the graph in memory and computes the Pagerank scores of the documents.
+     * 1) Writes to 'INDEX_PATH/graph' the necessary data for the Pagerank algorithm.
+     * 2) Loads the graph and computes the scores of the documents.
      * 3) Writes the scores to DOCUMENTS_META_FILENAME.
      *
      * Requires both DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME to be present.
@@ -76,8 +75,8 @@ public class Pagerank {
         }
     }
 
-    /* Parses the collection and saves the citation data to 'INDEX_PATH/graph' (random access file).
-    * Note: This isn't the full graph. Only the data required for initializing the Pagerank graph are saved. */
+    /* Parses the collection and saves the graph data to 'INDEX_PATH/graph' (random access file).
+    * Note: Only the data required for initializing the Pagerank graph are saved */
     private void dumpCitationsData()
             throws IOException {
         File folder = new File(_indexer.getDataSetPath());
@@ -86,30 +85,27 @@ public class Pagerank {
             return;
         }
 
-        /* memory map DOCUMENTS_ID_FILENAME */
+        /* memory map the DOCUMENTS_ID_FILENAME */
         String documentsIDPath = _indexer.getDocumentsIDFilePath();
         DocumentBlockBuffers documentIDBuffers = new DocumentBlockBuffers(documentsIDPath, MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
         byte[] docIDArray = new byte[DocumentStringID.SIZE];
 
-        /* 'INDEX_PATH/graph' stores for each document the number of Out citations and the IDs of the In citations.
+        /* 'INDEX_PATH/graph' stores for each document the number of Out citations and the (int) IDs of the In citations.
         Each entry in the file consists of:
         1) size (int) => size of the rest of the data in this entry
         2) number (int) of Out citations
-        3) [In citation1 ID, In citation2 ID, ...]  (int) */
+        3) [In citation1 ID, In citation2 ID, ...]  (int[]) */
         BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__CITATIONS_GRAPH_PATH__, "rw").getFD()));
 
-        /* sort the files of the collection. This is necessary so that the N-th parsed document is
-        the one with ID = (N-1) since the same ordering was used to generate the ID of each
-        document during the indexing */
+        /* sort the files of the collection. This is necessary so that the N-th parsed document is the one with
+        ID = (N-1) since the same ordering was used to generate the (int) ID of each document during indexing */
         List<File> corpus = new ArrayList<>(files.length);
         corpus.addAll(Arrays.asList(files));
         Collections.sort(corpus);
 
-        /* A map of [(string) doc ID -> (int) doc ID] */
+        /* parse DOCUMENTS_ID_FILENAME and create a map of [(string) doc ID -> (int) doc ID].
+        We'll use the map to get the (int) ID of a citation, this will save a lot of space/time later on */
         Map<String, Integer> docIDMap = new HashMap<>();
-
-        /* parse DOCUMENTS_ID_FILENAME and create the above map.
-           We'll use the map to get the (int) ID of a citation, this will save a lot of space/time later on */
         int documents = 0;
         long offset = 0;
         long maxOffset = DocumentStringID.SIZE * (long) _totalDocuments;
@@ -130,8 +126,6 @@ public class Pagerank {
                 BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String json;
                 while ((json = currentDataFile.readLine()) != null) {
-
-                    /* Parse json string to S2TextualEntry */
                     S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
 
                     /* count out citations */
@@ -202,7 +196,7 @@ public class Pagerank {
         return found;
     }
 
-    /* reads 'INDEX_PATH/graph' and initializes the Pagerank graph of the citations */
+    /* reads 'INDEX_PATH/graph' and initializes the Pagerank graph */
     private PagerankNode[] initCitationsPagerankGraph()
             throws IOException {
         BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream(new RandomAccessFile(__CITATIONS_GRAPH_PATH__, "r").getFD()));
@@ -304,7 +298,7 @@ public class Pagerank {
         return scores_tmp;
     }
 
-    /* writes the Pagerank scores of the documents to DOCUMENTS_META_FILENAME */
+    /* writes the Pagerank scores to DOCUMENTS_META_FILENAME */
     private void writeDocumentsScore(double[] scores)
             throws IOException {
         long offset = 0;

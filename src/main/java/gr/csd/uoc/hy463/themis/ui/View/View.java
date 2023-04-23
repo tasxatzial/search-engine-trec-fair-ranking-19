@@ -9,11 +9,11 @@ import java.io.IOException;
 
 public class View extends JFrame {
 
-    /* true when we see the search bar and button */
+    /* true when the search bar and button are visible */
     private boolean _searchInitialized = false;
 
-    /* true when we see only a text area */
-    private boolean _onlyResultsInitialized = false;
+    /* true when the results area is visible */
+    private boolean resultsAreaInitialized = false;
 
     /* The main menu bar */
     private JMenuBar _menu;
@@ -52,15 +52,15 @@ public class View extends JFrame {
     private JLayeredPane _mainPane;
 
     /* Contains the text area that shows the results of the indexing/searching tasks */
-    private JScrollPane _resultsPane;
+    private JScrollPane _outputPane;
 
-    /* shows results of indexing/searching */
+    /* the text area that shows the results of indexing/searching */
     private JTextArea _resultsArea;
 
-    /* The search button in search view */
+    /* The search button */
     private JButton _searchButton;
 
-    /* the search input area in search view */
+    /* the search input area */
     private JTextField _searchField;
 
     /* the "retrieval model" menu */
@@ -177,7 +177,7 @@ public class View extends JFrame {
         setJMenuBar(_menu);
     }
 
-    /* Creates the title label */
+    /* Initializes the title Area */
     private void initTitleArea() {
         _titleArea = new JLabel("Themis");
         _titleArea.setFont(new Font("SansSerif", Font.PLAIN, 20));
@@ -188,14 +188,14 @@ public class View extends JFrame {
 
     /* Initializes the area that shows the results of create/load index or search */
     private void initResultsArea() {
-        if (_searchInitialized || _onlyResultsInitialized) {
+        if (_searchInitialized || resultsAreaInitialized) {
             return;
         }
         _resultsArea = new JTextArea();
         _resultsArea.setEditable(false);
         _resultsArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        _resultsPane = new JScrollPane(_resultsArea);
-        _mainPane.add(_resultsPane);
+        _outputPane = new JScrollPane(_resultsArea);
+        _mainPane.add(_outputPane);
     }
 
     /**
@@ -203,18 +203,18 @@ public class View extends JFrame {
      * are clicked
      */
     public void initOnlyResultsView() {
-        if (_onlyResultsInitialized) {
+        if (resultsAreaInitialized) {
             clearResultsArea();
             return;
         }
         if (_searchInitialized) {
             _mainPane.remove(_searchButton);
             _mainPane.remove(_searchField);
-            _mainPane.remove(_resultsPane);
+            _mainPane.remove(_outputPane);
             _searchInitialized = false;
         }
         initResultsArea();
-        _onlyResultsInitialized = true;
+        resultsAreaInitialized = true;
         setOnlyResultsBounds();
     }
 
@@ -227,9 +227,9 @@ public class View extends JFrame {
             clearQuery();
             return;
         }
-        if (_onlyResultsInitialized) {
-            _mainPane.remove(_resultsPane);
-            _onlyResultsInitialized = false;
+        if (resultsAreaInitialized) {
+            _mainPane.remove(_outputPane);
+            resultsAreaInitialized = false;
         }
         _searchButton = new JButton("Search");
         _searchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -260,7 +260,7 @@ public class View extends JFrame {
      * "evaluate BM25" menu items are clicked
      */
     public void setOnlyResultsBounds() {
-        if (!_onlyResultsInitialized) {
+        if (!resultsAreaInitialized) {
             return;
         }
         Dimension frameDim = getBounds().getSize();
@@ -269,7 +269,7 @@ public class View extends JFrame {
                 _titleArea.getHeight() - _menu.getHeight();
         int resultsPaneX = 0;
         int resultsPaneY = _titleArea.getHeight();
-        _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+        _outputPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
     }
 
     /**
@@ -297,7 +297,7 @@ public class View extends JFrame {
         int searchFieldX = searchButtonWidth;
         int searchFieldY = _titleArea.getHeight();
 
-        _resultsPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
+        _outputPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
         _searchButton.setBounds(searchButtonX, searchButtonY, searchButtonWidth, searchButtonHeight);
         _searchField.setBounds(searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight);
     }
@@ -312,7 +312,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Clears the search box
+     * Clears the search input area
      */
     public void clearQuery() {
         if (_searchField != null) {

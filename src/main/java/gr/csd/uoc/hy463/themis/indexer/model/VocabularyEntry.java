@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.indexer.model;
 
 /**
- * Represents the value of a term in VOCABULARY_FILENAME. Holds the DF (document frequency) of the term
+ * Represents the data about a term in VOCABULARY_FILENAME. Holds the DF (document frequency) of the term
  * and the offset to POSTINGS_FILENAME.
  */
 public class VocabularyEntry {

@@ -35,7 +35,7 @@ public class Existential extends ARetrievalModel {
             _valid[i] = false;
         }
 
-        //merge weights for the same terms
+        //keep only one term if it appears multiple times
         query = mergeTerms(query);
 
         int[] dfs = _indexer.getDF(query);

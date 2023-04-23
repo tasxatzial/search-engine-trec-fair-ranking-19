@@ -11,8 +11,6 @@ import java.util.Collection;
 
 /**
  * Class that showcases example of Glove usage
- *
- * @author Panagiotis Papadakos (github.com/papadako)
  */
 public class GloveExample {
 

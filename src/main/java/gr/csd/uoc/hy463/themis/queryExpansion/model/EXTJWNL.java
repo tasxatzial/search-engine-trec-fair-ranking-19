@@ -19,8 +19,6 @@ import java.util.List;
 /**
  * Expands a query using the extJWNL dictionary
  *
- * @author Panagiotis Papadakos (github.com/papadako)
- * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class EXTJWNL extends QueryExpansion {
     private MaxentTagger _maxentTagger;
@@ -49,8 +47,8 @@ public class EXTJWNL extends QueryExpansion {
     }
 
     /**
-     * Expands the specified list of terms. Each term is expanded by the full list of its related terms and each
-     * new term gets a weight of 0.5.
+     * Expands the specified list of terms. Each term is expanded by the full list of its related terms.
+     * New terms get a weight of 0.5.
      *
      * @param query
      * @return
@@ -102,6 +100,7 @@ public class EXTJWNL extends QueryExpansion {
 
     /**
      * Get the wordnet Part-of-Speech (POS) representation from the stanford one
+     *
      * @param taggedAs
      * @return
      */

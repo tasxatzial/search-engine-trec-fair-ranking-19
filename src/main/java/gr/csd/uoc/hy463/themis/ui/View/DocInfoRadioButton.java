@@ -55,7 +55,7 @@ public class DocInfoRadioButton extends JCheckBoxMenuItem {
         return _prop;
     }
 
-    /* Changes the default action of clicking on a JCheckBoxMenuItem (the menu is closed).
+    /* Changes the default action when clicking on a JCheckBoxMenuItem (the menu is closed).
     This class changes this behavior so that the menu remains open.*/
     @Override
     protected void processMouseEvent(MouseEvent evt) {

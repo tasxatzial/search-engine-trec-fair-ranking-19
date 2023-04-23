@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Memory map DOCUMENTS_FILENAME. The entries in this file do not have a fixed size.
+ * Class used for memory mapping of DOCUMENTS_FILENAME. The entries in this file do not have a fixed size.
  */
 public class DocumentBuffers extends MemoryBuffers {
 
@@ -17,7 +17,7 @@ public class DocumentBuffers extends MemoryBuffers {
      *
      * @param documentsPath The full path of DOCUMENTS_FILENAME
      * @param mode READ or WRITE
-     * @param documentMetaBuffers Object that corresponds to the memory mapped file DOCUMENTS_META_FILENAME
+     * @param documentMetaBuffers Object that corresponds to the memory-mapped file DOCUMENTS_META_FILENAME
      * @throws IOException
      */
     public DocumentBuffers(String documentsPath, MemoryBuffers.MODE mode, MemoryBuffers documentMetaBuffers)

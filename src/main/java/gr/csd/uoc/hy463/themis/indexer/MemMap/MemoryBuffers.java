@@ -8,7 +8,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 /**
- * Implements the memory mapped file concept.
+ * Provides general functionality for memory-mapped files.
  */
 public abstract class MemoryBuffers {
     public enum MODE {
@@ -51,8 +51,8 @@ public abstract class MemoryBuffers {
     }
 
     /**
-     * Returns the buffer that contains the data at the given file offset. It also sets the
-     * position of the buffer so that we can start reading the data that begins at offset.
+     * Returns the buffer that contains the data at the given file offset and sets its position
+     * at the start of the data.
      *
      * @param offset
      * @return
@@ -73,7 +73,7 @@ public abstract class MemoryBuffers {
     }
 
     /**
-     * Unmaps the memory mapped file and closes all files
+     * Unmaps the memory-mapped file and closes all files
      *
      * @throws IOException
      */

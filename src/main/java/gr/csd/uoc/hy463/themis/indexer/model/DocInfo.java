@@ -7,7 +7,7 @@ import java.util.*;
  * Each instance corresponds to a document.
  */
 public class DocInfo {
-    /* names of all possible document properties */
+    /* names of all possible document properties except the string doc ID found in the JSON entries */
     public enum PROPERTY {
         TITLE,
         ABSTRACT,
@@ -27,12 +27,18 @@ public class DocInfo {
         DOCUMENT_SIZE
     }
 
-    /* The unique ID of each instance */
+    /* The unique ID of each instance. To save space, we'll be storing an int instead of the string doc ID
+    * found in the JSON entries */
     private final int _docID;
 
-    /* The properties for this instance along with their corresponding values */
+    /* The document properties associated with this DocInfo along with their corresponding values */
     private final Map<PROPERTY, Object> _props = new HashMap<>(0);
 
+    /**
+     * Constructor
+     *
+     * @param docID
+     */
     public DocInfo(int docID) {
         _docID = docID;
     }
@@ -68,7 +74,7 @@ public class DocInfo {
     }
 
     /**
-     * Returns the offset to DOCUMENTS_ID_FILENAME
+     * Returns the offset to DOCUMENTS_ID_FILENAME, useful for retrieving the string doc ID
      *
      * @param docID
      * @return
@@ -78,7 +84,7 @@ public class DocInfo {
     }
 
     /**
-     * Returns a copy of the keys of the _props map.
+     * Returns a copy of the document properties associated with this DocInfo
      *
      * @return
      */

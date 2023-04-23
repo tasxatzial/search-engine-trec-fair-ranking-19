@@ -6,9 +6,9 @@ import java.util.StringTokenizer;
 
 /**
  * This class provides utilities for string processing:
- * 1) Stem a term
+ * 1) Stem a term.
  * 2) Split a query into tokens and convert to lowercase. Uses a predefined set of delimiters.
- * 3) Split a string using the space character as delimiter
+ * 3) Split a string using the space character as delimiter.
  */
 public class ProcessText {
 
@@ -36,8 +36,8 @@ public class ProcessText {
      * @return
      */
     public static List<String> split(String query) {
-        String tokens = "\u0020“”/\"-.\uff0c[](),?+#，*";
-        StringTokenizer tokenizer = new StringTokenizer(query, tokens);
+        String delims = "\u0020“”/\"-.\uff0c[](),?+#，*";
+        StringTokenizer tokenizer = new StringTokenizer(query, delims);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();

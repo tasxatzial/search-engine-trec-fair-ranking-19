@@ -12,9 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Class that holds configuration options for the themis system
- *
- * @author Panagiotis Papadakos (github.com/papadako)
- * @author Anastasios Chatzialexiou (github.com/tasxatzial)
  */
 public class Config {
 
@@ -116,7 +113,7 @@ public class Config {
     }
 
     /**
-     * Returns the name of the index options/metadata file
+     * Returns the name of the index metadata file
      *
      * @return
      */
@@ -134,7 +131,7 @@ public class Config {
     }
 
     /**
-     * Returns the weight of the scores from the retrieval model
+     * Returns the weight of the retrieval model scores
      *
      * @return
      */
@@ -197,8 +194,7 @@ public class Config {
     }
 
     /**
-     * Returns the directory that has the files related to the citations graph. This has nothing
-     * to do with the Pagerank graph.
+     * Returns the directory that has the files related to the citations graph (not the pagerank graph)
      *
      * @return
      */

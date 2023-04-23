@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 /**
  * Stores the required data for an entry in POSTINGS_FILENAME:
  * - TF (frequency of a term in the relevant document)
- * - The ID of the relevant document
+ * - The (int) ID of the relevant document
  */
 public class Posting {
     private final int _TF;

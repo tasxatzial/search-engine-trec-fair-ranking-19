@@ -228,7 +228,7 @@ public class Search {
     }
 
     /**
-     * Queries the index and returns a ranked list of results. Equivalent to search(query, Integer.MAX_VALUE)
+     * Queries the index and returns a ranked list of results. Equivalent to search(query, Integer.MAX_VALUE).
      *
      * @param query
      * @return
@@ -264,12 +264,11 @@ public class Search {
         /* for each term of the initial query, keep 1 extra term from the expanded query */
         int extraTerms = 1;
 
-        List<QueryTerm> newQuery = new ArrayList<>();
-
         /* split query into tokens and convert to lowercase */
         List<String> splitQuery = ProcessText.split(query);
 
-        /* apply stopwords/stemming and collect the new terms in a new query */
+        /* apply stopwords/stemming and create a new query */
+        List<QueryTerm> newQuery = new ArrayList<>();
         for (String term : splitQuery) {
             if (useStopwords && StopWords.isStopWord(term)) {
                 continue;
@@ -288,16 +287,16 @@ public class Search {
             /* the expanded query is a list of lists */
             List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery);
 
-            /* process the list, each item is a list and corresponds to term of the query */
+            /* process the list, each item is a list of terms and corresponds to a term of the query */
             for (int i = 0; i < expandedQuery.size(); i++) {
 
                 /* get the expanded list of terms for the i-th term */
                 List<QueryTerm> expandedTermList = expandedQuery.get(i);
 
-                /* first item should be the original term from the query */
+                /* first item should be the original i-th term */
                 String originalTerm = expandedTermList.get(0).get_term().toLowerCase();
 
-                /* proceed to the next list if the original term is stopword or is a multiple token string */
+                /* proceed to the next list if the original term is stopword or is a string with > 1 tokens */
                 if (originalTerm.split(" ").length > 1) {
                     continue;
                 }

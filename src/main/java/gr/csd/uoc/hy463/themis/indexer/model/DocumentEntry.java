@@ -3,8 +3,8 @@ package gr.csd.uoc.hy463.themis.indexer.model;
 /**
  * Represents info about an entry in DOCUMENTS_FILENAME.
  *
- * For example, the size of a title is 4 bytes and can be found in position 2 of the entry.
- * The title itself starts at position 16.
+ * For example, the size of a title is 4 bytes and this info starts at offset 2 meaning it
+ * occupies bytes 3-6. The title itself starts at position 16.
  */
 public class DocumentEntry {
     /* Year (short => 2 bytes) */

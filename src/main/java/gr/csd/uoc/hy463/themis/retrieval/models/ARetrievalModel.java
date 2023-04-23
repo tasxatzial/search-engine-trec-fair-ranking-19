@@ -43,10 +43,7 @@ public abstract class ARetrievalModel {
      * For example by sorting the terms of the query based on some indicator of
      * goodness and process the terms in this order (e.g., cutoff based on
      * document frequency, cutoff based on maximum estimated weight, and cutoff
-     * based on the weight of a disk page in the posting list
-     *
-     * The double is the score of the document as returned by the corresponding
-     * retrieval model.
+     * based on the weight of a disk page in the posting list.
      *
      * @param query
      * @param endResult The returned list will have at most endResult results
@@ -59,8 +56,7 @@ public abstract class ARetrievalModel {
 
     /**
      * Sorts the specified results. Uses the pagerank scores of the documents and the scores from the
-     * retrieval model.
-     * The list will contain a maximum of endResult number of results.
+     * retrieval model. The returned list will contain a maximum of endResult number of results.
      *
      * @param results
      * @param endResult
@@ -87,7 +83,7 @@ public abstract class ARetrievalModel {
                 maxPagerankScore = 1;
             }
 
-            //calculate the combined score
+            //calculate the final score
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
                 double modelScore = results.get(i).getScore();
@@ -115,7 +111,7 @@ public abstract class ARetrievalModel {
     }
 
     /**
-     * Returns the total number of results in the last query
+     * Returns the total number of results of the last query
      *
      * @return
      */

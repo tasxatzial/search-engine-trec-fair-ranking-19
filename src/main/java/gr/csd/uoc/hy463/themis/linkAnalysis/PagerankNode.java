@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 /**
- * Class that represents a graph node (required by the Pagerank class)
+ * Class that represents a graph node
  */
 public class PagerankNode {
     private double _score = 0;

@@ -5,9 +5,7 @@ import java.util.List;
 
 /**
  * Class that holds all textual information read from an entry of the collection (document).
- * It is used by the S2JSONEntryReader
- *
- * @author Panagiotis Papadakos (github.com/papadako)
+ * It is used by the {@link S2JsonEntryReader}
  */
 public class S2TextualEntry {
     private String __ID__ = null;
