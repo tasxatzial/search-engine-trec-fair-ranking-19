@@ -63,13 +63,14 @@ public class Glove extends QueryExpansion {
      * @return
      */
     @Override
-    public List<List<QueryTerm>> expandQuery(List<String> query) {
+    public List<List<QueryTerm>> expandQuery(List<String> query)
+            throws IOException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
         for (String term : query) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
             expandedTerm.add(new QueryTerm(term, 1.0)); //original term
-            if (_useStopwords && StopWords.isStopWord(term.toLowerCase())) {
+            if (_useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;
             }

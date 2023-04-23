@@ -13,6 +13,7 @@ import net.sf.extjwnl.data.Synset;
 import net.sf.extjwnl.data.Word;
 import net.sf.extjwnl.dictionary.Dictionary;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class EXTJWNL extends QueryExpansion {
      */
     @Override
     public List<List<QueryTerm>> expandQuery(List<String> query)
-            throws JWNLException {
+            throws JWNLException, IOException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
@@ -74,7 +75,7 @@ public class EXTJWNL extends QueryExpansion {
             String term = eachTag[i].split("_")[0];
             String tag = eachTag[i].split("_")[1];
             expandedTerm.add(new QueryTerm(term, 1.0));
-            if (_useStopwords && StopWords.isStopWord(eachTag[i].toLowerCase())) {
+            if (_useStopwords && StopWords.Singleton().isStopWord(eachTag[i].toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;
             }

@@ -4,6 +4,7 @@ import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInit
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -24,5 +25,5 @@ public abstract class QueryExpansion {
      * @throws JWNLException
      */
     public abstract List<List<QueryTerm>> expandQuery(List<String> query)
-            throws ExpansionDictionaryInitException, JWNLException;
+            throws ExpansionDictionaryInitException, JWNLException, IOException;
 }

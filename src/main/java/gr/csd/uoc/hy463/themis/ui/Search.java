@@ -270,7 +270,7 @@ public class Search {
         /* apply stopwords/stemming and create a new query */
         List<QueryTerm> newQuery = new ArrayList<>();
         for (String term : splitQuery) {
-            if (useStopwords && StopWords.isStopWord(term)) {
+            if (useStopwords && StopWords.Singleton().isStopWord(term)) {
                 continue;
             }
             if (useStemmer) {
@@ -300,7 +300,7 @@ public class Search {
                 if (originalTerm.split(" ").length > 1) {
                     continue;
                 }
-                if (useStopwords && StopWords.isStopWord(originalTerm)) {
+                if (useStopwords && StopWords.Singleton().isStopWord(originalTerm)) {
                     continue;
                 }
 
@@ -319,7 +319,7 @@ public class Search {
                         continue;
                     }
                     String newTerm = expandedTermList.get(j).get_term().toLowerCase();
-                    if (useStopwords && StopWords.isStopWord(newTerm)) {
+                    if (useStopwords && StopWords.Singleton().isStopWord(newTerm)) {
                         continue;
                     }
                     if (useStemmer) {

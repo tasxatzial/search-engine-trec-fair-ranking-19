@@ -5,6 +5,7 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -25,7 +26,8 @@ public class S2TextualEntryTokens {
      * @param entry
      * @return
      */
-    public Map<String, Integer> createTFMap(S2TextualEntry entry) {
+    public Map<String, Integer> createTFMap(S2TextualEntry entry)
+            throws IOException {
         Map<String, Integer> TFs = new HashMap<>();
 
         addToTFMap(entry.getTitle(), DocInfo.PROPERTY.TITLE , TFs);
@@ -50,13 +52,14 @@ public class S2TextualEntryTokens {
 
     /* Splits a string into terms, applies stemming & stopwords, and finds the TF of each term.
     * It then adds all <term, TF> pairs to the given map */
-    private void addToTFMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> TFs) {
+    private void addToTFMap(String field, DocInfo.PROPERTY prop, Map<String, Integer> TFs)
+            throws IOException {
         String delimiter = getDelimiter(prop);
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken().toLowerCase();
-            if (_useStopwords && StopWords.isStopWord(currentToken)) {
+            if (_useStopwords && StopWords.Singleton().isStopWord(currentToken)) {
                 continue;
             }
             if (_useStemmer) {

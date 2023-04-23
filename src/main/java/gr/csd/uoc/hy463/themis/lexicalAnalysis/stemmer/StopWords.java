@@ -1,97 +1,45 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
 
-/**
- * Class responsible for identifying stopwords
- */
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
-import java.util.StringTokenizer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+/**
+ * Class responsible for identifying stop words
+ */
 public class StopWords {
-
-    private static final Logger __LOGGER__ = LogManager.getLogger(StopWords.class);
-    private static HashSet<String> __WORDS__;
-    private static StopWords __STOPWORDS__ = null;
-    private static String __STOPLIST_PATH__ = "stopwords.txt";
+    private static StopWords _instance = null;
+    private HashSet<String> __WORDS__;
 
     /**
-     * Words constructor, initializes stoplist
+     * Constructor. Initializes __WORDS__
      */
-    private StopWords() {
-        BufferedReader br;
-        StringBuffer strBuf;
-        __WORDS__ = new HashSet<String>();
+    private StopWords()
+            throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/stopwords.txt"), "UTF-8"));
+        __WORDS__ = new HashSet<>();
+        String line;
 
-        try {
-            br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/stopwords.txt")));
-            strBuf = new StringBuffer();
-
-            while (true) {
-                int ch = br.read();
-                if (ch == -1) {
-                    break;
-                }
-                strBuf.append((char) ch);
-            }
-
-            StringTokenizer strTok = new StringTokenizer(strBuf.toString());
-            while (strTok.hasMoreTokens()) {
-                __WORDS__.add(strTok.nextToken().toLowerCase());
-            }
-
-        } catch (FileNotFoundException e) {
-            __LOGGER__.error("Could not load stopwords file!");
-        } catch (IOException e) {
-            __LOGGER__.error("IOException found!");
+        while ((line = br.readLine()) != null) {
+            __WORDS__.add(line);
         }
-
     }
 
-    /**
-     * Initialize stopwords. Add the stopwords from file
-     */
-    public static void Initialize() {
-        __STOPWORDS__ = (__STOPWORDS__ == null) ? new StopWords() : __STOPWORDS__;
+    public static StopWords Singleton()
+            throws IOException {
+        return _instance == null
+                ? (_instance = new StopWords())
+                : _instance;
     }
 
     /**
      * Checks if a word is a stop word
      *
-     * @param word The term to be checked
-     *
+     * @param word
      * @return true if the term is a stop word, false otherwise
      */
-    public static boolean isStopWord(String word) {
-        Initialize();
-
+    public boolean isStopWord(String word) {
         return __WORDS__.contains(word);
-    }
-
-    /**
-     * Checks if a word is an operator word
-     *
-     * @param word The term to be checked
-     *
-     * @return true if the term is an operator word ("and","or","not"), false
-     * otherwise
-     */
-    /*---------------------------------------------------*/
-    public static final boolean isOpWord(String word) {
-        Initialize();
-        return word.compareToIgnoreCase("and") == 0
-                || word.compareToIgnoreCase("or") == 0
-                || word.compareToIgnoreCase("not") == 0;
-    }
-
-    public static void main(String[] args) {
-        StopWords.Initialize();
-        System.out.println(StopWords.isStopWord("ending")); // false
-        System.out.println(StopWords.isStopWord("other"));  // true
-
     }
 }
