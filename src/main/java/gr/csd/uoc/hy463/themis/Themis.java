@@ -3,7 +3,7 @@ package gr.csd.uoc.hy463.themis;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
-import gr.csd.uoc.hy463.themis.metrics.themisEval;
+import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
@@ -121,30 +121,30 @@ public class Themis {
         _search = new Search();
         _search.search("1"); // warm-up
         _search.setDocumentPagerankWeight(0);
-        themisEval eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
         eval.run();
         _search.setDocumentPagerankWeight(0.25);
-        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
         eval.run();
-        eval = new themisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
         eval.run();
     }
 
@@ -277,7 +277,7 @@ public class Themis {
                 }
             }
             try {
-                themisEval eval = new themisEval(_search, _model, _dictionary);
+                ThemisEval eval = new ThemisEval(_search, _model, _dictionary);
                 eval.run();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());

@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * Runs an evaluation given a retrieval model and query expansion dictionary.
  */
-public class themisEval {
+public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Search _search;
     private final Config __CONFIG__;
@@ -47,7 +47,7 @@ public class themisEval {
      * @param dictionary
      * @throws IOException
      */
-    public themisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary)
+    public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary)
             throws IOException {
         _search = search;
         __CONFIG__ = new Config();
@@ -175,15 +175,17 @@ public class themisEval {
         double averageNdcg = calculateAverage(ndcgs);
         double minNdcg = findMin(ndcgs);
         double maxNdcg = findMax(ndcgs);
+        long resultsRate = Math.min(totalResults, 1000000);
         Pair<String, Time> minTime = findMinTime(queryTime);
         Pair<String, Time> maxTime = findMaxTime(queryTime);
         Time queryAverageTime = calculateAverageTime(queryTime);
         Time resultsAverageTime;
+
         if (totalResults == 0) {
             resultsAverageTime = new Time(totalSearchTime.getValue());
         }
         else {
-            resultsAverageTime = new Time((totalSearchTime.getValue() / totalResults) * calculateBaseResults(totalResults));
+            resultsAverageTime = new Time((totalSearchTime.getValue() / totalResults) * resultsRate);
         }
 
         long evalEndTime = System.nanoTime();
@@ -202,7 +204,7 @@ public class themisEval {
         evaluationWriter.write("-> Search time\n");
         evaluationWriter.write("Total: " + totalSearchTime + "\n");
         evaluationWriter.write("Average per query: " + queryAverageTime + "\n");
-        evaluationWriter.write("Average per " + calculateBaseResults(totalResults) + " results: " + resultsAverageTime + "\n");
+        evaluationWriter.write("Average per " + resultsRate + " results: " + resultsAverageTime + "\n");
         evaluationWriter.write("Min: " + minTime.getR() + " for query: " + minTime.getL() + "\n");
         evaluationWriter.write("Max: " + maxTime.getR() + " for query: " + maxTime.getL() + "\n\n");
         evaluationWriter.write("-> Total time: " + new Time(evalEndTime - evalStartTime) + "\n");
@@ -375,17 +377,6 @@ public class themisEval {
             time.addTime(pair.getR());
         }
         return new Time(time.getValue() / list.size());
-    }
-
-    /* returns the X as in 'time per X results' */
-    private static long calculateBaseResults(long resultsSize) {
-        if (resultsSize == 0) {
-            return 0;
-        }
-        if (resultsSize > 1e6) {
-            return 1000000;
-        }
-        return resultsSize;
     }
 
     /* rounds num to digits decimal places */
