@@ -105,7 +105,7 @@ public class Pagerank {
 
         /* parse DOCUMENTS_ID_FILENAME and create a map of [(string) doc ID -> (int) doc ID].
         We'll use the map to get the (int) ID of a citation, this will save a lot of space/time later on */
-        Map<String, Integer> docIDMap = new HashMap<>();
+        Map<String, Integer> strToIntID = new HashMap<>();
         int documents = 0;
         long offset = 0;
         long maxOffset = DocumentStringID.SIZE * (long) _totalDocuments;
@@ -113,8 +113,8 @@ public class Pagerank {
         while (offset != maxOffset) {
             buffer = documentIDBuffers.getMemBuffer(offset);
             buffer.get(docIDArray);
-            String stringId = new String(docIDArray, 0, DocumentStringID.SIZE, "ASCII");
-            docIDMap.put(stringId, documents++);
+            String strID = new String(docIDArray, 0, DocumentStringID.SIZE, "ASCII");
+            strToIntID.put(strID, documents++);
             offset += DocumentStringID.SIZE;
         }
         documentIDBuffers.close();
@@ -132,7 +132,7 @@ public class Pagerank {
                     List<String> outCitations = entry.getOutCitations();
                     int numOutCitations = 0;
                     for (int i = 0; i < outCitations.size(); i++) {
-                        if (!skipCitation(docIDMap, outCitations, i, entry.getID(), outCitations.get(i))) {
+                        if (!skipCitation(i, outCitations, strToIntID, entry.getID())) {
                             numOutCitations++;
                         }
                     }
@@ -141,7 +141,7 @@ public class Pagerank {
                     List<String> inCitations = entry.getInCitations();
                     int numInCitations = 0;
                     for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(docIDMap, inCitations, i, entry.getID(), inCitations.get(i))) {
+                        if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
                             numInCitations++;
                         }
                     }
@@ -153,9 +153,9 @@ public class Pagerank {
                     citationDataBuf.putInt(4, numOutCitations);
                     int k = 0;
                     for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(docIDMap, inCitations, i, entry.getID(), inCitations.get(i))) {
-                            Integer citation = docIDMap.get(inCitations.get(i));
-                            citationDataBuf.putInt(4 * (2 + k), citation);
+                        if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
+                            Integer citationID = strToIntID.get(inCitations.get(i));
+                            citationDataBuf.putInt(4 * (2 + k), citationID);
                             k++;
                         }
                     }
@@ -173,22 +173,23 @@ public class Pagerank {
     2) citation is referencing itself
     3) citation is already in the list of citations
     */
-    private boolean skipCitation(Map<String, Integer> citationsIDMap, List<String> citations, int maxSearchIndex, String docID, String citation) {
+    private boolean skipCitation(int citationIdx, List<String> citations, Map<String, Integer> strToIntID, String docID) {
+        String citationID = citations.get(citationIdx);
 
         /* skip if citation does not exist */
-        if (citationsIDMap.get(citation) == null) {
+        if (strToIntID.get(citationID) == null) {
             return true;
         }
 
         /* skip if citation is referencing itself */
-        if (citation.equals(docID)) {
+        if (citationID.equals(docID)) {
             return true;
         }
 
         /* skip if citation is already in the list of citations */
         boolean found = false;
-        for (int j = 0; j < maxSearchIndex; j++) {
-            if (citation.equals(citations.get(j))) {
+        for (int j = 0; j < citationIdx; j++) {
+            if (citationID.equals(citations.get(j))) {
                 found = true;
                 break;
             }
