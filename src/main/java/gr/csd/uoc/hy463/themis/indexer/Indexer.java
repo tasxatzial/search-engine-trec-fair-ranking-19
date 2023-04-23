@@ -566,7 +566,7 @@ public class Indexer {
         partial POSTINGS_FILENAME, and write them to the final POSTINGS_FILENAME */
         String line;
         while ((line = termDFReader.readLine()) != null) {
-            List<String> split = ProcessText.splitSpace(line);
+            List<String> split = ProcessText.spaceSplit(line);
             for (int i = 0; i < split.size(); i+=2) {
                 int DF = Integer.parseInt(split.get(i + 1));
                 int indexID = Integer.parseInt(split.get(i));
@@ -719,7 +719,7 @@ public class Indexer {
 
         /* read a line from the 'INDEX_TMP_PATH/doc_tf' and calculate the weight */
         while ((line = docTFReader.readLine()) != null) {
-            List<String> splitList = ProcessText.splitSpace(line);
+            List<String> splitList = ProcessText.spaceSplit(line);
             double weight = 0;
             int maxTF = 0;
             for (int i = 0; i < splitList.size(); i += 2) {

@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
  * 3) Split a string using the space character as delimiter.
  */
 public class ProcessText {
+    private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*";
 
     /**
      * Applies stemming. Returns the original term only if the stemmed term has less than 3 characters
@@ -30,14 +31,13 @@ public class ProcessText {
     }
 
     /**
-     * Splits a string into lowercase tokens using a predefined set of delimiters
+     * Splits a string into lowercase tokens using ProcessText.splitDelimiters
      *
      * @param query
      * @return
      */
     public static List<String> split(String query) {
-        String delims = "\u0020“”/\"-.\uff0c[](),?+#，*";
-        StringTokenizer tokenizer = new StringTokenizer(query, delims);
+        StringTokenizer tokenizer = new StringTokenizer(query, splitDelimiters);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
@@ -52,7 +52,7 @@ public class ProcessText {
      *
      * @param str
      */
-    public static List<String> splitSpace(String str) {
+    public static List<String> spaceSplit(String str) {
         StringBuilder sb = new StringBuilder();
         List<String> words = new ArrayList<>();
         char[] strArray = str.toCharArray();
