@@ -4,7 +4,7 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
@@ -30,6 +30,7 @@ public class Search {
     private final Indexer _indexer;
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
+    private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*";
 
     /* the set of document props that will be retrieved */
     private Set<DocInfo.PROPERTY> _props;
@@ -228,6 +229,22 @@ public class Search {
     }
 
     /**
+     * Splits a query into lowercase tokens.
+     *
+     * @param query
+     * @return
+     */
+    public static List<String> split(String query) {
+        StringTokenizer tokenizer = new StringTokenizer(query, Search.splitDelimiters);
+        List<String> terms = new ArrayList<>();
+        while (tokenizer.hasMoreTokens()) {
+            String token = tokenizer.nextToken();
+            terms.add(token.toLowerCase());
+        }
+        return terms;
+    }
+
+    /**
      * Queries the index and returns a ranked list of results. Equivalent to search(query, Integer.MAX_VALUE).
      *
      * @param query
@@ -265,7 +282,7 @@ public class Search {
         int extraTerms = 1;
 
         /* split query into tokens and convert to lowercase */
-        List<String> splitQuery = ProcessText.split(query);
+        List<String> splitQuery = Search.split(query);
 
         /* apply stopwords/stemming and create a new query */
         List<QueryTerm> newQuery = new ArrayList<>();
@@ -274,7 +291,7 @@ public class Search {
                 continue;
             }
             if (useStemmer) {
-                String stemmedTerm = ProcessText.applyStemming(term);
+                String stemmedTerm = Stemmer.applyStemming(term);
                 newQuery.add(new QueryTerm(stemmedTerm, 1.0));
             } else {
                 newQuery.add(new QueryTerm(term, 1.0));
@@ -306,7 +323,7 @@ public class Search {
 
                 /* apply stemming to the original term */
                 if (useStemmer) {
-                    originalTerm = ProcessText.applyStemming(originalTerm);
+                    originalTerm = Stemmer.applyStemming(originalTerm);
                 }
 
                 /* keep at most extraTerms from the expanded list */
@@ -323,7 +340,7 @@ public class Search {
                         continue;
                     }
                     if (useStemmer) {
-                        newTerm = ProcessText.applyStemming(newTerm);
+                        newTerm = Stemmer.applyStemming(newTerm);
                     }
 
                     /* Make sure none of the new terms are the same as the original term */

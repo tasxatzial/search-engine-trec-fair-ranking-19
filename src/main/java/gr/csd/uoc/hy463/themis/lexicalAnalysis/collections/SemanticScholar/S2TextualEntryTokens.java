@@ -1,7 +1,7 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.ProcessText;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
 
@@ -63,7 +63,7 @@ public class S2TextualEntryTokens {
                 continue;
             }
             if (_useStemmer) {
-                currentToken = ProcessText.applyStemming(currentToken);
+                currentToken = Stemmer.applyStemming(currentToken);
             }
             Integer tf = TFs.get(currentToken);
             if (tf != null) {

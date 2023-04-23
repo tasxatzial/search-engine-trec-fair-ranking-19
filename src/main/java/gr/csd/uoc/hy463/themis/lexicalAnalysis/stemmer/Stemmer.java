@@ -45,9 +45,27 @@ public class Stemmer {
         }
     }
 
+    /**
+     * Applies stemming, but takes into account the length of the given term. Returns the original term
+     * only if the stemmed term has less than 3 characters or the original term has less than 4 characters.
+     *
+     * @param term
+     * @return
+     */
+    public static String applyStemming(String term) {
+        if (term.length() > 3) {
+            String stemTerm = Stemmer.Stem(term);
+            if (stemTerm.length() >= 3) {
+                return stemTerm;
+            }
+        }
+        return term;
+    }
+
     public static void Initialize() {
         EnglishStemmer.Singleton();
     }
+
 
     public static void anotherMain(String[] a) {
         String w;
