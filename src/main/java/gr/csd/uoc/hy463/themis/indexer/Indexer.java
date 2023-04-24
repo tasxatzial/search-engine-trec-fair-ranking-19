@@ -41,7 +41,6 @@ import org.apache.logging.log4j.Logger;
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private double _documentPagerankWeight;
-    private double[] _documentsPagerank;
     private final Config __CONFIG__;
 
     /* The full path of the final index folder */
@@ -791,15 +790,8 @@ public class Indexer {
             __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
             __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
 
-            /* load Pagerank scores of the documents */
+            /* load Pagerank weight */
             _documentPagerankWeight = __CONFIG__.getDocumentPagerankWeight();
-            int documents = Integer.parseInt(_INDEX_META__.get("documents"));
-            _documentsPagerank = new double[documents];
-            for (int i = 0; i < documents; ++i) {
-                long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
-                ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset);
-                _documentsPagerank[i] = buffer.getDouble();
-            }
         }
         catch (IOException e) {
             throw new IndexNotLoadedException();
@@ -856,7 +848,6 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
-        _documentsPagerank = null;
     }
 
     /**
@@ -1112,8 +1103,7 @@ public class Indexer {
                 __DOCUMENTS__ != null &&
                 __DOCMETA_BUFFERS__ != null &&
                 __DOCID_BUFFERS__ != null &&
-                _INDEX_META__ != null &&
-                _documentsPagerank != null;
+                _INDEX_META__ != null;
     }
 
     /**
@@ -1213,6 +1203,16 @@ public class Indexer {
             tokenCount[i] = buffer.getInt();
         }
         return new OKAPIprops(tokenCount);
+    }
+
+    /**
+     * Gets the pagerank score of the document with the given (int) ID
+     *
+     * @return
+     */
+    public double getDocumentsPagerank(int ID) {
+        long offset = DocInfo.getMetaOffset(ID) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
+        return __DOCMETA_BUFFERS__.getMemBuffer(offset).getDouble();
     }
 
     /**
@@ -1425,14 +1425,5 @@ public class Indexer {
      */
     public double getDocumentPagerankWeight() {
         return _documentPagerankWeight;
-    }
-
-    /**
-     * Gets the pagerank scores of the documents
-     *
-     * @return
-     */
-    public double[] getDocumentsPagerank() {
-        return _documentsPagerank;
     }
 }

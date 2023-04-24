@@ -67,16 +67,15 @@ public abstract class ARetrievalModel {
         double documentPagerankWeight = _indexer.getDocumentPagerankWeight();
         boolean hasPagerank = Double.compare(documentPagerankWeight, 0.0) != 0;
         if (hasPagerank) {
-            double[] documentsPagerank = _indexer.getDocumentsPagerank();
             double maxPagerankScore = 0;
             double modelWeight = 1 - documentPagerankWeight;
 
             //normalize pagerank scores
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
-                int id = docInfo.get_docID();
-                if (documentsPagerank[id] > maxPagerankScore) {
-                    maxPagerankScore = documentsPagerank[id];
+                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.get_docID());
+                if (pagerankScore > maxPagerankScore) {
+                    maxPagerankScore = pagerankScore;
                 }
             }
             if (Double.compare(maxPagerankScore, 0.0) == 0) {
@@ -87,7 +86,7 @@ public abstract class ARetrievalModel {
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
                 double modelScore = results.get(i).getScore();
-                double pagerankScore = documentsPagerank[docInfo.get_docID()] / maxPagerankScore;
+                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.get_docID()) / maxPagerankScore;
                 double combinedScore = modelScore * modelWeight + pagerankScore * documentPagerankWeight;
                 results.get(i).setScore(combinedScore);
             }
