@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
-import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -32,7 +31,6 @@ import java.util.*;
 public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Search _search;
-    private final Config __CONFIG__;
     private final ARetrievalModel.MODEL _model;
     private final QueryExpansion.DICTIONARY _dictionary;
     private final double _documentPagerankWeight;
@@ -51,7 +49,6 @@ public class ThemisEval {
     public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
             throws IOException {
         _search = search;
-        __CONFIG__ = new Config();
         _model = model;
         _dictionary = dictionary;
         _documentPagerankWeight = documentPagerankWeight;
@@ -71,13 +68,13 @@ public class ThemisEval {
      */
     public void run()
             throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
-        String __JUDGEMENTS_FILE__ = __CONFIG__.getJudgmentsPath();
+        String __JUDGEMENTS_FILE__ = _search.getConfig().getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_FILE__).exists())) {
             __LOGGER__.info("No judgements file found!");
             Themis.print("No judgements file found!\n");
             return;
         }
-        String evaluationFilename = __CONFIG__.getEvaluationFilename();
+        String evaluationFilename = _search.getConfig().getEvaluationFilename();
         String timestamp = Instant.now().toString().replace(':', '.');
         if (evaluationFilename.lastIndexOf('.') != -1) {
             evaluationFilename = evaluationFilename.substring(0, evaluationFilename.lastIndexOf('.')) + '_' +
@@ -90,7 +87,7 @@ public class ThemisEval {
         _search.setExpansionDictionary(_dictionary);
         _search.setDocumentProperties(new HashSet<>());
         _search.setDocumentPagerankWeight(_documentPagerankWeight);
-        String __EVALUATION_FILE__ =  __CONFIG__.getIndexPath() + "/" + evaluationFilename;
+        String __EVALUATION_FILE__ =  _search.getConfig().getIndexPath() + "/" + evaluationFilename;
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");
@@ -99,7 +96,7 @@ public class ThemisEval {
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
-        evaluationWriter.write("Index path: " + __CONFIG__.getIndexPath() + "\n");
+        evaluationWriter.write("Index path: " + _search.getConfig().getIndexPath() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");

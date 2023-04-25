@@ -1,6 +1,7 @@
 package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.Themis;
+import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
@@ -68,7 +69,7 @@ public class Search {
             String expansionModel = _indexer.getConfig().getQueryExpansionModel();
             switch (expansionModel) {
                 case "Glove":
-                    _queryExpansion = new Glove(_indexer.useStopwords());
+                    _queryExpansion = new Glove(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
                     break;
                 case "extJWNL":
                     _queryExpansion = new EXTJWNL(_indexer.useStopwords());
@@ -84,6 +85,15 @@ public class Search {
         }
         Themis.print("Default Pagerank weight (documents): " + _indexer.getDocumentPagerankWeight() + "\n");
         Themis.print("Ready\n\n");
+    }
+
+    /**
+     * Returns the Config instance associated with this Search.
+     *
+     * @return
+     */
+    public Config getConfig() {
+        return _indexer.getConfig();
     }
 
     /**
@@ -151,15 +161,14 @@ public class Search {
      * @throws IOException
      * @throws ExpansionDictionaryInitException
      * @throws IndexNotLoadedException
-     * @throws ConfigLoadException
      */
     public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
-            throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+            throws IOException, IndexNotLoadedException, ExpansionDictionaryInitException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
-            _queryExpansion = new Glove(_indexer.useStopwords());
+            _queryExpansion = new Glove(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
         }
         else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
             _queryExpansion = new EXTJWNL(_indexer.useStopwords());
@@ -192,9 +201,6 @@ public class Search {
      */
     public String getIndexTimestamp()
             throws IndexNotLoadedException {
-        if (!isIndexLoaded()) {
-            throw new IndexNotLoadedException();
-        }
         return _indexer.getIndexTimestamp();
     }
 
@@ -222,9 +228,6 @@ public class Search {
      */
     public String getDocID(int docID)
             throws IndexNotLoadedException, UnsupportedEncodingException {
-        if (!isIndexLoaded()) {
-            throw new IndexNotLoadedException();
-        }
         return _indexer.getDocID(docID);
     }
 

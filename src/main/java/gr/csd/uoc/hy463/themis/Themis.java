@@ -425,11 +425,6 @@ public class Themis {
                         print("Index is not loaded\n");
                         _task = null;
                         return;
-                    } catch (ConfigLoadException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        print("Failed to read from config file\n");
-                        _task = null;
-                        return;
                     } catch (IOException ex) {
                         __LOGGER__.error(ex.getMessage());
                         print("IO error\n");

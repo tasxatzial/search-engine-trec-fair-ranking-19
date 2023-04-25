@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import gr.csd.uoc.hy463.themis.Themis;
-import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -32,17 +31,11 @@ public class Glove extends QueryExpansion {
      * @throws ExpansionDictionaryInitException
      * @throws ConfigLoadException
      */
-    public Glove(boolean useStopwords)
-            throws ExpansionDictionaryInitException, ConfigLoadException {
+    public Glove(String modelPath, boolean useStopwords)
+            throws ExpansionDictionaryInitException {
         Themis.print("-> Initializing Glove...");
-        Config __CONFIG__;
-        try {
-            __CONFIG__ = new Config();
-        }
-        catch (IOException e) {
-            throw new ConfigLoadException();
-        }
-        File gloveModel = new File(__CONFIG__.getGloveModelPath());
+
+        File gloveModel = new File(modelPath);
         if (!gloveModel.exists()) {
             throw new ExpansionDictionaryInitException();
         }
