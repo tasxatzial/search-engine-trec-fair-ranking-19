@@ -120,31 +120,29 @@ public class Themis {
             throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
         _search = new Search();
         _search.search("1"); // warm-up
-        _search.setDocumentPagerankWeight(0);
-        ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE, 0);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL, 0);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE, 0);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE, 0);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL, 0);
         eval.run();
-        _search.setDocumentPagerankWeight(0.25);
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0.25);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE, 0.25);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL, 0.25);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE, 0.25);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE, 0.25);
         eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL);
+        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL, 0.25);
         eval.run();
     }
 
@@ -277,7 +275,7 @@ public class Themis {
                 }
             }
             try {
-                ThemisEval eval = new ThemisEval(_search, _model, _dictionary);
+                ThemisEval eval = new ThemisEval(_search, _model, _dictionary, 0.25);
                 eval.run();
             } catch (IOException ex) {
                 __LOGGER__.error(ex.getMessage());

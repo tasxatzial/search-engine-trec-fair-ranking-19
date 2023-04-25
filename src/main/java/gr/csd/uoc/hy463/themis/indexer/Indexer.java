@@ -40,7 +40,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
-    private double _documentPagerankWeight;
     private final Config __CONFIG__;
 
     /* The full path of the final index folder */
@@ -789,9 +788,6 @@ public class Indexer {
             __DOCID_BUFFERS__ = new DocumentBlockBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
             __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
             __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
-
-            /* load Pagerank weight */
-            _documentPagerankWeight = __CONFIG__.getDocumentPagerankWeight();
         }
         catch (IOException e) {
             throw new IndexNotLoadedException();
@@ -1410,20 +1406,11 @@ public class Indexer {
     }
 
     /**
-     * Sets the weight for the Pagerank scores of the documents
-     *
-     * @param weight
-     */
-    public void setDocumentPagerankWeight(double weight) {
-        _documentPagerankWeight = weight;
-    }
-
-    /**
      * Gets the weight for the pagerank scores of the documents
      *
      * @return
      */
     public double getDocumentPagerankWeight() {
-        return _documentPagerankWeight;
+        return __CONFIG__.getDocumentPagerankWeight();
     }
 }

@@ -383,8 +383,12 @@ public class Search {
      *
      * @param weight
      */
-    public void setDocumentPagerankWeight(double weight) {
-        _indexer.setDocumentPagerankWeight(weight);
+    public void setDocumentPagerankWeight(double weight)
+            throws IndexNotLoadedException {
+        if (!isIndexLoaded()) {
+            throw new IndexNotLoadedException();
+        }
+        _model.setDocumentPagerankWeight(weight);
     }
 
     /**
@@ -393,7 +397,7 @@ public class Search {
      * @return
      */
     public double getDocumentPagerankWeight() {
-        return _indexer.getDocumentPagerankWeight();
+        return _model.getDocumentPagerankWeight();
     }
 
     /**

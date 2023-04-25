@@ -35,6 +35,7 @@ public class ThemisEval {
     private final Config __CONFIG__;
     private final ARetrievalModel.MODEL _model;
     private final QueryExpansion.DICTIONARY _dictionary;
+    private final double _documentPagerankWeight;
 
     /**
      * Constructor.
@@ -47,12 +48,13 @@ public class ThemisEval {
      * @param dictionary
      * @throws IOException
      */
-    public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary)
+    public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
             throws IOException {
         _search = search;
         __CONFIG__ = new Config();
         _model = model;
         _dictionary = dictionary;
+        _documentPagerankWeight = documentPagerankWeight;
     }
 
     /**
@@ -87,8 +89,8 @@ public class ThemisEval {
         _search.setRetrievalModel(_model);
         _search.setExpansionDictionary(_dictionary);
         _search.setDocumentProperties(new HashSet<>());
+        _search.setDocumentPagerankWeight(_documentPagerankWeight);
         String __EVALUATION_FILE__ =  __CONFIG__.getIndexPath() + "/" + evaluationFilename;
-
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");

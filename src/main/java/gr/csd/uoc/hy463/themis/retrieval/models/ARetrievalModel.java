@@ -19,6 +19,7 @@ public abstract class ARetrievalModel {
 
     protected int _totalDocuments;
     protected int _totalResults = 0;
+    private double _documentPagerankWeight;
     Indexer _indexer;
 
     /**
@@ -31,6 +32,7 @@ public abstract class ARetrievalModel {
             throws IndexNotLoadedException {
         _indexer = indexer;
         _totalDocuments = indexer.getTotalDocuments();
+        _documentPagerankWeight = indexer.getDocumentPagerankWeight();
     }
 
     /**
@@ -64,11 +66,10 @@ public abstract class ARetrievalModel {
      */
     protected List<Result> sort(List<Result> results, int endResult)
             throws IndexNotLoadedException {
-        double documentPagerankWeight = _indexer.getDocumentPagerankWeight();
-        boolean hasPagerank = Double.compare(documentPagerankWeight, 0.0) != 0;
+        boolean hasPagerank = Double.compare(_documentPagerankWeight, 0.0) != 0;
         if (hasPagerank) {
             double maxPagerankScore = 0;
-            double modelWeight = 1 - documentPagerankWeight;
+            double modelWeight = 1 - _documentPagerankWeight;
 
             //normalize pagerank scores
             for (int i = 0; i < results.size(); i++) {
@@ -87,7 +88,7 @@ public abstract class ARetrievalModel {
                 DocInfo docInfo = results.get(i).getDocInfo();
                 double modelScore = results.get(i).getScore();
                 double pagerankScore = _indexer.getDocumentsPagerank(docInfo.get_docID()) / maxPagerankScore;
-                double combinedScore = modelScore * modelWeight + pagerankScore * documentPagerankWeight;
+                double combinedScore = modelScore * modelWeight + pagerankScore * _documentPagerankWeight;
                 results.get(i).setScore(combinedScore);
             }
         }
@@ -107,6 +108,24 @@ public abstract class ARetrievalModel {
             }
             return topResults;
         }
+    }
+
+    /**
+     * Sets the weight for the Pagerank scores of the documents
+     *
+     * @param weight
+     */
+    public void setDocumentPagerankWeight(double weight) {
+        _documentPagerankWeight = weight;
+    }
+
+    /**
+     * Gets the weight of the pagerank scores of the documents
+     *
+     * @return
+     */
+    public double getDocumentPagerankWeight() {
+        return _documentPagerankWeight;
     }
 
     /**
