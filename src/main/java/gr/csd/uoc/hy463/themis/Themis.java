@@ -289,9 +289,6 @@ public class Themis {
             } catch (JWNLException ex) {
                 __LOGGER__.error(ex.getMessage());
                 print("extJWNL error\n");
-            } catch (ConfigLoadException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to read from config file\n");
             } finally {
                 _task = null;
             }

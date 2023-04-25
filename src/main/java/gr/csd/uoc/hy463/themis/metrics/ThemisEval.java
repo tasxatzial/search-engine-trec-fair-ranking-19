@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
-import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
@@ -31,27 +30,26 @@ import java.util.*;
 public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Search _search;
-    private final ARetrievalModel.MODEL _model;
-    private final QueryExpansion.DICTIONARY _dictionary;
-    private final double _documentPagerankWeight;
 
     /**
      * Constructor.
      *
-     * Reads configuration options from themis.config file and sets the
-     * retrieval model and query expansion dictionary for this instance.
+     * Reads configuration options from the given Search and sets its retrieval model and query expansion dictionary.
      *
      * @param search
      * @param model
      * @param dictionary
      * @throws IOException
+     * @throws IndexNotLoadedException
+     * @throws ExpansionDictionaryInitException
      */
     public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
-            throws IOException {
+            throws IOException, IndexNotLoadedException, ExpansionDictionaryInitException {
         _search = search;
-        _model = model;
-        _dictionary = dictionary;
-        _documentPagerankWeight = documentPagerankWeight;
+        _search.setRetrievalModel(model);
+        _search.setExpansionDictionary(dictionary);
+        _search.setDocumentProperties(new HashSet<>());
+        _search.setDocumentPagerankWeight(documentPagerankWeight);
     }
 
     /**
@@ -64,10 +62,9 @@ public class ThemisEval {
      * @throws IOException
      * @throws ExpansionDictionaryInitException
      * @throws JWNLException
-     * @throws ConfigLoadException
      */
     public void run()
-            throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException, ConfigLoadException {
+            throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException {
         String __JUDGEMENTS_FILE__ = _search.getConfig().getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_FILE__).exists())) {
             __LOGGER__.info("No judgements file found!");
@@ -83,10 +80,6 @@ public class ThemisEval {
         else {
             evaluationFilename = evaluationFilename + '_' + timestamp;
         }
-        _search.setRetrievalModel(_model);
-        _search.setExpansionDictionary(_dictionary);
-        _search.setDocumentProperties(new HashSet<>());
-        _search.setDocumentPagerankWeight(_documentPagerankWeight);
         String __EVALUATION_FILE__ =  _search.getConfig().getIndexPath() + "/" + evaluationFilename;
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
