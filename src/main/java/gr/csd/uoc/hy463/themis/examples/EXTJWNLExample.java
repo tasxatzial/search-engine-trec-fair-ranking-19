@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.examples;
 
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import javafx.geometry.Pos;
 import net.sf.extjwnl.JWNLException;
 import net.sf.extjwnl.data.IndexWord;
 import net.sf.extjwnl.data.POS;

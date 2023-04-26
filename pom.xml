@@ -2,35 +2,40 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>gr.csd.uoc.hy463</groupId>
-    <artifactId>fairness-trec-2020</artifactId>
+    <artifactId>fairness-trec-2019</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>fairness-trec-2020</name>
+    <name>fairness-trec-2019</name>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>
             <type>jar</type>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.11.1</version>
             <type>jar</type>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.sf.extjwnl/extjwnl -->
         <dependency>
             <groupId>net.sf.extjwnl</groupId>
             <artifactId>extjwnl</artifactId>
             <version>2.0.2</version>
         </dependency>
         <!-- Princeton WordNet 3.1 data dependency -->
+        <!-- https://mvnrepository.com/artifact/net.sf.extjwnl/extjwnl-data-wn31 -->
         <dependency>
             <groupId>net.sf.extjwnl</groupId>
             <artifactId>extjwnl-data-wn31</artifactId>
             <version>1.2</version>
         </dependency>
         <!-- POS Tagging -->
+        <!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-corenlp -->
         <dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
@@ -54,16 +59,12 @@
             <artifactId>deeplearning4j-nlp</artifactId>
             <version>1.0.0-beta6</version>
         </dependency>
+        <!-- GloVe -->
+        <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-native-platform -->
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-native-platform</artifactId>
             <version>1.0.0-beta6</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-examples -->
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-examples</artifactId>
-            <version>0.0.3.1</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.opennlp/opennlp-tools -->
         <dependency>
