@@ -24,7 +24,6 @@ public class VSM extends ARetrievalModel {
             throws IndexNotLoadedException {
         super(index);
         _calculatedWeights = new double[_totalDocuments][];
-        _documentWeights = new double[_totalDocuments];
         _modelScore = new double[_totalDocuments];
         VSMprops props = _indexer.getVSMprops();
         _documentWeights = props.getVSMweights();

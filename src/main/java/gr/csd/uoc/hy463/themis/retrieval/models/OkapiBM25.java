@@ -26,7 +26,6 @@ public class OkapiBM25 extends ARetrievalModel {
             throws IndexNotLoadedException {
         super(index);
         _calculatedFreqs = new double[_totalDocuments][];
-        _tokenCount = new int[_totalDocuments];
         _modelScore = new double[_totalDocuments];
         _avgdl = _indexer.getAvgDL();
         OKAPIprops props = _indexer.getOKAPIprops();
