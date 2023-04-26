@@ -9,7 +9,7 @@ Themis is a search engine that was built to index and query the collection of do
   * Vector Space
   * Okapi
 * Query expansion using deep learning models:
-  * Statistical Dictionary [Glove](https://nlp.stanford.edu/projects/glove/).
+  * Statistical Dictionary [GloVe](https://nlp.stanford.edu/projects/glove/).
   * Lexical Dictionary [WordNet](https://wordnet.princeton.edu/) ([extJWNL](http://extjwnl.sourceforge.net/) library).
 * Pagerank ranking.
 * Option to use stemming.
@@ -36,7 +36,7 @@ The '[results](results/)' folder contains a complete log of the indexing & evalu
 
 ## Compile
 
-Java (8 or 11) & Maven 3.6
+Java (8-11) & Maven 3.6
 
 From the command line switch to the root directory of the project and run:
 
@@ -58,8 +58,6 @@ Write all code in the main function of the class gr.csd.uoc.hy463.themis.Themis.
 The GUI gives us access to most of the needed functionality. Switch to the 'target' folder and run:
 
     java -Xmx32G -jar fairness-trec-2020-1.0-SNAPSHOT.jar gui
-
-We need a 32G heap size only when recreating the index to ensure sufficient memory for the process.
 
 ## Query output
 

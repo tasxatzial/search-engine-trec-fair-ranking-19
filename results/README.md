@@ -1,6 +1,6 @@
 # Results
 
-Here you'll find various files related to the creation and evaluation of the index.
+Files related to the creation and evaluation of the index.
 
 * [stemming](stemming/): Stemming was enabled during index creation & evaluation.
 * [no_stemming](no_stemming/): Stemming was disabled during index creation & evaluation.
