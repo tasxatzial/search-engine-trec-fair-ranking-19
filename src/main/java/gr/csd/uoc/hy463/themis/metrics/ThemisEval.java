@@ -25,7 +25,7 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Runs an evaluation given a retrieval model and query expansion dictionary.
+ * The main class responsible for running an evaluation of the index.
  */
 public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
@@ -221,7 +221,7 @@ public class ThemisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().get_docID());
+            String docId = _search.getDocID(result.getDocInfo().getDocID());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -254,7 +254,7 @@ public class ThemisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().get_docID());
+            String docId = _search.getDocID(result.getDocInfo().getDocID());
             Long isJudged = docRelevance.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;

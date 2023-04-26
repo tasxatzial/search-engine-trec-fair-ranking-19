@@ -2,7 +2,7 @@ package gr.csd.uoc.hy463.themis.linkAnalysis;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBlockBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFixedBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemoryBuffers;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentStringID;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
@@ -87,7 +87,7 @@ public class Pagerank {
 
         /* memory map the DOCUMENTS_ID_FILENAME */
         String documentsIDPath = _indexer.getDocumentsIDFilePath();
-        DocumentBlockBuffers documentIDBuffers = new DocumentBlockBuffers(documentsIDPath, MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
+        DocumentFixedBuffers documentIDBuffers = new DocumentFixedBuffers(documentsIDPath, MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
         byte[] docIDArray = new byte[DocumentStringID.SIZE];
 
         /* 'INDEX_PATH/graph' stores for each document the number of Out citations and the (int) IDs of the In citations.
@@ -304,7 +304,7 @@ public class Pagerank {
             throws IOException {
         long offset = 0;
         String documentsMetaPath = _indexer.getDocumentsMetaFilePath();
-        DocumentBlockBuffers documentMetaBuffers = new DocumentBlockBuffers(documentsMetaPath, MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
+        DocumentFixedBuffers documentMetaBuffers = new DocumentFixedBuffers(documentsMetaPath, MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
         for (int i = 0; i < scores.length; i++) {
             ByteBuffer buffer = documentMetaBuffers.getMemBuffer(offset + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET);
             buffer.putDouble(scores[i]);

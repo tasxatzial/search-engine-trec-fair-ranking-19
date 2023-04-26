@@ -7,7 +7,7 @@ import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import java.io.IOException;
 
 /**
- * This class is used for creating and deleting an index
+ * The main class responsible for creating and deleting an index.
  */
 public class CreateIndex {
     private final Indexer _indexer;

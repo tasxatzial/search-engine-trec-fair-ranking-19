@@ -20,7 +20,7 @@ public abstract class ARetrievalModel {
     protected int _totalDocuments;
     protected int _totalResults = 0;
     private double _documentPagerankWeight;
-    Indexer _indexer;
+    protected Indexer _indexer;
 
     /**
      * Constructor.
@@ -74,7 +74,7 @@ public abstract class ARetrievalModel {
             //normalize pagerank scores
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
-                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.get_docID());
+                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.getDocID());
                 if (pagerankScore > maxPagerankScore) {
                     maxPagerankScore = pagerankScore;
                 }
@@ -87,7 +87,7 @@ public abstract class ARetrievalModel {
             for (int i = 0; i < results.size(); i++) {
                 DocInfo docInfo = results.get(i).getDocInfo();
                 double modelScore = results.get(i).getScore();
-                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.get_docID()) / maxPagerankScore;
+                double pagerankScore = _indexer.getDocumentsPagerank(docInfo.getDocID()) / maxPagerankScore;
                 double combinedScore = modelScore * modelWeight + pagerankScore * _documentPagerankWeight;
                 results.get(i).setScore(combinedScore);
             }

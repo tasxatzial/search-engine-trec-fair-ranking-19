@@ -226,7 +226,7 @@ public class Config {
     }
 
     /**
-     * Returns the path to the compressed glove model file
+     * Returns the path to the compressed GloVe model file
      *
      * @return
      */

@@ -7,7 +7,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
-import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
+import gr.csd.uoc.hy463.themis.queryExpansion.model.GloVe;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
@@ -25,7 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
- * Perform a search.
+ * The main class responsible for querying the collection and printing the results.
  */
 public class Search {
     private final Indexer _indexer;
@@ -69,17 +69,17 @@ public class Search {
         _props = new HashSet<>();
         if (_indexer.getConfig().getUseQueryExpansion()) {
             String expansionModel = _indexer.getConfig().getQueryExpansionModel();
+            Themis.print("Default query expansion model: " + expansionModel + "\n");
             switch (expansionModel) {
-                case "Glove":
-                    _queryExpansion = new Glove(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
+                case "GloVe":
+                    _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
                     break;
-                case "extJWNL":
+                case "WordNet":
                     _queryExpansion = new EXTJWNL(_indexer.useStopwords());
                     break;
                 default:
                     throw new ExpansionDictionaryInitException();
             }
-            Themis.print("Default query expansion model: " + expansionModel + "\n");
         }
         else {
             _queryExpansion = null;
@@ -171,8 +171,8 @@ public class Search {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
-        if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof Glove)) {
-            _queryExpansion = new Glove(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
+        if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof GloVe)) {
+            _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
         }
         else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
             _queryExpansion = new EXTJWNL(_indexer.useStopwords());
@@ -188,7 +188,7 @@ public class Search {
      * @return
      */
     public QueryExpansion.DICTIONARY getExpansionDictionary() {
-        if (_queryExpansion instanceof Glove) {
+        if (_queryExpansion instanceof GloVe) {
             return QueryExpansion.DICTIONARY.GLOVE;
         }
         else if (_queryExpansion instanceof EXTJWNL) {
@@ -372,18 +372,6 @@ public class Search {
     }
 
     /**
-     * Prints a list of ranked results
-     *
-     * @param searchResults
-     * @throws UnsupportedEncodingException
-     * @throws IndexNotLoadedException
-     */
-    public void printResults(List<Result> searchResults)
-            throws UnsupportedEncodingException, IndexNotLoadedException {
-        printResults(searchResults, 0, Integer.MAX_VALUE);
-    }
-
-    /**
      * Sets the weight for the pagerank scores of the documents
      *
      * @param weight
@@ -405,6 +393,18 @@ public class Search {
         return _model.getDocumentPagerankWeight();
     }
 
+    /**
+     * Prints a list of ranked results
+     *
+     * @param searchResults
+     * @throws UnsupportedEncodingException
+     * @throws IndexNotLoadedException
+     */
+    public void printResults(List<Result> searchResults)
+            throws UnsupportedEncodingException, IndexNotLoadedException {
+        printResults(searchResults, 0, Integer.MAX_VALUE);
+    }
+    
     /**
      * Prints results from index startResult to endResult (inclusive).
      * Equivalent to printResults(searchResults, 0, Integer.MAX_VALUE)
@@ -438,7 +438,7 @@ public class Search {
             List<DocInfo.PROPERTY> sortedProps = new ArrayList<>(_props);
             Collections.sort(sortedProps);
             Themis.print(i + " ---------------------------------------\n");
-            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.get_docID()) + "\n");
+            Themis.print("DOC_ID: " + _indexer.getDocID(docInfo.getDocID()) + "\n");
             for (DocInfo.PROPERTY docInfoProp : sortedProps) {
                 if (docInfo.hasProperty(docInfoProp)) {
                     Themis.print(docInfoProp + ": " + docInfo.getProperty(docInfoProp) + "\n");

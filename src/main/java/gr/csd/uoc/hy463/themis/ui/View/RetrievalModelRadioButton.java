@@ -29,7 +29,7 @@ public class RetrievalModelRadioButton extends JRadioButtonMenuItem {
      * Returns the search retrieval model associated with this radiobutton
      * @return
      */
-    public ARetrievalModel.MODEL get_model() {
+    public ARetrievalModel.MODEL getRetrievalModel() {
         return _model;
     }
 }

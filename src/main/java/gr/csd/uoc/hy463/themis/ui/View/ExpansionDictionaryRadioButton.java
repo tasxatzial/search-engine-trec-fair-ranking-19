@@ -16,10 +16,10 @@ public class ExpansionDictionaryRadioButton extends JRadioButtonMenuItem {
             case "None":
                 _dictionary = QueryExpansion.DICTIONARY.NONE;
                 break;
-            case "Glove":
+            case "GloVe":
                 _dictionary = QueryExpansion.DICTIONARY.GLOVE;
                 break;
-            case "extJWNL":
+            case "WordNet":
                 _dictionary = QueryExpansion.DICTIONARY.EXTJWNL;
                 break;
         }
@@ -29,7 +29,7 @@ public class ExpansionDictionaryRadioButton extends JRadioButtonMenuItem {
      * Returns the query expansion dictionary associated with this radiobutton
      * @return
      */
-    public QueryExpansion.DICTIONARY get_dictionary() {
+    public QueryExpansion.DICTIONARY getExpansionDictionary() {
         return _dictionary;
     }
 }

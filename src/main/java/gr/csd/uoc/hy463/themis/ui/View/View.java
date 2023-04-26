@@ -31,18 +31,18 @@ public class View extends JFrame {
     private JMenuItem _evaluateVSM;
 
     /* The "evaluate VSM/Glove" menu item */
-    private JMenuItem _evaluateVSMGlove;
+    private JMenuItem _evaluateVSM_Glove;
 
     /* The "evaluate BM25" menu item */
     private JMenuItem _evaluateBM25;
 
     /* The "evaluate BM25/Glove" menu item */
-    private JMenuItem _evaluateBM25Glove;
+    private JMenuItem _evaluateBM25_Glove;
 
-    /* The "evaluate VSM/JWNL" menu item */
+    /* The "evaluate VSM/WordNet" menu item */
     private JMenuItem _evaluateVSM_JWNL;
 
-    /* The "evaluate BM25/JWNL" menu item */
+    /* The "evaluate BM25/WordNet" menu item */
     private JMenuItem _evaluateBM25_JWNL;
 
     /* Title area (top) */
@@ -118,8 +118,8 @@ public class View extends JFrame {
         _expansionDictionary = new JMenu("Query expansion");
         group = new ButtonGroup();
         ExpansionDictionaryRadioButton noneDictionary = new ExpansionDictionaryRadioButton("None");
-        ExpansionDictionaryRadioButton gloveDictionary = new ExpansionDictionaryRadioButton("Glove");
-        ExpansionDictionaryRadioButton extJWNLDictionary = new ExpansionDictionaryRadioButton("extJWNL");
+        ExpansionDictionaryRadioButton gloveDictionary = new ExpansionDictionaryRadioButton("GloVe");
+        ExpansionDictionaryRadioButton extJWNLDictionary = new ExpansionDictionaryRadioButton("WordNet");
         group.add(noneDictionary);
         group.add(gloveDictionary);
         group.add(extJWNLDictionary);
@@ -157,14 +157,14 @@ public class View extends JFrame {
         JMenuItem evaluate = new JMenu("Evaluate");
         _evaluateVSM = new JMenuItem("VSM");
         _evaluateBM25 = new JMenuItem("BM25");
-        _evaluateVSMGlove = new JMenuItem("VSM/Glove");
-        _evaluateBM25Glove = new JMenuItem("BM25/Glove");
-        _evaluateVSM_JWNL = new JMenuItem("VSM/JWNL");
-        _evaluateBM25_JWNL = new JMenuItem("BM25/JWNL");
+        _evaluateVSM_Glove = new JMenuItem("VSM/GloVe");
+        _evaluateBM25_Glove = new JMenuItem("BM25/GloVe");
+        _evaluateVSM_JWNL = new JMenuItem("VSM/WordNet");
+        _evaluateBM25_JWNL = new JMenuItem("BM25/WordNet");
         evaluate.add(_evaluateVSM);
         evaluate.add(_evaluateBM25);
-        evaluate.add(_evaluateVSMGlove);
-        evaluate.add(_evaluateBM25Glove);
+        evaluate.add(_evaluateVSM_Glove);
+        evaluate.add(_evaluateBM25_Glove);
         evaluate.add(_evaluateVSM_JWNL);
         evaluate.add(_evaluateBM25_JWNL);
 
@@ -354,7 +354,7 @@ public class View extends JFrame {
      * Returns the "create index" menu item
      * @return
      */
-    public JMenuItem get_createIndex() {
+    public JMenuItem getCreateIndex() {
         return _createIndex;
     }
 
@@ -362,7 +362,7 @@ public class View extends JFrame {
      * Returns the "query collection" menu item
      * @return
      */
-    public JMenuItem get_queryCollection() {
+    public JMenuItem getQueryCollection() {
         return _queryCollection;
     }
 
@@ -370,7 +370,7 @@ public class View extends JFrame {
      * Returns the "load index" menu item
      * @return
      */
-    public JMenuItem get_loadIndex() {
+    public JMenuItem getLoadIndex() {
         return _loadIndex;
     }
 
@@ -378,7 +378,7 @@ public class View extends JFrame {
      * Returns the "evaluate VSM" menu item
      * @return
      */
-    public JMenuItem get_evaluateVSM() {
+    public JMenuItem getEvaluateVSM() {
         return _evaluateVSM;
     }
 
@@ -386,39 +386,39 @@ public class View extends JFrame {
      * Returns the "evaluate BM25" menu item
      * @return
      */
-    public JMenuItem get_evaluateBM25() {
+    public JMenuItem getEvaluateBM25() {
         return _evaluateBM25;
     }
 
     /**
-     * Returns the "evaluate VSM/Glove" menu item
+     * Returns the "evaluate VSM/GloVe" menu item
      * @return
      */
-    public JMenuItem get_evaluateVSMGlove() {
-        return _evaluateVSMGlove;
+    public JMenuItem getEvaluateVSM_Glove() {
+        return _evaluateVSM_Glove;
     }
 
     /**
      * Returns the "evaluate BM25/Glove" menu item
      * @return
      */
-    public JMenuItem get_evaluateBM25Glove() {
-        return _evaluateBM25Glove;
+    public JMenuItem getEvaluateBM25_Glove() {
+        return _evaluateBM25_Glove;
     }
 
     /**
-     * Returns the "evaluate VSM/JWNL" menu item
+     * Returns the "evaluate VSM/WordNet" menu item
      * @return
      */
-    public JMenuItem get_evaluateVSM_JWNL() {
+    public JMenuItem getEvaluateVSM_JWNL() {
         return _evaluateVSM_JWNL;
     }
 
     /**
-     * Returns the "evaluate BM25/JWNL" menu item
+     * Returns the "evaluate BM25/WordNet" menu item
      * @return
      */
-    public JMenuItem get_evaluateBM25_JWNL() {
+    public JMenuItem getEvaluateBM25_JWNL() {
         return _evaluateBM25_JWNL;
     }
 
@@ -426,7 +426,7 @@ public class View extends JFrame {
      * Returns the search button
      * @return
      */
-    public JButton get_searchButton() {
+    public JButton getSearchButton() {
         return _searchButton;
     }
 
@@ -434,7 +434,7 @@ public class View extends JFrame {
      * Returns the search input field
      * @return
      */
-    public JTextField get_searchField() {
+    public JTextField getSearchField() {
         return _searchField;
     }
 
@@ -442,7 +442,7 @@ public class View extends JFrame {
      * Returns the "retrieval model" menu
      * @return
      */
-    public JMenu get_retrievalModel() {
+    public JMenu getRetrievalModel() {
         return _retrievalModel;
     }
 
@@ -450,7 +450,7 @@ public class View extends JFrame {
      * Returns the "document properties" menu
      * @return
      */
-    public JMenu get_documentProperties() {
+    public JMenu getDocumentProperties() {
         return _documentProperties;
     }
 
@@ -458,7 +458,7 @@ public class View extends JFrame {
      * Returns the "query expansion" menu
      * @return
      */
-    public JMenu get_expansionDictionary() {
+    public JMenu getExpansionDictionary() {
         return _expansionDictionary;
     }
 
@@ -468,7 +468,7 @@ public class View extends JFrame {
      */
     public void checkRetrievalModel(ARetrievalModel.MODEL model) {
         for (int i = 0; i < _retrievalModel.getItemCount(); i++) {
-            if (((RetrievalModelRadioButton) _retrievalModel.getItem(i)).get_model() == model) {
+            if (((RetrievalModelRadioButton) _retrievalModel.getItem(i)).getRetrievalModel() == model) {
                 _retrievalModel.getItem(i).setSelected(true);
                 break;
             }
@@ -481,7 +481,7 @@ public class View extends JFrame {
      */
     public void checkExpansionDictionary(QueryExpansion.DICTIONARY dictionary) {
         for (int i = 0; i < _expansionDictionary.getItemCount(); i++) {
-            if (((ExpansionDictionaryRadioButton) _expansionDictionary.getItem(i)).get_dictionary() == dictionary) {
+            if (((ExpansionDictionaryRadioButton) _expansionDictionary.getItem(i)).getExpansionDictionary() == dictionary) {
                 _expansionDictionary.getItem(i).setSelected(true);
                 break;
             }

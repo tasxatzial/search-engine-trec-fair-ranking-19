@@ -7,7 +7,7 @@ import java.util.*;
  * Each instance corresponds to a document.
  */
 public class DocInfo {
-    /* names of all possible document properties except the string doc ID found in the JSON entries */
+    /* names of all possible document properties except the string doc ID */
     public enum PROPERTY {
         TITLE,
         ABSTRACT,
@@ -27,7 +27,7 @@ public class DocInfo {
         DOCUMENT_SIZE
     }
 
-    /* The unique ID of each instance. To save space, we'll be storing an int instead of the string doc ID
+    /* The unique (int) ID of each instance. To save space, we'll be storing an int instead of the string doc ID
     * found in the JSON entries */
     private final int _docID;
 
@@ -59,7 +59,7 @@ public class DocInfo {
         return _props.containsKey(prop);
     }
 
-    public int get_docID() {
+    public int getDocID() {
         return _docID;
     }
 
@@ -88,7 +88,7 @@ public class DocInfo {
      *
      * @return
      */
-    public Set<PROPERTY> get_props() {
+    public Set<PROPERTY> getProps() {
         return new HashSet<>(_props.keySet());
     }
 }

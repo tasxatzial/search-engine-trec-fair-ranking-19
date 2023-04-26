@@ -7,7 +7,7 @@ import java.io.IOException;
  * Each entry in these files has a fixed size DocumentMetaEntry.SIZE and DocumentStringID.SIZE
  * respectively.
  */
-public class DocumentBlockBuffers extends MemoryBuffers {
+public class DocumentFixedBuffers extends MemoryBuffers {
 
     /**
      * Constructor.
@@ -17,7 +17,7 @@ public class DocumentBlockBuffers extends MemoryBuffers {
      * @param blockSize The size of an entry in the file
      * @throws IOException
      */
-    public DocumentBlockBuffers(String filePath, MemoryBuffers.MODE mode, int blockSize)
+    public DocumentFixedBuffers(String filePath, MemoryBuffers.MODE mode, int blockSize)
             throws IOException {
         _filePath = filePath;
         createBufferOffsets(blockSize);

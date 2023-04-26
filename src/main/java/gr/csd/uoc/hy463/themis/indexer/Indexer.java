@@ -4,7 +4,7 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
-import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentBlockBuffers;
+import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFixedBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemoryBuffers;
 import gr.csd.uoc.hy463.themis.indexer.indexes.Index;
 import gr.csd.uoc.hy463.themis.indexer.model.*;
@@ -64,12 +64,12 @@ public class Indexer {
     private RandomAccessFile __DOCUMENTS__ = null;
 
     /* Use DOCUMENTS_META_FILENAME as a memory mapped file */
-    private DocumentBlockBuffers __DOCMETA_BUFFERS__ = null;
+    private DocumentFixedBuffers __DOCMETA_BUFFERS__ = null;
     private byte[] __DOCUMENT_META_ARRAY__;
     private ByteBuffer __DOCUMENT_META_BUFFER__;
 
     /* Use DOCUMENTS_ID_FILENAME as a memory mapped file */
-    private DocumentBlockBuffers __DOCID_BUFFERS__ = null;
+    private DocumentFixedBuffers __DOCID_BUFFERS__ = null;
     private byte[] __DOCUMENT_ID_ARRAY__;
     private ByteBuffer __DOCUMENT_ID_BUFFER__; /* currently unused */
 
@@ -707,7 +707,7 @@ public class Indexer {
         vocabularyReader.close();
 
         /* open DOCUMENTS_META_FILENAME and 'INDEX_TMP_PATH/doc_tf' */
-        __DOCMETA_BUFFERS__ = new DocumentBlockBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
+        __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
         BufferedReader docTFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTFPath()), "UTF-8"));
 
         int totalDocuments = Integer.parseInt(_INDEX_META__.get("documents"));
@@ -782,10 +782,10 @@ public class Indexer {
             __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
 
             /* memory map DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME */
-            __DOCMETA_BUFFERS__ = new DocumentBlockBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
+            __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
             __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
             __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-            __DOCID_BUFFERS__ = new DocumentBlockBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
+            __DOCID_BUFFERS__ = new DocumentFixedBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
             __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
             __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         }
@@ -918,7 +918,7 @@ public class Indexer {
         }
 
         /* get the props of the first DocInfo */
-        Set<DocInfo.PROPERTY> firstProps = results.get(0).getDocInfo().get_props();
+        Set<DocInfo.PROPERTY> firstProps = results.get(0).getDocInfo().getProps();
 
         /* find the props that will be deleted from each DocInfo */
         Set<DocInfo.PROPERTY> delProps = new HashSet<>(firstProps);
@@ -1003,7 +1003,7 @@ public class Indexer {
             if (ADD_CITATIONS_PAGERANK || ADD_VSM_WEIGHT || ADD_MAX_TF || ADD_TOKEN_COUNT || ADD_AVG_AUTHOR_RANK || ADD_DOC_SIZE) {
 
                 /* go to the appropriate offset and read all document metadata */
-                documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_docID());
+                documentsMetaOffset = DocInfo.getMetaOffset(docInfo.getDocID());
                 ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
                 buffer.get(__DOCUMENT_META_ARRAY__);
 
@@ -1042,7 +1042,7 @@ public class Indexer {
                 /* In case we haven't already read props from DOCUMENTS_META_FILENAME, we need to do it now
                 * because some of them are required for fetching props from DOCUMENTS_FILENAME */
                 if (documentsMetaOffset == -1) {
-                    documentsMetaOffset = DocInfo.getMetaOffset(docInfo.get_docID());
+                    documentsMetaOffset = DocInfo.getMetaOffset(docInfo.getDocID());
                     ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
                     buffer.get(__DOCUMENT_META_ARRAY__);
                     documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);

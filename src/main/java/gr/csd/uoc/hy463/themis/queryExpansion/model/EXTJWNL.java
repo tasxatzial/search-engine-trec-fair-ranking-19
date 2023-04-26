@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Expands a query using the extJWNL dictionary
+ * Expands a query using the WordNet dictionary
  *
  */
 public class EXTJWNL extends QueryExpansion {
@@ -34,7 +34,7 @@ public class EXTJWNL extends QueryExpansion {
      */
     public EXTJWNL(boolean useStopwords)
             throws ExpansionDictionaryInitException {
-        Themis.print("-> Initializing extJWNL...");
+        Themis.print("-> Initializing WordNet...");
         try {
             _dictionary = Dictionary.getDefaultResourceInstance();
         } catch (JWNLException e) {

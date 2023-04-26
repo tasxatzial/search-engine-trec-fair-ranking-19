@@ -51,7 +51,7 @@ public class DocInfoRadioButton extends JCheckBoxMenuItem {
      * Returns the document property associated with the checkbox
      * @return
      */
-    public DocInfo.PROPERTY get_prop() {
+    public DocInfo.PROPERTY getProp() {
         return _prop;
     }
 
