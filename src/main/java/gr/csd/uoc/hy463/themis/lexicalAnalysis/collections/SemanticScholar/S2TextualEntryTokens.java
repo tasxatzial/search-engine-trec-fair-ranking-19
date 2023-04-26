@@ -1,9 +1,9 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar;
 
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.utils.Pair;
+import opennlp.tools.stemmer.PorterStemmer;
 
 import java.io.IOException;
 import java.util.*;
@@ -12,11 +12,13 @@ import java.util.*;
  * Create a map of [term -> TF (term frequency)] from a {@link S2TextualEntry}.
  */
 public class S2TextualEntryTokens {
-    private final boolean _useStemmer;
+    private PorterStemmer _stemmer;
     private final boolean _useStopwords;
 
     public S2TextualEntryTokens(boolean useStemmer, boolean useStopwords) {
-        _useStemmer = useStemmer;
+        if (useStemmer) {
+            _stemmer = new PorterStemmer();
+        }
         _useStopwords = useStopwords;
     }
 
@@ -62,8 +64,8 @@ public class S2TextualEntryTokens {
             if (_useStopwords && StopWords.Singleton().isStopWord(currentToken)) {
                 continue;
             }
-            if (_useStemmer) {
-                currentToken = Stemmer.applyStemming(currentToken);
+            if (_stemmer != null) {
+                currentToken = _stemmer.stem(currentToken);
             }
             Integer tf = TFs.get(currentToken);
             if (tf != null) {

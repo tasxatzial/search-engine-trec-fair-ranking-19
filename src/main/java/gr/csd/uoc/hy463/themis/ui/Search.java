@@ -5,8 +5,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.Stemmer;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.Glove;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -19,6 +18,7 @@ import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import net.sf.extjwnl.JWNLException;
+import opennlp.tools.stemmer.PorterStemmer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -31,6 +31,8 @@ public class Search {
     private final Indexer _indexer;
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
+    private final PorterStemmer _stemmer;
+    private final boolean _useStopwords;
     private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*";
 
     /* the set of document props that will be retrieved */
@@ -84,6 +86,8 @@ public class Search {
             Themis.print("Default query expansion model: None\n");
         }
         Themis.print("Default Pagerank weight (documents): " + _indexer.getDocumentPagerankWeight() + "\n");
+        _stemmer = _indexer.useStemmer() ? new PorterStemmer() : null;
+        _useStopwords = _indexer.useStopwords();
         Themis.print("Ready\n\n");
     }
 
@@ -278,8 +282,6 @@ public class Search {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
-        boolean useStopwords = _indexer.useStopwords();
-        boolean useStemmer = _indexer.useStemmer();
 
         /* for each term of the initial query, keep 1 extra term from the expanded query */
         int extraTerms = 1;
@@ -290,11 +292,11 @@ public class Search {
         /* apply stopwords/stemming and create a new query */
         List<QueryTerm> newQuery = new ArrayList<>();
         for (String term : splitQuery) {
-            if (useStopwords && StopWords.Singleton().isStopWord(term)) {
+            if (_useStopwords && StopWords.Singleton().isStopWord(term)) {
                 continue;
             }
-            if (useStemmer) {
-                String stemmedTerm = Stemmer.applyStemming(term);
+            if (_stemmer != null) {
+                String stemmedTerm = _stemmer.stem(term);
                 newQuery.add(new QueryTerm(stemmedTerm, 1.0));
             } else {
                 newQuery.add(new QueryTerm(term, 1.0));
@@ -320,13 +322,13 @@ public class Search {
                 if (originalTerm.split(" ").length > 1) {
                     continue;
                 }
-                if (useStopwords && StopWords.Singleton().isStopWord(originalTerm)) {
+                if (_useStopwords && StopWords.Singleton().isStopWord(originalTerm)) {
                     continue;
                 }
 
                 /* apply stemming to the original term */
-                if (useStemmer) {
-                    originalTerm = Stemmer.applyStemming(originalTerm);
+                if (_stemmer != null) {
+                    originalTerm = _stemmer.stem(originalTerm);
                 }
 
                 /* keep at most extraTerms from the expanded list */
@@ -339,11 +341,11 @@ public class Search {
                         continue;
                     }
                     String newTerm = expandedTermList.get(j).get_term().toLowerCase();
-                    if (useStopwords && StopWords.Singleton().isStopWord(newTerm)) {
+                    if (_useStopwords && StopWords.Singleton().isStopWord(newTerm)) {
                         continue;
                     }
-                    if (useStemmer) {
-                        newTerm = Stemmer.applyStemming(newTerm);
+                    if (_stemmer != null) {
+                        newTerm = _stemmer.stem(newTerm);
                     }
 
                     /* Make sure none of the new terms are the same as the original term */

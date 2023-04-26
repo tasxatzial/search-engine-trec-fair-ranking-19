@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer;
+package gr.csd.uoc.hy463.themis.lexicalAnalysis;
 
 import java.io.BufferedReader;
 import java.io.IOException;

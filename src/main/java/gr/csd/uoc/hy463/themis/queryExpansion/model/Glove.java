@@ -2,7 +2,7 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
-import gr.csd.uoc.hy463.themis.lexicalAnalysis.stemmer.StopWords;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
