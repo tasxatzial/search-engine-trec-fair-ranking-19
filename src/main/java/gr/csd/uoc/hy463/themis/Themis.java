@@ -113,32 +113,19 @@ public class Themis {
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runFullEval()
             throws IOException, JWNLException, IndexNotLoadedException, IncompleteFileException {
+        ARetrievalModel.MODEL[] models = {ARetrievalModel.MODEL.VSM, ARetrievalModel.MODEL.OKAPI};
+        QueryExpansion.DICTIONARY[] dictionaries = {QueryExpansion.DICTIONARY.NONE, QueryExpansion.DICTIONARY.GLOVE, QueryExpansion.DICTIONARY.EXTJWNL};
+        double[] pagerankWeights = {0, 0.25};
         _search = new Search();
         _search.search("1"); // warm-up
-        ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL, 0);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0.25);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE, 0.25);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL, 0.25);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE, 0.25);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE, 0.25);
-        eval.run();
-        eval = new ThemisEval(_search, ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL, 0.25);
-        eval.run();
+        for (QueryExpansion.DICTIONARY dictionary : dictionaries) {
+            for (ARetrievalModel.MODEL model : models) {
+                for (double pagerank : pagerankWeights) {
+                    ThemisEval eval = new ThemisEval(_search, model, dictionary, pagerank);
+                    eval.run();
+                }
+            }
+        }
     }
 
     /**
