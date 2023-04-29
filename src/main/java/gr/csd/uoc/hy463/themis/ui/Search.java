@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.ui;
 
+import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
@@ -44,9 +45,10 @@ public class Search {
      * @throws IOException
      * @throws IndexNotLoadedException
      * @throws JWNLException
+     * @throws IncompleteFileException
      */
     public Search()
-            throws IOException, IndexNotLoadedException, JWNLException {
+            throws IOException, IndexNotLoadedException, JWNLException, IncompleteFileException {
         _indexer = new Indexer();
         _indexer.load();
         Themis.print("-> Initializing search...\n");

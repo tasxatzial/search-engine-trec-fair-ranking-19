@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -111,7 +112,7 @@ public class Themis {
 
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runFullEval()
-            throws IOException, JWNLException, IndexNotLoadedException {
+            throws IOException, JWNLException, IndexNotLoadedException, IncompleteFileException {
         _search = new Search();
         _search.search("1"); // warm-up
         ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0);

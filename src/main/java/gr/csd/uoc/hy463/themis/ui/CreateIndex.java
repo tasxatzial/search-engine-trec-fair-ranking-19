@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.ui;
 
+import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 
 import java.io.IOException;
@@ -27,9 +28,10 @@ public class CreateIndex {
      * will be saved in the INDEX_TMP_PATH directory.
      *
      * @throws IOException
+     * @throws IncompleteFileException
      */
     public void createIndex()
-            throws IOException {
+            throws IOException, IncompleteFileException {
         _indexer.index();
     }
 

@@ -17,7 +17,7 @@ public class StopWords {
         if (input == null) {
             throw new FileNotFoundException("Stopwords file not found");
         }
-        BufferedReader br = new BufferedReader(new InputStreamReader(input, "UTF-8"));;
+        BufferedReader br = new BufferedReader(new InputStreamReader(input, "UTF-8"));
         __WORDS__ = new HashSet<>();
         String line;
         while ((line = br.readLine()) != null) {

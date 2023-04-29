@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.indexer;
 
+import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
@@ -96,9 +97,10 @@ public class Indexer {
      * Indexes the collection found in DATASET_PATH.
      *
      * @throws IOException
+     * @throws IncompleteFileException
      */
     public void index()
-            throws IOException {
+            throws IOException, IncompleteFileException {
         index(getDataSetPath());
     }
 
@@ -115,7 +117,7 @@ public class Indexer {
      * @throws IOException
      */
     public void index(String path)
-            throws IOException {
+            throws IOException, IncompleteFileException {
         if (!areIndexDirEmpty()) {
             Themis.print("Previous index found. Aborting...\n");
             return;
@@ -258,15 +260,8 @@ public class Indexer {
         /* calculate the avgdl (average number of tokens) for the Okapi retrieval model */
         double avgdl = (0.0 + tokenCount) / docID;
 
-        /* calculate the remaining metadata/options of the final index and write everything to INDEX_META_FILENAME */
         _INDEX_META__.put("documents", String.valueOf(docID));
         _INDEX_META__.put("avgdl", String.valueOf(avgdl));
-        _INDEX_META__.put("timestamp", Instant.now().toString());
-        for (Map.Entry<String, String> pair : _INDEX_META__.entrySet()) {
-            metaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
-        }
-        metaWriter.close();
-
         Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
 
         /* merge all partial VOCABULARY_FILENAME and delete them */
@@ -295,6 +290,13 @@ public class Indexer {
 
         /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merging of the partial vocabulary files) */
         deleteDir(new File(getTermDFPath()));
+
+        /* write final index metadata files to disk */
+        _INDEX_META__.put("timestamp", Instant.now().toString());
+        for (Map.Entry<String, String> pair : _INDEX_META__.entrySet()) {
+            metaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
+        }
+        metaWriter.close();
 
         /* compute the document pagerank scores and update DOCUMENTS_META_FILENAME */
         Pagerank pagerank = new Pagerank(this);
@@ -744,9 +746,10 @@ public class Indexer {
      * 4) The Pagerank scores of the documents are loaded.
      *
      * @throws IOException
+     * @throws IncompleteFileException
      */
     public void load()
-            throws IOException {
+            throws IOException, IncompleteFileException {
         Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
 
         /* load index configuration options from INDEX_META_FILENAME */
@@ -787,9 +790,10 @@ public class Indexer {
      *
      * @return
      * @throws IOException
+     * @throws IncompleteFileException
      */
     public Map<String, String> loadIndexMeta()
-            throws IOException {
+            throws IOException, IncompleteFileException {
         Map<String, String> meta;
         BufferedReader indexMetaReader = new BufferedReader(new FileReader(getMetaPath()));
         meta = new HashMap<>();
@@ -800,7 +804,9 @@ public class Indexer {
             meta.put(split[0], split[1]);
         }
         indexMetaReader.close();
-
+        if (meta.get("timestamp") == null) {
+            throw new IncompleteFileException(getMetaPath());
+        }
         return meta;
     }
 
