@@ -48,9 +48,7 @@ public class Search {
     public Search()
             throws IOException, IndexNotLoadedException, JWNLException {
         _indexer = new Indexer();
-        if (!_indexer.load()) {
-            throw new IndexNotLoadedException();
-        }
+        _indexer.load();
         Themis.print("-> Initializing search...\n");
         String retrievalModel = _indexer.getConfig().getRetrievalModel();
         switch (retrievalModel) {
@@ -102,7 +100,7 @@ public class Search {
      * @return
      */
     public boolean isIndexLoaded() {
-        return _indexer.isloaded();
+        return _indexer.isLoaded();
     }
 
     /**

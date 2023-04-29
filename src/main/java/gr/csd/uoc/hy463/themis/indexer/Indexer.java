@@ -40,6 +40,7 @@ import java.util.*;
 public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Config __CONFIG__;
+    private boolean _LOADED_ = false;
 
     /* The full path of the final index folder */
     private final String __INDEX_PATH__;
@@ -742,10 +743,9 @@ public class Indexer {
      * 3) DOCUMENTS_ID_FILENAME and DOCUMENTS_META_FILENAME are memory mapped.
      * 4) The Pagerank scores of the documents are loaded.
      *
-     * @return
      * @throws IOException
      */
-    public boolean load()
+    public void load()
             throws IOException {
         Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
 
@@ -777,9 +777,9 @@ public class Indexer {
         __DOCID_BUFFERS__ = new DocumentFixedBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
         __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
         __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
-        Themis.print("Done\n");
 
-        return true;
+        _LOADED_ = true;
+        Themis.print("Done\n");
     }
 
     /**
@@ -829,6 +829,7 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
+        _LOADED_ = false;
     }
 
     /**
@@ -869,7 +870,7 @@ public class Indexer {
      */
     public String getDocID(int docID)
             throws UnsupportedEncodingException, IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         long docIdOffset = DocInfo.getDocIDOffset(docID);
@@ -895,7 +896,7 @@ public class Indexer {
      */
     public void updateDocInfo(List<Result> results, Set<DocInfo.PROPERTY> props)
             throws IOException, IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         if (results.size() == 0) {
@@ -1078,13 +1079,8 @@ public class Indexer {
      *
      * @return
      */
-    public boolean isloaded() {
-        return  __VOCABULARY__ != null &&
-                __POSTINGS__ != null &&
-                __DOCUMENTS__ != null &&
-                __DOCMETA_BUFFERS__ != null &&
-                __DOCID_BUFFERS__ != null &&
-                _INDEX_META__ != null;
+    public boolean isLoaded() {
+        return _LOADED_;
     }
 
     /**
@@ -1096,7 +1092,7 @@ public class Indexer {
      */
     public int[] getDF(List<QueryTerm> query)
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         int[] dfs = new int[query.size()];
@@ -1120,7 +1116,7 @@ public class Indexer {
      */
     public Postings getPostings(String term)
             throws IOException, IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         VocabularyEntry vocabularyEntry = __VOCABULARY__.get(term);
@@ -1150,7 +1146,7 @@ public class Indexer {
      */
     public VSMprops getVSMprops()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
@@ -1173,7 +1169,7 @@ public class Indexer {
      */
     public OKAPIprops getOKAPIprops()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
@@ -1191,7 +1187,11 @@ public class Indexer {
      *
      * @return
      */
-    public double getDocumentsPagerank(int ID) {
+    public double getDocumentsPagerank(int ID)
+            throws IndexNotLoadedException {
+        if (!isLoaded()) {
+            throw new IndexNotLoadedException();
+        }
         long offset = DocInfo.getMetaOffset(ID) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
         return __DOCMETA_BUFFERS__.getMemBuffer(offset).getDouble();
     }
@@ -1204,7 +1204,7 @@ public class Indexer {
      */
     public int getTotalDocuments()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         return Integer.parseInt(_INDEX_META__.get("documents"));
@@ -1218,7 +1218,7 @@ public class Indexer {
      */
     public double getAvgDL()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         return Double.parseDouble(_INDEX_META__.get("avgdl"));
@@ -1232,7 +1232,7 @@ public class Indexer {
      */
     public Boolean useStopwords()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         return Boolean.parseBoolean(_INDEX_META__.get("use_stopwords"));
@@ -1246,7 +1246,7 @@ public class Indexer {
      */
     public Boolean useStemmer()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         return Boolean.parseBoolean(_INDEX_META__.get("use_stemmer"));
@@ -1259,7 +1259,7 @@ public class Indexer {
      */
     public String getIndexTimestamp()
             throws IndexNotLoadedException {
-        if (!isloaded()) {
+        if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
         return _INDEX_META__.get("timestamp");
