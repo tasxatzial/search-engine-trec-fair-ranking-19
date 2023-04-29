@@ -12,7 +12,7 @@ public class StopWords {
 
     private StopWords()
             throws IOException {
-        String fileName = "/stopwords.txt";
+        String fileName = "/themis-stopwords";
         InputStream input = getClass().getResourceAsStream(fileName);
         if (input == null) {
             throw new FileNotFoundException("Stopwords file not found");
