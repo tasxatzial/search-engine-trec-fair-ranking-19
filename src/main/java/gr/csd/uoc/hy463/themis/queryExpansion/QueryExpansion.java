@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.queryExpansion;
 
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
 
@@ -21,9 +20,9 @@ public abstract class QueryExpansion {
      *
      * @param query
      * @return
-     * @throws ExpansionDictionaryInitException
      * @throws JWNLException
+     * @throws IOException
      */
     public abstract List<List<QueryTerm>> expandQuery(List<String> query)
-            throws ExpansionDictionaryInitException, JWNLException, IOException;
+            throws JWNLException, IOException;
 }

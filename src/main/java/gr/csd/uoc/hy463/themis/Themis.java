@@ -1,11 +1,8 @@
 package gr.csd.uoc.hy463.themis;
 
-import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
-import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
@@ -16,9 +13,8 @@ import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
+
 import net.sf.extjwnl.JWNLException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -32,8 +28,6 @@ import java.util.*;
  * enabled by passing 'gui' as first argument of the main function.
  */
 public class Themis {
-    private static final Logger __LOGGER__ = LogManager.getLogger(Themis.class);
-
     private static CreateIndex _createIndex;
     private static Search _search;
     private static View _view;
@@ -110,14 +104,14 @@ public class Themis {
                 _search.printResults(results, 5, 20);
             }
             catch (Exception ex) {
-                print("Search failed\n");
+                print(ex.getMessage() + "\n");
             }
         }
     }
 
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runFullEval()
-            throws IOException, JWNLException, ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+            throws IOException, JWNLException, IndexNotLoadedException {
         _search = new Search();
         _search.search("1"); // warm-up
         ThemisEval eval = new ThemisEval(_search, ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE, 0);
@@ -257,19 +251,8 @@ public class Themis {
             if (_search == null) {
                 try {
                     _search = new Search();
-                } catch (ExpansionDictionaryInitException ex) {
-                    __LOGGER__.error(ex.getMessage());
-                    print("Failed to initialize search\n");
-                    _task = null;
-                    return;
-                } catch (IndexNotLoadedException ex) {
-                    __LOGGER__.error(ex.getMessage());
-                    print("Index is not loaded\n");
-                    _task = null;
-                    return;
-                } catch (ConfigLoadException ex) {
-                    __LOGGER__.error(ex.getMessage());
-                    print("Failed to read from config file\n");
+                } catch (Exception ex) {
+                    print(ex.getMessage() + "\n");
                     _task = null;
                     return;
                 }
@@ -277,18 +260,8 @@ public class Themis {
             try {
                 ThemisEval eval = new ThemisEval(_search, _model, _dictionary, 0.25);
                 eval.run();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Evaluation failed\n");
-            } catch (ExpansionDictionaryInitException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize expansion dictionary\n");
-            } catch (IndexNotLoadedException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Index is not loaded\n");
-            } catch (JWNLException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("extJWNL error\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
             } finally {
                 _task = null;
             }
@@ -302,14 +275,8 @@ public class Themis {
             _task = TASK.CREATE_INDEX;
             try {
                 _createIndex = new CreateIndex();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize indexer\n");
-                _task = null;
-                return;
-            } catch (ConfigLoadException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to read from config file\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
                 _task = null;
                 return;
             }
@@ -326,30 +293,24 @@ public class Themis {
                     _search.unloadIndex();
                     _search = null;
                 }
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to unload previous index\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
                 _task = null;
                 return;
             }
             if (deleteIndex) {
                 try {
                     _createIndex.deleteIndex();
-                } catch (IOException ex) {
-                    __LOGGER__.error(ex.getMessage());
-                    print("Failed to delete previous index\n");
+                } catch (Exception ex) {
+                    print(ex.getMessage() + "\n");
                     _task = null;
                     return;
                 }
             }
             try {
                 _createIndex.createIndex();
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to create index\n");
-            } catch (PagerankException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Pagerank failed\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
             } finally {
                 _task = null;
             }
@@ -368,24 +329,16 @@ public class Themis {
                     _search.unloadIndex();
                     _search = null;
                 }
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to unload previous index\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
                 _task = null;
                 return;
             }
             _createIndex = null;
             try {
                 _search = new Search();
-            } catch (ExpansionDictionaryInitException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize expansion dictionary\n");
-            } catch (IndexNotLoadedException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to load index\n");
-            } catch (ConfigLoadException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to read from config file\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
             } finally {
                 _task = null;
                 if (_search != null) {
@@ -412,19 +365,8 @@ public class Themis {
                 if (expansionDictionary.getItem(i).isSelected()) {
                     try {
                         _search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).getExpansionDictionary());
-                    } catch (ExpansionDictionaryInitException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        print("Failed to initialize expansion dictionary\n");
-                        _task = null;
-                        return;
-                    } catch (IndexNotLoadedException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        print("Index is not loaded\n");
-                        _task = null;
-                        return;
-                    } catch (IOException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        print("IO error\n");
+                    } catch (Exception ex) {
+                        print(ex.getMessage() + "\n");
                         _task = null;
                         return;
                     }
@@ -442,9 +384,8 @@ public class Themis {
             }
             try {
                 _search.setDocumentProperties(props);
-            } catch (IndexNotLoadedException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Index is not loaded\n");
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
                 _task = null;
                 return;
             }
@@ -456,8 +397,7 @@ public class Themis {
                     try {
                         _search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).getRetrievalModel());
                     } catch (IndexNotLoadedException ex) {
-                        __LOGGER__.error(ex.getMessage());
-                        print("Index is not loaded\n");
+                        print(ex.getMessage() + "\n");
                         _task = null;
                         return;
                     }
@@ -490,20 +430,9 @@ public class Themis {
 
                 /* print top 10 results */
                 _search.printResults(results, 0, 9);
-            } catch (IOException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Search failed\n");
-            } catch (IndexNotLoadedException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Index is not loaded\n");
-            } catch (ExpansionDictionaryInitException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("Failed to initialize expansion dictionary\n");
-            } catch (JWNLException ex) {
-                __LOGGER__.error(ex.getMessage());
-                print("extJWNL error\n");
-            }
-            finally {
+            } catch (Exception ex) {
+                print(ex.getMessage() + "\n");
+            } finally {
                 _task = null;
             }
         }

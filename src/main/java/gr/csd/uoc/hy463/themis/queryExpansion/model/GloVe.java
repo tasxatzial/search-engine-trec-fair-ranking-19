@@ -3,12 +3,12 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,15 +27,15 @@ public class GloVe extends QueryExpansion {
      * Reads configuration options from themis.config file.
      *
      * @param useStopwords
-     * @throws ExpansionDictionaryInitException
+     * @throws FileNotFoundException
      */
     public GloVe(String modelPath, boolean useStopwords)
-            throws ExpansionDictionaryInitException {
+            throws FileNotFoundException {
         Themis.print("-> Initializing GloVe...");
 
         File gloveModel = new File(modelPath);
         if (!gloveModel.exists()) {
-            throw new ExpansionDictionaryInitException();
+            throw new FileNotFoundException("GloVe file not found");
         }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 

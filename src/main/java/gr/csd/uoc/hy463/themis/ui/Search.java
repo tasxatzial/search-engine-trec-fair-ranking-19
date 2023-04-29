@@ -2,14 +2,12 @@ package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.GloVe;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
@@ -18,6 +16,7 @@ import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import net.sf.extjwnl.JWNLException;
+
 import opennlp.tools.stemmer.PorterStemmer;
 
 import java.io.IOException;
@@ -42,12 +41,12 @@ public class Search {
      * Initializes the Indexer, the expansion dictionary, and loads the index from INDEX_PATH.
      * Reads configuration options from themis.config file.
      *
-     * @throws ExpansionDictionaryInitException
+     * @throws IOException
      * @throws IndexNotLoadedException
-     * @throws ConfigLoadException
+     * @throws JWNLException
      */
     public Search()
-            throws ExpansionDictionaryInitException, IndexNotLoadedException, ConfigLoadException {
+            throws IOException, IndexNotLoadedException, JWNLException {
         _indexer = new Indexer();
         if (!_indexer.load()) {
             throw new IndexNotLoadedException();
@@ -70,15 +69,12 @@ public class Search {
         if (_indexer.getConfig().getUseQueryExpansion()) {
             String expansionModel = _indexer.getConfig().getQueryExpansionModel();
             Themis.print("Default query expansion model: " + expansionModel + "\n");
-            switch (expansionModel) {
-                case "GloVe":
-                    _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
-                    break;
-                case "WordNet":
-                    _queryExpansion = new EXTJWNL(_indexer.useStopwords());
-                    break;
-                default:
-                    throw new ExpansionDictionaryInitException();
+            if (expansionModel.equals("GloVe")) {
+                _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
+            } else if (expansionModel.equals("WordNet")) {
+                _queryExpansion = new EXTJWNL(_indexer.useStopwords());
+            } else {
+                _queryExpansion = null;
             }
         }
         else {
@@ -163,11 +159,11 @@ public class Search {
      *
      * @param dictionary
      * @throws IOException
-     * @throws ExpansionDictionaryInitException
      * @throws IndexNotLoadedException
+     * @throws JWNLException
      */
     public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
-            throws IOException, IndexNotLoadedException, ExpansionDictionaryInitException {
+            throws IOException, IndexNotLoadedException, JWNLException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -201,7 +197,7 @@ public class Search {
      * Returns the timestamp of the loaded index
      *
      * @return
-     * @throws IndexNotLoadedException If the index is not loaded
+     * @throws IndexNotLoadedException
      */
     public String getIndexTimestamp()
             throws IndexNotLoadedException {
@@ -256,13 +252,12 @@ public class Search {
      *
      * @param query
      * @return
-     * @throws ExpansionDictionaryInitException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      * @throws IOException
      */
     public List<Result> search(String query)
-            throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
+            throws IndexNotLoadedException, JWNLException, IOException {
         return search(query, Integer.MAX_VALUE);
     }
 
@@ -272,13 +267,12 @@ public class Search {
      * @param query
      * @param endResult From 0 to Integer.MAX_VALUE
      * @return
-     * @throws ExpansionDictionaryInitException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      * @throws IOException
      */
     public List<Result> search(String query, int endResult)
-            throws ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException, IOException {
+            throws IndexNotLoadedException, JWNLException, IOException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -397,11 +391,11 @@ public class Search {
      * Prints a list of ranked results
      *
      * @param searchResults
-     * @throws UnsupportedEncodingException
      * @throws IndexNotLoadedException
+     * @throws UnsupportedEncodingException
      */
     public void printResults(List<Result> searchResults)
-            throws UnsupportedEncodingException, IndexNotLoadedException {
+            throws IndexNotLoadedException, UnsupportedEncodingException {
         printResults(searchResults, 0, Integer.MAX_VALUE);
     }
     
@@ -412,11 +406,11 @@ public class Search {
      * @param searchResults
      * @param startResult From 0 to Integer.MAX_VALUE
      * @param endResult From 0 to Integer.MAX_VALUE
-     * @throws UnsupportedEncodingException
      * @throws IndexNotLoadedException
+     * @throws UnsupportedEncodingException
      */
     public void printResults(List<Result> searchResults, int startResult, int endResult)
-            throws UnsupportedEncodingException, IndexNotLoadedException {
+            throws IndexNotLoadedException, UnsupportedEncodingException {
         if (searchResults.isEmpty()) {
             return;
         }

@@ -1,8 +1,6 @@
 package gr.csd.uoc.hy463.themis.ui;
 
-import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
-import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 
 import java.io.IOException;
 
@@ -18,10 +16,9 @@ public class CreateIndex {
      * Initializes the Indexer. Reads configuration options from themis.config file.
      *
      * @throws IOException
-     * @throws ConfigLoadException
      */
     public CreateIndex()
-            throws IOException, ConfigLoadException {
+            throws IOException {
         _indexer = new Indexer();
     }
 
@@ -30,10 +27,9 @@ public class CreateIndex {
      * will be saved in the INDEX_TMP_PATH directory.
      *
      * @throws IOException
-     * @throws PagerankException
      */
     public void createIndex()
-            throws IOException, PagerankException {
+            throws IOException {
         _indexer.index();
     }
 

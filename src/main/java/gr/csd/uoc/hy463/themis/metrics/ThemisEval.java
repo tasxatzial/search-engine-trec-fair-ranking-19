@@ -3,7 +3,6 @@ package gr.csd.uoc.hy463.themis.metrics;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.Search;
@@ -28,7 +27,7 @@ import java.util.*;
  * The main class responsible for running an evaluation of the index.
  */
 public class ThemisEval {
-    private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
+    private static final Logger __LOGGER__ = LogManager.getLogger(ThemisEval.class);
     private final Search _search;
 
     /**
@@ -41,10 +40,10 @@ public class ThemisEval {
      * @param dictionary
      * @throws IOException
      * @throws IndexNotLoadedException
-     * @throws ExpansionDictionaryInitException
+     * @throws JWNLException
      */
     public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
-            throws IOException, IndexNotLoadedException, ExpansionDictionaryInitException {
+            throws IOException, IndexNotLoadedException, JWNLException {
         _search = search;
         _search.setRetrievalModel(model);
         _search.setExpansionDictionary(dictionary);
@@ -60,15 +59,14 @@ public class ThemisEval {
      *
      * @throws IndexNotLoadedException
      * @throws IOException
-     * @throws ExpansionDictionaryInitException
      * @throws JWNLException
      */
     public void run()
-            throws IndexNotLoadedException, IOException, ExpansionDictionaryInitException, JWNLException {
+            throws IndexNotLoadedException, IOException, JWNLException {
         String __JUDGEMENTS_FILE__ = _search.getConfig().getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_FILE__).exists())) {
-            __LOGGER__.info("No judgements file found!");
-            Themis.print("No judgements file found!\n");
+            __LOGGER__.info("Judgements file not found");
+            Themis.print("Judgements file not found\n");
             return;
         }
         String evaluationFilename = _search.getConfig().getEvaluationFilename();
@@ -101,7 +99,7 @@ public class ThemisEval {
 
     /* Runs the evaluation */
     private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter)
-            throws IOException, ExpansionDictionaryInitException, IndexNotLoadedException, JWNLException {
+            throws IOException, IndexNotLoadedException, JWNLException {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();
@@ -116,7 +114,6 @@ public class ThemisEval {
                 obj = parser.parse(line);
             } catch (ParseException e) {
                 __LOGGER__.error(e.getMessage());
-                Themis.print("Unable to parse json\n");
                 continue;
             }
             JSONObject jsonObject = (JSONObject) obj;
@@ -206,7 +203,7 @@ public class ThemisEval {
 
     /* calculates the average precision given a ranked list of results and a map of [(string) doc ID -> relevance] */
     private double computeAveP(List<Result> results, Map<String, Long> relevanceMap)
-            throws UnsupportedEncodingException, IndexNotLoadedException {
+            throws IOException, IndexNotLoadedException {
         double avep = 0;
         int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
@@ -238,7 +235,7 @@ public class ThemisEval {
 
     /* calculates the nDCG given a ranked list of results and a map of [(string) doc ID -> relevance] */
     private double computeNdcg(List<Result> results, Map<String, Long> docRelevance)
-            throws UnsupportedEncodingException, IndexNotLoadedException {
+            throws IOException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
         int foundRelevantDocuments = 0;

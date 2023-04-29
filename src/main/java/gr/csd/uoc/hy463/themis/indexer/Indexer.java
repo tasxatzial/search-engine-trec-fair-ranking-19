@@ -2,7 +2,6 @@ package gr.csd.uoc.hy463.themis.indexer;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
-import gr.csd.uoc.hy463.themis.config.Exceptions.ConfigLoadException;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFixedBuffers;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.MemoryBuffers;
@@ -11,7 +10,6 @@ import gr.csd.uoc.hy463.themis.indexer.model.*;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTokens;
-import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
@@ -19,6 +17,9 @@ import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
 import gr.csd.uoc.hy463.themis.utils.*;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -28,8 +29,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * The basic indexer class. This class is responsible for two tasks:
@@ -78,16 +77,11 @@ public class Indexer {
      *
      * Reads configuration options from themis.config file and sets the names of the files in the final index.
      *
-     * @throws ConfigLoadException
+     * @throws IOException
      */
     public Indexer()
-            throws ConfigLoadException {
-        try {
-            this.__CONFIG__ = new Config();
-        }
-        catch (IOException e) {
-            throw new ConfigLoadException();
-        }
+            throws IOException {
+        this.__CONFIG__ = new Config();
         __INDEX_PATH__ = getIndexPath();
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
@@ -101,10 +95,9 @@ public class Indexer {
      * Indexes the collection found in DATASET_PATH.
      *
      * @throws IOException
-     * @throws PagerankException
      */
     public void index()
-            throws IOException, PagerankException {
+            throws IOException {
         index(getDataSetPath());
     }
 
@@ -119,12 +112,10 @@ public class Indexer {
      *
      * @param path
      * @throws IOException
-     * @throws PagerankException
      */
     public void index(String path)
-            throws IOException, PagerankException {
+            throws IOException {
         if (!areIndexDirEmpty()) {
-            __LOGGER__.error("Previous index found. Aborting...");
             Themis.print("Previous index found. Aborting...\n");
             return;
         }
@@ -148,7 +139,6 @@ public class Indexer {
         File folder = new File(path);
         File[] files = folder.listFiles();
         if (files == null || files.length == 0) {
-            __LOGGER__.info("No dataset files found in " + path);
             Themis.print("No dataset files found in " + path + "\n");
             return;
         }
@@ -213,6 +203,9 @@ public class Indexer {
 
                     /* Extract all textual info into a S2TextualEntry */
                     S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
+                    if (entry.getID() == null) {
+                        continue;
+                    }
 
                     /* create the frequencies map for the terms of the S2TextualEntry */
                     Map<String, Integer> TFMap = textualEntryTokens.createTFMap(entry);
@@ -282,8 +275,7 @@ public class Indexer {
                 deleteDir(new File(getPartialVocabularyPath(i)));
             }
         } catch (IOException e) {
-            __LOGGER__.error("Error deleting partial vocabularies");
-            Themis.print("[Error deleting partial vocabularies]\n");
+            __LOGGER__.error(e.getMessage() + "\n");
         }
 
         /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_PATH/doc_tf' */
@@ -297,8 +289,7 @@ public class Indexer {
                 deleteDir(new File(getPartialPostingsPath(i)));
             }
         } catch (IOException e) {
-            __LOGGER__.error("Error deleting partial postings");
-            Themis.print("[Error deleting partial postings]\n");
+            __LOGGER__.error(e.getMessage() + "\n");
         }
 
         /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merging of the partial vocabulary files) */
@@ -312,8 +303,7 @@ public class Indexer {
         try {
             deleteDir(new File(getIndexTmpPath()));
         } catch (IOException e) {
-            __LOGGER__.error("Error deleting index tmp folder");
-            Themis.print("[Error deleting index tmp folder]\n");
+            __LOGGER__.error(e.getMessage() + "\n");
         }
 
         Themis.print("-> End of indexing\n");
@@ -510,7 +500,6 @@ public class Indexer {
     (random access file) in INDEX_PATH */
     private void mergePostings(int maxIndexID)
             throws IOException {
-
         /* If there is only one partial index, just move POSTINGS_FILENAME to INDEX_PATH */
         long startTime =  System.nanoTime();
         Themis.print("-> Merging partial postings...\n");
@@ -754,44 +743,40 @@ public class Indexer {
      * 4) The Pagerank scores of the documents are loaded.
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public boolean load()
-            throws IndexNotLoadedException {
+            throws IOException {
         Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
-        try {
-            /* load index configuration options from INDEX_META_FILENAME */
-            _INDEX_META__ = loadIndexMeta();
-            Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
-            Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
-            Themis.print("-> Loading index...");
 
-            /* load VOCABULARY_FILENAME */
-            __VOCABULARY__ = new HashMap<>();
-            String line;
-            String[] fields;
-            BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
-            while ((line = vocabularyReader.readLine()) != null) {
-                fields = line.split(" ");
-                __VOCABULARY__.put(fields[0], new VocabularyEntry(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
-            }
-            vocabularyReader.close();
+        /* load index configuration options from INDEX_META_FILENAME */
+        _INDEX_META__ = loadIndexMeta();
+        Themis.print("Stemming: " + _INDEX_META__.get("use_stemmer") + "\n");
+        Themis.print("Stopwords: " + _INDEX_META__.get("use_stopwords") + "\n");
+        Themis.print("-> Loading index...");
 
-            /* open POSTINGS_FILENAME and DOCUMENTS_FILENAME */
-            __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
-            __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
-
-            /* memory map DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME */
-            __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
-            __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
-            __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-            __DOCID_BUFFERS__ = new DocumentFixedBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
-            __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
-            __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
+        /* load VOCABULARY_FILENAME */
+        __VOCABULARY__ = new HashMap<>();
+        String line;
+        String[] fields;
+        BufferedReader vocabularyReader = new BufferedReader(new InputStreamReader(new FileInputStream(getVocabularyPath()), "UTF-8"));
+        while ((line = vocabularyReader.readLine()) != null) {
+            fields = line.split(" ");
+            __VOCABULARY__.put(fields[0], new VocabularyEntry(Integer.parseInt(fields[1]), Long.parseLong(fields[2])));
         }
-        catch (IOException e) {
-            throw new IndexNotLoadedException();
-        }
+        vocabularyReader.close();
+
+        /* open POSTINGS_FILENAME and DOCUMENTS_FILENAME */
+        __POSTINGS__ = new RandomAccessFile(getPostingsPath(), "r");
+        __DOCUMENTS__ = new RandomAccessFile(getDocumentsFilePath(), "r");
+
+        /* memory map DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME */
+        __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
+        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
+        __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
+        __DOCID_BUFFERS__ = new DocumentFixedBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
+        __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
+        __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
         Themis.print("Done\n");
 
         return true;

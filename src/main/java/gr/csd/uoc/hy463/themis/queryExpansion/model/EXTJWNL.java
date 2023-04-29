@@ -4,7 +4,6 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.ExpansionDictionaryInitException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
 import net.sf.extjwnl.data.IndexWord;
@@ -30,19 +29,13 @@ public class EXTJWNL extends QueryExpansion {
      * Constructor.
      *
      * @param useStopwords
-     * @throws ExpansionDictionaryInitException
+     * @throws JWNLException
      */
     public EXTJWNL(boolean useStopwords)
-            throws ExpansionDictionaryInitException {
+            throws JWNLException {
         Themis.print("-> Initializing WordNet...");
-        try {
-            _dictionary = Dictionary.getDefaultResourceInstance();
-        } catch (JWNLException e) {
-            throw new ExpansionDictionaryInitException();
-        }
-        if (_dictionary != null) {
-            _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
-        }
+        _dictionary = Dictionary.getDefaultResourceInstance();
+        _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
         _useStopwords = useStopwords;
         Themis.print("Done\n");
     }

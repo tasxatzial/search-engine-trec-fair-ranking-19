@@ -8,7 +8,6 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocumentStringID;
 import gr.csd.uoc.hy463.themis.indexer.model.DocumentMetaEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
-import gr.csd.uoc.hy463.themis.linkAnalysis.Exceptions.PagerankException;
 import gr.csd.uoc.hy463.themis.utils.Time;
 
 import java.io.*;
@@ -53,26 +52,20 @@ public class Pagerank {
      *
      * Requires both DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME to be present.
      *
-     * @throws PagerankException
      */
     public void documentsPagerank()
-            throws PagerankException {
-        try {
-            long startTime = System.nanoTime();
-            Themis.print("-> Constructing Pagerank graph...\n");
-            dumpCitationsData();
-            PagerankNode[] graph = initCitationsPagerankGraph();
-            Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
-            startTime = System.nanoTime();
-            Themis.print("-> Calculating Pagerank scores...\n");
-            double[] scores = computeDocumentsPagerank(graph);
-            Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
-            writeDocumentsScore(scores);
-            Files.deleteIfExists(new File(__CITATIONS_GRAPH_PATH__).toPath());
-        }
-        catch (IOException e) {
-            throw new PagerankException();
-        }
+            throws IOException {
+        long startTime = System.nanoTime();
+        Themis.print("-> Constructing Pagerank graph...\n");
+        dumpCitationsData();
+        PagerankNode[] graph = initCitationsPagerankGraph();
+        Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');
+        startTime = System.nanoTime();
+        Themis.print("-> Calculating Pagerank scores...\n");
+        double[] scores = computeDocumentsPagerank(graph);
+        Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
+        writeDocumentsScore(scores);
+        Files.deleteIfExists(new File(__CITATIONS_GRAPH_PATH__).toPath());
     }
 
     /* Parses the collection and saves the graph data to 'INDEX_PATH/graph' (random access file).

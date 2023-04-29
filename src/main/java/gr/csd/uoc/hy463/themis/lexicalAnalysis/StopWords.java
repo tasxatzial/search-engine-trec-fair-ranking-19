@@ -1,8 +1,6 @@
 package gr.csd.uoc.hy463.themis.lexicalAnalysis;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashSet;
 
 /**
@@ -12,15 +10,16 @@ public class StopWords {
     private static StopWords _instance = null;
     private HashSet<String> __WORDS__;
 
-    /**
-     * Constructor. Initializes __WORDS__
-     */
     private StopWords()
             throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/stopwords.txt"), "UTF-8"));
+        String fileName = "/stopwords.txt";
+        InputStream input = getClass().getResourceAsStream(fileName);
+        if (input == null) {
+            throw new FileNotFoundException("Stopwords file not found");
+        }
+        BufferedReader br = new BufferedReader(new InputStreamReader(input, "UTF-8"));;
         __WORDS__ = new HashSet<>();
         String line;
-
         while ((line = br.readLine()) != null) {
             __WORDS__.add(line);
         }

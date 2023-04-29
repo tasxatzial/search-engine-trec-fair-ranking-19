@@ -1,5 +1,6 @@
 package gr.csd.uoc.hy463.themis.config;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -7,37 +8,22 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Class that holds configuration options for the themis system
  */
 public class Config {
-
-    private static final Logger __LOGGER__ = LogManager.getLogger(Config.class);
     private Properties __PROP__;
 
-    public Config() throws IOException {
+    public Config()
+            throws IOException {
         __PROP__ = new Properties();
         String propFileName = "/themis.config";
-
         InputStream input = getClass().getResourceAsStream(propFileName);
-
-        if (input != null) {
-            __PROP__.load(input);
-        } else {
-            __LOGGER__.error("config file '" + propFileName + "' not found in the classpath");
+        if (input == null) {
+            throw new FileNotFoundException("Config file not found");
         }
-    }
-
-    /**
-     * Check if config is valid
-     *
-     * @return
-     */
-    public boolean isValid() {
-        return !__PROP__.isEmpty();
+        __PROP__.load(input);
     }
 
     /**
