@@ -113,7 +113,7 @@ public class ThemisEval {
             try {
                 obj = parser.parse(line);
             } catch (ParseException e) {
-                __LOGGER__.error(e.getMessage());
+                __LOGGER__.error(e);
                 continue;
             }
             JSONObject jsonObject = (JSONObject) obj;

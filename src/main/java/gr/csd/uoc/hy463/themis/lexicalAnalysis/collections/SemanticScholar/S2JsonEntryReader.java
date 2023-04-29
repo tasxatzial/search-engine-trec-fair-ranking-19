@@ -36,7 +36,7 @@ public class S2JsonEntryReader {
             String ID = (String) jsonObject.get("id");
             entry.setID(ID);
         } catch (ParseException e) {
-            __LOGGER__.error(e.getMessage());
+            __LOGGER__.error(e);
         }
         return entry;
     }
@@ -138,7 +138,7 @@ public class S2JsonEntryReader {
             entry.setVenue(venue);
 
         } catch (ParseException e) {
-            __LOGGER__.error(e.getMessage());
+            __LOGGER__.error(e);
         }
 
         return entry;
@@ -182,7 +182,7 @@ public class S2JsonEntryReader {
             }
             entry.setInCitations(inCitations);
         } catch (ParseException e) {
-            __LOGGER__.error(e.getMessage());
+            __LOGGER__.error(e);
         }
 
         return entry;

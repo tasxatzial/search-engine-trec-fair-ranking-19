@@ -105,7 +105,7 @@ public class Themis {
                 _search.printResults(results, 5, 20);
             }
             catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
             }
         }
     }
@@ -240,7 +240,7 @@ public class Themis {
                 try {
                     _search = new Search();
                 } catch (Exception ex) {
-                    print(ex.getMessage() + "\n");
+                    print(ex + "\n");
                     _task = null;
                     return;
                 }
@@ -249,7 +249,7 @@ public class Themis {
                 ThemisEval eval = new ThemisEval(_search, _model, _dictionary, 0.25);
                 eval.run();
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
             } finally {
                 _task = null;
             }
@@ -264,7 +264,7 @@ public class Themis {
             try {
                 _createIndex = new CreateIndex();
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
                 _task = null;
                 return;
             }
@@ -282,7 +282,7 @@ public class Themis {
                     _search = null;
                 }
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
                 _task = null;
                 return;
             }
@@ -290,7 +290,7 @@ public class Themis {
                 try {
                     _createIndex.deleteIndex();
                 } catch (Exception ex) {
-                    print(ex.getMessage() + "\n");
+                    print(ex + "\n");
                     _task = null;
                     return;
                 }
@@ -298,7 +298,7 @@ public class Themis {
             try {
                 _createIndex.createIndex();
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
             } finally {
                 _task = null;
             }
@@ -318,7 +318,7 @@ public class Themis {
                     _search = null;
                 }
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
                 _task = null;
                 return;
             }
@@ -326,7 +326,7 @@ public class Themis {
             try {
                 _search = new Search();
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
             } finally {
                 _task = null;
                 if (_search != null) {
@@ -354,7 +354,7 @@ public class Themis {
                     try {
                         _search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).getExpansionDictionary());
                     } catch (Exception ex) {
-                        print(ex.getMessage() + "\n");
+                        print(ex + "\n");
                         _task = null;
                         return;
                     }
@@ -373,7 +373,7 @@ public class Themis {
             try {
                 _search.setDocumentProperties(props);
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
                 _task = null;
                 return;
             }
@@ -385,7 +385,7 @@ public class Themis {
                     try {
                         _search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).getRetrievalModel());
                     } catch (IndexNotLoadedException ex) {
-                        print(ex.getMessage() + "\n");
+                        print(ex + "\n");
                         _task = null;
                         return;
                     }
@@ -419,7 +419,7 @@ public class Themis {
                 /* print top 10 results */
                 _search.printResults(results, 0, 9);
             } catch (Exception ex) {
-                print(ex.getMessage() + "\n");
+                print(ex + "\n");
             } finally {
                 _task = null;
             }

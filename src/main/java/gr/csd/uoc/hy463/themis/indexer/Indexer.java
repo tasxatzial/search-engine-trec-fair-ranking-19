@@ -271,7 +271,7 @@ public class Indexer {
                 deleteDir(new File(getPartialVocabularyPath(i)));
             }
         } catch (IOException e) {
-            __LOGGER__.error(e.getMessage() + "\n");
+            __LOGGER__.error(e);
         }
 
         /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_PATH/doc_tf' */
@@ -285,7 +285,7 @@ public class Indexer {
                 deleteDir(new File(getPartialPostingsPath(i)));
             }
         } catch (IOException e) {
-            __LOGGER__.error(e.getMessage() + "\n");
+            __LOGGER__.error(e);
         }
 
         /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merging of the partial vocabulary files) */
@@ -306,7 +306,7 @@ public class Indexer {
         try {
             deleteDir(new File(getIndexTmpPath()));
         } catch (IOException e) {
-            __LOGGER__.error(e.getMessage() + "\n");
+            __LOGGER__.error(e);
         }
 
         Themis.print("-> End of indexing\n");
