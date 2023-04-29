@@ -27,17 +27,21 @@ public class S2JsonEntryReader {
     public static S2TextualEntry readDocIDEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
+        Object obj;
         try {
-            Object obj = parser.parse(jsonToRead);
-
-            // This should be a JSON object.
-            JSONObject jsonObject = (JSONObject) obj;
-
-            String ID = (String) jsonObject.get("id");
-            entry.setID(ID);
-        } catch (ParseException e) {
-            __LOGGER__.error(e);
+            obj = parser.parse(jsonToRead);
         }
+        catch (ParseException e) {
+            __LOGGER__.error(e);
+            return entry;
+        }
+
+        // This should be a JSON object.
+        JSONObject jsonObject = (JSONObject) obj;
+
+        String ID = (String) jsonObject.get("id");
+        entry.setID(ID);
+
         return entry;
     }
 
@@ -50,96 +54,98 @@ public class S2JsonEntryReader {
     public static S2TextualEntry readTextualEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
+        Object obj;
         try {
-            Object obj = parser.parse(jsonToRead);
-
-            // This should be a JSON object.
-            JSONObject jsonObject = (JSONObject) obj;
-
-            // Get the ID
-            String ID = (String) jsonObject.get("id");
-            entry.setID(ID);
-
-            // Get the title
-            String titleCheck = (String) jsonObject.get("title");
-            String title = titleCheck != null ? titleCheck : "";
-            entry.setTitle(title);
-
-            // Get abstract
-            String paperAbstractCheck = (String) jsonObject.get("paperAbstract");
-            String paperAbstract = paperAbstractCheck != null ? paperAbstractCheck : "";
-            entry.setPaperAbstract(paperAbstract);
-
-            // Read entities. A JSONArray
-            JSONArray entitiesArray = (JSONArray) jsonObject.get("entities");
-            List<String> entities = new ArrayList<>();
-            if(entitiesArray != null) {
-                entitiesArray.forEach(entity -> {
-                    entities.add(entity.toString());
-                });
-            }
-            entry.setEntities(entities);
-
-            // Read fieldsOfStudy. A JSONArray
-            JSONArray fieldsArray = (JSONArray) jsonObject.get("fieldsOfStudy");
-            List<String> fields = new ArrayList<>();
-            if(fieldsArray != null) {
-                fieldsArray.forEach(field -> {
-                    fields.add(field.toString());
-                });
-            }
-            entry.setFieldsOfStudy(fields);
-
-            // Read authors. A JSONArray
-            JSONArray authorsList = (JSONArray) jsonObject.get("authors");
-            List<Pair<String, List<String>>> authors = new ArrayList<>();
-            if (authorsList != null) {
-                for (int i = 0; i < authorsList.size(); i++) {
-                    JSONObject authorInfo = (JSONObject) authorsList.get(i);
-                    String authorName = (String) authorInfo.get("name");
-                    // Now get all the ids
-                    JSONArray IDsList = (JSONArray) authorInfo.get("ids");
-                    List<String> IDs = new ArrayList<>();
-                    if(IDsList != null) {
-                        for (int j = 0; j < IDsList.size(); j++) {
-                            ID = (String) IDsList.get(j);
-                            IDs.add(ID);
-                        }
-                    }
-                    Pair author = new Pair(authorName, IDs);
-                    authors.add(author);
-                }
-            }
-            entry.setAuthors(authors);
-
-            // Get journal
-            String journalCheck = (String) jsonObject.get("journalName");
-            String journal = journalCheck != null ? journalCheck : "";
-            entry.setJournalName(journal);
-
-            // Read sources. A JSONArray
-            JSONArray sourcesArray = (JSONArray) jsonObject.get("sources");
-            List<String> sources = new ArrayList<>();
-            if(sourcesArray != null) {
-                sourcesArray.forEach(source -> {
-                    sources.add(source.toString());
-                });
-            }
-            entry.setSources(sources);
-
-            // Get year
-            Long yearLong = (Long) jsonObject.get("year");
-            int year = yearLong != null ? yearLong.intValue() : 0;
-            entry.setYear(year);
-
-            // Get venue
-            String venueCheck = (String) jsonObject.get("venue");
-            String venue = venueCheck != null ? venueCheck : "";
-            entry.setVenue(venue);
-
-        } catch (ParseException e) {
-            __LOGGER__.error(e);
+            obj = parser.parse(jsonToRead);
         }
+        catch (ParseException e) {
+            __LOGGER__.error(e);
+            return entry;
+        }
+
+        // This should be a JSON object.
+        JSONObject jsonObject = (JSONObject) obj;
+
+        // Get the ID
+        String ID = (String) jsonObject.get("id");
+        entry.setID(ID);
+
+        // Get the title
+        String titleCheck = (String) jsonObject.get("title");
+        String title = titleCheck != null ? titleCheck : "";
+        entry.setTitle(title);
+
+        // Get abstract
+        String paperAbstractCheck = (String) jsonObject.get("paperAbstract");
+        String paperAbstract = paperAbstractCheck != null ? paperAbstractCheck : "";
+        entry.setPaperAbstract(paperAbstract);
+
+        // Read entities. A JSONArray
+        JSONArray entitiesArray = (JSONArray) jsonObject.get("entities");
+        List<String> entities = new ArrayList<>();
+        if(entitiesArray != null) {
+            entitiesArray.forEach(entity -> {
+                entities.add(entity.toString());
+            });
+        }
+        entry.setEntities(entities);
+
+        // Read fieldsOfStudy. A JSONArray
+        JSONArray fieldsArray = (JSONArray) jsonObject.get("fieldsOfStudy");
+        List<String> fields = new ArrayList<>();
+        if(fieldsArray != null) {
+            fieldsArray.forEach(field -> {
+                fields.add(field.toString());
+            });
+        }
+        entry.setFieldsOfStudy(fields);
+
+        // Read authors. A JSONArray
+        JSONArray authorsList = (JSONArray) jsonObject.get("authors");
+        List<Pair<String, List<String>>> authors = new ArrayList<>();
+        if (authorsList != null) {
+            for (int i = 0; i < authorsList.size(); i++) {
+                JSONObject authorInfo = (JSONObject) authorsList.get(i);
+                String authorName = (String) authorInfo.get("name");
+                // Now get all the ids
+                JSONArray IDsList = (JSONArray) authorInfo.get("ids");
+                List<String> IDs = new ArrayList<>();
+                if(IDsList != null) {
+                    for (int j = 0; j < IDsList.size(); j++) {
+                        ID = (String) IDsList.get(j);
+                        IDs.add(ID);
+                    }
+                }
+                Pair author = new Pair(authorName, IDs);
+                authors.add(author);
+            }
+        }
+        entry.setAuthors(authors);
+
+        // Get journal
+        String journalCheck = (String) jsonObject.get("journalName");
+        String journal = journalCheck != null ? journalCheck : "";
+        entry.setJournalName(journal);
+
+        // Read sources. A JSONArray
+        JSONArray sourcesArray = (JSONArray) jsonObject.get("sources");
+        List<String> sources = new ArrayList<>();
+        if(sourcesArray != null) {
+            sourcesArray.forEach(source -> {
+                sources.add(source.toString());
+            });
+        }
+        entry.setSources(sources);
+
+        // Get year
+        Long yearLong = (Long) jsonObject.get("year");
+        int year = yearLong != null ? yearLong.intValue() : 0;
+        entry.setYear(year);
+
+        // Get venue
+        String venueCheck = (String) jsonObject.get("venue");
+        String venue = venueCheck != null ? venueCheck : "";
+        entry.setVenue(venue);
 
         return entry;
     }
@@ -153,37 +159,39 @@ public class S2JsonEntryReader {
     public static S2TextualEntry readCitationsEntry(String jsonToRead) {
         S2TextualEntry entry = new S2TextualEntry();
         JSONParser parser = new JSONParser();
+        Object obj;
         try {
-            Object obj = parser.parse(jsonToRead);
-
-            // This should be a JSON object.
-            JSONObject jsonObject = (JSONObject) obj;
-
-            // Get the ID
-            String ID = (String) jsonObject.get("id");
-            entry.setID(ID);
-
-            // Read out citations. A JSONArray
-            JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
-            List<String> outCitations = new ArrayList<>();
-            if(outCitationsArray != null) {
-                outCitationsArray.forEach(citation -> {
-                    outCitations.add(citation.toString());
-                });
-            }
-            entry.setOutCitations(outCitations);
-
-            JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
-            List<String> inCitations = new ArrayList<>();
-            if(inCitationsArray != null) {
-                inCitationsArray.forEach(citation -> {
-                    inCitations.add(citation.toString());
-                });
-            }
-            entry.setInCitations(inCitations);
+            obj = parser.parse(jsonToRead);
         } catch (ParseException e) {
             __LOGGER__.error(e);
+            return entry;
         }
+
+        // This should be a JSON object.
+        JSONObject jsonObject = (JSONObject) obj;
+
+        // Get the ID
+        String ID = (String) jsonObject.get("id");
+        entry.setID(ID);
+
+        // Read out citations. A JSONArray
+        JSONArray outCitationsArray = (JSONArray) jsonObject.get("outCitations");
+        List<String> outCitations = new ArrayList<>();
+        if(outCitationsArray != null) {
+            outCitationsArray.forEach(citation -> {
+                outCitations.add(citation.toString());
+            });
+        }
+        entry.setOutCitations(outCitations);
+
+        JSONArray inCitationsArray = (JSONArray) jsonObject.get("inCitations");
+        List<String> inCitations = new ArrayList<>();
+        if(inCitationsArray != null) {
+            inCitationsArray.forEach(citation -> {
+                inCitations.add(citation.toString());
+            });
+        }
+        entry.setInCitations(inCitations);
 
         return entry;
     }
