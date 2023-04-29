@@ -122,6 +122,9 @@ public class Pagerank {
                 String json;
                 while ((json = currentDataFile.readLine()) != null) {
                     S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
+                    if (entry.getID() == null) {
+                        continue;
+                    }
 
                     /* count out citations */
                     List<String> outCitations = entry.getOutCitations();
