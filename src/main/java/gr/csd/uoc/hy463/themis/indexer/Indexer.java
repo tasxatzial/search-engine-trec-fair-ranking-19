@@ -74,6 +74,10 @@ public class Indexer {
     private byte[] __DOCUMENT_ID_ARRAY__;
     private ByteBuffer __DOCUMENT_ID_BUFFER__; /* currently unused */
 
+    private OKAPIprops _OKAPIprops = null;
+    private VSMprops _VSMprops = null;
+    private double[] _documentsPagerank = null;
+
     /**
      * Constructor.
      *
@@ -836,6 +840,9 @@ public class Indexer {
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
         _LOADED_ = false;
+        _VSMprops = null;
+        _OKAPIprops = null;
+        _documentsPagerank = null;
     }
 
     /**
@@ -1155,6 +1162,9 @@ public class Indexer {
         if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
+        if (_VSMprops != null) {
+            return _VSMprops;
+        }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
         int[] maxTFs = new int[documents];
         double[] VSMweights = new double[documents];
@@ -1165,7 +1175,8 @@ public class Indexer {
             buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset + DocumentMetaEntry.MAX_TF_OFFSET);
             maxTFs[i] = buffer.getInt();
         }
-        return new VSMprops(maxTFs, VSMweights);
+        _VSMprops = new VSMprops(maxTFs, VSMweights);
+        return _VSMprops;
     }
 
     /**
@@ -1178,6 +1189,9 @@ public class Indexer {
         if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
+        if (_OKAPIprops != null) {
+            return _OKAPIprops;
+        }
         int documents = Integer.parseInt(_INDEX_META__.get("documents"));
         int[] tokenCount = new int[documents];
         for (int i = 0; i < documents; i++) {
@@ -1185,21 +1199,33 @@ public class Indexer {
             ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset);
             tokenCount[i] = buffer.getInt();
         }
-        return new OKAPIprops(tokenCount);
+        _OKAPIprops = new OKAPIprops(tokenCount);
+        return _OKAPIprops;
     }
 
     /**
-     * Gets the pagerank score of the document with the given (int) ID
+     * Returns an array of the pagerank scores of the documents.
      *
      * @return
+     * @throws IndexNotLoadedException
      */
-    public double getDocumentsPagerank(int ID)
+    public double[] getDocumentsPagerank()
             throws IndexNotLoadedException {
         if (!isLoaded()) {
             throw new IndexNotLoadedException();
         }
-        long offset = DocInfo.getMetaOffset(ID) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
-        return __DOCMETA_BUFFERS__.getMemBuffer(offset).getDouble();
+        if (_documentsPagerank != null) {
+            return _documentsPagerank;
+        }
+        int documents = Integer.parseInt(_INDEX_META__.get("documents"));
+        double[] documentsPagerank = new double[documents];
+        for (int i = 0; i < documents; i++) {
+            long offset = DocInfo.getMetaOffset(i) + DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET;
+            ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(offset);
+            documentsPagerank[i] = buffer.getDouble();
+        }
+        _documentsPagerank = documentsPagerank;
+        return _documentsPagerank;
     }
 
     /**
