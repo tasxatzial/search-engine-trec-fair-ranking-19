@@ -19,10 +19,11 @@ public abstract class QueryExpansion {
      * should be the original term.
      *
      * @param query
+     * @param useStopwords
      * @return
      * @throws JWNLException
      * @throws IOException
      */
-    public abstract List<List<QueryTerm>> expandQuery(List<String> query)
+    public abstract List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
             throws JWNLException, IOException;
 }

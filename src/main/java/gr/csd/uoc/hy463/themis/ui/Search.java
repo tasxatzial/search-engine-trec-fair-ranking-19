@@ -20,6 +20,7 @@ import net.sf.extjwnl.JWNLException;
 
 import opennlp.tools.stemmer.PorterStemmer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -70,9 +71,9 @@ public class Search {
             String expansionModel = _indexer.getConfig().getQueryExpansionModel();
             Themis.print("Default query expansion model: " + expansionModel + "\n");
             if (expansionModel.equals("GloVe")) {
-                _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
+                _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloveModelPath());
             } else if (expansionModel.equals("WordNet")) {
-                _queryExpansion = new EXTJWNL(_indexer.useStopwords());
+                _queryExpansion = EXTJWNL.Singleton();
             } else {
                 _queryExpansion = null;
             }
@@ -158,20 +159,20 @@ public class Search {
      * Sets the query expansion dictionary to the specified dictionary
      *
      * @param dictionary
-     * @throws IOException
+     * @throws FileNotFoundException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      */
     public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
-            throws IOException, IndexNotLoadedException, JWNLException {
+            throws FileNotFoundException, IndexNotLoadedException, JWNLException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
-        if (dictionary == QueryExpansion.DICTIONARY.GLOVE && !(_queryExpansion instanceof GloVe)) {
-            _queryExpansion = new GloVe(_indexer.getConfig().getGloveModelPath(), _indexer.useStopwords());
+        if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+            _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloveModelPath());
         }
-        else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL && !(_queryExpansion instanceof EXTJWNL)) {
-            _queryExpansion = new EXTJWNL(_indexer.useStopwords());
+        else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL) {
+            _queryExpansion = EXTJWNL.Singleton();
         }
         else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
             _queryExpansion = null;
@@ -301,7 +302,7 @@ public class Search {
         if (_queryExpansion != null) {
 
             /* the expanded query is a list of lists */
-            List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery);
+            List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery, _useStopwords);
 
             /* process the list, each item is a list of terms and corresponds to a term of the query */
             for (int i = 0; i < expandedQuery.size(); i++) {

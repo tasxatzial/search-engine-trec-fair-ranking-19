@@ -18,26 +18,31 @@ import java.util.List;
 
 /**
  * Expands a query using the WordNet dictionary
- *
  */
 public class EXTJWNL extends QueryExpansion {
+    private static EXTJWNL _instance = null;
     private MaxentTagger _maxentTagger;
     private final Dictionary _dictionary;
-    private final boolean _useStopwords;
 
-    /**
-     * Constructor.
-     *
-     * @param useStopwords
-     * @throws JWNLException
-     */
-    public EXTJWNL(boolean useStopwords)
+    private EXTJWNL()
             throws JWNLException {
         Themis.print("-> Initializing WordNet...");
         _dictionary = Dictionary.getDefaultResourceInstance();
         _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
-        _useStopwords = useStopwords;
         Themis.print("Done\n");
+    }
+
+    /**
+     * Returns the instance of the EXTJWNL dictionary.
+     *
+     * @return
+     * @throws JWNLException
+     */
+    public static EXTJWNL Singleton()
+            throws JWNLException {
+        return _instance == null
+                ? (_instance = new EXTJWNL())
+                : _instance;
     }
 
     /**
@@ -45,10 +50,12 @@ public class EXTJWNL extends QueryExpansion {
      * New terms get a weight of 0.5.
      *
      * @param query
+     * @throws JWNLException
+     * @throws IOException
      * @return
      */
     @Override
-    public List<List<QueryTerm>> expandQuery(List<String> query)
+    public List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
             throws JWNLException, IOException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
@@ -68,7 +75,7 @@ public class EXTJWNL extends QueryExpansion {
             String term = eachTag[i].split("_")[0];
             String tag = eachTag[i].split("_")[1];
             expandedTerm.add(new QueryTerm(term, 1.0));
-            if (_useStopwords && StopWords.Singleton().isStopWord(eachTag[i].toLowerCase())) {
+            if (useStopwords && StopWords.Singleton().isStopWord(eachTag[i].toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;
             }

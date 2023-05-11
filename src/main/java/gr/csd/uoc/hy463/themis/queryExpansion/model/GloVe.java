@@ -18,18 +18,11 @@ import java.util.List;
  * Expands a query using the GloVe dictionary
  */
 public class GloVe extends QueryExpansion {
+    private static GloVe _instance = null;
     private final WordVectors _model;
     private final int _nearest;
-    private final boolean _useStopwords;
 
-    /**
-     * Constructor.
-     * Reads configuration options from themis.config file.
-     *
-     * @param useStopwords
-     * @throws FileNotFoundException
-     */
-    public GloVe(String modelPath, boolean useStopwords)
+    private GloVe(String modelPath)
             throws FileNotFoundException {
         Themis.print("-> Initializing GloVe...");
 
@@ -41,9 +34,21 @@ public class GloVe extends QueryExpansion {
 
         /* default is to get the nearest 1 terms for each query term */
         _nearest = 1;
-
-        _useStopwords = useStopwords;
         Themis.print("Done\n");
+    }
+
+    /**
+     * Returns the instance of the GloVe dictionary.
+     *
+     * @param modelPath
+     * @return
+     * @throws FileNotFoundException
+     */
+    public static GloVe Singleton(String modelPath)
+            throws FileNotFoundException {
+        return _instance == null
+                ? (_instance = new GloVe(modelPath))
+                : _instance;
     }
 
     /**
@@ -51,17 +56,18 @@ public class GloVe extends QueryExpansion {
      * New terms get a weight of 0.5.
      *
      * @param query
+     * @throws IOException
      * @return
      */
     @Override
-    public List<List<QueryTerm>> expandQuery(List<String> query)
+    public List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
             throws IOException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
         for (String term : query) {
             List<QueryTerm> expandedTerm = new ArrayList<>();
             expandedTerm.add(new QueryTerm(term, 1.0)); //original term
-            if (_useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
+            if (useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
                 expandedQuery.add(expandedTerm);
                 continue;
             }
