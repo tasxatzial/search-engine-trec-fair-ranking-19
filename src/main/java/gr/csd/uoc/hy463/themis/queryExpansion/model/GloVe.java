@@ -5,50 +5,39 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
+
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * Expands a query using the GloVe dictionary
+ * Expands a query using a GloVe pre-trained word vectors file
  */
 public class GloVe extends QueryExpansion {
     private static GloVe _instance = null;
     private final WordVectors _model;
-    private final int _nearest;
 
-    private GloVe(String modelPath)
+    private GloVe(String filePath)
             throws FileNotFoundException {
         Themis.print("-> Initializing GloVe...");
-
-        File gloveModel = new File(modelPath);
+        File gloveModel = new File(filePath);
         if (!gloveModel.exists()) {
             throw new FileNotFoundException("GloVe file not found");
         }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 
-        /* default is to get the nearest 1 terms for each query term */
-        _nearest = 1;
         Themis.print("Done\n");
     }
 
-    /**
-     * Returns the instance of the GloVe dictionary.
-     *
-     * @param modelPath
-     * @return
-     * @throws FileNotFoundException
-     */
-    public static GloVe Singleton(String modelPath)
+    public static GloVe Singleton(String filePath)
             throws FileNotFoundException {
         return _instance == null
-                ? (_instance = new GloVe(modelPath))
+                ? (_instance = new GloVe(filePath))
                 : _instance;
     }
 
@@ -63,20 +52,25 @@ public class GloVe extends QueryExpansion {
     @Override
     public List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
             throws QueryExpansionException {
-        double weight = 0.5;
+        double newTermWeight = 0.5;
+        double origTermWeight = 1.0;
+        int extraTerms = 3;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
         try {
             for (String term : query) {
-                List<QueryTerm> expandedTerm = new ArrayList<>();
-                expandedTerm.add(new QueryTerm(term, 1.0)); //original term
-                if (useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
-                    expandedQuery.add(expandedTerm);
+                if (useStopwords && StopWords.Singleton().isStopWord(term)) {
                     continue;
                 }
-                Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
+                List<QueryTerm> expandedTerm = new ArrayList<>();
+                expandedTerm.add(new QueryTerm(term, origTermWeight));
+                Collection<String> nearestTerms = _model.wordsNearest(term, extraTerms);
                 Object[] nearestArray = nearestTerms.toArray();
                 for (Object o : nearestArray) {
-                    expandedTerm.add(new QueryTerm(o.toString(), weight));
+                    String s = o.toString();
+                    if (useStopwords && StopWords.Singleton().isStopWord(s)) {
+                        continue;
+                    }
+                    expandedTerm.add(new QueryTerm(s, newTermWeight));
                 }
                 expandedQuery.add(expandedTerm);
             }

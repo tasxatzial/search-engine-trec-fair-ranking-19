@@ -39,6 +39,6 @@ public class StopWords {
      * @return true if the term is a stop word, false otherwise
      */
     public boolean isStopWord(String word) {
-        return __WORDS__.contains(word);
+        return __WORDS__.contains(word.toLowerCase());
     }
 }

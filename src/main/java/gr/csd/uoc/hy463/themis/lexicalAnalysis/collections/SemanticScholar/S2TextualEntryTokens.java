@@ -12,13 +12,11 @@ import java.util.*;
  * Create a map of [term -> TF (term frequency)] from a {@link S2TextualEntry}.
  */
 public class S2TextualEntryTokens {
-    private PorterStemmer _stemmer;
+    private final PorterStemmer _stemmer;
     private final boolean _useStopwords;
 
     public S2TextualEntryTokens(boolean useStemmer, boolean useStopwords) {
-        if (useStemmer) {
-            _stemmer = new PorterStemmer();
-        }
+        _stemmer = useStemmer ? new PorterStemmer() : null;
         _useStopwords = useStopwords;
     }
 
@@ -60,13 +58,14 @@ public class S2TextualEntryTokens {
         StringTokenizer tokenizer = new StringTokenizer(field, delimiter);
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
-            currentToken = tokenizer.nextToken().toLowerCase();
+            currentToken = tokenizer.nextToken();
             if (_useStopwords && StopWords.Singleton().isStopWord(currentToken)) {
                 continue;
             }
             if (_stemmer != null) {
                 currentToken = _stemmer.stem(currentToken);
             }
+            currentToken = currentToken.toLowerCase();
             Integer tf = TFs.get(currentToken);
             if (tf != null) {
                 TFs.put(currentToken, tf + 1);

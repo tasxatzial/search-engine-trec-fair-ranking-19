@@ -17,8 +17,8 @@ import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
 import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
-import net.sf.extjwnl.JWNLException;
 
+import net.sf.extjwnl.JWNLException;
 import opennlp.tools.stemmer.PorterStemmer;
 
 import java.io.FileNotFoundException;
@@ -35,7 +35,7 @@ public class Search {
     private QueryExpansion _queryExpansion;
     private final PorterStemmer _stemmer;
     private final boolean _useStopwords;
-    private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*";
+    private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*'";
 
     /* the set of document props that will be retrieved */
     private Set<DocInfo.PROPERTY> _props;
@@ -72,7 +72,7 @@ public class Search {
             String expansionModel = _indexer.getConfig().getQueryExpansionModel();
             Themis.print("Default query expansion model: " + expansionModel + "\n");
             if (expansionModel.equals("GloVe")) {
-                _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloveModelPath());
+                _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloVeModelPath());
             } else if (expansionModel.equals("WordNet")) {
                 _queryExpansion = EXTJWNL.Singleton();
             } else {
@@ -170,7 +170,7 @@ public class Search {
             throw new IndexNotLoadedException();
         }
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
-            _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloveModelPath());
+            _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloVeModelPath());
         }
         else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL) {
             _queryExpansion = EXTJWNL.Singleton();
@@ -244,7 +244,7 @@ public class Search {
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
-            terms.add(token.toLowerCase());
+            terms.add(token);
         }
         return terms;
     }
@@ -279,75 +279,47 @@ public class Search {
             throw new IndexNotLoadedException();
         }
 
-        /* for each term of the initial query, keep 1 extra term from the expanded query */
-        int extraTerms = 1;
-
         /* split query into tokens and convert to lowercase */
         List<String> splitQuery = Search.split(query);
-
-        /* apply stopwords/stemming and create a new query */
+        
         List<QueryTerm> newQuery = new ArrayList<>();
-        for (String term : splitQuery) {
-            if (_useStopwords && StopWords.Singleton().isStopWord(term)) {
-                continue;
-            }
-            if (_stemmer != null) {
-                String stemmedTerm = _stemmer.stem(term);
-                newQuery.add(new QueryTerm(stemmedTerm, 1.0));
-            } else {
-                newQuery.add(new QueryTerm(term, 1.0));
+        if (_queryExpansion == null) {
+            for (String term : splitQuery) {
+                if (_useStopwords && StopWords.Singleton().isStopWord(term)) {
+                    continue;
+                }
+                String newTerm = term;
+                if (_stemmer != null) {
+                    newTerm = _stemmer.stem(term);
+                }
+                newQuery.add(new QueryTerm(newTerm.toLowerCase(), 1.0));
             }
         }
-
-        /* finally, use the expansion dictionary */
-        if (_queryExpansion != null) {
-
+        else {
             /* the expanded query is a list of lists */
             List<List<QueryTerm>> expandedQuery = _queryExpansion.expandQuery(splitQuery, _useStopwords);
 
-            /* process the list, each item is a list of terms and corresponds to a term of the query */
-            for (int i = 0; i < expandedQuery.size(); i++) {
-
-                /* get the expanded list of terms for the i-th term */
-                List<QueryTerm> expandedTermList = expandedQuery.get(i);
-
-                /* first item should be the original i-th term */
-                String originalTerm = expandedTermList.get(0).get_term().toLowerCase();
-
-                /* proceed to the next list if the original term is stopword or is a string with > 1 tokens */
-                if (originalTerm.split(" ").length > 1) {
-                    continue;
-                }
-                if (_useStopwords && StopWords.Singleton().isStopWord(originalTerm)) {
-                    continue;
-                }
-
-                /* apply stemming to the original term */
-                if (_stemmer != null) {
-                    originalTerm = _stemmer.stem(originalTerm);
-                }
-
-                /* keep at most extraTerms from the expanded list */
-                int count = 0;
-                for (int j = 1; j < expandedTermList.size(); j++) {
-                    if (count == extraTerms) {
-                        break;
-                    }
-                    if (expandedTermList.get(j).get_term().split(" ").length > 1) {
+            /* each list contains the Query terms associated to a term of the query */
+            for (List<QueryTerm> expandedTermList : expandedQuery) {
+                int termCount = 0;
+                for (QueryTerm currQueryTerm : expandedTermList) {
+                    String term = currQueryTerm.get_term();
+                    if ((_useStopwords && StopWords.Singleton().isStopWord(term)) ||
+                            (term.split(" ").length > 1)) {
                         continue;
                     }
-                    String newTerm = expandedTermList.get(j).get_term().toLowerCase();
-                    if (_useStopwords && StopWords.Singleton().isStopWord(newTerm)) {
-                        continue;
-                    }
+
                     if (_stemmer != null) {
-                        newTerm = _stemmer.stem(newTerm);
+                        term = _stemmer.stem(term);
                     }
 
-                    /* Make sure none of the new terms are the same as the original term */
-                    if (!originalTerm.equals(newTerm)) {
-                        newQuery.add(new QueryTerm(newTerm, expandedTermList.get(j).get_weight()));
-                        count++;
+                    /* Make sure the new term is not the same as the original term */
+                    if (termCount == 0 || !newQuery.get(newQuery.size() - 1).get_term().equals(term)) {
+                        newQuery.add(new QueryTerm(term.toLowerCase(), currQueryTerm.get_weight()));
+                        termCount++;
+                    }
+                    if (termCount == 2) {
+                        break;
                     }
                 }
             }

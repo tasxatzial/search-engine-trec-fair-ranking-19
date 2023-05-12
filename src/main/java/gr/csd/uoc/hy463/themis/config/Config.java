@@ -203,7 +203,7 @@ public class Config {
     }
 
     /**
-     * Returns the path to the compressed word2vec model file
+     * Returns the path to the compressed Word2Vec word vector model file
      *
      * @return
      */
@@ -212,11 +212,11 @@ public class Config {
     }
 
     /**
-     * Returns the path to the compressed GloVe model file
+     * Returns the path to the compressed GloVe word vector model file
      *
      * @return
      */
-    public String getGloveModelPath() {
+    public String getGloVeModelPath() {
         return __PROP__.getProperty("GLOVE_PATH");
     }
 

@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
-import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;

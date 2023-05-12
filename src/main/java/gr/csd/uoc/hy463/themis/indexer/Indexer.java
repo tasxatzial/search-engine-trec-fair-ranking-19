@@ -12,8 +12,6 @@ import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2Jso
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntry;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2TextualEntryTokens;
 import gr.csd.uoc.hy463.themis.linkAnalysis.Pagerank;
-import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
-import gr.csd.uoc.hy463.themis.queryExpansion.model.GloVe;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
 import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
@@ -21,7 +19,6 @@ import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
 import gr.csd.uoc.hy463.themis.utils.*;
 
-import net.sf.extjwnl.JWNLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -80,9 +77,6 @@ public class Indexer {
     private OKAPIprops _OKAPIprops = null;
     private VSMprops _VSMprops = null;
     private double[] _documentsPagerank = null;
-
-    private GloVe __GLOVE__ = null;
-    private EXTJWNL __EXTJWNL__ = null;
 
     /**
      * Constructor.
@@ -845,8 +839,6 @@ public class Indexer {
         }
         __VOCABULARY__ = null;
         _INDEX_META__ = null;
-        __GLOVE__ = null;
-        __EXTJWNL__ = null;
         _VSMprops = null;
         _OKAPIprops = null;
         _documentsPagerank = null;

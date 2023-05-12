@@ -85,7 +85,7 @@ public class Themis {
         /* non GUI version */
         else {
             try {
-                System.out.println("Write code in this block");
+
             } catch (Exception ex) {
                 print(ex + "\n");
             }
