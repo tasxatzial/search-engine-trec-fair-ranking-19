@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
@@ -59,10 +60,10 @@ public class ThemisEval {
      *
      * @throws IndexNotLoadedException
      * @throws IOException
-     * @throws JWNLException
+     * @throws QueryExpansionException
      */
     public void run()
-            throws IndexNotLoadedException, IOException, JWNLException {
+            throws IndexNotLoadedException, IOException, QueryExpansionException {
         String __JUDGEMENTS_FILE__ = _search.getConfig().getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_FILE__).exists())) {
             __LOGGER__.info("Judgements file not found");
@@ -99,7 +100,7 @@ public class ThemisEval {
 
     /* Runs the evaluation */
     private void evaluate(BufferedReader judgementsReader, BufferedWriter evaluationWriter)
-            throws IOException, IndexNotLoadedException, JWNLException {
+            throws IOException, IndexNotLoadedException, QueryExpansionException {
         String line;
         JSONParser parser = new JSONParser();
         List<Double> aveps = new ArrayList<>();

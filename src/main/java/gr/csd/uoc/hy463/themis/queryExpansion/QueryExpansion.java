@@ -1,9 +1,8 @@
 package gr.csd.uoc.hy463.themis.queryExpansion;
 
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
-import net.sf.extjwnl.JWNLException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -20,10 +19,9 @@ public abstract class QueryExpansion {
      *
      * @param query
      * @param useStopwords
+     * @throws QueryExpansionException
      * @return
-     * @throws JWNLException
-     * @throws IOException
      */
     public abstract List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
-            throws JWNLException, IOException;
+            throws QueryExpansionException;
 }

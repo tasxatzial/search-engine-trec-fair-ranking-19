@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis;
 import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
@@ -112,7 +113,7 @@ public class Themis {
 
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runFullEval()
-            throws IOException, JWNLException, IndexNotLoadedException, IncompleteFileException {
+            throws IOException, QueryExpansionException, IndexNotLoadedException, IncompleteFileException, JWNLException {
         ARetrievalModel.MODEL[] models = {ARetrievalModel.MODEL.VSM, ARetrievalModel.MODEL.OKAPI};
         QueryExpansion.DICTIONARY[] dictionaries = {QueryExpansion.DICTIONARY.NONE, QueryExpansion.DICTIONARY.GLOVE, QueryExpansion.DICTIONARY.EXTJWNL};
         double[] pagerankWeights = {0, 0.25};

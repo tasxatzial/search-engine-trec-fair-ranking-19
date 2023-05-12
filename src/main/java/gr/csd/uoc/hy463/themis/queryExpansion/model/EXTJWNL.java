@@ -3,6 +3,7 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import net.sf.extjwnl.JWNLException;
@@ -50,13 +51,12 @@ public class EXTJWNL extends QueryExpansion {
      * New terms get a weight of 0.5.
      *
      * @param query
-     * @throws JWNLException
-     * @throws IOException
+     * @throws QueryExpansionException
      * @return
      */
     @Override
     public List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
-            throws JWNLException, IOException {
+            throws QueryExpansionException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
 
@@ -70,31 +70,35 @@ public class EXTJWNL extends QueryExpansion {
         String taggedQuery = _maxentTagger.tagString(queryString);
         String[] eachTag = taggedQuery.split("\\s+");
 
-        for (int i = 0; i < eachTag.length; i++) {
-            List<QueryTerm> expandedTerm = new ArrayList<>();
-            String term = eachTag[i].split("_")[0];
-            String tag = eachTag[i].split("_")[1];
-            expandedTerm.add(new QueryTerm(term, 1.0));
-            if (useStopwords && StopWords.Singleton().isStopWord(eachTag[i].toLowerCase())) {
-                expandedQuery.add(expandedTerm);
-                continue;
-            }
-            POS pos = getPos(tag);
+        try {
+            for (int i = 0; i < eachTag.length; i++) {
+                List<QueryTerm> expandedTerm = new ArrayList<>();
+                String term = eachTag[i].split("_")[0];
+                String tag = eachTag[i].split("_")[1];
+                expandedTerm.add(new QueryTerm(term, 1.0));
+                if (useStopwords && StopWords.Singleton().isStopWord(eachTag[i].toLowerCase())) {
+                    expandedQuery.add(expandedTerm);
+                    continue;
+                }
+                POS pos = getPos(tag);
 
-            // Ignore anything that is not a noun, verb, adjective, adverb
-            if (pos != null) {
-                IndexWord iWord;
-                iWord = _dictionary.getIndexWord(pos, term);
-                if (iWord != null) {
-                    for (Synset synset : iWord.getSenses()) {
-                        List<Word> words = synset.getWords();
-                        for (Word word : words) {
-                            expandedTerm.add(new QueryTerm(word.getLemma(), weight));
+                // Ignore anything that is not a noun, verb, adjective, adverb
+                if (pos != null) {
+                    IndexWord iWord;
+                    iWord = _dictionary.getIndexWord(pos, term);
+                    if (iWord != null) {
+                        for (Synset synset : iWord.getSenses()) {
+                            List<Word> words = synset.getWords();
+                            for (Word word : words) {
+                                expandedTerm.add(new QueryTerm(word.getLemma(), weight));
+                            }
                         }
                     }
                 }
+                expandedQuery.add(expandedTerm);
             }
-            expandedQuery.add(expandedTerm);
+        } catch (Exception ex) {
+            throw new QueryExpansionException("EXTJWNL");
         }
         return expandedQuery;
     }

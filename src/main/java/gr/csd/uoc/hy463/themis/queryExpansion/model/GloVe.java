@@ -2,6 +2,7 @@ package gr.csd.uoc.hy463.themis.queryExpansion.model;
 
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -56,27 +57,31 @@ public class GloVe extends QueryExpansion {
      * New terms get a weight of 0.5.
      *
      * @param query
-     * @throws IOException
+     * @throws QueryExpansionException
      * @return
      */
     @Override
     public List<List<QueryTerm>> expandQuery(List<String> query, boolean useStopwords)
-            throws IOException {
+            throws QueryExpansionException {
         double weight = 0.5;
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
-        for (String term : query) {
-            List<QueryTerm> expandedTerm = new ArrayList<>();
-            expandedTerm.add(new QueryTerm(term, 1.0)); //original term
-            if (useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
+        try {
+            for (String term : query) {
+                List<QueryTerm> expandedTerm = new ArrayList<>();
+                expandedTerm.add(new QueryTerm(term, 1.0)); //original term
+                if (useStopwords && StopWords.Singleton().isStopWord(term.toLowerCase())) {
+                    expandedQuery.add(expandedTerm);
+                    continue;
+                }
+                Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
+                Object[] nearestArray = nearestTerms.toArray();
+                for (Object o : nearestArray) {
+                    expandedTerm.add(new QueryTerm(o.toString(), weight));
+                }
                 expandedQuery.add(expandedTerm);
-                continue;
             }
-            Collection<String> nearestTerms = _model.wordsNearest(term, _nearest);
-            Object[] nearestArray = nearestTerms.toArray();
-            for (Object o : nearestArray) {
-                expandedTerm.add(new QueryTerm(o.toString(), weight));
-            }
-            expandedQuery.add(expandedTerm);
+        } catch (Exception ex) {
+            throw new QueryExpansionException("GloVe");
         }
         return expandedQuery;
     }

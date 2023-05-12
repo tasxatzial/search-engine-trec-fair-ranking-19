@@ -6,6 +6,7 @@ import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
+import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.GloVe;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
@@ -254,11 +255,11 @@ public class Search {
      * @param query
      * @return
      * @throws IndexNotLoadedException
-     * @throws JWNLException
+     * @throws QueryExpansionException
      * @throws IOException
      */
     public List<Result> search(String query)
-            throws IndexNotLoadedException, JWNLException, IOException {
+            throws IndexNotLoadedException, QueryExpansionException, IOException {
         return search(query, Integer.MAX_VALUE);
     }
 
@@ -269,11 +270,11 @@ public class Search {
      * @param endResult From 0 to Integer.MAX_VALUE
      * @return
      * @throws IndexNotLoadedException
-     * @throws JWNLException
+     * @throws QueryExpansionException
      * @throws IOException
      */
     public List<Result> search(String query, int endResult)
-            throws IndexNotLoadedException, JWNLException, IOException {
+            throws IndexNotLoadedException, QueryExpansionException, IOException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
