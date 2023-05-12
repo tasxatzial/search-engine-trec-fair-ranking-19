@@ -1,9 +1,7 @@
 package gr.csd.uoc.hy463.themis;
 
-import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
-import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
@@ -16,11 +14,8 @@ import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
 
-import net.sf.extjwnl.JWNLException;
-
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
 
 /**
@@ -87,45 +82,56 @@ public class Themis {
 
             _view.setVisible(true);
         }
-
-        /* non GUI version, write code in else block */
+        /* non GUI version */
         else {
             try {
-                _search = new Search();
-                Set<DocInfo.PROPERTY> props = new HashSet<>();
-
-                /* fetch the titles */
-                props.add(DocInfo.PROPERTY.TITLE);
-                _search.setDocumentProperties(props);
-
-                /* Query 'test' and retrieve info for the top 8 results */
-                List<Result> results = _search.search("test", 8);
-
-                /* print results with index 5-20 (included). If there are only 10 results,
-                it would print those with index 5-9 */
-                _search.printResults(results, 5, 20);
-            }
-            catch (Exception ex) {
+                System.out.println("Write code in this block");
+            } catch (Exception ex) {
                 print(ex + "\n");
             }
         }
     }
 
+    /* Example of using Themis */
+    private static void runExample() {
+        try {
+            _search = new Search();
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+
+            /* fetch the titles */
+            props.add(DocInfo.PROPERTY.TITLE);
+            _search.setDocumentProperties(props);
+
+            /* Query 'test' and retrieve info for the top 12 results */
+            List<Result> results = _search.search("test", 12);
+
+            /* print results with index 5-20 (included). If there are only 10 results,
+            it would print those with index 5-9 */
+            _search.printResults(results, 5, 20);
+        }
+        catch (Exception ex) {
+            print(ex + "\n");
+        }
+    }
+
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
-    private static void runFullEval()
-            throws IOException, QueryExpansionException, IndexNotLoadedException, IncompleteFileException, JWNLException {
+    private static void runFullEval() {
         ARetrievalModel.MODEL[] models = {ARetrievalModel.MODEL.VSM, ARetrievalModel.MODEL.OKAPI};
         QueryExpansion.DICTIONARY[] dictionaries = {QueryExpansion.DICTIONARY.NONE, QueryExpansion.DICTIONARY.GLOVE, QueryExpansion.DICTIONARY.EXTJWNL};
         double[] pagerankWeights = {0, 0.25};
-        _search = new Search();
-        _search.search("1"); // warm-up
-        for (QueryExpansion.DICTIONARY dictionary : dictionaries) {
-            for (ARetrievalModel.MODEL model : models) {
-                for (double pagerank : pagerankWeights) {
-                    ThemisEval eval = new ThemisEval(_search, model, dictionary, pagerank);
-                    eval.run();
+        try {
+            _search = new Search();
+            _search.search("1"); // warm-up
+            for (QueryExpansion.DICTIONARY dictionary : dictionaries) {
+                for (ARetrievalModel.MODEL model : models) {
+                    for (double pagerank : pagerankWeights) {
+                        ThemisEval eval = new ThemisEval(_search, model, dictionary, pagerank);
+                        eval.run();
+                    }
                 }
             }
+        } catch (Exception ex) {
+            print(ex + "\n");
         }
     }
 
