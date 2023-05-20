@@ -5,6 +5,7 @@ import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
+import gr.csd.uoc.hy463.themis.lexicalAnalysis.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
@@ -19,7 +20,6 @@ import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 
 import net.sf.extjwnl.JWNLException;
-import opennlp.tools.stemmer.PorterStemmer;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class Search {
     private final Indexer _indexer;
     private ARetrievalModel _model;
     private QueryExpansion _queryExpansion;
-    private final PorterStemmer _stemmer;
+    private final boolean _useStemmer;
     private final boolean _useStopwords;
     private static final String splitDelimiters = "\u0020“”/\"-.\uff0c[](),?+#，*'";
 
@@ -84,7 +84,7 @@ public class Search {
             Themis.print("Default query expansion model: None\n");
         }
         Themis.print("Default Pagerank weight (documents): " + _indexer.getDocumentPagerankWeight() + "\n");
-        _stemmer = _indexer.useStemmer() ? new PorterStemmer() : null;
+        _useStemmer = _indexer.useStemmer();
         _useStopwords = _indexer.useStopwords();
         Themis.print("Ready\n\n");
     }
@@ -281,7 +281,7 @@ public class Search {
 
         /* split query into tokens and convert to lowercase */
         List<String> splitQuery = Search.split(query);
-        
+
         List<QueryTerm> newQuery = new ArrayList<>();
         if (_queryExpansion == null) {
             for (String term : splitQuery) {
@@ -289,8 +289,8 @@ public class Search {
                     continue;
                 }
                 String newTerm = term;
-                if (_stemmer != null) {
-                    newTerm = _stemmer.stem(term);
+                if (_useStemmer) {
+                    newTerm = Stemmer.stem(term);
                 }
                 newQuery.add(new QueryTerm(newTerm.toLowerCase(), 1.0));
             }
@@ -309,8 +309,8 @@ public class Search {
                         continue;
                     }
 
-                    if (_stemmer != null) {
-                        term = _stemmer.stem(term);
+                    if (_useStemmer) {
+                        term = Stemmer.stem(term);
                     }
 
                     /* Make sure the new term is not the same as the original term */
