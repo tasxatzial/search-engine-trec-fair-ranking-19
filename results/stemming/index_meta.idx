@@ -1,0 +1,7 @@
+avgdl=124.43041649225029
+documents=46947044
+pagerank_damping=0.85
+use_stopwords=true
+use_stemmer=true
+pagerank_threshold=1.0E-8
+timestamp=2023-05-19T23:10:02.280402600Z

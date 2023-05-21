@@ -8,7 +8,7 @@ Themis is a search engine that was built to index and query the collection of do
   * Boolean
   * Vector Space
   * Okapi
-* Query expansion using deep learning models:
+* Query expansion using pre-trained word vectors from deep learning models:
   * Statistical Dictionary [GloVe](https://nlp.stanford.edu/projects/glove/).
   * Lexical Dictionary [WordNet](https://wordnet.princeton.edu/) ([extJWNL](http://extjwnl.sourceforge.net/) library).
 * Pagerank ranking.
@@ -24,9 +24,9 @@ Indexing took 2h:30m on a i9-9900k with 64GB DDR4 RAM and 1TB SSD. Both stemming
 
 635 queries from a judgements file were used for the engine evaluation.
 
-* The average of the average precision scores is between 70.03 and 71.69.
-* The average of the nDCG scores is between 80.46 and 81.8.
-* Average search time for finding the top 1 million documents was between 0.5s and 0.84s.
+* The average of the average precision scores was between 0.6973 and 0.7191.
+* The average of the nDCG scores was between 0.8014 and 0.8192.
+* Average search time for finding the top 1 million documents was between 0.48s and 1s.
 
 These numbers depend on the search parameters (retrieval model/query expansion/pagerank).
 
@@ -51,13 +51,13 @@ The first command should copy all .jar dependencies in the 'target/dependency' d
 
 Write all code in the main function of the class gr.csd.uoc.hy463.themis.Themis. Compile the project then switch to the 'target' folder and run:
 
-    java -Xmx32G -jar fairness-trec-2020-1.0-SNAPSHOT.jar
+    java -Xmx32G -jar fairness-trec-2019-1.0-SNAPSHOT.jar
 
 ### Running the project with a GUI
 
 The GUI gives us access to most of the needed functionality. Switch to the 'target' folder and run:
 
-    java -Xmx32G -jar fairness-trec-2020-1.0-SNAPSHOT.jar gui
+    java -Xmx32G -jar fairness-trec-2019-1.0-SNAPSHOT.jar gui
 
 ## Query output
 
