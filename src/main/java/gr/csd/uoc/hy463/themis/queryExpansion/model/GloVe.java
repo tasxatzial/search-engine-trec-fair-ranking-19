@@ -58,7 +58,7 @@ public class GloVe extends QueryExpansion {
         List<List<QueryTerm>> expandedQuery = new ArrayList<>();
         try {
             for (String term : query) {
-                if (useStopwords && StopWords.Singleton().isStopWord(term)) {
+                if (useStopwords && StopWords.isStopWord(term)) {
                     continue;
                 }
                 List<QueryTerm> expandedTerm = new ArrayList<>();
@@ -67,7 +67,7 @@ public class GloVe extends QueryExpansion {
                 Object[] nearestArray = nearestTerms.toArray();
                 for (Object o : nearestArray) {
                     String s = o.toString();
-                    if (useStopwords && StopWords.Singleton().isStopWord(s)) {
+                    if (useStopwords && StopWords.isStopWord(s)) {
                         continue;
                     }
                     expandedTerm.add(new QueryTerm(s, newTermWeight));

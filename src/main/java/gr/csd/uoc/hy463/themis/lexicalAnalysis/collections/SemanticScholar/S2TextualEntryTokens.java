@@ -59,7 +59,7 @@ public class S2TextualEntryTokens {
         String currentToken;
         while (tokenizer.hasMoreTokens()) {
             currentToken = tokenizer.nextToken();
-            if (_useStopwords && StopWords.Singleton().isStopWord(currentToken)) {
+            if (_useStopwords && StopWords.isStopWord(currentToken)) {
                 continue;
             }
             if (_useStemmer) {

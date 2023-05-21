@@ -285,7 +285,7 @@ public class Search {
         List<QueryTerm> newQuery = new ArrayList<>();
         if (_queryExpansion == null) {
             for (String term : splitQuery) {
-                if (_useStopwords && StopWords.Singleton().isStopWord(term)) {
+                if (_useStopwords && StopWords.isStopWord(term)) {
                     continue;
                 }
                 String newTerm = term;
@@ -304,7 +304,7 @@ public class Search {
                 int termCount = 0;
                 for (QueryTerm currQueryTerm : expandedTermList) {
                     String term = currQueryTerm.get_term();
-                    if ((_useStopwords && StopWords.Singleton().isStopWord(term)) ||
+                    if ((_useStopwords && StopWords.isStopWord(term)) ||
                             (term.split(" ").length > 1)) {
                         continue;
                     }

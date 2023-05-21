@@ -8,7 +8,7 @@ import java.util.HashSet;
  */
 public class StopWords {
     private static StopWords _instance = null;
-    private HashSet<String> __WORDS__;
+    private final HashSet<String> __WORDS__;
 
     private StopWords()
             throws IOException {
@@ -25,6 +25,10 @@ public class StopWords {
         }
     }
 
+    private HashSet<String> getWords() {
+        return __WORDS__;
+    }
+
     public static StopWords Singleton()
             throws IOException {
         return _instance == null
@@ -38,7 +42,8 @@ public class StopWords {
      * @param word
      * @return true if the term is a stop word, false otherwise
      */
-    public boolean isStopWord(String word) {
-        return __WORDS__.contains(word.toLowerCase());
+    public static boolean isStopWord(String word)
+            throws IOException {
+        return StopWords.Singleton().getWords().contains(word.toLowerCase());
     }
 }

@@ -69,7 +69,7 @@ public class EXTJWNL extends QueryExpansion {
             for (String value : eachTag) {
                 String term = value.split("_")[0];
                 String tag = value.split("_")[1];
-                if (useStopwords && StopWords.Singleton().isStopWord(term)) {
+                if (useStopwords && StopWords.isStopWord(term)) {
                     continue;
                 }
                 List<QueryTerm> expandedTerm = new ArrayList<>();
@@ -85,7 +85,7 @@ public class EXTJWNL extends QueryExpansion {
                             int wordCount = 0;
                             for (Word word : words) {
                                 String s = word.getLemma();
-                                if (useStopwords && StopWords.Singleton().isStopWord(s)) {
+                                if (useStopwords && StopWords.isStopWord(s)) {
                                     continue;
                                 }
                                 expandedTerm.add(new QueryTerm(s, newTermWeight));
