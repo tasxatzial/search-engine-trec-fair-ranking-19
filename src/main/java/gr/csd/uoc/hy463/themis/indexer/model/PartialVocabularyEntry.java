@@ -16,10 +16,10 @@ public class PartialVocabularyEntry implements Comparable<PartialVocabularyEntry
     /* comparator to sort by index ID */
     public static Comparator<PartialVocabularyEntry> IDComparator = Comparator.comparingInt(PartialVocabularyEntry::getIndexID);
 
-    public PartialVocabularyEntry(String term, int DF, int indexId) {
+    public PartialVocabularyEntry(String term, int DF, int indexID) {
         _term = term;
         _DF = DF;
-        _indexID = indexId;
+        _indexID = indexID;
     }
 
     public String getTerm() {

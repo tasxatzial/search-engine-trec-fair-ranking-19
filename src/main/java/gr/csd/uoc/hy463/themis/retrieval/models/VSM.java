@@ -6,7 +6,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.model.VSMprops;
-import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
+import gr.csd.uoc.hy463.themis.retrieval.model.TermPostings;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,7 +18,7 @@ public class VSM extends ARetrievalModel {
     double[][] _calculatedWeights;
     double[] _documentWeights;
     double[] _modelScore;
-    int[] _maxTfs;
+    int[] _maxTFs;
 
     public VSM(Indexer index)
             throws IndexNotLoadedException {
@@ -27,7 +27,7 @@ public class VSM extends ARetrievalModel {
         _modelScore = new double[_totalDocuments];
         VSMprops props = _indexer.getVSMprops();
         _documentWeights = props.getVSMweights();
-        _maxTfs = props.getMaxTfs();
+        _maxTFs = props.getMaxTFs();
     }
 
     @Override
@@ -57,14 +57,14 @@ public class VSM extends ARetrievalModel {
             }
         }
 
-        int[] dfs = _indexer.getDF(query);
+        int[] DFs = _indexer.getDFs(query);
 
         //tf * idf of terms
         double[] queryWeights = new double[query.size()];
         for (int i = 0; i < query.size(); i++) {
-            double tf = query.get(i).get_weight() / queryMaxFrequency;
-            double idf = Math.log(_totalDocuments / (1.0 + dfs[i]));
-            queryWeights[i] = tf * idf;
+            double TF = query.get(i).get_weight() / queryMaxFrequency;
+            double iDF = Math.log(_totalDocuments / (1.0 + DFs[i]));
+            queryWeights[i] = TF * iDF;
         }
 
         //norm of query
@@ -76,20 +76,20 @@ public class VSM extends ARetrievalModel {
 
         //calculate VSM weights
         for (int i = 0; i < query.size(); i++) {
-            Postings postings = _indexer.getPostings(query.get(i).get_term());
-            int[] docIDs = postings.get_intID();
-            int[] tfs = postings.get_tfs();
+            TermPostings termPostings = _indexer.getPostings(query.get(i).get_term());
+            int[] docIDs = termPostings.getIntID();
+            int[] TFs = termPostings.getTFs();
             double weight = query.get(i).get_weight();
-            double idf = Math.log(_totalDocuments / (1.0 + dfs[i]));
-            for (int j = 0; j < dfs[i]; j++) {
-                int id = docIDs[j];
-                double[] weights = _calculatedWeights[id];
+            double iDF = Math.log(_totalDocuments / (1.0 + DFs[i]));
+            for (int j = 0; j < DFs[i]; j++) {
+                int ID = docIDs[j];
+                double[] weights = _calculatedWeights[ID];
                 if (weights == null) {
                     weights = new double[query.size()];
-                    _calculatedWeights[id] = weights;
+                    _calculatedWeights[ID] = weights;
                 }
-                double tf = (tfs[j] * weight) / _maxTfs[id];
-                weights[i] += tf * idf;
+                double TF = (TFs[j] * weight) / _maxTFs[ID];
+                weights[i] += TF * iDF;
             }
         }
 

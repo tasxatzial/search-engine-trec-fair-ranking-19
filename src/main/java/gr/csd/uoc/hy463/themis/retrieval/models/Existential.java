@@ -4,7 +4,7 @@ import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
-import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
+import gr.csd.uoc.hy463.themis.retrieval.model.TermPostings;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 
 import java.io.IOException;
@@ -38,11 +38,11 @@ public class Existential extends ARetrievalModel {
         //keep only one term if it appears multiple times
         query = mergeTerms(query);
 
-        int[] dfs = _indexer.getDF(query);
+        int[] DFs = _indexer.getDFs(query);
         for (int i = 0; i < query.size(); i++) {
-            Postings postings = _indexer.getPostings(query.get(i).get_term());
-            int[] intIDs = postings.get_intID();
-            for (int j = 0; j < dfs[i]; j++) {
+            TermPostings termPostings = _indexer.getPostings(query.get(i).get_term());
+            int[] intIDs = termPostings.getIntID();
+            for (int j = 0; j < DFs[i]; j++) {
                 _valid[intIDs[j]] = true;
             }
         }

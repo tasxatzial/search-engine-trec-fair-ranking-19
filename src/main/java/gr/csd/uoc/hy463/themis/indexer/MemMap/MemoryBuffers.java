@@ -73,7 +73,7 @@ public abstract class MemoryBuffers {
     }
 
     /**
-     * Unmaps the memory-mapped file and closes all files
+     * Unmaps the memory-mapped file and closes all files.
      *
      * @throws IOException
      */

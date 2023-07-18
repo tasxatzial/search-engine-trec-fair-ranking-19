@@ -35,7 +35,7 @@ public class DocInfo {
     private final Map<PROPERTY, Object> _props = new HashMap<>(0);
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param docID
      */

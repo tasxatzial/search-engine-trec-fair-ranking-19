@@ -66,9 +66,9 @@ public class S2TextualEntryTokens {
                 currentToken = Stemmer.stem(currentToken);
             }
             currentToken = currentToken.toLowerCase();
-            Integer tf = TFs.get(currentToken);
-            if (tf != null) {
-                TFs.put(currentToken, tf + 1);
+            Integer TF = TFs.get(currentToken);
+            if (TF != null) {
+                TFs.put(currentToken, TF + 1);
             } else {
                 TFs.put(currentToken, 1);
             }

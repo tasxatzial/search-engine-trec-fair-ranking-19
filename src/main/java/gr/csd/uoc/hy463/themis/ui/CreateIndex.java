@@ -24,8 +24,8 @@ public class CreateIndex {
     }
 
     /**
-     * Starts the indexing. The final index files will be saved in the INDEX_PATH directory. The temporary files
-     * will be saved in the INDEX_TMP_PATH directory.
+     * Creates the index. Final index files will be saved in the INDEX_PATH directory.
+     * Temporary files will be saved in the INDEX_TMP_PATH directory.
      *
      * @throws IOException
      * @throws IncompleteFileException

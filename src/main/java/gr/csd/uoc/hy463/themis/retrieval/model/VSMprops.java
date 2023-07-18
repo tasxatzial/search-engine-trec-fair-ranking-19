@@ -8,16 +8,16 @@ package gr.csd.uoc.hy463.themis.retrieval.model;
  * The size of each array should be equal to the number of documents in the collection.
  */
 public class VSMprops {
-    private final int[] _maxTfs;
+    private final int[] _maxTFs;
     private final double[] _VSMweights;
 
-    public VSMprops(int[] maxTfs, double[] VSMweights) {
-        _maxTfs = maxTfs;
+    public VSMprops(int[] maxTFs, double[] VSMweights) {
+        _maxTFs = maxTFs;
         _VSMweights = VSMweights;
     }
 
-    public int[] getMaxTfs() {
-        return _maxTfs;
+    public int[] getMaxTFs() {
+        return _maxTFs;
     }
 
     public double[] getVSMweights() {

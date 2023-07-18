@@ -28,12 +28,6 @@ public class Result implements Comparable<Result> {
 
     @Override
     public int compareTo(Result r) {
-        if (r.score > score) {
-            return 1;
-        }
-        if (r.score < score) {
-            return -1;
-        }
-        return 0;
+        return Double.compare(r.score, score);
     }
 }

@@ -17,15 +17,12 @@ import gr.csd.uoc.hy463.themis.indexer.model.Posting;
 public class Index {
     private final int _indexID;
     private final Indexer _indexer;
+    private final Map<String, TermPostings> __INDEX__ = new HashMap<>();
     private List<String> __SORTED_TERMS__ = null;
-
-    /* use a map to store the index data */
-    private Map<String, TermPostings> __INDEX__ = null;
 
     public Index(Indexer indexer, int ID) {
         _indexer = indexer;
         _indexID = ID;
-        __INDEX__ = new HashMap<>();
     }
 
     /**
@@ -38,7 +35,7 @@ public class Index {
             throws IOException {
         __SORTED_TERMS__ = new ArrayList<>(__INDEX__.keySet());
 
-        /* sort the terms right before dumping to disk */
+        /* sort the terms before dumping to disk */
         Collections.sort(__SORTED_TERMS__);
 
         String vocabularyPath = _indexer.getPartialVocabularyPath(_indexID);
@@ -55,7 +52,7 @@ public class Index {
      * Also writes this information to 'INDEX_TMP_PATH/doc_tf' as a sequence of <term1, TF1, term2, TF2, ...>
      * (one line per document)
      *
-     * Returns the sum of all frequencies in the document, in other words, the total number of tokens.
+     * Returns the sum of all frequencies in the document (total number of tokens).
      *
      * @param TFMap Map of term frequencies
      * @param docTFWriter
@@ -70,15 +67,15 @@ public class Index {
         for (Map.Entry<String, Integer> entry : TFMap.entrySet()) {
             int TF = entry.getValue();
             String term = entry.getKey();
-            TermPostings termPostings = __INDEX__.get(term);
+            TermPostings postings = __INDEX__.get(term);
             TFSum += TF;
-            if (termPostings != null) {
-                termPostings.addPosting(new Posting(TF, docID));
+            if (postings != null) {
+                postings.addPosting(new Posting(TF, docID));
             }
             else {
-                termPostings = new TermPostings();
-                termPostings.addPosting(new Posting(TF, docID));
-                __INDEX__.put(term, termPostings);
+                postings = new TermPostings();
+                postings.addPosting(new Posting(TF, docID));
+                __INDEX__.put(term, postings);
             }
             SB.append(term).append(' ').append(TF).append(' ');
         }
@@ -90,22 +87,22 @@ public class Index {
     /* Dumps the appropriate vocabulary data to the given filePath (normal sequential file).
      * Each line contains:
      * 1) Term
-     * 2) DF (document frequency of this term)
+     * 2) DF (document frequency of the term)
      *
      * Terms are saved in lexicographic order.
      * */
     private void dumpVocabulary(String filePath)
             throws IOException {
-        BufferedWriter vocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"));
         for (String term : __SORTED_TERMS__) {
             int DF = __INDEX__.get(term).getDF();
-            vocabularyWriter.write(term + ' ' + DF + '\n');
+            writer.write(term + ' ' + DF + '\n');
         }
-        vocabularyWriter.close();
+        writer.close();
     }
 
-    /* Dumps the appropriate postings data to the given filePath (random access file).
-     * For each term, a block of postings is written to the file. Each posting consists of:
+    /* Dumps the postings from index to the given path (random access file).
+     * For each term a block of postings is written to the file. Each posting consists of:
      * 1) TF (frequency of the term in the relevant document)
      * 2) doc ID (int ID of the relevant document)
      *
@@ -114,21 +111,21 @@ public class Index {
      *
      * The ID of the documents in each block will appear sorted based on the document parsing order.
      * */
-    private void dumpPostings(String filePath)
+    private void dumpPostings(String path)
             throws IOException {
-        BufferedOutputStream postingsWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(filePath, "rw").getFD()));
+        BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(path, "rw").getFD()));
         for (String term : __SORTED_TERMS__) {
             List<Posting> postings = __INDEX__.get(term).getPostings();
             byte[] postingsArray = new byte[postings.size() * Posting.SIZE];
-            ByteBuffer postingsBuf = ByteBuffer.wrap(postingsArray);
+            ByteBuffer buffer = ByteBuffer.wrap(postingsArray);
             int offset = 0;
             for (Posting posting : postings) {
-                postingsBuf.putInt(offset, posting.getTF());
-                postingsBuf.putInt(offset + Posting.DOCID_OFFSET, posting.getDocID());
+                buffer.putInt(offset, posting.getTF());
+                buffer.putInt(offset + Posting.DOCID_OFFSET, posting.getDocID());
                 offset += Posting.SIZE;
             }
-            postingsWriter.write(postingsArray);
+            writer.write(postingsArray);
         }
-        postingsWriter.close();
+        writer.close();
     }
 }

@@ -5,7 +5,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.OKAPIprops;
-import gr.csd.uoc.hy463.themis.retrieval.model.Postings;
+import gr.csd.uoc.hy463.themis.retrieval.model.TermPostings;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 
 import java.io.IOException;
@@ -44,28 +44,28 @@ public class OkapiBM25 extends ARetrievalModel {
         //keep only one term if it appears multiple times
         query = mergeTerms(query);
 
-        int[] dfs = _indexer.getDF(query);
+        int[] DFs = _indexer.getDFs(query);
 
         //calculate frequencies
         for(int i = 0; i < query.size(); i++) {
-            Postings postings = _indexer.getPostings(query.get(i).get_term());
-            int[] docIDs = postings.get_intID();
-            int[] tfs = postings.get_tfs();
+            TermPostings termPostings = _indexer.getPostings(query.get(i).get_term());
+            int[] docIDs = termPostings.getIntID();
+            int[] TFs = termPostings.getTFs();
             double weight = query.get(i).get_weight();
-            for (int j = 0; j < dfs[i]; j++) {
-                int id = docIDs[j];
-                double[] freqs = _calculatedFreqs[id];
+            for (int j = 0; j < DFs[i]; j++) {
+                int ID = docIDs[j];
+                double[] freqs = _calculatedFreqs[ID];
                 if (freqs == null) {
                     freqs = new double[query.size()];
-                    _calculatedFreqs[id] = freqs;
+                    _calculatedFreqs[ID] = freqs;
                 }
-                freqs[i] = tfs[j] * weight;
+                freqs[i] = TFs[j] * weight;
             }
         }
 
-        double[] idfs = new double[query.size()];
-        for (int i = 0; i < idfs.length; i++) {
-            idfs[i] = Math.log(_totalDocuments / (1.0 + dfs[i]));
+        double[] iDFs = new double[query.size()];
+        for (int i = 0; i < iDFs.length; i++) {
+            iDFs[i] = Math.log(_totalDocuments / (1.0 + DFs[i]));
         }
 
         //calculate scores
@@ -78,7 +78,7 @@ public class OkapiBM25 extends ARetrievalModel {
             double[] freqs = _calculatedFreqs[i];
             double B = _k1 * (1 - _b + (_b * _tokenCount[i]) / _avgdl);
             for (int j = 0; j < query.size(); j++) {
-                score += idfs[j] * (freqs[j] * (_k1 + 1) / (freqs[j] + B) + 1);
+                score += iDFs[j] * (freqs[j] * (_k1 + 1) / (freqs[j] + B) + 1);
             }
             _modelScore[i] = score;
             if (score > maxScore) {

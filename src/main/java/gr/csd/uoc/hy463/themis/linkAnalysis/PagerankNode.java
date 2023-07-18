@@ -22,23 +22,23 @@ public class PagerankNode {
      *
      * @return
      */
-    public double get_score() {
+    public double getScore() {
         return _score;
     }
 
     /**
      * Sets the current score to the specified score
      *
-     * @param newScore
+     * @param score
      */
-    public void set_score(double newScore) {
-        _score = newScore;
+    public void setScore(double score) {
+        _score = score;
     }
 
     /**
      * Returns the number of Out Nodes
      */
-    public int get_outNodes() {
+    public int getOutNodes() {
         return _outNodes;
     }
 
@@ -47,7 +47,7 @@ public class PagerankNode {
      *
      * @param num
      */
-    public void set_outNodes(int num) {
+    public void setOutNodes(int num) {
         _outNodes = num;
     }
 
@@ -56,7 +56,7 @@ public class PagerankNode {
      *
      * @return
      */
-    public PagerankNode[] get_inNodes() {
+    public PagerankNode[] getInNodes() {
         return _inNodes;
     }
 }

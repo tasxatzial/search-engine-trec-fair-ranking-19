@@ -120,7 +120,7 @@ public class ThemisEval {
             JSONArray documentsArray = (JSONArray) jsonObject.get("documents");
             String query = (String) jsonObject.get("query");
 
-            //construct a map of [(string) doc ID -> relevance] for this query
+            //construct a map of [(string) doc ID -> relevance] for the current query
             Map<String, Long> relevanceMap = new HashMap<>();
             for (Object o : documentsArray) {
                 JSONObject doc = (JSONObject) o;
@@ -136,7 +136,7 @@ public class ThemisEval {
 
             totalResults += results.size();
 
-            //calculate the elapsed time for this query
+            //calculate the elapsed time for the current query
             Time time = new Time(endTime - startTime);
             totalSearchTime.addTime(time);
             queryTime.add(new Pair<>(query, time));
@@ -238,7 +238,7 @@ public class ThemisEval {
             throws IOException, IndexNotLoadedException {
         double dcg = 0;
         double idcg = 0;
-        int foundRelevantDocuments = 0;
+        //int foundRelevantDocuments = 0;
         int nonSkippedDocuments = 0;
         int relevantDocuments = 0;
 
@@ -256,7 +256,7 @@ public class ThemisEval {
             if (isJudged != null) {
                 nonSkippedDocuments++;
                 if (isJudged == 1) {
-                    foundRelevantDocuments++;
+                    //foundRelevantDocuments++;
                     dcg += Math.log(2) / Math.log(nonSkippedDocuments + 1);
                 }
             }
