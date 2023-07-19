@@ -42,16 +42,7 @@ public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Config __CONFIG__;
     private boolean __INDEX_IS_LOADED__ = false;
-    private final String __INDEX_DIR__;
     private Map<String, String> __INDEX_META__ = null;
-
-    /* Names of the final index files */
-    private final String __VOCABULARY_FILENAME__;
-    private final String __POSTINGS_FILENAME__;
-    private final String __DOCUMENTS_FILENAME__ ;
-    private final String __DOCUMENTS_META_FILENAME__;
-    private final String __DOCUMENTS_ID_FILENAME__;
-    private final String __INDEX_META_FILENAME__;
 
     private HashMap<String, VocabularyEntry> __VOCABULARY__ = null;
     private RandomAccessFile __POSTINGS__ = null;
@@ -79,13 +70,6 @@ public class Indexer {
     public Indexer()
             throws IOException {
         this.__CONFIG__ = new Config();
-        __INDEX_DIR__ = getIndexDir();
-        __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
-        __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
-        __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
-        __DOCUMENTS_META_FILENAME__ = __CONFIG__.getDocumentsMetaFileName();
-        __DOCUMENTS_ID_FILENAME__ = __CONFIG__.getDocumentsIDFileName();
-        __INDEX_META_FILENAME__ = __CONFIG__.getIndexMetaFileName();
     }
 
     /**
@@ -144,7 +128,7 @@ public class Indexer {
         S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
         /* create the required index folders */
-        Files.createDirectories(Paths.get(__INDEX_DIR__));
+        Files.createDirectories(Paths.get(getIndexDir()));
         Files.createDirectories(Paths.get(getIndexTmpDir()));
 
         /* open INDEX_META_FILENAME (normal sequential file) and
@@ -339,8 +323,7 @@ public class Indexer {
         /* open files */
         BufferedReader[] partialVocabularyReader = new BufferedReader[maxIndexID + 1];
         for (int i = 0; i <= maxIndexID; i++) {
-            String partialVocabularyPath = getPartialVocabularyPath(i);
-            partialVocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(partialVocabularyPath), "UTF-8"));
+            partialVocabularyReader[i] = new BufferedReader(new InputStreamReader(new FileInputStream(getPartialVocabularyPath(i)), "UTF-8"));
         }
         BufferedWriter finalVocabularyWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getVocabularyPath()), "UTF-8"));
         BufferedWriter termDFWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getTermDFPath()), "ASCII"));
@@ -472,8 +455,7 @@ public class Indexer {
         /* open files */
         BufferedInputStream[] partialPostingsInStream = new BufferedInputStream[maxIndexID + 1];
         for (int i = 0; i <= maxIndexID; i++) {
-            String partialPostingsPath = getPartialPostingsPath(i);
-            partialPostingsInStream[i] = new BufferedInputStream(new FileInputStream(new RandomAccessFile(partialPostingsPath, "rw").getFD()));
+            partialPostingsInStream[i] = new BufferedInputStream(new FileInputStream(new RandomAccessFile(getPartialPostingsPath(i), "rw").getFD()));
         }
         BufferedOutputStream finalPostingsOutStream = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(getPostingsPath(), "rw").getFD()));
         BufferedReader termDFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getTermDFPath()), "ASCII"));
@@ -665,7 +647,7 @@ public class Indexer {
      */
     public void load()
             throws IOException, IncompleteFileException {
-        Themis.print("-> Index path: " + __INDEX_DIR__ + "\n");
+        Themis.print("-> Index path: " + getIndexDir() + "\n");
         Themis.print("-> Loading index...");
 
         /* load index metadata from INDEX_META_FILENAME */
@@ -795,7 +777,7 @@ public class Indexer {
      * @return
      */
     public boolean areIndexDirEmpty() {
-        File file = new File(__INDEX_DIR__);
+        File file = new File(getIndexDir());
         File[] fileList = file.listFiles();
         if (fileList != null && fileList.length != 0) {
             return false;
@@ -1262,7 +1244,7 @@ public class Indexer {
      * @return
      */
     public String getVocabularyPath() {
-        return __INDEX_DIR__ + "/" + __VOCABULARY_FILENAME__;
+        return getIndexDir() + __CONFIG__.getVocabularyFileName();
     }
 
     /**
@@ -1271,7 +1253,7 @@ public class Indexer {
      * @return
      */
     public String getPostingsPath() {
-        return __INDEX_DIR__ + "/" + __POSTINGS_FILENAME__;
+        return getIndexDir() + __CONFIG__.getPostingsFileName();
     }
 
     /**
@@ -1280,7 +1262,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsFilePath() {
-        return __INDEX_DIR__ + "/" + __DOCUMENTS_FILENAME__;
+        return getIndexDir() + __CONFIG__.getDocumentsFileName();
     }
 
     /**
@@ -1289,7 +1271,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsMetaFilePath() {
-        return __INDEX_DIR__ + "/" + __DOCUMENTS_META_FILENAME__;
+        return getIndexDir() + __CONFIG__.getDocumentsMetaFileName();
     }
 
     /**
@@ -1298,7 +1280,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsIDFilePath() {
-        return __INDEX_DIR__ + "/" + __DOCUMENTS_ID_FILENAME__;
+        return getIndexDir() + __CONFIG__.getDocumentsIDFileName();
     }
 
     /**
@@ -1307,7 +1289,7 @@ public class Indexer {
      * @return
      */
     public String getMetaPath() {
-        return __INDEX_DIR__ + "/" + __INDEX_META_FILENAME__;
+        return getIndexDir() + __CONFIG__.getIndexMetaFileName();
     }
 
     /* Returns the full path of 'INDEX_TMP_DIR/term_df' */
@@ -1332,7 +1314,7 @@ public class Indexer {
      * @return
      */
     public String getPartialPostingsPath(int ID) {
-        return getPartialIndexDir(ID) + __POSTINGS_FILENAME__;
+        return getPartialIndexDir(ID) + __CONFIG__.getPostingsFileName();
     }
 
     /**
@@ -1342,7 +1324,7 @@ public class Indexer {
      * @return
      */
     public String getPartialVocabularyPath(int ID) {
-        return getPartialIndexDir(ID) + __VOCABULARY_FILENAME__;
+        return getPartialIndexDir(ID) + __CONFIG__.getVocabularyFileName();
     }
 
     /**
