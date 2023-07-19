@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
+package gr.csd.uoc.hy463.themis.linkAnalysis.stats;
 
 /**
  * Class that holds two arrays that have the int IDs of In nodes and Out nodes. Used for holding

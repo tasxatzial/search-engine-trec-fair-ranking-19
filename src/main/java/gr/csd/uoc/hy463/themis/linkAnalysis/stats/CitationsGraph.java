@@ -1,4 +1,4 @@
-package gr.csd.uoc.hy463.themis.linkAnalysis.graph;
+package gr.csd.uoc.hy463.themis.linkAnalysis.stats;
 
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.collections.SemanticScholar.S2JsonEntryReader;
@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+
 
 public class CitationsGraph {
     private final String __DATASET_PATH__;
@@ -47,18 +48,18 @@ public class CitationsGraph {
             throws IOException {
         Config __CONFIG__ = new Config();
         __DATASET_PATH__ = __CONFIG__.getDatasetPath();
-        String citationsGraphPath = __CONFIG__.getCitationsGraphPath();
-        Files.createDirectories(Paths.get(citationsGraphPath));
-        _citationsGraphBinary = citationsGraphPath + "/citations_graph_binary";
-        _citationsGraph = citationsGraphPath + "/citations_graph";
-        _citationsStats = citationsGraphPath + "/citations_stats";
-        _citationsNotFoundStats = citationsGraphPath + "/citations_not_found_stats";
-        _inEdgesTrue = citationsGraphPath + "/in_edges_true";
-        _outEdgesTrue = citationsGraphPath + "/out_edges_true";
-        _inEdges = citationsGraphPath + "/in_edges";
-        _outEdges = citationsGraphPath + "/out_edges";
-        _inEdgesNotFound = citationsGraphPath + "/in_edges_not_found";
-        _outEdgesNotFound = citationsGraphPath + "/out_edges_not_found";
+        String citationsStats = __CONFIG__.getCitationsStats();
+        Files.createDirectories(Paths.get(citationsStats));
+        _citationsGraphBinary = citationsStats + "/citations_graph_binary";
+        _citationsGraph = citationsStats + "/citations_graph";
+        _citationsStats = citationsStats + "/citations_stats";
+        _citationsNotFoundStats = citationsStats + "/citations_not_found_stats";
+        _inEdgesTrue = citationsStats + "/in_edges_true";
+        _outEdgesTrue = citationsStats + "/out_edges_true";
+        _inEdges = citationsStats + "/in_edges";
+        _outEdges = citationsStats + "/out_edges";
+        _inEdgesNotFound = citationsStats + "/in_edges_not_found";
+        _outEdgesNotFound = citationsStats + "/out_edges_not_found";
     }
 
     /**

@@ -180,12 +180,13 @@ public class Config {
     }
 
     /**
-     * Returns the directory that has the files related to the citations graph (not the pagerank graph)
+     * Returns the directory that will store all files related to the analysis of the graph structure
+     * of the citations.
      *
      * @return
      */
-    public String getCitationsGraphPath() {
-        return __PROP__.getProperty("CITATIONS_GRAPH_PATH");
+    public String getCitationsStats() {
+        return __PROP__.getProperty("CITATIONS_STATS");
     }
 
     /**
