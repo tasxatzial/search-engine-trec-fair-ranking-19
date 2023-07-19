@@ -66,9 +66,9 @@ public class Pagerank {
     * Note: Only the data required for initializing the Pagerank graph are saved */
     private void dumpCitationsData()
             throws IOException {
-        File folder = new File(_indexer.getDataSetPath());
-        File[] files = folder.listFiles();
-        if (files == null) {
+        List<File> corpus = _indexer.getCorpus();
+        if (corpus == null || corpus.size() == 0) {
+            Themis.print("No dataset files found in " + _indexer.getDataSetPath() + "\n");
             return;
         }
 
@@ -83,12 +83,6 @@ public class Pagerank {
         2) (int) => number of Out citations
         3) (int[]) => [In citation1 ID, In citation2 ID, ...] */
         BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__CITATIONS_GRAPH_PATH__, "rw").getFD()));
-
-        /* sort the files of the collection. This is necessary so that the N-th parsed document is the one with
-        ID = (N-1) since the same ordering was used to generate the (int) ID of each document during indexing */
-        List<File> corpus = new ArrayList<>(files.length);
-        corpus.addAll(Arrays.asList(files));
-        Collections.sort(corpus);
 
         /* parse DOCUMENTS_ID_FILENAME and create a map of [(string) doc ID -> (int) doc ID] */
         Map<String, Integer> strToIntID = new HashMap<>();
@@ -106,52 +100,50 @@ public class Pagerank {
         documentIDBuffers.close();
 
         /* Parse the collection and write the required data to 'INDEX_PATH/graph' */
-        for (File file : corpus) {
-            if (file.isFile()) {
-                Themis.print("Parsing file: " + file + "\n");
-                BufferedReader currentDataFile = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
-                String json;
-                while ((json = currentDataFile.readLine()) != null) {
-                    S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
-                    if (entry.getID() == null) {
-                        continue;
-                    }
-
-                    /* count out citations */
-                    List<String> outCitations = entry.getOutCitations();
-                    int numOutCitations = 0;
-                    for (int i = 0; i < outCitations.size(); i++) {
-                        if (!skipCitation(i, outCitations, strToIntID, entry.getID())) {
-                            numOutCitations++;
-                        }
-                    }
-
-                    /* count in citations */
-                    List<String> inCitations = entry.getInCitations();
-                    int numInCitations = 0;
-                    for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
-                            numInCitations++;
-                        }
-                    }
-
-                    /* dump data to disk */
-                    byte[] citationData = new byte[4 * (2 + numInCitations)];
-                    ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
-                    citationDataBuf.putInt(0, 4 * (1 + numInCitations));
-                    citationDataBuf.putInt(4, numOutCitations);
-                    int k = 0;
-                    for (int i = 0; i <inCitations.size(); i++) {
-                        if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
-                            Integer citationID = strToIntID.get(inCitations.get(i));
-                            citationDataBuf.putInt(4 * (2 + k), citationID);
-                            k++;
-                        }
-                    }
-                    graphWriter.write(citationData);
+        for (File corpusFile : corpus) {
+            Themis.print("Parsing file: " + corpusFile + "\n");
+            BufferedReader corpusReader = new BufferedReader(new InputStreamReader(new FileInputStream(corpusFile), "UTF-8"));
+            String json;
+            while ((json = corpusReader.readLine()) != null) {
+                S2TextualEntry entry = S2JsonEntryReader.readCitationsEntry(json);
+                if (entry.getID() == null) {
+                    continue;
                 }
-                currentDataFile.close();
+
+                /* count out citations */
+                List<String> outCitations = entry.getOutCitations();
+                int numOutCitations = 0;
+                for (int i = 0; i < outCitations.size(); i++) {
+                    if (!skipCitation(i, outCitations, strToIntID, entry.getID())) {
+                        numOutCitations++;
+                    }
+                }
+
+                /* count in citations */
+                List<String> inCitations = entry.getInCitations();
+                int numInCitations = 0;
+                for (int i = 0; i <inCitations.size(); i++) {
+                    if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
+                        numInCitations++;
+                    }
+                }
+
+                /* dump data to disk */
+                byte[] citationData = new byte[4 * (2 + numInCitations)];
+                ByteBuffer citationDataBuf = ByteBuffer.wrap(citationData);
+                citationDataBuf.putInt(0, 4 * (1 + numInCitations));
+                citationDataBuf.putInt(4, numOutCitations);
+                int k = 0;
+                for (int i = 0; i <inCitations.size(); i++) {
+                    if (!skipCitation(i, inCitations, strToIntID, entry.getID())) {
+                        Integer citationID = strToIntID.get(inCitations.get(i));
+                        citationDataBuf.putInt(4 * (2 + k), citationID);
+                        k++;
+                    }
+                }
+                graphWriter.write(citationData);
             }
+            corpusReader.close();
         }
         graphWriter.close();
     }

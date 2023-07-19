@@ -89,18 +89,7 @@ public class Indexer {
     }
 
     /**
-     * Indexes the collection found in DATASET_PATH.
-     *
-     * @throws IOException
-     * @throws IncompleteFileException
-     */
-    public void index()
-            throws IOException, IncompleteFileException {
-        index(getDataSetPath());
-    }
-
-    /**
-     * Indexes the collection found in the given path and writes the final index to INDEX_PATH.
+     * Indexes the collection found in the DATASET_PATH and writes the final index to INDEX_PATH.
      * Aborts if INDEX_PATH is not empty.
      *
      * All temp files will be saved in INDEX_TMP_PATH and will be deleted at the end of the process.
@@ -108,10 +97,9 @@ public class Indexer {
      * Each partial index will contain data from at most PARTIAL_INDEX_MAX_DOCS_SIZE documents.
      * Finally, all partial indexes are merged to create the final index and temporary files are deleted.
      *
-     * @param path
      * @throws IOException
      */
-    public void index(String path)
+    public void index()
             throws IOException, IncompleteFileException {
         if (!areIndexDirEmpty()) {
             Themis.print("Previous index found. Aborting...\n");
@@ -132,10 +120,9 @@ public class Indexer {
         long documentsOffset = 0;
 
         /* create the list of files in the given path */
-        File folder = new File(path);
-        File[] files = folder.listFiles();
-        if (files == null || files.length == 0) {
-            Themis.print("No dataset files found in " + path + "\n");
+        List<File> corpus = getCorpus();
+        if (corpus == null || corpus.size() == 0) {
+            Themis.print("No dataset files found in " + getDataSetPath() + "\n");
             return;
         }
 
@@ -152,11 +139,6 @@ public class Indexer {
 
         Themis.print("-> Start indexing\n");
         long startTime = System.nanoTime();
-
-        /* sort the files in the collection, this determines the parsing order and thus the (int) ID of each document */
-        List<File> corpus = new ArrayList<>(files.length);
-        corpus.addAll(Arrays.asList(files));
-        Collections.sort(corpus);
 
         /* use this object for calculating the frequencies of the tokens in a document */
         S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
@@ -185,36 +167,34 @@ public class Indexer {
 
         /* parse the collection */
         for (File corpusFile : corpus) {
-            if (corpusFile.isFile()) {
-                Themis.print("Parsing file: " + corpusFile + "\n");
-                BufferedReader corpusFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(corpusFile), "UTF-8"));
-                String json;
+            Themis.print("Parsing file: " + corpusFile + "\n");
+            BufferedReader corpusReader = new BufferedReader(new InputStreamReader(new FileInputStream(corpusFile), "UTF-8"));
+            String json;
 
-                while ((json = corpusFileReader.readLine()) != null) {
-                    S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
-                    if (entry.getID() == null) {
-                        continue;
-                    }
-                    Map<String, Integer> TFMap = textualEntryTokens.createTFMap(entry);
-                    int documentTokens = partialIndex.add(TFMap, docTFWriter, docID);
-                    tokenCount += documentTokens;
-                    long prevDocumentsOffset = documentsOffset;
-                    documentsOffset = dumpDocuments(documentsOutStream, entry, documentsOffset);
-
-                    /* size of the entry in DOCUMENTS_FILENAME for the currently parsed document */
-                    int documentSize = (int) (documentsOffset - prevDocumentsOffset);
-
-                    dumpDocumentsMeta(documentsMetaOutStream, docID, documentTokens, documentSize, prevDocumentsOffset);
-                    documentsIDOutStream.write(entry.getID().getBytes("ASCII"));
-                    docID++;
-                    if (docID % maxDocsPerPartialIndex == 0) {
-                        partialIndex.dump();
-                        indexID++;
-                        partialIndex = new Index(this, indexID);
-                    }
+            while ((json = corpusReader.readLine()) != null) {
+                S2TextualEntry entry = S2JsonEntryReader.readTextualEntry(json);
+                if (entry.getID() == null) {
+                    continue;
                 }
-                corpusFileReader.close();
+                Map<String, Integer> TFMap = textualEntryTokens.createTFMap(entry);
+                int documentTokens = partialIndex.add(TFMap, docTFWriter, docID);
+                tokenCount += documentTokens;
+                long prevDocumentsOffset = documentsOffset;
+                documentsOffset = dumpDocuments(documentsOutStream, entry, documentsOffset);
+
+                /* size of the entry in DOCUMENTS_FILENAME for the currently parsed document */
+                int documentSize = (int) (documentsOffset - prevDocumentsOffset);
+
+                dumpDocumentsMeta(documentsMetaOutStream, docID, documentTokens, documentSize, prevDocumentsOffset);
+                documentsIDOutStream.write(entry.getID().getBytes("ASCII"));
+                docID++;
+                if (docID % maxDocsPerPartialIndex == 0) {
+                    partialIndex.dump();
+                    indexID++;
+                    partialIndex = new Index(this, indexID);
+                }
             }
+            corpusReader.close();
         }
 
         /* decrease the index id if a new index has just been created but there are no documents left */
@@ -772,6 +752,28 @@ public class Indexer {
         __OKAPI_PROPS__ = null;
         __DocumentsPagerank__ = null;
         __INDEX_IS_LOADED__ = false;
+    }
+
+    /**
+     * Returns a list of all files in DATASET_PATH.
+     *
+     * @return
+     */
+    public List<File> getCorpus() {
+        File folder = new File(getDataSetPath());
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return null;
+        }
+        List<File> corpus = new ArrayList<>();
+        for (File f : files) {
+            if (f.isFile()) {
+                corpus.add(f);
+            }
+        }
+        Collections.sort(corpus);
+
+        return corpus;
     }
 
     /**
