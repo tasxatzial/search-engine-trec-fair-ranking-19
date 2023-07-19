@@ -83,7 +83,7 @@ public class Search {
             _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
-        Themis.print("Default Pagerank weight (documents): " + _indexer.getDocumentPagerankWeight() + "\n");
+        Themis.print("Default Pagerank weight (documents): " + _indexer.getConfig().getDocumentPagerankWeight() + "\n");
         _useStemmer = _indexer.useStemmer();
         _useStopwords = _indexer.useStopwords();
         Themis.print("Ready\n\n");

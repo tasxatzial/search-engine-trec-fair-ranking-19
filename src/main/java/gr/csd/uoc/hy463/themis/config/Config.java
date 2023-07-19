@@ -32,7 +32,11 @@ public class Config {
      * @return
      */
     public String getIndexDir() {
-        return __PROP__.getProperty("INDEX_DIR");
+        String indexDir = __PROP__.getProperty("INDEX_DIR");
+        if (indexDir.endsWith("/")) {
+            return indexDir;
+        }
+        return indexDir + "/";
     }
 
     /**
@@ -41,7 +45,11 @@ public class Config {
      * @return
      */
     public String getIndexTmpDir() {
-        return __PROP__.getProperty("INDEX_TMP_DIR");
+        String indexTmpDir = __PROP__.getProperty("INDEX_TMP_DIR");
+        if (indexTmpDir.endsWith("/")) {
+            return indexTmpDir;
+        }
+        return indexTmpDir + "/";
     }
 
     /**
@@ -50,7 +58,11 @@ public class Config {
      * @return
      */
     public String getDatasetDir() {
-        return __PROP__.getProperty("DATASET_DIR");
+        String datasetDir = __PROP__.getProperty("DATASET_DIR");
+        if (datasetDir.endsWith("/")) {
+            return datasetDir;
+        }
+        return datasetDir + "/";
     }
 
     /**

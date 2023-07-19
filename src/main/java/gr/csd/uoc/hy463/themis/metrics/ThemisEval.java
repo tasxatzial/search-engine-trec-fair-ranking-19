@@ -78,7 +78,7 @@ public class ThemisEval {
         else {
             evaluationFilename = evaluationFilename + '_' + timestamp;
         }
-        String __EVALUATION_FILE__ =  _search.getConfig().getIndexDir() + "/" + evaluationFilename;
+        String __EVALUATION_FILE__ =  _search.getConfig().getIndexDir() + evaluationFilename;
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");

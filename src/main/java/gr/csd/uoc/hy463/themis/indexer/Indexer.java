@@ -106,7 +106,7 @@ public class Indexer {
         /* create the list of files in the given path */
         List<File> corpus = getCorpus();
         if (corpus == null || corpus.size() == 0) {
-            Themis.print("No dataset files found in " + getDataSetDir() + "\n");
+            Themis.print("No dataset files found in " + __CONFIG__.getDatasetDir() + "\n");
             return;
         }
 
@@ -128,12 +128,12 @@ public class Indexer {
         S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
         /* create the required index folders */
-        Files.createDirectories(Paths.get(getIndexDir()));
-        Files.createDirectories(Paths.get(getIndexTmpDir()));
+        Files.createDirectories(Paths.get(__CONFIG__.getIndexDir()));
+        Files.createDirectories(Paths.get(__CONFIG__.getIndexTmpDir()));
 
         /* open INDEX_META_FILENAME (normal sequential file) and
         DOCUMENTS_FILENAME, DOCUMENTS_ID_FILENAME, DOCUMENTS_META_FILENAME (random access files) */
-        BufferedWriter metaWriter = new BufferedWriter(new FileWriter(getMetaPath()));
+        BufferedWriter metaWriter = new BufferedWriter(new FileWriter(getIndexMetaPath()));
         RandomAccessFile documents = new RandomAccessFile(getDocumentsFilePath(), "rw");
         BufferedOutputStream documentsOutStream = new BufferedOutputStream(new FileOutputStream(documents.getFD()));
         RandomAccessFile documentsMeta = new RandomAccessFile(getDocumentsMetaFilePath(), "rw");
@@ -241,7 +241,7 @@ public class Indexer {
 
         /* delete INDEX_TMP_DIR */
         try {
-            deleteDir(new File(getIndexTmpDir()));
+            deleteDir(new File(__CONFIG__.getIndexTmpDir()));
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
@@ -647,7 +647,7 @@ public class Indexer {
      */
     public void load()
             throws IOException, IncompleteFileException {
-        Themis.print("-> Index path: " + getIndexDir() + "\n");
+        Themis.print("-> Index path: " + __CONFIG__.getIndexDir() + "\n");
         Themis.print("-> Loading index...");
 
         /* load index metadata from INDEX_META_FILENAME */
@@ -691,7 +691,7 @@ public class Indexer {
     public Map<String, String> loadIndexMeta()
             throws IOException, IncompleteFileException {
         Map<String, String> meta;
-        BufferedReader indexMetaReader = new BufferedReader(new FileReader(getMetaPath()));
+        BufferedReader indexMetaReader = new BufferedReader(new FileReader(getIndexMetaPath()));
         meta = new HashMap<>();
         String line;
         while((line = indexMetaReader.readLine()) != null) {
@@ -700,7 +700,7 @@ public class Indexer {
         }
         indexMetaReader.close();
         if (meta.get("timestamp") == null) {
-            throw new IncompleteFileException(getMetaPath());
+            throw new IncompleteFileException(getIndexMetaPath());
         }
         return meta;
     }
@@ -742,7 +742,7 @@ public class Indexer {
      * @return
      */
     public List<File> getCorpus() {
-        File folder = new File(getDataSetDir());
+        File folder = new File(__CONFIG__.getDatasetDir());
         File[] files = folder.listFiles();
         if (files == null) {
             return null;
@@ -766,8 +766,8 @@ public class Indexer {
     public void deleteIndex()
             throws IOException {
         Themis.print("-> Deleting previous index...");
-        deleteDir(new File(getIndexDir()));
-        deleteDir(new File(getIndexTmpDir()));
+        deleteDir(new File(__CONFIG__.getIndexDir()));
+        deleteDir(new File(__CONFIG__.getIndexTmpDir()));
         Themis.print("Done\n");
     }
 
@@ -777,12 +777,12 @@ public class Indexer {
      * @return
      */
     public boolean areIndexDirEmpty() {
-        File file = new File(getIndexDir());
+        File file = new File(__CONFIG__.getIndexDir());
         File[] fileList = file.listFiles();
         if (fileList != null && fileList.length != 0) {
             return false;
         }
-        file = new File(getIndexTmpDir());
+        file = new File(__CONFIG__.getIndexTmpDir());
         fileList = file.listFiles();
         return fileList == null || fileList.length == 0;
     }
@@ -1210,41 +1210,14 @@ public class Indexer {
     public Config getConfig() {
         return __CONFIG__;
     }
-
-    /**
-     * Returns the INDEX_DIR.
-     *
-     * @return
-     */
-    public String getIndexDir() {
-        return __CONFIG__.getIndexDir() + "/";
-    }
-
-    /**
-     * Returns the DATASET_DIR.
-     *
-     * @return
-     */
-    public String getDataSetDir() {
-        return __CONFIG__.getDatasetDir() + "/";
-    }
-
-    /**
-     * Returns the INDEX_TMP_DIR.
-     *
-     * @return
-     */
-    public String getIndexTmpDir() {
-        return __CONFIG__.getIndexTmpDir() + "/";
-    }
-
+    
     /**
      * Returns the full path of VOCABULARY_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getVocabularyPath() {
-        return getIndexDir() + __CONFIG__.getVocabularyFileName();
+        return __CONFIG__.getIndexDir() + __CONFIG__.getVocabularyFileName();
     }
 
     /**
@@ -1253,7 +1226,7 @@ public class Indexer {
      * @return
      */
     public String getPostingsPath() {
-        return getIndexDir() + __CONFIG__.getPostingsFileName();
+        return __CONFIG__.getIndexDir() + __CONFIG__.getPostingsFileName();
     }
 
     /**
@@ -1262,7 +1235,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsFilePath() {
-        return getIndexDir() + __CONFIG__.getDocumentsFileName();
+        return __CONFIG__.getIndexDir() + __CONFIG__.getDocumentsFileName();
     }
 
     /**
@@ -1271,7 +1244,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsMetaFilePath() {
-        return getIndexDir() + __CONFIG__.getDocumentsMetaFileName();
+        return __CONFIG__.getIndexDir() + __CONFIG__.getDocumentsMetaFileName();
     }
 
     /**
@@ -1280,7 +1253,7 @@ public class Indexer {
      * @return
      */
     public String getDocumentsIDFilePath() {
-        return getIndexDir() + __CONFIG__.getDocumentsIDFileName();
+        return __CONFIG__.getIndexDir() + __CONFIG__.getDocumentsIDFileName();
     }
 
     /**
@@ -1288,23 +1261,23 @@ public class Indexer {
      *
      * @return
      */
-    public String getMetaPath() {
-        return getIndexDir() + __CONFIG__.getIndexMetaFileName();
+    public String getIndexMetaPath() {
+        return __CONFIG__.getIndexDir() + __CONFIG__.getIndexMetaFileName();
     }
 
     /* Returns the full path of 'INDEX_TMP_DIR/term_df' */
     private String getTermDFPath() {
-        return getIndexTmpDir() + "term_df";
+        return __CONFIG__.getIndexTmpDir() + "term_df";
     }
 
     /* Returns the full path of 'INDEX_TMP_DIR/doc_df' */
     private String getDocTFPath() {
-        return getIndexTmpDir() + "doc_tf";
+        return __CONFIG__.getIndexTmpDir() + "doc_tf";
     }
 
     /* Returns the full path of the partial index folder 'INDEX_TMP_DIR/ID/' */
     private String getPartialIndexDir(int ID) {
-        return getIndexTmpDir() + ID + "/";
+        return __CONFIG__.getIndexTmpDir() + ID + "/";
     }
 
     /**
@@ -1325,14 +1298,5 @@ public class Indexer {
      */
     public String getPartialVocabularyPath(int ID) {
         return getPartialIndexDir(ID) + __CONFIG__.getVocabularyFileName();
-    }
-
-    /**
-     * Returns the weight for the pagerank scores of the documents.
-     *
-     * @return
-     */
-    public double getDocumentPagerankWeight() {
-        return __CONFIG__.getDocumentPagerankWeight();
     }
 }

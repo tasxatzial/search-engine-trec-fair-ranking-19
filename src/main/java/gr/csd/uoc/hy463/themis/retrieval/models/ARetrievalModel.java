@@ -32,7 +32,7 @@ public abstract class ARetrievalModel {
             throws IndexNotLoadedException {
         _indexer = indexer;
         _totalDocuments = indexer.getTotalDocuments();
-        _documentPagerankWeight = indexer.getDocumentPagerankWeight();
+        _documentPagerankWeight = indexer.getConfig().getDocumentPagerankWeight();
     }
 
     /**

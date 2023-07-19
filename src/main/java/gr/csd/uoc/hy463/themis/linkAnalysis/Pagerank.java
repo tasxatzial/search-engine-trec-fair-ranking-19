@@ -34,7 +34,7 @@ public class Pagerank {
     public Pagerank(Indexer indexer)
             throws IOException, IncompleteFileException {
         _indexer = indexer;
-        __CITATIONS_GRAPH__ = _indexer.getIndexDir() + "graph";
+        __CITATIONS_GRAPH__ = _indexer.getConfig().getIndexDir() + "graph";
         Map<String, String> __INDEX_META__ = indexer.loadIndexMeta();
         _totalDocuments = Integer.parseInt(__INDEX_META__.get("documents"));
     }
@@ -68,7 +68,7 @@ public class Pagerank {
             throws IOException {
         List<File> corpus = _indexer.getCorpus();
         if (corpus == null || corpus.size() == 0) {
-            Themis.print("No dataset files found in " + _indexer.getDataSetDir() + "\n");
+            Themis.print("No dataset files found in " + _indexer.getConfig().getDatasetDir() + "\n");
             return;
         }
 
