@@ -20,7 +20,7 @@ public class Existential extends ARetrievalModel {
     boolean[] _valid;
 
     public Existential(Indexer index)
-            throws IndexNotLoadedException {
+            throws IOException {
         super(index);
         _valid = new boolean[_totalDocuments];
     }

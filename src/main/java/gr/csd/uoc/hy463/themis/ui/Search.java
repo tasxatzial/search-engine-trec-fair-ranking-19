@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.ui;
 
-import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
@@ -47,10 +46,9 @@ public class Search {
      * @throws IOException
      * @throws IndexNotLoadedException
      * @throws JWNLException
-     * @throws IncompleteFileException
      */
     public Search()
-            throws IOException, IndexNotLoadedException, JWNLException, IncompleteFileException {
+            throws IOException, IndexNotLoadedException, JWNLException {
         _indexer = new Indexer();
         _indexer.load();
         Themis.print("-> Initializing search...\n");
@@ -124,9 +122,10 @@ public class Search {
      *
      * @param model
      * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public void setRetrievalModel(ARetrievalModel.MODEL model)
-            throws IndexNotLoadedException {
+            throws IndexNotLoadedException, IOException {
         if (!isIndexLoaded()) {
             throw new IndexNotLoadedException();
         }
@@ -196,13 +195,13 @@ public class Search {
     }
 
     /**
-     * Returns the timestamp of the loaded index
+     * Returns the timestamp of the index
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public String getIndexTimestamp()
-            throws IndexNotLoadedException {
+            throws IOException {
         return _indexer.getIndexTimestamp();
     }
 
@@ -343,6 +342,7 @@ public class Search {
      * Sets the weight for the pagerank scores of the documents
      *
      * @param weight
+     * @throws IndexNotLoadedException
      */
     public void setDocumentPagerankWeight(double weight)
             throws IndexNotLoadedException {

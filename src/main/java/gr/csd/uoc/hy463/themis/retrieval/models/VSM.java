@@ -21,7 +21,7 @@ public class VSM extends ARetrievalModel {
     int[] _maxTFs;
 
     public VSM(Indexer index)
-            throws IndexNotLoadedException {
+            throws IndexNotLoadedException, IOException {
         super(index);
         _calculatedWeights = new double[_totalDocuments][];
         _modelScore = new double[_totalDocuments];

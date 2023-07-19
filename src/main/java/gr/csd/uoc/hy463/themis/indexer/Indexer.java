@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.indexer;
 
-import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
@@ -84,7 +83,7 @@ public class Indexer {
      * @throws IOException
      */
     public void index()
-            throws IOException, IncompleteFileException {
+            throws IOException {
         if (!areIndexDirEmpty()) {
             Themis.print("Previous index found. Aborting...\n");
             return;
@@ -643,10 +642,9 @@ public class Indexer {
      * 3) DOCUMENTS_ID_FILENAME and DOCUMENTS_META_FILENAME are memory mapped.
      *
      * @throws IOException
-     * @throws IncompleteFileException
      */
     public void load()
-            throws IOException, IncompleteFileException {
+            throws IOException {
         Themis.print("-> Index path: " + __CONFIG__.getIndexDir() + "\n");
         Themis.print("-> Loading index...");
 
@@ -686,10 +684,9 @@ public class Indexer {
      *
      * @return
      * @throws IOException
-     * @throws IncompleteFileException
      */
     public Map<String, String> loadIndexMeta()
-            throws IOException, IncompleteFileException {
+            throws IOException {
         Map<String, String> meta;
         BufferedReader indexMetaReader = new BufferedReader(new FileReader(getIndexMetaPath()));
         meta = new HashMap<>();
@@ -699,9 +696,6 @@ public class Indexer {
             meta.put(split[0], split[1]);
         }
         indexMetaReader.close();
-        if (meta.get("timestamp") == null) {
-            throw new IncompleteFileException(getIndexMetaPath());
-        }
         return meta;
     }
 
@@ -1137,12 +1131,12 @@ public class Indexer {
      * Returns the total number of indexed documents.
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public int getTotalDocuments()
-            throws IndexNotLoadedException {
-        if (!isLoaded()) {
-            throw new IndexNotLoadedException();
+            throws IOException {
+        if (__INDEX_META__ == null) {
+            loadIndexMeta();
         }
         return Integer.parseInt(__INDEX_META__.get("documents"));
     }
@@ -1151,12 +1145,12 @@ public class Indexer {
      * Returns the average number of tokens per document (required by the Okapi retrieval model).
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public double getAvgDL()
-            throws IndexNotLoadedException {
-        if (!isLoaded()) {
-            throw new IndexNotLoadedException();
+            throws IOException {
+        if (__INDEX_META__ == null) {
+            loadIndexMeta();
         }
         return Double.parseDouble(__INDEX_META__.get("avgdl"));
     }
@@ -1165,12 +1159,12 @@ public class Indexer {
      * Returns true if the index has been created with stopwords enabled, false otherwise.
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public Boolean useStopwords()
-            throws IndexNotLoadedException {
-        if (!isLoaded()) {
-            throw new IndexNotLoadedException();
+            throws IOException {
+        if (__INDEX_META__ == null) {
+            loadIndexMeta();
         }
         return Boolean.parseBoolean(__INDEX_META__.get("use_stopwords"));
     }
@@ -1179,12 +1173,12 @@ public class Indexer {
      * Returns true if the index has been created with stemming enabled, false otherwise.
      *
      * @return
-     * @throws IndexNotLoadedException
+     * @throws IOException
      */
     public Boolean useStemmer()
-            throws IndexNotLoadedException {
-        if (!isLoaded()) {
-            throw new IndexNotLoadedException();
+            throws IOException {
+        if (__INDEX_META__ == null) {
+            loadIndexMeta();
         }
         return Boolean.parseBoolean(__INDEX_META__.get("use_stemmer"));
     }
@@ -1193,11 +1187,12 @@ public class Indexer {
      * Returns the timestamp of the index.
      *
      * @return
+     * @throws IOException
      */
     public String getIndexTimestamp()
-            throws IndexNotLoadedException {
-        if (!isLoaded()) {
-            throw new IndexNotLoadedException();
+            throws IOException {
+        if (__INDEX_META__ == null) {
+            loadIndexMeta();
         }
         return __INDEX_META__.get("timestamp");
     }

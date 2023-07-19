@@ -26,10 +26,9 @@ public abstract class ARetrievalModel {
      * Constructor.
      *
      * @param indexer
-     * @throws IndexNotLoadedException
      */
     protected ARetrievalModel(Indexer indexer)
-            throws IndexNotLoadedException {
+            throws IOException {
         _indexer = indexer;
         _totalDocuments = indexer.getTotalDocuments();
         _documentPagerankWeight = indexer.getConfig().getDocumentPagerankWeight();

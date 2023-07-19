@@ -1,6 +1,5 @@
 package gr.csd.uoc.hy463.themis.linkAnalysis;
 
-import gr.csd.uoc.hy463.themis.Exceptions.IncompleteFileException;
 import gr.csd.uoc.hy463.themis.Themis;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.MemMap.DocumentFixedBuffers;
@@ -29,14 +28,12 @@ public class Pagerank {
      *
      * @param indexer
      * @throws IOException
-     * @throws IncompleteFileException
      */
     public Pagerank(Indexer indexer)
-            throws IOException, IncompleteFileException {
+            throws IOException {
         _indexer = indexer;
         __CITATIONS_GRAPH__ = _indexer.getConfig().getIndexDir() + "graph";
-        Map<String, String> __INDEX_META__ = indexer.loadIndexMeta();
-        _totalDocuments = Integer.parseInt(__INDEX_META__.get("documents"));
+        _totalDocuments = _indexer.getTotalDocuments();
     }
 
     /**

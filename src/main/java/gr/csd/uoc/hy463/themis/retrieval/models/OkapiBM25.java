@@ -23,7 +23,7 @@ public class OkapiBM25 extends ARetrievalModel {
     double[][] _calculatedFreqs;
 
     public OkapiBM25(Indexer index)
-            throws IndexNotLoadedException {
+            throws IndexNotLoadedException, IOException {
         super(index);
         _calculatedFreqs = new double[_totalDocuments][];
         _modelScore = new double[_totalDocuments];

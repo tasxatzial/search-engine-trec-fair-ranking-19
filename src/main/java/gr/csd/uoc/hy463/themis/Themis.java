@@ -7,7 +7,6 @@ import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
 import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.ui.View.ExpansionDictionaryRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
@@ -391,7 +390,7 @@ public class Themis {
                 if (retrievalModel.getItem(i).isSelected()) {
                     try {
                         _search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).getRetrievalModel());
-                    } catch (IndexNotLoadedException ex) {
+                    } catch (Exception ex) {
                         print(ex + "\n");
                         _task = null;
                         return;
