@@ -76,8 +76,8 @@ public class Indexer {
      * Aborts if INDEX_DIR is not empty.
      *
      * All temp files will be saved in INDEX_TMP_DIR and will be deleted at the end of the process.
-     * If PARTIAL_INDEX_MAX_DOCS_SIZE is less than the number of documents then >1 partial indexes will be created.
-     * Each partial index will contain data from at most PARTIAL_INDEX_MAX_DOCS_SIZE documents.
+     * If PARTIAL_INDEX_MAX_DOCS is less than the number of documents then >1 partial indexes will be created.
+     * Each partial index will contain data from at most PARTIAL_INDEX_MAX_DOCS documents.
      * Finally, all partial indexes are merged to create the final index and temporary files are deleted.
      *
      * @throws IOException
@@ -91,7 +91,7 @@ public class Indexer {
 
         __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
         __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
-        int maxDocsPerPartialIndex = __CONFIG__.getPartialIndexSize();
+        int maxDocsPerPartialIndex = __CONFIG__.getPartialIndexMaxDocs();
 
         /* the (int) ID of each document. The N-th parsed document will have ID = N */
         int docID = 0;

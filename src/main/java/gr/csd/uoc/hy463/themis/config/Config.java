@@ -202,12 +202,12 @@ public class Config {
     }
 
     /**
-     * Number of max number of documents per each partial index
+     * Max documents per partial index.
      *
      * @return
      */
-    public int getPartialIndexSize() {
-        String size = __PROP__.getProperty("PARTIAL_INDEX_MAX_DOCS_SIZE");
+    public int getPartialIndexMaxDocs() {
+        String size = __PROP__.getProperty("PARTIAL_INDEX_MAX_DOCS");
         if (size != null) {
             return Integer.parseInt(size);
         } else {
