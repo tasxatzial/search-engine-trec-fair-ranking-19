@@ -26,7 +26,7 @@ public class Index {
     }
 
     /**
-     * Dumps all index data to 'INDEX_TMP_PATH/index_id/' and creates the VOCABULARY_FILENAME
+     * Dumps all index data to 'INDEX_TMP_DIR/index_id/' and creates the VOCABULARY_FILENAME
      * and POSTINGS_FILENAME files in the same directory.
      *
      * @throws IOException
@@ -49,7 +49,7 @@ public class Index {
 
     /**
      * Adds to this index the map of [term -> TF] for the document that has the given (int) doc ID.
-     * Also writes this information to 'INDEX_TMP_PATH/doc_tf' as a sequence of <term1, TF1, term2, TF2, ...>
+     * Also writes this information to 'INDEX_TMP_DIR/doc_tf' as a sequence of <term1, TF1, term2, TF2, ...>
      * (one line per document)
      *
      * Returns the sum of all frequencies in the document (total number of tokens).

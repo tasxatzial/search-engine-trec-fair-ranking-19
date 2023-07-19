@@ -55,7 +55,7 @@ public class ThemisEval {
      * Initializes and runs the evaluation:
      * 1) Parses JUDGEMENTS_FILE
      * 2) Performs a search for each query
-     * 3) Writes results to EVALUATION_FILENAME located in INDEX_PATH. The file will have the current date appended to it.
+     * 3) Writes results to EVALUATION_FILENAME located in INDEX_DIR. The file will have the current date appended to it.
      *
      * @throws IndexNotLoadedException
      * @throws IOException
@@ -78,7 +78,7 @@ public class ThemisEval {
         else {
             evaluationFilename = evaluationFilename + '_' + timestamp;
         }
-        String __EVALUATION_FILE__ =  _search.getConfig().getIndexPath() + "/" + evaluationFilename;
+        String __EVALUATION_FILE__ =  _search.getConfig().getIndexDir() + "/" + evaluationFilename;
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");
@@ -87,7 +87,7 @@ public class ThemisEval {
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
-        evaluationWriter.write("Index path: " + _search.getConfig().getIndexPath() + "\n");
+        evaluationWriter.write("Index path: " + _search.getConfig().getIndexDir() + "\n");
         evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");

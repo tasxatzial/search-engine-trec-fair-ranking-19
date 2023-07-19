@@ -24,8 +24,8 @@ public class CreateIndex {
     }
 
     /**
-     * Creates the index. Final index files will be saved in the INDEX_PATH directory.
-     * Temporary files will be saved in the INDEX_TMP_PATH directory.
+     * Creates the index. Final index files will be saved in the INDEX_DIR directory.
+     * Temporary files will be saved in the INDEX_TMP_DIR directory.
      *
      * @throws IOException
      * @throws IncompleteFileException
@@ -36,7 +36,7 @@ public class CreateIndex {
     }
 
     /**
-     * Deletes the INDEX_PATH and INDEX_TMP_PATH folders.
+     * Deletes the INDEX_DIR and INDEX_TMP_DIR folders.
      *
      * @throws IOException
      */
@@ -46,7 +46,7 @@ public class CreateIndex {
     }
 
     /**
-     * Returns true if the INDEX_PATH folder is empty, false otherwise.
+     * Returns true if the INDEX_DIR folder is empty, false otherwise.
      *
      * @return
      */

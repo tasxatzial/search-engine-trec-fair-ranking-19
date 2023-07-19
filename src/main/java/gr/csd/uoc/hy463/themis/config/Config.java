@@ -31,8 +31,8 @@ public class Config {
      *
      * @return
      */
-    public String getIndexPath() {
-        return __PROP__.getProperty("INDEX_PATH");
+    public String getIndexDir() {
+        return __PROP__.getProperty("INDEX_DIR");
     }
 
     /**
@@ -40,8 +40,8 @@ public class Config {
      *
      * @return
      */
-    public String getIndexTmpPath() {
-        return __PROP__.getProperty("INDEX_TMP_PATH");
+    public String getIndexTmpDir() {
+        return __PROP__.getProperty("INDEX_TMP_DIR");
     }
 
     /**
@@ -49,8 +49,8 @@ public class Config {
      *
      * @return
      */
-    public String getDatasetPath() {
-        return __PROP__.getProperty("DATASET_PATH");
+    public String getDatasetDir() {
+        return __PROP__.getProperty("DATASET_DIR");
     }
 
     /**
@@ -185,8 +185,8 @@ public class Config {
      *
      * @return
      */
-    public String getCitationsStats() {
-        return __PROP__.getProperty("CITATIONS_STATS");
+    public String getCitationsStatsDir() {
+        return __PROP__.getProperty("CITATIONS_STATS_DIR");
     }
 
     /**

@@ -12,7 +12,7 @@ import java.util.*;
 
 
 public class CitationsGraph {
-    private final String __DATASET_PATH__;
+    private final String __DATASET_DIR__;
 
     /* graph filename in binary format */
     private final String _citationsGraphBinary;
@@ -47,8 +47,8 @@ public class CitationsGraph {
     public CitationsGraph()
             throws IOException {
         Config __CONFIG__ = new Config();
-        __DATASET_PATH__ = __CONFIG__.getDatasetPath();
-        String citationsStats = __CONFIG__.getCitationsStats();
+        __DATASET_DIR__ = __CONFIG__.getDatasetDir();
+        String citationsStats = __CONFIG__.getCitationsStatsDir();
         Files.createDirectories(Paths.get(citationsStats));
         _citationsGraphBinary = citationsStats + "/citations_graph_binary";
         _citationsGraph = citationsStats + "/citations_graph";
@@ -80,7 +80,7 @@ public class CitationsGraph {
      */
     public void dumpCitationsGraph()
             throws IOException {
-        File folder = new File(__DATASET_PATH__);
+        File folder = new File(__DATASET_DIR__);
         File[] files = folder.listFiles();
         if (files == null) {
             return;
@@ -295,7 +295,7 @@ public class CitationsGraph {
     }
 
     /**
-     * Creates the 'citations_graph' file in the CITATIONS_GRAPH_PATH specified in the themis.config file
+     * Creates the 'citations_graph' file in the CITATIONS_STATS_DIR specified in the themis.config file
      *
      * @param graph
      * @throws IOException
@@ -324,7 +324,7 @@ public class CitationsGraph {
     }
 
     /**
-     * Creates the following files in the CITATIONS_GRAPH_PATH specified in the themis.config file:
+     * Creates the following files in the CITATIONS_STATS_DIR specified in the themis.config file:
      * 1) citations_stats
      * 2) in_nodes_true
      * 3) out_nodes_true

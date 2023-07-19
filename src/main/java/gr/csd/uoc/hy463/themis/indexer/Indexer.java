@@ -42,7 +42,7 @@ public class Indexer {
     private static final Logger __LOGGER__ = LogManager.getLogger(Indexer.class);
     private final Config __CONFIG__;
     private boolean __INDEX_IS_LOADED__ = false;
-    private final String __INDEX_PATH__;
+    private final String __INDEX_DIR__;
     private Map<String, String> __INDEX_META__ = null;
 
     /* Names of the final index files */
@@ -79,7 +79,7 @@ public class Indexer {
     public Indexer()
             throws IOException {
         this.__CONFIG__ = new Config();
-        __INDEX_PATH__ = getIndexPath();
+        __INDEX_DIR__ = getIndexDir();
         __VOCABULARY_FILENAME__ = __CONFIG__.getVocabularyFileName();
         __POSTINGS_FILENAME__ = __CONFIG__.getPostingsFileName();
         __DOCUMENTS_FILENAME__ = __CONFIG__.getDocumentsFileName();
@@ -89,10 +89,10 @@ public class Indexer {
     }
 
     /**
-     * Indexes the collection found in the DATASET_PATH and writes the final index to INDEX_PATH.
-     * Aborts if INDEX_PATH is not empty.
+     * Indexes the collection found in the DATASET_DIR and writes the final index to INDEX_DIR.
+     * Aborts if INDEX_DIR is not empty.
      *
-     * All temp files will be saved in INDEX_TMP_PATH and will be deleted at the end of the process.
+     * All temp files will be saved in INDEX_TMP_DIR and will be deleted at the end of the process.
      * If PARTIAL_INDEX_MAX_DOCS_SIZE is less than the number of documents then >1 partial indexes will be created.
      * Each partial index will contain data from at most PARTIAL_INDEX_MAX_DOCS_SIZE documents.
      * Finally, all partial indexes are merged to create the final index and temporary files are deleted.
@@ -122,7 +122,7 @@ public class Indexer {
         /* create the list of files in the given path */
         List<File> corpus = getCorpus();
         if (corpus == null || corpus.size() == 0) {
-            Themis.print("No dataset files found in " + getDataSetPath() + "\n");
+            Themis.print("No dataset files found in " + getDataSetDir() + "\n");
             return;
         }
 
@@ -144,8 +144,8 @@ public class Indexer {
         S2TextualEntryTokens textualEntryTokens = new S2TextualEntryTokens(__CONFIG__.getUseStemmer(), __CONFIG__.getUseStopwords());
 
         /* create the required index folders */
-        Files.createDirectories(Paths.get(__INDEX_PATH__));
-        Files.createDirectories(Paths.get(getIndexTmpPath()));
+        Files.createDirectories(Paths.get(__INDEX_DIR__));
+        Files.createDirectories(Paths.get(getIndexTmpDir()));
 
         /* open INDEX_META_FILENAME (normal sequential file) and
         DOCUMENTS_FILENAME, DOCUMENTS_ID_FILENAME, DOCUMENTS_META_FILENAME (random access files) */
@@ -157,7 +157,7 @@ public class Indexer {
         RandomAccessFile documentsID = new RandomAccessFile(getDocumentsIDFilePath(), "rw");
         BufferedOutputStream documentsIDOutStream = new BufferedOutputStream(new FileOutputStream(documentsID.getFD()));
 
-        /* A 'doc_tf' file will be stored in INDEX_TMP_PATH (normal sequential file).
+        /* A 'doc_tf' file will be stored in INDEX_TMP_DIR (normal sequential file).
         Contains a sequence of <term1, TF1, term2, TF2, ...> (one line per document).
         Will be used during the calculation of VSM weights */
         BufferedWriter docTFWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getDocTFPath()), "UTF-8"));
@@ -227,7 +227,7 @@ public class Indexer {
             __LOGGER__.error(e);
         }
 
-        /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_PATH/doc_tf' */
+        /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_DIR/doc_tf' */
         updateVSMWeights();
         deleteDir(new File(getDocTFPath()));
 
@@ -241,7 +241,7 @@ public class Indexer {
             __LOGGER__.error(e);
         }
 
-        /* delete 'INDEX_TMP_PATH/term_df' (has been created during the merging of the partial VOCABULARY_FILENAME) */
+        /* delete 'INDEX_TMP_DIR/term_df' (has been created during the merging of the partial VOCABULARY_FILENAME) */
         deleteDir(new File(getTermDFPath()));
 
         /* write index metadata to INDEX_META_FILENAME */
@@ -255,9 +255,9 @@ public class Indexer {
         Pagerank pagerank = new Pagerank(this);
         pagerank.documentsPagerank();
 
-        /* delete INDEX_TMP_PATH */
+        /* delete INDEX_TMP_DIR */
         try {
-            deleteDir(new File(getIndexTmpPath()));
+            deleteDir(new File(getIndexTmpDir()));
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
@@ -266,7 +266,7 @@ public class Indexer {
     }
 
     /* Merges all partial VOCABULARY_FILENAME and creates the final VOCABULARY_FILENAME
-    (normal sequential file) in INDEX_PATH */
+    (normal sequential file) in INDEX_DIR */
     private void mergeVocabularies(int maxIndexID)
             throws IOException {
         long startTime =  System.nanoTime();
@@ -311,7 +311,7 @@ public class Indexer {
         finalVocabularyWriter.close();
     }
 
-    /* Merges all partial VOCABULARY_FILENAME when there's >1 partial index. Also creates 'INDEX_TMP_PATH/term_df',
+    /* Merges all partial VOCABULARY_FILENAME when there's >1 partial index. Also creates 'INDEX_TMP_DIR/term_df',
     this file contains all <index ID, DF> for each term and will be used when merging all partial POSTINGS_FILENAME.
 
     Process:
@@ -325,7 +325,7 @@ public class Indexer {
     Therefore, we keep removing from the queue until we get a different term. Each time an object is removed,
     we add to the queue a new PartialVocabulary object from the partial index with the same index.
     4) All objects that have been removed from the queue in the previous step are added to a list which is sorted
-    by the ID of the index (increasing). We then write all <index ID, DF> pairs to 'INDEX_TMP_PATH/term_df'
+    by the ID of the index (increasing). We then write all <index ID, DF> pairs to 'INDEX_TMP_DIR/term_df'
     (one line per term).
     5) Since we have all objects that correspond to the min lexicographical term, we can sum their DF and find the
     final DF of the term.
@@ -361,7 +361,7 @@ public class Indexer {
         while((polledEntry = vocabularyQueue.poll()) != null) {
 
             /* if the term of the polled entry is not equal to the current min term, we must process the current
-            list of entries and update the final VOCABULARY_FILENAME. Also update 'INDEX_TMP_PATH/term_df' */
+            list of entries and update the final VOCABULARY_FILENAME. Also update 'INDEX_TMP_DIR/term_df' */
             if (!polledEntry.getTerm().equals(minLexTerm) && !equalMinLexEntries.isEmpty()) {
                 postingsOffset = dumpEqualTerms(equalMinLexEntries, finalVocabularyWriter, termDFWriter, postingsOffset);
             }
@@ -405,7 +405,7 @@ public class Indexer {
     }
 
     /* Processes the given list of min lex entries (all correspond to the same term) and writes a new line
-    to the final VOCABULARY_FILENAME. Also updates 'INDEX_TMP_PATH/term_df' with a new line for the min term.
+    to the final VOCABULARY_FILENAME. Also updates 'INDEX_TMP_DIR/term_df' with a new line for the min term.
     Returns the new offset to POSTINGS_FILENAME. It will be used in the next call of the method */
     private long dumpEqualTerms(List<PartialVocabularyEntry> equalMinLexEntries, BufferedWriter finalVocabularyWriter, BufferedWriter termDFWriter, long postingsOffset)
             throws IOException {
@@ -415,7 +415,7 @@ public class Indexer {
         * of the term appear sorted based on the (int) doc ID */
         equalMinLexEntries.sort(PartialVocabularyEntry.IDComparator);
 
-        /* calculate final DF and write to 'INDEX_TMP_PATH/term_df' all <index ID, DF> for the current term */
+        /* calculate final DF and write to 'INDEX_TMP_DIR/term_df' all <index ID, DF> for the current term */
         StringBuilder SB = new StringBuilder();
         for (PartialVocabularyEntry equalTerm : equalMinLexEntries) {
             DF += equalTerm.getDF();
@@ -431,7 +431,7 @@ public class Indexer {
     }
 
     /* Merges all partial POSTINGS_FILENAME and creates the final POSTINGS_FILENAME
-    (random access file) in INDEX_PATH */
+    (random access file) in INDEX_DIR */
     private void mergePostings(int maxIndexID)
             throws IOException {
         long startTime =  System.nanoTime();
@@ -451,11 +451,11 @@ public class Indexer {
     /* Merges all partial POSTINGS_FILENAME when there's >1 partial index.
 
     Process:
-    We'll use 'INDEX_TMP_PATH/term_df' that has been created during the merging of all partial
+    We'll use 'INDEX_TMP_DIR/term_df' that has been created during the merging of all partial
     VOCABULARY_FILENAME. This is the known information so far:
-    1) Each line in 'INDEX_TMP_PATH/term_df' consists of a sequence of <index ID, DF> with the ID
+    1) Each line in 'INDEX_TMP_DIR/term_df' consists of a sequence of <index ID, DF> with the ID
     appearing in increasing order (done in function Indexer.dumpEqualTerms())
-    2) Line N in 'INDEX_TMP_PATH/term_df' corresponds to line N in VOCABULARY_FILENAME
+    2) Line N in 'INDEX_TMP_DIR/term_df' corresponds to line N in VOCABULARY_FILENAME
     (done in function Indexer.dumpEqualTerms())
     3) The blocks of postings in each partial POSTINGS_FILENAME are already sorted based on the
     sorting of terms in the corresponding partial VOCABULARY_FILENAME (done in function Index.dumpPostings())
@@ -478,7 +478,7 @@ public class Indexer {
         BufferedOutputStream finalPostingsOutStream = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(getPostingsPath(), "rw").getFD()));
         BufferedReader termDFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getTermDFPath()), "ASCII"));
 
-        /* parse each line of 'INDEX_TMP_PATH/term_df', grab the postings from the appropriate
+        /* parse each line of 'INDEX_TMP_DIR/term_df', grab the postings from the appropriate
         partial POSTINGS_FILENAME, and write them to the final POSTINGS_FILENAME */
         String line;
         while ((line = termDFReader.readLine()) != null) {
@@ -597,7 +597,7 @@ public class Indexer {
     and writes them to DOCUMENTS_META_FILENAME.
     To calculate the weight we need:
     1) The DF of each term : Obtained from the final VOCABULARY_FILENAME.
-    2) The TF of each term: 'INDEX_TMP_PATH/doc_tf' already contains a sequence of <term, TF>.
+    2) The TF of each term: 'INDEX_TMP_DIR/doc_tf' already contains a sequence of <term, TF>.
     */
     private void updateVSMWeights()
             throws IOException {
@@ -614,7 +614,7 @@ public class Indexer {
         }
         vocabularyReader.close();
 
-        /* open DOCUMENTS_META_FILENAME and 'INDEX_TMP_PATH/doc_tf' */
+        /* open DOCUMENTS_META_FILENAME and 'INDEX_TMP_DIR/doc_tf' */
         __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.WRITE, DocumentMetaEntry.SIZE);
         BufferedReader docTFReader = new BufferedReader(new InputStreamReader(new FileInputStream(getDocTFPath()), "UTF-8"));
 
@@ -622,7 +622,7 @@ public class Indexer {
         double logDocumentCount = Math.log(documentCount);
         long documentsMetaOffset = 0;
 
-        /* read a line from the 'INDEX_TMP_PATH/doc_tf' and calculate the weight */
+        /* read a line from the 'INDEX_TMP_DIR/doc_tf' and calculate the weight */
         while ((line = docTFReader.readLine()) != null) {
             String[] splitLine = line.split(" ");
             double weight = 0;
@@ -655,7 +655,7 @@ public class Indexer {
     }
 
     /**
-     * Loads the index from INDEX_PATH. The following actions take place:
+     * Loads the index from INDEX_DIR. The following actions take place:
      * 1) VOCABULARY_FILENAME and INDEX_META_FILENAME are loaded.
      * 2) POSTINGS_FILENAME and DOCUMENTS_FILENAME are opened.
      * 3) DOCUMENTS_ID_FILENAME and DOCUMENTS_META_FILENAME are memory mapped.
@@ -665,7 +665,7 @@ public class Indexer {
      */
     public void load()
             throws IOException, IncompleteFileException {
-        Themis.print("-> Index path: " + __INDEX_PATH__ + "\n");
+        Themis.print("-> Index path: " + __INDEX_DIR__ + "\n");
         Themis.print("-> Loading index...");
 
         /* load index metadata from INDEX_META_FILENAME */
@@ -755,12 +755,12 @@ public class Indexer {
     }
 
     /**
-     * Returns a list of all files in DATASET_PATH.
+     * Returns a list of all files in DATASET_DIR.
      *
      * @return
      */
     public List<File> getCorpus() {
-        File folder = new File(getDataSetPath());
+        File folder = new File(getDataSetDir());
         File[] files = folder.listFiles();
         if (files == null) {
             return null;
@@ -777,30 +777,30 @@ public class Indexer {
     }
 
     /**
-     * Deletes INDEX_PATH and INDEX_TMP_PATH.
+     * Deletes INDEX_DIR and INDEX_TMP_DIR.
      *
      * @throws IOException
      */
     public void deleteIndex()
             throws IOException {
         Themis.print("-> Deleting previous index...");
-        deleteDir(new File(getIndexPath()));
-        deleteDir(new File(getIndexTmpPath()));
+        deleteDir(new File(getIndexDir()));
+        deleteDir(new File(getIndexTmpDir()));
         Themis.print("Done\n");
     }
 
     /**
-     * Returns true if INDEX_PATH and INDEX_TMP_PATH are empty, false otherwise.
+     * Returns true if INDEX_DIR and INDEX_TMP_DIR are empty, false otherwise.
      *
      * @return
      */
     public boolean areIndexDirEmpty() {
-        File file = new File(__INDEX_PATH__);
+        File file = new File(__INDEX_DIR__);
         File[] fileList = file.listFiles();
         if (fileList != null && fileList.length != 0) {
             return false;
         }
-        file = new File(getIndexTmpPath());
+        file = new File(getIndexTmpDir());
         fileList = file.listFiles();
         return fileList == null || fileList.length == 0;
     }
@@ -1230,119 +1230,119 @@ public class Indexer {
     }
 
     /**
-     * Returns the INDEX_PATH.
+     * Returns the INDEX_DIR.
      *
      * @return
      */
-    public String getIndexPath() {
-        return __CONFIG__.getIndexPath() + "/";
+    public String getIndexDir() {
+        return __CONFIG__.getIndexDir() + "/";
     }
 
     /**
-     * Returns the DATASET_PATH.
+     * Returns the DATASET_DIR.
      *
      * @return
      */
-    public String getDataSetPath() {
-        return __CONFIG__.getDatasetPath() + "/";
+    public String getDataSetDir() {
+        return __CONFIG__.getDatasetDir() + "/";
     }
 
     /**
-     * Returns the INDEX_TMP_PATH.
+     * Returns the INDEX_TMP_DIR.
      *
      * @return
      */
-    public String getIndexTmpPath() {
-        return __CONFIG__.getIndexTmpPath() + "/";
+    public String getIndexTmpDir() {
+        return __CONFIG__.getIndexTmpDir() + "/";
     }
 
     /**
-     * Returns the full path of VOCABULARY_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of VOCABULARY_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getVocabularyPath() {
-        return __INDEX_PATH__ + "/" + __VOCABULARY_FILENAME__;
+        return __INDEX_DIR__ + "/" + __VOCABULARY_FILENAME__;
     }
 
     /**
-     * Returns the full path of POSTINGS_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of POSTINGS_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getPostingsPath() {
-        return __INDEX_PATH__ + "/" + __POSTINGS_FILENAME__;
+        return __INDEX_DIR__ + "/" + __POSTINGS_FILENAME__;
     }
 
     /**
-     * Returns the full path of DOCUMENTS_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of DOCUMENTS_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getDocumentsFilePath() {
-        return __INDEX_PATH__ + "/" + __DOCUMENTS_FILENAME__;
+        return __INDEX_DIR__ + "/" + __DOCUMENTS_FILENAME__;
     }
 
     /**
-     * Returns the full path of DOCUMENTS_META_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of DOCUMENTS_META_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getDocumentsMetaFilePath() {
-        return __INDEX_PATH__ + "/" + __DOCUMENTS_META_FILENAME__;
+        return __INDEX_DIR__ + "/" + __DOCUMENTS_META_FILENAME__;
     }
 
     /**
-     * Returns the full path of DOCUMENTS_ID_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of DOCUMENTS_ID_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getDocumentsIDFilePath() {
-        return __INDEX_PATH__ + "/" + __DOCUMENTS_ID_FILENAME__;
+        return __INDEX_DIR__ + "/" + __DOCUMENTS_ID_FILENAME__;
     }
 
     /**
-     * Returns the full path of INDEX_META_FILENAME. The file is in INDEX_PATH.
+     * Returns the full path of INDEX_META_FILENAME. The file is in INDEX_DIR.
      *
      * @return
      */
     public String getMetaPath() {
-        return __INDEX_PATH__ + "/" + __INDEX_META_FILENAME__;
+        return __INDEX_DIR__ + "/" + __INDEX_META_FILENAME__;
     }
 
-    /* Returns the full path of 'INDEX_TMP_PATH/term_df' */
+    /* Returns the full path of 'INDEX_TMP_DIR/term_df' */
     private String getTermDFPath() {
-        return getIndexTmpPath() + "term_df";
+        return getIndexTmpDir() + "term_df";
     }
 
-    /* Returns the full path of 'INDEX_TMP_PATH/doc_df' */
+    /* Returns the full path of 'INDEX_TMP_DIR/doc_df' */
     private String getDocTFPath() {
-        return getIndexTmpPath() + "doc_tf";
+        return getIndexTmpDir() + "doc_tf";
     }
 
-    /* Returns the full path of the partial index folder 'INDEX_TMP_PATH/ID/' */
-    private String getPartialIndexPath(int ID) {
-        return getIndexTmpPath() + ID + "/";
+    /* Returns the full path of the partial index folder 'INDEX_TMP_DIR/ID/' */
+    private String getPartialIndexDir(int ID) {
+        return getIndexTmpDir() + ID + "/";
     }
 
     /**
-     * Returns the full path of the partial postings file 'INDEX_TMP_PATH/ID/POSTINGS_FILENAME'.
+     * Returns the full path of the partial postings file 'INDEX_TMP_DIR/ID/POSTINGS_FILENAME'.
      *
      * @param ID
      * @return
      */
     public String getPartialPostingsPath(int ID) {
-        return getPartialIndexPath(ID) + __POSTINGS_FILENAME__;
+        return getPartialIndexDir(ID) + __POSTINGS_FILENAME__;
     }
 
     /**
-     * Returns the full path of the partial vocabulary file 'INDEX_TMP_PATH/ID/VOCABULARY_FILENAME'.
+     * Returns the full path of the partial vocabulary file 'INDEX_TMP_DIR/ID/VOCABULARY_FILENAME'.
      *
      * @param ID
      * @return
      */
     public String getPartialVocabularyPath(int ID) {
-        return getPartialIndexPath(ID) + __VOCABULARY_FILENAME__;
+        return getPartialIndexDir(ID) + __VOCABULARY_FILENAME__;
     }
 
     /**

@@ -41,7 +41,7 @@ public class Search {
     private Set<DocInfo.PROPERTY> _props;
 
     /**
-     * Initializes the Indexer, the expansion dictionary, and loads the index from INDEX_PATH.
+     * Initializes the Indexer, the expansion dictionary, and loads the index from INDEX_DIR.
      * Reads configuration options from themis.config file.
      *
      * @throws IOException
