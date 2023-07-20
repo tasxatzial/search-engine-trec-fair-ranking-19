@@ -200,7 +200,6 @@ public class Indexer {
         __INDEX_META__.put("avgdl", String.valueOf(avgdl));
         Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
 
-        /* merge all partial VOCABULARY_FILENAME and delete them */
         mergeVocabularies(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
@@ -209,23 +208,22 @@ public class Indexer {
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
-
-        /* calculate VSM weights and update DOCUMENTS_META_FILENAME. Also, delete 'INDEX_TMP_DIR/doc_tf' */
         updateVSMWeights();
-        deleteDir(new File(getDocTFPath()));
-
-        /* merge all partial POSTINGS_FILENAME and delete them */
+        try {
+            deleteDir(new File(getDocTFPath()));
+        } catch (IOException e) {
+            __LOGGER__.error(e);
+        }
         mergePostings(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
                 deleteDir(new File(getPartialPostingsPath(i)));
             }
+            deleteDir(new File(getTermDFPath()));
+            deleteDir(new File(__CONFIG__.getIndexTmpDir()));
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
-
-        /* delete 'INDEX_TMP_DIR/term_df' (has been created during the merging of the partial VOCABULARY_FILENAME) */
-        deleteDir(new File(getTermDFPath()));
 
         /* write index metadata to INDEX_META_FILENAME */
         __INDEX_META__.put("timestamp", Instant.now().toString());
@@ -234,16 +232,8 @@ public class Indexer {
         }
         metaWriter.close();
 
-        /* compute the document pagerank scores and update DOCUMENTS_META_FILENAME */
         Pagerank pagerank = new Pagerank(this);
         pagerank.documentsPagerank();
-
-        /* delete INDEX_TMP_DIR */
-        try {
-            deleteDir(new File(__CONFIG__.getIndexTmpDir()));
-        } catch (IOException e) {
-            __LOGGER__.error(e);
-        }
 
         Themis.print("-> End of indexing\n");
     }
