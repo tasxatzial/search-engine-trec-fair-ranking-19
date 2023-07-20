@@ -1,11 +1,11 @@
 package gr.csd.uoc.hy463.themis.ui.View;
 
-import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
-
 import javax.swing.*;
+
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class View extends JFrame {
 
@@ -24,8 +24,8 @@ public class View extends JFrame {
     /* The "load index" menu item */
     private JMenuItem _loadIndex;
 
-    /* The "query collection" menu item */
-    private JMenuItem _queryCollection;
+    /* The "initialize search" menu item */
+    private JMenuItem _initSearch;
 
     /* The "evaluate VSM" menu item */
     private JMenuItem _evaluateVSM;
@@ -82,7 +82,7 @@ public class View extends JFrame {
         UIManager.put("RadioButtonMenuItem.font", font);
         initMenu();
         pack();
-        setTitle("Themis search engine v1.0");
+        setTitle("Themis search engine v1.1");
         setSize(800, 600); //initial frame size
         _mainPane = new JLayeredPane();
         initTitleArea();
@@ -101,13 +101,13 @@ public class View extends JFrame {
 
         /* search menu */
         JMenu search = new JMenu("Search");
-        _queryCollection = new JMenuItem("New query");
+        _initSearch = new JMenuItem("Initialize search");
 
         _retrievalModel = new JMenu("Retrieval model");
         ButtonGroup group = new ButtonGroup();
-        RetrievalModelRadioButton modelBoolean = new RetrievalModelRadioButton("Existential");
-        RetrievalModelRadioButton modelVSM = new RetrievalModelRadioButton("VSM");
-        RetrievalModelRadioButton modelBM25 = new RetrievalModelRadioButton("BM25");
+        JRadioButtonMenuItem modelBoolean = new JRadioButtonMenuItem("Existential");
+        JRadioButtonMenuItem modelVSM = new JRadioButtonMenuItem("VSM");
+        JRadioButtonMenuItem modelBM25 = new JRadioButtonMenuItem("BM25");
         group.add(modelBoolean);
         group.add(modelVSM);
         group.add(modelBM25);
@@ -117,9 +117,9 @@ public class View extends JFrame {
 
         _expansionDictionary = new JMenu("Query expansion");
         group = new ButtonGroup();
-        ExpansionDictionaryRadioButton noneDictionary = new ExpansionDictionaryRadioButton("None");
-        ExpansionDictionaryRadioButton gloveDictionary = new ExpansionDictionaryRadioButton("GloVe");
-        ExpansionDictionaryRadioButton extJWNLDictionary = new ExpansionDictionaryRadioButton("WordNet");
+        JRadioButtonMenuItem noneDictionary = new JRadioButtonMenuItem("None");
+        JRadioButtonMenuItem gloveDictionary = new JRadioButtonMenuItem("GloVe");
+        JRadioButtonMenuItem extJWNLDictionary = new JRadioButtonMenuItem("WordNet");
         group.add(noneDictionary);
         group.add(gloveDictionary);
         group.add(extJWNLDictionary);
@@ -148,7 +148,7 @@ public class View extends JFrame {
         _documentProperties.add(length);
         _documentProperties.add(maxTF);
         _documentProperties.add(documentSize);
-        search.add(_queryCollection);
+        search.add(_initSearch);
         search.add(_retrievalModel);
         search.add(_expansionDictionary);
         search.add(_documentProperties);
@@ -359,11 +359,11 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "query collection" menu item
+     * Returns the "initialize search" menu item
      * @return
      */
-    public JMenuItem getQueryCollection() {
-        return _queryCollection;
+    public JMenuItem getInitSearch() {
+        return _initSearch;
     }
 
     /**
@@ -431,60 +431,101 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the search input field
+     * Returns the text content of the search field.
      * @return
      */
-    public JTextField getSearchField() {
-        return _searchField;
+    public String getQuery() {
+        return _searchField.getText();
     }
 
     /**
-     * Returns the "retrieval model" menu
+     * Returns the name of the selected retrieval model.
      * @return
      */
-    public JMenu getRetrievalModel() {
-        return _retrievalModel;
-    }
-
-    /**
-     * Returns the "document properties" menu
-     * @return
-     */
-    public JMenu getDocumentProperties() {
-        return _documentProperties;
-    }
-
-    /**
-     * Returns the "query expansion" menu
-     * @return
-     */
-    public JMenu getExpansionDictionary() {
-        return _expansionDictionary;
-    }
-
-    /**
-     * Checks the menu radio button that corresponds to the given retrieval model
-     * @param model
-     */
-    public void checkRetrievalModel(ARetrievalModel.MODEL model) {
+    public String getRetrievalModel() {
         for (int i = 0; i < _retrievalModel.getItemCount(); i++) {
-            if (((RetrievalModelRadioButton) _retrievalModel.getItem(i)).getRetrievalModel() == model) {
-                _retrievalModel.getItem(i).setSelected(true);
-                break;
+            if (_retrievalModel.getItem(i).isSelected()) {
+                return _retrievalModel.getItem(i).getText();
             }
         }
+        return null;
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given query expansion dictionary
-     * @param dictionary
+     * Returns a list of all checked document props.
+     * @return
      */
-    public void checkExpansionDictionary(QueryExpansion.DICTIONARY dictionary) {
-        for (int i = 0; i < _expansionDictionary.getItemCount(); i++) {
-            if (((ExpansionDictionaryRadioButton) _expansionDictionary.getItem(i)).getExpansionDictionary() == dictionary) {
-                _expansionDictionary.getItem(i).setSelected(true);
-                break;
+    public List<String> getCheckedDocumentProps() {
+        List<String> props = new ArrayList<>();
+        for (int i = 0; i < _documentProperties.getItemCount(); i++) {
+            if (_documentProperties.getItem(i).isSelected()) {
+                props.add(_documentProperties.getItem(i).getText());
             }
+        }
+        return props;
+    }
+
+    /**
+     * Returns name of the selected query expansion dictionary.
+     * @return
+     */
+    public String getExpansionDictionary() {
+        for (int i = 0; i < _expansionDictionary.getItemCount(); i++) {
+            if (_expansionDictionary.getItem(i).isSelected()) {
+                return _expansionDictionary.getItem(i).getText();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given retrieval model.
+     */
+    public void checkExistentialRetrievalModel() {
+        _retrievalModel.getItem(0).setSelected(true);
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given retrieval model.
+     */
+    public void checkVSMRetrievalModel() {
+        _retrievalModel.getItem(1).setSelected(true);
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given retrieval model.
+     */
+    public void checkBM25RetrievalModel() {
+        _retrievalModel.getItem(2).setSelected(true);
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     */
+    public void checkNoneExpansionDictionary() {
+        _expansionDictionary.getItem(0).setSelected(true);
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     */
+    public void checkGloVeExpansionDictionary() {
+        _expansionDictionary.getItem(1).setSelected(true);
+    }
+
+    /**
+     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     */
+    public void checkWordNetExpansionDictionary() {
+        _expansionDictionary.getItem(2).setSelected(true);
+    }
+
+    /**
+     * Unchecks all document props.
+     */
+    public void uncheckAllDocumentProps() {
+        for (int i = 0; i < _documentProperties.getItemCount(); i++) {
+            _documentProperties.getItem(i).setSelected(false);
         }
     }
 }

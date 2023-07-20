@@ -73,12 +73,9 @@ public class Search {
                 _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloVeModelPath());
             } else if (expansionModel.equals("WordNet")) {
                 _queryExpansion = EXTJWNL.Singleton();
-            } else {
-                _queryExpansion = null;
             }
         }
         else {
-            _queryExpansion = null;
             Themis.print("Default query expansion model: None\n");
         }
         Themis.print("Default Pagerank weight (documents): " + _indexer.getConfig().getDocumentPagerankWeight() + "\n");

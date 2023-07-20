@@ -633,7 +633,7 @@ public class Indexer {
     public void load()
             throws IOException {
         Themis.print("-> Index path: " + __CONFIG__.getIndexDir() + "\n");
-        Themis.print("-> Loading index...");
+        Themis.print("-> Loading index...\n");
 
         /* load index metadata from INDEX_META_FILENAME */
         __INDEX_META__ = loadIndexMeta();

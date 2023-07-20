@@ -1,20 +1,21 @@
 package gr.csd.uoc.hy463.themis;
 
+import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
+import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
 import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
-import gr.csd.uoc.hy463.themis.ui.CreateIndex;
 import gr.csd.uoc.hy463.themis.ui.Search;
-import gr.csd.uoc.hy463.themis.ui.View.ExpansionDictionaryRadioButton;
-import gr.csd.uoc.hy463.themis.ui.View.RetrievalModelRadioButton;
 import gr.csd.uoc.hy463.themis.ui.View.View;
-import gr.csd.uoc.hy463.themis.ui.View.DocInfoRadioButton;
 import gr.csd.uoc.hy463.themis.utils.Time;
+import net.sf.extjwnl.JWNLException;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -24,15 +25,15 @@ import java.util.*;
  * enabled by passing 'gui' as first argument of the main function.
  */
 public class Themis {
-    private static CreateIndex _createIndex;
+    private static Indexer _indexer;
     private static Search _search;
     private static View _view;
     private static ActionListener _searchButtonListener = null;
     private static TASK _task = null;
 
-    /* one of the 4 available tasks. The GUI lets us run only one task at a time. */
+    /* one of the 5 available tasks. Only one task is allowed to run at a time */
     private enum TASK {
-        CREATE_INDEX, LOAD_INDEX, SEARCH, EVALUATE
+        CREATE_INDEX, LOAD_INDEX, INIT_SEARCH, SEARCH, EVALUATE
     }
 
     public static void main(String[] args) {
@@ -70,7 +71,7 @@ public class Themis {
 
             /* listeners for the menu items */
             _view.getCreateIndex().addActionListener(new createIndexListener());
-            _view.getQueryCollection().addActionListener(new searchListener());
+            _view.getInitSearch().addActionListener(new InitSearchListener());
             _view.getLoadIndex().addActionListener(new loadIndexListener());
             _view.getEvaluateVSM().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE));
             _view.getEvaluateVSM_Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE));
@@ -92,21 +93,23 @@ public class Themis {
     }
 
     /* Example of using Themis */
-    private static void runExample() {
+    private static void runSearchExample() {
         try {
-            _search = new Search();
+            Indexer indexer = new Indexer();
+            indexer.load();
+            Search search = new Search(indexer);
             Set<DocInfo.PROPERTY> props = new HashSet<>();
 
             /* fetch the titles */
             props.add(DocInfo.PROPERTY.TITLE);
-            _search.setDocumentProperties(props);
+            search.setDocumentProperties(props);
 
             /* Query 'test' and retrieve info for the top 12 results */
-            List<Result> results = _search.search("test", 12);
+            List<Result> results = search.search("test", 12);
 
             /* print results with index 5-20 (included). If there are only 10 results,
             it would print those with index 5-9 */
-            _search.printResults(results, 5, 20);
+            search.printResults(results, 5, 20);
         }
         catch (Exception ex) {
             print(ex + "\n");
@@ -119,12 +122,12 @@ public class Themis {
         QueryExpansion.DICTIONARY[] dictionaries = {QueryExpansion.DICTIONARY.NONE, QueryExpansion.DICTIONARY.GLOVE, QueryExpansion.DICTIONARY.EXTJWNL};
         double[] pagerankWeights = {0, 0.25};
         try {
-            _search = new Search();
-            _search.search("1"); // warm-up
+            Indexer indexer = new Indexer();
+            indexer.load();
             for (QueryExpansion.DICTIONARY dictionary : dictionaries) {
                 for (ARetrievalModel.MODEL model : models) {
                     for (double pagerank : pagerankWeights) {
-                        ThemisEval eval = new ThemisEval(_search, model, dictionary, pagerank);
+                        ThemisEval eval = new ThemisEval(_indexer, model, dictionary, pagerank);
                         eval.run();
                     }
                 }
@@ -175,11 +178,17 @@ public class Themis {
         }
     }
 
-    /* The listener for the "query collection" menu item */
-    private static class searchListener implements ActionListener {
+    /* The listener for the "initialize search" menu item */
+    private static class InitSearchListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (_task != null) {
+                return;
+            }
+            if (_indexer == null || !_indexer.isLoaded()) {
+                _view.initOnlyResultsView();
+                print("Index is not loaded!");
+                _task = null;
                 return;
             }
             _view.initSearchView();
@@ -187,10 +196,8 @@ public class Themis {
                 _searchButtonListener = new searchButtonListener();
                 _view.getSearchButton().addActionListener(_searchButtonListener);
             }
-            if (_search == null) {
-                Thread runnableLoad = new Thread(new LoadIndex_runnable());
-                runnableLoad.start();
-            }
+            Thread runnableInitQuery = new Thread(new InitSearch_runnable());
+            runnableInitQuery.start();
         }
     }
 
@@ -202,6 +209,7 @@ public class Themis {
                 return;
             }
             _view.initOnlyResultsView();
+            _searchButtonListener = null;
             Thread runnableLoad = new Thread(new LoadIndex_runnable());
             runnableLoad.start();
         }
@@ -241,18 +249,14 @@ public class Themis {
         @Override
         public void run() {
             _task = TASK.EVALUATE;
-            _createIndex = null;
-            if (_search == null) {
-                try {
-                    _search = new Search();
-                } catch (Exception ex) {
-                    print(ex + "\n");
-                    _task = null;
-                    return;
-                }
-            }
             try {
-                ThemisEval eval = new ThemisEval(_search, _model, _dictionary, 0.25);
+                if (_indexer == null) {
+                    _indexer = new Indexer();
+                }
+                if (!_indexer.isLoaded()) {
+                    _indexer.load();
+                }
+                ThemisEval eval = new ThemisEval(_indexer, _model, _dictionary, 0.25);
                 eval.run();
             } catch (Exception ex) {
                 print(ex + "\n");
@@ -268,41 +272,19 @@ public class Themis {
         public void run() {
             _task = TASK.CREATE_INDEX;
             try {
-                _createIndex = new CreateIndex();
-            } catch (Exception ex) {
-                print(ex + "\n");
-                _task = null;
-                return;
-            }
-            boolean deleteIndex = false;
-            if (!_createIndex.isIndexDirEmpty()) {
-                deleteIndex = _view.showYesNoMessage("Delete previous index folders?");
-                if (!deleteIndex) {
-                    _task = null;
-                    return;
+                if (_indexer == null) {
+                    _indexer = new Indexer();
                 }
-            }
-            try {
-                if (_search != null) {
-                    _search.unloadIndex();
-                    _search = null;
+                if (!_indexer.areIndexDirEmpty()) {
+                    boolean deleteIndex = _view.showYesNoMessage("Delete previous index folders?");
+                    if (!deleteIndex) {
+                        _task = null;
+                        return;
+                    }
                 }
-            } catch (Exception ex) {
-                print(ex + "\n");
-                _task = null;
-                return;
-            }
-            if (deleteIndex) {
-                try {
-                    _createIndex.deleteIndex();
-                } catch (Exception ex) {
-                    print(ex + "\n");
-                    _task = null;
-                    return;
-                }
-            }
-            try {
-                _createIndex.createIndex();
+                _indexer.unload();
+                _indexer.deleteIndex();
+                _indexer.index();
             } catch (Exception ex) {
                 print(ex + "\n");
             } finally {
@@ -311,34 +293,73 @@ public class Themis {
         }
     }
 
-    /* runs when the "load default index" or "query collection" menu items are clicked. When the index
-    * has been loaded, the menu items for the retrieval model and expansion dictionary are set to their
-    * default values from the config file */
+    /* runs when the "load default index" menu item is clicked */
     private static class LoadIndex_runnable implements Runnable {
         @Override
         public void run() {
             _task = TASK.LOAD_INDEX;
             try {
-                if (_search != null) {
-                    _search.unloadIndex();
-                    _search = null;
+                if (_indexer == null) {
+                    _indexer = new Indexer();
+                } else {
+                    _indexer.unload();
                 }
-            } catch (Exception ex) {
-                print(ex + "\n");
-                _task = null;
-                return;
-            }
-            _createIndex = null;
-            try {
-                _search = new Search();
+                _indexer.load();
             } catch (Exception ex) {
                 print(ex + "\n");
             } finally {
                 _task = null;
-                if (_search != null) {
-                    _view.checkRetrievalModel(_search.getRetrievalmodel());
-                    _view.checkExpansionDictionary(_search.getExpansionDictionary());
-                }
+            }
+        }
+    }
+
+    /* runs when the "initialize search" menu item is clicked */
+    private static class InitSearch_runnable implements Runnable {
+        @Override
+        public void run() {
+            _task = TASK.INIT_SEARCH;
+            try {
+                _search = new Search(_indexer);
+                setViewRetrievalModel();
+                setViewExpansionDictionary();
+                _view.uncheckAllDocumentProps();
+            } catch (Exception ex) {
+                print(ex + "\n");
+            } finally {
+                _task = null;
+            }
+        }
+
+        /* reads the default retrieval model from config and updates view */
+        private void setViewRetrievalModel() {
+            String model = _indexer.getConfig().getRetrievalModel();
+            switch (model) {
+                case "Existential":
+                    _view.checkExistentialRetrievalModel();
+                    break;
+                case "VSM":
+                    _view.checkVSMRetrievalModel();
+                    break;
+                case "BM25":
+                    _view.checkBM25RetrievalModel();
+                    break;
+            }
+        }
+
+        /* reads the default query expansion dictionary from config and updates view */
+        private void setViewExpansionDictionary() {
+            if (!_indexer.getConfig().getUseQueryExpansion()) {
+                _view.checkNoneExpansionDictionary();
+                return;
+            }
+            String model = _indexer.getConfig().getQueryExpansionModel();
+            switch (model) {
+                case "GloVe":
+                    _view.checkGloVeExpansionDictionary();
+                    break;
+                case "WordNet":
+                    _view.checkWordNetExpansionDictionary();
+                    break;
             }
         }
     }
@@ -347,74 +368,24 @@ public class Themis {
     private static class Search_runnable implements Runnable {
         @Override
         public void run() {
-            if (_search == null) {
-                return;
-            }
             _task = TASK.SEARCH;
-            List<Result> results;
-
-            /* set the query expansion dictionary */
-            JMenu expansionDictionary = _view.getExpansionDictionary();
-            for (int i = 0; i < expansionDictionary.getItemCount(); i++) {
-                if (expansionDictionary.getItem(i).isSelected()) {
-                    try {
-                        _search.setExpansionDictionary(((ExpansionDictionaryRadioButton) expansionDictionary.getItem(i)).getExpansionDictionary());
-                    } catch (Exception ex) {
-                        print(ex + "\n");
-                        _task = null;
-                        return;
-                    }
-                    break;
-                }
-            }
-
-            /* set the document properties we want to retrieve */
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-            JMenu documentProperties = _view.getDocumentProperties();
-            for (int i = 0; i < documentProperties.getItemCount(); i++) {
-                if (documentProperties.getItem(i).isSelected()) {
-                    props.add(((DocInfoRadioButton) documentProperties.getItem(i)).getProp());
-                }
-            }
             try {
-                _search.setDocumentProperties(props);
-            } catch (Exception ex) {
-                print(ex + "\n");
-                _task = null;
-                return;
-            }
+                setExpansionDictionary(_search);
+                setDocumentProps(_search);
+                setRetrievalModel(_search);
+                String query = _view.getQuery();
+                long startTime = System.nanoTime();
+                print(">>> Searching for: " + query + " ...\n");
 
-            /* set the query retrieval model */
-            JMenu retrievalModel = _view.getRetrievalModel();
-            for (int i = 0; i < retrievalModel.getItemCount(); i++) {
-                if (retrievalModel.getItem(i).isSelected()) {
-                    try {
-                        _search.setRetrievalModel(((RetrievalModelRadioButton) retrievalModel.getItem(i)).getRetrievalModel());
-                    } catch (Exception ex) {
-                        print(ex + "\n");
-                        _task = null;
-                        return;
-                    }
-                    break;
-                }
-            }
+                /* maximum results that should be returned */
+                int endResult = 50;
 
-            /* get the query text from the GUI text box */
-            String query = _view.getSearchField().getText();
-            long startTime = System.nanoTime();
-            print(">>> Searching for: " + query + " ...\n");
-
-            /* maximum results that should be returned */
-            int endResult = 50;
-            try {
+                /* return all results when the retrieval model is existential, else return top endResult results */
+                List<Result> results;
                 if (_search.getRetrievalmodel() == ARetrievalModel.MODEL.EXISTENTIAL) {
-
-                    /* return all results when the retrieval model is existential */
-                    results = _search.search(_view.getSearchField().getText());
+                    results = _search.search(_view.getQuery());
                 } else {
-
-                    /* return top endResult results when the retrieval model is VSM/Okapi */
-                    results = _search.search(_view.getSearchField().getText(), endResult);
+                    results = _search.search(_view.getQuery(), endResult);
                 }
                 print("Search time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + _search.getTotalResults() + " results\n");
@@ -428,6 +399,82 @@ public class Themis {
                 print(ex + "\n");
             } finally {
                 _task = null;
+            }
+        }
+
+        /* reads the expansion dictionary from view and updates search */
+        private void setExpansionDictionary(Search search)
+                throws IndexNotLoadedException, FileNotFoundException, JWNLException {
+            String dictionary = _view.getExpansionDictionary();
+            switch (dictionary) {
+                case "None":
+                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.NONE);
+                    break;
+                case "GloVe":
+                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.GLOVE);
+                    break;
+                case "WordNet":
+                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.EXTJWNL);
+                    break;
+            }
+        }
+
+        /* reads the selected document props from view and updates search */
+        private void setDocumentProps(Search search)
+                throws IndexNotLoadedException {
+            Set<DocInfo.PROPERTY> props = new HashSet<>();
+            List<String> checkedProps = _view.getCheckedDocumentProps();
+            for (String checkedProp : checkedProps) {
+                switch (checkedProp) {
+                    case "Title":
+                        props.add(DocInfo.PROPERTY.TITLE);
+                        break;
+                    case "Authors":
+                        props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
+                        break;
+                    case "Author ids":
+                        props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+                        break;
+                    case "Journal":
+                        props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+                        break;
+                    case "Year":
+                        props.add(DocInfo.PROPERTY.YEAR);
+                        break;
+                    case "Citations Pagerank":
+                        props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
+                        break;
+                    case "VSM Weight":
+                        props.add(DocInfo.PROPERTY.VSM_WEIGHT);
+                        break;
+                    case "Token count":
+                        props.add(DocInfo.PROPERTY.TOKEN_COUNT);
+                        break;
+                    case "Max TF":
+                        props.add(DocInfo.PROPERTY.MAX_TF);
+                        break;
+                    case "Document Size":
+                        props.add(DocInfo.PROPERTY.DOCUMENT_SIZE);
+                        break;
+                }
+            }
+            search.setDocumentProperties(props);
+        }
+
+        /* reads the query retrieval model from view and updates search */
+        private void setRetrievalModel(Search search)
+                throws IndexNotLoadedException, IOException {
+            String model = _view.getRetrievalModel();
+            switch (model) {
+                case "Existential":
+                    search.setRetrievalModel(ARetrievalModel.MODEL.EXISTENTIAL);
+                    break;
+                case "VSM":
+                    search.setRetrievalModel(ARetrievalModel.MODEL.VSM);
+                    break;
+                case "BM25":
+                    search.setRetrievalModel(ARetrievalModel.MODEL.OKAPI);
+                    break;
             }
         }
     }
