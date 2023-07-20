@@ -223,7 +223,7 @@ public class Indexer {
         }
 
         Pagerank pagerank = new Pagerank(this);
-        pagerank.documentsPagerank();
+        pagerank.citationsPagerank();
 
         /* write index metadata to INDEX_META_FILENAME */
         __INDEX_META__.put("timestamp", Instant.now().toString());
