@@ -119,7 +119,6 @@ public class Indexer {
         Themis.print("Pagerank damping factor: " + __CONFIG__.getPagerankDampingFactor() + "\n");
         __INDEX_META__.put("pagerank_threshold", String.valueOf(__CONFIG__.getPagerankThreshold()));
         Themis.print("Pagerank threshold: " + __CONFIG__.getPagerankThreshold() + "\n");
-
         Themis.print("-> Start indexing\n");
         long startTime = System.nanoTime();
 
@@ -192,13 +191,9 @@ public class Indexer {
         documentsMetaOutStream.close();
         documentsIDOutStream.close();
         docTFWriter.close();
-
-        /* calculate the avgdl (average number of tokens) for the Okapi retrieval model */
-        double avgdl = (0.0 + tokenCount) / docID;
-
-        __INDEX_META__.put("documents", String.valueOf(docID));
-        __INDEX_META__.put("avgdl", String.valueOf(avgdl));
         Themis.print("Partial indexes created in " + new Time(System.nanoTime() - startTime) + "\n");
+        __INDEX_META__.put("documents", String.valueOf(docID));
+        __INDEX_META__.put("avgdl", String.valueOf((float) tokenCount / docID)); // (average number of tokens)
 
         mergeVocabularies(indexID);
         try {
@@ -208,12 +203,14 @@ public class Indexer {
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
+
         updateVSMWeights();
         try {
             deleteDir(new File(getDocTFPath()));
         } catch (IOException e) {
             __LOGGER__.error(e);
         }
+
         mergePostings(indexID);
         try {
             for (int i = 0; i <= indexID; i++) {
@@ -225,15 +222,15 @@ public class Indexer {
             __LOGGER__.error(e);
         }
 
+        Pagerank pagerank = new Pagerank(this);
+        pagerank.documentsPagerank();
+
         /* write index metadata to INDEX_META_FILENAME */
         __INDEX_META__.put("timestamp", Instant.now().toString());
         for (Map.Entry<String, String> pair : __INDEX_META__.entrySet()) {
             metaWriter.write(pair.getKey() + "=" + pair.getValue() + "\n");
         }
         metaWriter.close();
-
-        Pagerank pagerank = new Pagerank(this);
-        pagerank.documentsPagerank();
 
         Themis.print("-> End of indexing\n");
     }
