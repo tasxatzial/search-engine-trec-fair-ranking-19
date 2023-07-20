@@ -1,7 +1,6 @@
 package gr.csd.uoc.hy463.themis.ui;
 
 import gr.csd.uoc.hy463.themis.Themis;
-import gr.csd.uoc.hy463.themis.config.Config;
 import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.Stemmer;
@@ -40,17 +39,18 @@ public class Search {
     private Set<DocInfo.PROPERTY> _props;
 
     /**
-     * Initializes the Indexer, the expansion dictionary, and loads the index from INDEX_DIR.
-     * Reads configuration options from themis.config file.
+     * Initializes a search given an indexer with a loaded index.
      *
      * @throws IOException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      */
-    public Search()
+    public Search(Indexer indexer)
             throws IOException, IndexNotLoadedException, JWNLException {
-        _indexer = new Indexer();
-        _indexer.load();
+        if (!indexer.isLoaded()) {
+            throw new IndexNotLoadedException();
+        }
+        _indexer = indexer;
         Themis.print("-> Initializing search...\n");
         String retrievalModel = _indexer.getConfig().getRetrievalModel();
         switch (retrievalModel) {
@@ -88,36 +88,6 @@ public class Search {
     }
 
     /**
-     * Returns the Config instance associated with this Search.
-     *
-     * @return
-     */
-    public Config getConfig() {
-        return _indexer.getConfig();
-    }
-
-    /**
-     * Returns true if index is loaded, false otherwise
-     *
-     * @return
-     */
-    public boolean isIndexLoaded() {
-        return _indexer.isLoaded();
-    }
-
-    /**
-     * Unloads the index from memory.
-     *
-     * Note: Currently there is no method in this class that re-loads the index.
-     *
-     * @throws IOException
-     */
-    public void unloadIndex()
-            throws IOException {
-        _indexer.unload();
-    }
-
-    /**
      * Sets the retrieval model to the specified model
      *
      * @param model
@@ -126,7 +96,7 @@ public class Search {
      */
     public void setRetrievalModel(ARetrievalModel.MODEL model)
             throws IndexNotLoadedException, IOException {
-        if (!isIndexLoaded()) {
+        if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
         if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
@@ -165,7 +135,7 @@ public class Search {
      */
     public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
             throws FileNotFoundException, IndexNotLoadedException, JWNLException {
-        if (!isIndexLoaded()) {
+        if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
         if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
@@ -195,17 +165,6 @@ public class Search {
     }
 
     /**
-     * Returns the timestamp of the index
-     *
-     * @return
-     * @throws IOException
-     */
-    public String getIndexTimestamp()
-            throws IOException {
-        return _indexer.getIndexTimestamp();
-    }
-
-    /**
      * Sets the retrieved document properties to the specified props
      *
      * @param props
@@ -213,23 +172,10 @@ public class Search {
      */
     public void setDocumentProperties(Set<DocInfo.PROPERTY> props)
             throws IndexNotLoadedException {
-        if (!isIndexLoaded()) {
+        if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
         _props = props;
-    }
-
-    /**
-     * Returns the string ID from an int ID
-     *
-     * @param docID
-     * @return
-     * @throws IndexNotLoadedException
-     * @throws UnsupportedEncodingException
-     */
-    public String getDocID(int docID)
-            throws IndexNotLoadedException, UnsupportedEncodingException {
-        return _indexer.getDocID(docID);
     }
 
     /**
@@ -274,7 +220,7 @@ public class Search {
      */
     public List<Result> search(String query, int endResult)
             throws IndexNotLoadedException, QueryExpansionException, IOException {
-        if (!isIndexLoaded()) {
+        if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
 
@@ -346,7 +292,7 @@ public class Search {
      */
     public void setDocumentPagerankWeight(double weight)
             throws IndexNotLoadedException {
-        if (!isIndexLoaded()) {
+        if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
         _model.setDocumentPagerankWeight(weight);

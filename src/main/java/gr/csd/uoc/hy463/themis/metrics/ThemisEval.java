@@ -1,6 +1,7 @@
 package gr.csd.uoc.hy463.themis.metrics;
 
 import gr.csd.uoc.hy463.themis.Themis;
+import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
@@ -29,22 +30,25 @@ import java.util.*;
 public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(ThemisEval.class);
     private final Search _search;
+    private final Indexer _indexer;
 
     /**
-     * Constructor.
+     * Initializes a new {@link Search} with the given arguments.
      *
-     * Reads configuration options from the given Search and sets its retrieval model and query expansion dictionary.
-     *
-     * @param search
+     * @param indexer
      * @param model
      * @param dictionary
      * @throws IOException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      */
-    public ThemisEval(Search search, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
+    public ThemisEval(Indexer indexer, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
             throws IOException, IndexNotLoadedException, JWNLException {
-        _search = search;
+        if (!indexer.isLoaded()) {
+            throw new IndexNotLoadedException();
+        }
+        _indexer = indexer;
+        _search = new Search(indexer);
         _search.setRetrievalModel(model);
         _search.setExpansionDictionary(dictionary);
         _search.setDocumentProperties(new HashSet<>());
@@ -63,13 +67,13 @@ public class ThemisEval {
      */
     public void run()
             throws IndexNotLoadedException, IOException, QueryExpansionException {
-        String __JUDGEMENTS_FILE__ = _search.getConfig().getJudgmentsPath();
+        String __JUDGEMENTS_FILE__ = _indexer.getConfig().getJudgmentsPath();
         if (!(new File(__JUDGEMENTS_FILE__).exists())) {
             __LOGGER__.info("Judgements file not found");
             Themis.print("Judgements file not found\n");
             return;
         }
-        String evaluationFilename = _search.getConfig().getEvaluationFilename();
+        String evaluationFilename = _indexer.getConfig().getEvaluationFilename();
         String timestamp = Instant.now().toString().replace(':', '.');
         if (evaluationFilename.lastIndexOf('.') != -1) {
             evaluationFilename = evaluationFilename.substring(0, evaluationFilename.lastIndexOf('.')) + '_' +
@@ -78,7 +82,7 @@ public class ThemisEval {
         else {
             evaluationFilename = evaluationFilename + '_' + timestamp;
         }
-        String __EVALUATION_FILE__ =  _search.getConfig().getIndexDir() + evaluationFilename;
+        String __EVALUATION_FILE__ =  _indexer.getConfig().getIndexDir() + evaluationFilename;
         BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
         BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");
@@ -87,8 +91,8 @@ public class ThemisEval {
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
         Themis.print("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
-        evaluationWriter.write("Index path: " + _search.getConfig().getIndexDir() + "\n");
-        evaluationWriter.write("Index timestamp: " + _search.getIndexTimestamp() + "\n");
+        evaluationWriter.write("Index path: " + _indexer.getConfig().getIndexDir() + "\n");
+        evaluationWriter.write("Index timestamp: " + _indexer.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
         evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
@@ -218,7 +222,7 @@ public class ThemisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().getDocID());
+            String docId = _indexer.getDocID(result.getDocInfo().getDocID());
             Long isJudged = relevanceMap.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
@@ -251,7 +255,7 @@ public class ThemisEval {
             return Double.NaN;
         }
         for (Result result : results) {
-            String docId = _search.getDocID(result.getDocInfo().getDocID());
+            String docId = _indexer.getDocID(result.getDocInfo().getDocID());
             Long isJudged = docRelevance.get(docId);
             if (isJudged != null) {
                 nonSkippedDocuments++;
