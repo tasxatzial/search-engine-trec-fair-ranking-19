@@ -49,13 +49,13 @@ public class Indexer {
 
     /* Use DOCUMENTS_META_FILENAME as a memory mapped file */
     private DocumentFixedBuffers __DOCMETA_BUFFERS__ = null;
-    private byte[] __DOCUMENT_META_ARRAY__;
-    private ByteBuffer __DOCUMENT_META_BUFFER__;
+    private byte[] __DOCMETA_ARRAY__;
+    private ByteBuffer __DOCMETA_BUFFER__;
 
     /* Use DOCUMENTS_ID_FILENAME as a memory mapped file */
     private DocumentFixedBuffers __DOCID_BUFFERS__ = null;
-    private byte[] __DOCUMENT_ID_ARRAY__;
-    private ByteBuffer __DOCUMENT_ID_BUFFER__; /* currently unused */
+    private byte[] __DOCID_ARRAY__;
+    private ByteBuffer __DOCID_BUFFER__; /* currently unused */
 
     private OKAPIprops __OKAPI_PROPS__ = null;
     private VSMprops __VSM_PROPS__ = null;
@@ -89,8 +89,8 @@ public class Indexer {
             return;
         }
 
-        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
-        __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
+        __DOCMETA_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
+        __DOCMETA_BUFFER__ = ByteBuffer.wrap(__DOCMETA_ARRAY__);
         int maxDocsPerPartialIndex = __CONFIG__.getPartialIndexMaxDocs();
 
         /* the (int) ID of each document. The N-th parsed document will have ID = N */
@@ -102,7 +102,7 @@ public class Indexer {
         /* offset to DOCUMENTS_FILENAME */
         long documentsOffset = 0;
 
-        /* create the list of files in the given path */
+        /* get the list of files in the collection */
         List<File> corpus = getCorpus();
         if (corpus == null || corpus.size() == 0) {
             Themis.print("No dataset files found in " + __CONFIG__.getDatasetDir() + "\n");
@@ -472,16 +472,16 @@ public class Indexer {
     PageRank, VSM weight, Max TF, Avg author rank are all initialized to 0. */
     private void dumpDocumentsMeta(BufferedOutputStream out, int docID, int documentTokens, int documentSize, long documentsOffset)
             throws IOException {
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCID_OFFSET, docID);
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET, documentTokens);
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET, 0);
-        __DOCUMENT_META_BUFFER__.putDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET, 0);
-        __DOCUMENT_META_BUFFER__.putInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET, documentSize);
-        __DOCUMENT_META_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentsOffset);
-        __DOCUMENT_META_BUFFER__.position(0);
-        out.write(__DOCUMENT_META_ARRAY__);
+        __DOCMETA_BUFFER__.putInt(DocumentMetaEntry.DOCID_OFFSET, docID);
+        __DOCMETA_BUFFER__.putDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET, 0);
+        __DOCMETA_BUFFER__.putInt(DocumentMetaEntry.MAX_TF_OFFSET, 0);
+        __DOCMETA_BUFFER__.putInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET, documentTokens);
+        __DOCMETA_BUFFER__.putDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET, 0);
+        __DOCMETA_BUFFER__.putDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET, 0);
+        __DOCMETA_BUFFER__.putInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET, documentSize);
+        __DOCMETA_BUFFER__.putLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET, documentsOffset);
+        __DOCMETA_BUFFER__.position(0);
+        out.write(__DOCMETA_ARRAY__);
     }
 
     /* Writes an entry to DOCUMENTS_FILENAME (random access file). See class DocumentEntry.
@@ -656,11 +656,11 @@ public class Indexer {
 
         /* memory map DOCUMENTS_META_FILENAME and DOCUMENTS_ID_FILENAME */
         __DOCMETA_BUFFERS__ = new DocumentFixedBuffers(getDocumentsMetaFilePath(), MemoryBuffers.MODE.READ, DocumentMetaEntry.SIZE);
-        __DOCUMENT_META_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
-        __DOCUMENT_META_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_META_ARRAY__);
+        __DOCMETA_ARRAY__ = new byte[DocumentMetaEntry.SIZE];
+        __DOCMETA_BUFFER__ = ByteBuffer.wrap(__DOCMETA_ARRAY__);
         __DOCID_BUFFERS__ = new DocumentFixedBuffers(getDocumentsIDFilePath(), MemoryBuffers.MODE.READ, DocumentStringID.SIZE);
-        __DOCUMENT_ID_ARRAY__ = new byte[DocumentStringID.SIZE];
-        __DOCUMENT_ID_BUFFER__ = ByteBuffer.wrap(__DOCUMENT_ID_ARRAY__);
+        __DOCID_ARRAY__ = new byte[DocumentStringID.SIZE];
+        __DOCID_BUFFER__ = ByteBuffer.wrap(__DOCID_ARRAY__);
 
         __INDEX_IS_LOADED__ = true;
         Themis.print("Done\n");
@@ -783,9 +783,9 @@ public class Indexer {
         }
         long docIDOffset = DocInfo.getDocIDOffset(docID);
         ByteBuffer buffer = __DOCID_BUFFERS__.getMemBuffer(docIDOffset);
-        buffer.get(__DOCUMENT_ID_ARRAY__);
+        buffer.get(__DOCID_ARRAY__);
 
-        return new String(__DOCUMENT_ID_ARRAY__, 0, DocumentStringID.SIZE, "ASCII");
+        return new String(__DOCID_ARRAY__, 0, DocumentStringID.SIZE, "ASCII");
     }
 
     /**
@@ -892,28 +892,28 @@ public class Indexer {
                 /* go to DOCUMENTS_META_FILENAME offset and fetch the required document metadata props */
                 documentsMetaOffset = DocInfo.getMetaOffset(docInfo.getDocID());
                 ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
-                buffer.get(__DOCUMENT_META_ARRAY__);
-                documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-                documentsOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
+                buffer.get(__DOCMETA_ARRAY__);
+                documentSize = __DOCMETA_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                documentsOffset = __DOCMETA_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
 
                 if (ADD_CITATIONS_PAGERANK) {
-                    double pagerank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET);
+                    double pagerank = __DOCMETA_BUFFER__.getDouble(DocumentMetaEntry.DOCUMENT_PAGERANK_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.CITATIONS_PAGERANK, pagerank);
                 }
                 if (ADD_VSM_WEIGHT) {
-                    double weight = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
+                    double weight = __DOCMETA_BUFFER__.getDouble(DocumentMetaEntry.VSM_WEIGHT_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.VSM_WEIGHT, weight);
                 }
                 if (ADD_MAX_TF) {
-                    int maxTF = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
+                    int maxTF = __DOCMETA_BUFFER__.getInt(DocumentMetaEntry.MAX_TF_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.MAX_TF, maxTF);
                 }
                 if (ADD_TOKEN_COUNT) {
-                    int length = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
+                    int length = __DOCMETA_BUFFER__.getInt(DocumentMetaEntry.TOKEN_COUNT_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.TOKEN_COUNT, length);
                 }
                 if (ADD_AVG_AUTHOR_RANK) {
-                    double authorRank = __DOCUMENT_META_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);
+                    double authorRank = __DOCMETA_BUFFER__.getDouble(DocumentMetaEntry.AVG_AUTHOR_RANK_OFFSET);
                     docInfo.setProperty(DocInfo.PROPERTY.AVG_AUTHOR_RANK, authorRank);
                 }
                 if (ADD_DOC_SIZE) {
@@ -929,9 +929,9 @@ public class Indexer {
                 if (documentsMetaOffset == -1) {
                     documentsMetaOffset = DocInfo.getMetaOffset(docInfo.getDocID());
                     ByteBuffer buffer = __DOCMETA_BUFFERS__.getMemBuffer(documentsMetaOffset);
-                    buffer.get(__DOCUMENT_META_ARRAY__);
-                    documentSize = __DOCUMENT_META_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
-                    documentsOffset = __DOCUMENT_META_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
+                    buffer.get(__DOCMETA_ARRAY__);
+                    documentSize = __DOCMETA_BUFFER__.getInt(DocumentMetaEntry.DOCUMENT_SIZE_OFFSET);
+                    documentsOffset = __DOCMETA_BUFFER__.getLong(DocumentMetaEntry.DOCUMENT_OFFSET_OFFSET);
                 }
 
                 /* go to DOCUMENTS_FILENAME offset and fetch the required document props */
@@ -1169,21 +1169,7 @@ public class Indexer {
         }
         return Boolean.parseBoolean(__INDEX_META__.get("use_stemmer"));
     }
-
-    /**
-     * Returns the timestamp of the index.
-     *
-     * @return
-     * @throws IOException
-     */
-    public String getIndexTimestamp()
-            throws IOException {
-        if (__INDEX_META__ == null) {
-            loadIndexMeta();
-        }
-        return __INDEX_META__.get("timestamp");
-    }
-
+    
     /**
      * Returns the general configuration options used by this Indexer.
      *

@@ -12,16 +12,16 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Implementation of the VSM retrieval model
+ * Implementation of the VSM retrieval model.
  */
-public class VSM extends ARetrievalModel {
+public class VSM extends Retrieval {
     double[][] _calculatedWeights;
     double[] _documentWeights;
     double[] _modelScore;
     int[] _maxTFs;
 
     public VSM(Indexer index)
-            throws IndexNotLoadedException, IOException {
+            throws IOException, IndexNotLoadedException  {
         super(index);
         _calculatedWeights = new double[_totalDocuments][];
         _modelScore = new double[_totalDocuments];

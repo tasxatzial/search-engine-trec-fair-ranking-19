@@ -6,14 +6,14 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.Stemmer;
 import gr.csd.uoc.hy463.themis.lexicalAnalysis.StopWords;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
-import gr.csd.uoc.hy463.themis.queryExpansion.model.EXTJWNL;
+import gr.csd.uoc.hy463.themis.queryExpansion.model.WordNet;
 import gr.csd.uoc.hy463.themis.queryExpansion.model.GloVe;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.Retrieval;
 import gr.csd.uoc.hy463.themis.retrieval.models.Existential;
-import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25;
+import gr.csd.uoc.hy463.themis.retrieval.models.OkapiBM25P;
 import gr.csd.uoc.hy463.themis.retrieval.models.VSM;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 
@@ -29,7 +29,7 @@ import java.util.*;
  */
 public class Search {
     private final Indexer _indexer;
-    private ARetrievalModel _model;
+    private Retrieval _model;
     private QueryExpansion _queryExpansion;
     private final boolean _useStemmer;
     private final boolean _useStopwords;
@@ -53,9 +53,10 @@ public class Search {
         _indexer = indexer;
         Themis.print("-> Initializing search...\n");
         String retrievalModel = _indexer.getConfig().getRetrievalModel();
+
         switch (retrievalModel) {
-            case "BM25":
-                _model = new OkapiBM25(_indexer);
+            case "OkapiBM25+":
+                _model = new OkapiBM25P(_indexer);
                 break;
             case "VSM":
                 _model = new VSM(_indexer);
@@ -72,7 +73,7 @@ public class Search {
             if (expansionModel.equals("GloVe")) {
                 _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloVeModelPath());
             } else if (expansionModel.equals("WordNet")) {
-                _queryExpansion = EXTJWNL.Singleton();
+                _queryExpansion = WordNet.Singleton();
             }
         }
         else {
@@ -85,84 +86,84 @@ public class Search {
     }
 
     /**
-     * Sets the retrieval model to the specified model
+     * Sets the retrieval model to the specified model.
      *
      * @param model
      * @throws IndexNotLoadedException
      * @throws IOException
      */
-    public void setRetrievalModel(ARetrievalModel.MODEL model)
+    public void setRetrievalModel(Retrieval.MODEL model)
             throws IndexNotLoadedException, IOException {
         if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
-        if (model == ARetrievalModel.MODEL.VSM && !(_model instanceof VSM)) {
+        if (model == Retrieval.MODEL.VSM && !(_model instanceof VSM)) {
             _model = new VSM(_indexer);
         }
-        else if (model == ARetrievalModel.MODEL.OKAPI && !(_model instanceof OkapiBM25)) {
-            _model = new OkapiBM25(_indexer);
+        else if (model == Retrieval.MODEL.OKAPI && !(_model instanceof OkapiBM25P)) {
+            _model = new OkapiBM25P(_indexer);
         }
-        else if (model == ARetrievalModel.MODEL.EXISTENTIAL && !(_model instanceof Existential)) {
+        else if (model == Retrieval.MODEL.EXISTENTIAL && !(_model instanceof Existential)) {
             _model = new Existential(_indexer);
         }
     }
 
     /**
-     * Returns the current retrieval model of this Search
+     * Returns the current retrieval model of this Search.
      *
      * @return
      */
-    public ARetrievalModel.MODEL getRetrievalmodel() {
+    public Retrieval.MODEL getRetrievalmodel() {
         if (_model instanceof VSM) {
-            return ARetrievalModel.MODEL.VSM;
+            return Retrieval.MODEL.VSM;
         }
-        if (_model instanceof OkapiBM25) {
-            return ARetrievalModel.MODEL.OKAPI;
+        if (_model instanceof OkapiBM25P) {
+            return Retrieval.MODEL.OKAPI;
         }
-        return ARetrievalModel.MODEL.EXISTENTIAL;
+        return Retrieval.MODEL.EXISTENTIAL;
     }
 
     /**
-     * Sets the query expansion dictionary to the specified dictionary
+     * Sets the query expansion model to the specified model.
      *
-     * @param dictionary
+     * @param model
      * @throws FileNotFoundException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      */
-    public void setExpansionDictionary(QueryExpansion.DICTIONARY dictionary)
+    public void setExpansionModel(QueryExpansion.MODEL model)
             throws FileNotFoundException, IndexNotLoadedException, JWNLException {
         if (!_indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
-        if (dictionary == QueryExpansion.DICTIONARY.GLOVE) {
+        if (model == QueryExpansion.MODEL.GLOVE) {
             _queryExpansion = GloVe.Singleton(_indexer.getConfig().getGloVeModelPath());
         }
-        else if (dictionary == QueryExpansion.DICTIONARY.EXTJWNL) {
-            _queryExpansion = EXTJWNL.Singleton();
+        else if (model == QueryExpansion.MODEL.WORDNET) {
+            _queryExpansion = WordNet.Singleton();
         }
-        else if (dictionary == QueryExpansion.DICTIONARY.NONE) {
+        else if (model == QueryExpansion.MODEL.NONE) {
             _queryExpansion = null;
         }
     }
 
     /**
-     * Returns the current query expansion dictionary of this Search
+     * Returns the current query expansion model of this Search.
      *
      * @return
      */
-    public QueryExpansion.DICTIONARY getExpansionDictionary() {
+    public QueryExpansion.MODEL getExpansionModel() {
         if (_queryExpansion instanceof GloVe) {
-            return QueryExpansion.DICTIONARY.GLOVE;
+            return QueryExpansion.MODEL.GLOVE;
         }
-        else if (_queryExpansion instanceof EXTJWNL) {
-            return QueryExpansion.DICTIONARY.EXTJWNL;
+        else if (_queryExpansion instanceof WordNet) {
+            return QueryExpansion.MODEL.WORDNET;
         }
-        return QueryExpansion.DICTIONARY.NONE;
+        return QueryExpansion.MODEL.NONE;
     }
 
     /**
-     * Sets the retrieved document properties to the specified props
+     * Sets the retrieved document properties to the specified props.
      *
      * @param props
      * @throws IndexNotLoadedException
@@ -181,7 +182,7 @@ public class Search {
      * @param query
      * @return
      */
-    public static List<String> split(String query) {
+    private static List<String> split(String query) {
         StringTokenizer tokenizer = new StringTokenizer(query, Search.splitDelimiters);
         List<String> terms = new ArrayList<>();
         while (tokenizer.hasMoreTokens()) {
@@ -273,7 +274,7 @@ public class Search {
     }
 
     /**
-     * Returns the total number of results of the last query
+     * Returns the total number of results of the last query.
      *
      * @return
      */
@@ -282,7 +283,7 @@ public class Search {
     }
 
     /**
-     * Sets the weight for the pagerank scores of the documents
+     * Sets the weight of the pagerank scores of the documents.
      *
      * @param weight
      * @throws IndexNotLoadedException
@@ -296,7 +297,7 @@ public class Search {
     }
 
     /**
-     * Gets the weight for the pagerank scores of the documents
+     * Gets the weight of the pagerank scores of the documents.
      *
      * @return
      */
@@ -305,7 +306,7 @@ public class Search {
     }
 
     /**
-     * Prints a list of ranked results
+     * Prints a list of ranked results.
      *
      * @param searchResults
      * @throws IndexNotLoadedException
@@ -333,7 +334,7 @@ public class Search {
         }
 
         /* startResult and endResult can be anything therefore we need to compute the correct
-        * values based on the actual results */
+        values based on the actual results */
         int firstDisplayedResult = Math.max(startResult, 0);
         int lastDisplayedResult = Math.min(endResult, searchResults.size() - 1);
         if (firstDisplayedResult > lastDisplayedResult) {

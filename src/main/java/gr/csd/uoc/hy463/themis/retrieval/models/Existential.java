@@ -16,11 +16,11 @@ import java.util.*;
  * documents, since all documents that have at least one term of the query, are
  * relevant and have a score 1.0
  */
-public class Existential extends ARetrievalModel {
+public class Existential extends Retrieval {
     boolean[] _valid;
 
     public Existential(Indexer index)
-            throws IOException {
+            throws IOException, IndexNotLoadedException {
         super(index);
         _valid = new boolean[_totalDocuments];
     }

@@ -18,25 +18,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Expands a query using the WordNet dictionary
+ * Expands a query using the WordNet model.
  */
-public class EXTJWNL extends QueryExpansion {
-    private static EXTJWNL _instance = null;
+public class WordNet extends QueryExpansion {
+    private static WordNet _instance = null;
     private final MaxentTagger _maxentTagger;
-    private final Dictionary _dictionary;
+    private final Dictionary _model;
 
-    private EXTJWNL()
+    private WordNet()
             throws JWNLException {
         Themis.print("-> Initializing WordNet...");
-        _dictionary = Dictionary.getDefaultResourceInstance();
+        _model = Dictionary.getDefaultResourceInstance();
         _maxentTagger = new MaxentTagger("edu/stanford/nlp/models/pos-tagger/english-left3words-distsim.tagger");
         Themis.print("Done\n");
     }
     
-    public static EXTJWNL Singleton()
+    public static WordNet Singleton()
             throws JWNLException {
         return _instance == null
-                ? (_instance = new EXTJWNL())
+                ? (_instance = new WordNet())
                 : _instance;
     }
 
@@ -78,7 +78,7 @@ public class EXTJWNL extends QueryExpansion {
 
                 // Ignore anything that is not a noun, verb, adjective, adverb
                 if (pos != null) {
-                    IndexWord iWord = _dictionary.getIndexWord(pos, term);
+                    IndexWord iWord = _model.getIndexWord(pos, term);
                     if (iWord != null) {
                         for (Synset synset : iWord.getSenses()) {
                             List<Word> words = synset.getWords();
@@ -99,7 +99,7 @@ public class EXTJWNL extends QueryExpansion {
                 expandedQuery.add(expandedTerm);
             }
         } catch (Exception ex) {
-            throw new QueryExpansionException("EXTJWNL");
+            throw new QueryExpansionException("WordNet");
         }
         return expandedQuery;
     }

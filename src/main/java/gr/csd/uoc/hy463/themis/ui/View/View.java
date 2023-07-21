@@ -34,16 +34,16 @@ public class View extends JFrame {
     private JMenuItem _evaluateVSM_Glove;
 
     /* The "evaluate BM25" menu item */
-    private JMenuItem _evaluateBM25;
+    private JMenuItem _evaluateOkapi;
 
     /* The "evaluate BM25/Glove" menu item */
-    private JMenuItem _evaluateBM25_Glove;
+    private JMenuItem _evaluateOkapi_Glove;
 
     /* The "evaluate VSM/WordNet" menu item */
-    private JMenuItem _evaluateVSM_JWNL;
+    private JMenuItem _evaluateVSM_WordNet;
 
     /* The "evaluate BM25/WordNet" menu item */
-    private JMenuItem _evaluateBM25_JWNL;
+    private JMenuItem _evaluateOkapi_WordNet;
 
     /* Title area (top) */
     private JLabel _titleArea;
@@ -70,7 +70,7 @@ public class View extends JFrame {
     private JMenu _documentProperties;
 
     /* the "query expansion" menu */
-    private JMenu _expansionDictionary;
+    private JMenu _expansionModel;
 
     public View() {
         Font font = new Font("SansSerif", Font.PLAIN, 14);
@@ -95,7 +95,7 @@ public class View extends JFrame {
         /* index menu */
         JMenu index = new JMenu("Index");
         _createIndex = new JMenuItem("Create index");
-        _loadIndex = new JMenuItem("Load default index");
+        _loadIndex = new JMenuItem("Load index");
         index.add(_createIndex);
         index.add(_loadIndex);
 
@@ -107,25 +107,25 @@ public class View extends JFrame {
         ButtonGroup group = new ButtonGroup();
         JRadioButtonMenuItem modelBoolean = new JRadioButtonMenuItem("Existential");
         JRadioButtonMenuItem modelVSM = new JRadioButtonMenuItem("VSM");
-        JRadioButtonMenuItem modelBM25 = new JRadioButtonMenuItem("BM25");
+        JRadioButtonMenuItem modelOkapi = new JRadioButtonMenuItem("Okapi BM25+");
         group.add(modelBoolean);
         group.add(modelVSM);
-        group.add(modelBM25);
+        group.add(modelOkapi);
         _retrievalModel.add(modelBoolean);
         _retrievalModel.add(modelVSM);
-        _retrievalModel.add(modelBM25);
+        _retrievalModel.add(modelOkapi);
 
-        _expansionDictionary = new JMenu("Query expansion");
+        _expansionModel = new JMenu("Query expansion");
         group = new ButtonGroup();
-        JRadioButtonMenuItem noneDictionary = new JRadioButtonMenuItem("None");
-        JRadioButtonMenuItem gloveDictionary = new JRadioButtonMenuItem("GloVe");
-        JRadioButtonMenuItem extJWNLDictionary = new JRadioButtonMenuItem("WordNet");
-        group.add(noneDictionary);
-        group.add(gloveDictionary);
-        group.add(extJWNLDictionary);
-        _expansionDictionary.add(noneDictionary);
-        _expansionDictionary.add(gloveDictionary);
-        _expansionDictionary.add(extJWNLDictionary);
+        JRadioButtonMenuItem noneModel = new JRadioButtonMenuItem("None");
+        JRadioButtonMenuItem gloveModel = new JRadioButtonMenuItem("GloVe");
+        JRadioButtonMenuItem extWordNetModel = new JRadioButtonMenuItem("WordNet");
+        group.add(noneModel);
+        group.add(gloveModel);
+        group.add(extWordNetModel);
+        _expansionModel.add(noneModel);
+        _expansionModel.add(gloveModel);
+        _expansionModel.add(extWordNetModel);
 
         _documentProperties = new JMenu("Document properties");
         DocInfoRadioButton title = new DocInfoRadioButton("Title");
@@ -133,7 +133,7 @@ public class View extends JFrame {
         DocInfoRadioButton authorIds = new DocInfoRadioButton("Author ids");
         DocInfoRadioButton journal = new DocInfoRadioButton("Journal");
         DocInfoRadioButton year = new DocInfoRadioButton("Year");
-        DocInfoRadioButton pagerank = new DocInfoRadioButton("Citations Pagerank");
+        DocInfoRadioButton pagerank = new DocInfoRadioButton("Citation Pagerank");
         DocInfoRadioButton weight = new DocInfoRadioButton("VSM Weight");
         DocInfoRadioButton length = new DocInfoRadioButton("Token count");
         DocInfoRadioButton maxTF = new DocInfoRadioButton("Max TF");
@@ -150,23 +150,23 @@ public class View extends JFrame {
         _documentProperties.add(documentSize);
         search.add(_initSearch);
         search.add(_retrievalModel);
-        search.add(_expansionDictionary);
+        search.add(_expansionModel);
         search.add(_documentProperties);
 
         /* evaluate menu */
         JMenuItem evaluate = new JMenu("Evaluate");
         _evaluateVSM = new JMenuItem("VSM");
-        _evaluateBM25 = new JMenuItem("BM25");
+        _evaluateOkapi = new JMenuItem("Okapi BM25+");
         _evaluateVSM_Glove = new JMenuItem("VSM/GloVe");
-        _evaluateBM25_Glove = new JMenuItem("BM25/GloVe");
-        _evaluateVSM_JWNL = new JMenuItem("VSM/WordNet");
-        _evaluateBM25_JWNL = new JMenuItem("BM25/WordNet");
+        _evaluateOkapi_Glove = new JMenuItem("Okapi BM25+/GloVe");
+        _evaluateVSM_WordNet = new JMenuItem("VSM/WordNet");
+        _evaluateOkapi_WordNet = new JMenuItem("Okapi BM25+/WordNet");
         evaluate.add(_evaluateVSM);
-        evaluate.add(_evaluateBM25);
+        evaluate.add(_evaluateOkapi);
         evaluate.add(_evaluateVSM_Glove);
-        evaluate.add(_evaluateBM25_Glove);
-        evaluate.add(_evaluateVSM_JWNL);
-        evaluate.add(_evaluateBM25_JWNL);
+        evaluate.add(_evaluateOkapi_Glove);
+        evaluate.add(_evaluateVSM_WordNet);
+        evaluate.add(_evaluateOkapi_WordNet);
 
         /* main menu bar */
         _menu = new JMenuBar();
@@ -359,7 +359,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "initialize search" menu item
+     * Returns the "initialize search" menu item.
      * @return
      */
     public JMenuItem getInitSearch() {
@@ -367,7 +367,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "load index" menu item
+     * Returns the "load index" menu item.
      * @return
      */
     public JMenuItem getLoadIndex() {
@@ -375,7 +375,7 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "evaluate VSM" menu item
+     * Returns the "evaluate VSM" menu item.
      * @return
      */
     public JMenuItem getEvaluateVSM() {
@@ -383,15 +383,15 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "evaluate BM25" menu item
+     * Returns the "evaluate Okapi BM25+" menu item.
      * @return
      */
-    public JMenuItem getEvaluateBM25() {
-        return _evaluateBM25;
+    public JMenuItem getEvaluateOkapi() {
+        return _evaluateOkapi;
     }
 
     /**
-     * Returns the "evaluate VSM/GloVe" menu item
+     * Returns the "evaluate VSM/GloVe" menu item.
      * @return
      */
     public JMenuItem getEvaluateVSM_Glove() {
@@ -399,31 +399,31 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "evaluate BM25/Glove" menu item
+     * Returns the "evaluate Okapi BM25+/Glove" menu item.
      * @return
      */
-    public JMenuItem getEvaluateBM25_Glove() {
-        return _evaluateBM25_Glove;
+    public JMenuItem getEvaluateOkapi_Glove() {
+        return _evaluateOkapi_Glove;
     }
 
     /**
-     * Returns the "evaluate VSM/WordNet" menu item
+     * Returns the "evaluate VSM/WordNet" menu item.
      * @return
      */
-    public JMenuItem getEvaluateVSM_JWNL() {
-        return _evaluateVSM_JWNL;
+    public JMenuItem getEvaluateVSM_WordNet() {
+        return _evaluateVSM_WordNet;
     }
 
     /**
-     * Returns the "evaluate BM25/WordNet" menu item
+     * Returns the "evaluate Okapi BM25+/WordNet" menu item.
      * @return
      */
-    public JMenuItem getEvaluateBM25_JWNL() {
-        return _evaluateBM25_JWNL;
+    public JMenuItem getEvaluateOkapi_WordNet() {
+        return _evaluateOkapi_WordNet;
     }
 
     /**
-     * Returns the search button
+     * Returns the search button.
      * @return
      */
     public JButton getSearchButton() {
@@ -452,7 +452,8 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns a list of all checked document props.
+     * Returns a list of all checked document properties.
+     *
      * @return
      */
     public List<String> getCheckedDocumentProps() {
@@ -466,62 +467,63 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns name of the selected query expansion dictionary.
+     * Returns the name of the selected query expansion model.
+     *
      * @return
      */
-    public String getExpansionDictionary() {
-        for (int i = 0; i < _expansionDictionary.getItemCount(); i++) {
-            if (_expansionDictionary.getItem(i).isSelected()) {
-                return _expansionDictionary.getItem(i).getText();
+    public String getExpansionModel() {
+        for (int i = 0; i < _expansionModel.getItemCount(); i++) {
+            if (_expansionModel.getItem(i).isSelected()) {
+                return _expansionModel.getItem(i).getText();
             }
         }
         return null;
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given retrieval model.
+     * Checks the menu radio button that corresponds to the Existential retrieval model.
      */
     public void checkExistentialRetrievalModel() {
         _retrievalModel.getItem(0).setSelected(true);
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given retrieval model.
+     * Checks the menu radio button that corresponds to the VSM retrieval model.
      */
     public void checkVSMRetrievalModel() {
         _retrievalModel.getItem(1).setSelected(true);
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given retrieval model.
+     * Checks the menu radio button that corresponds to the Okapi retrieval model.
      */
-    public void checkBM25RetrievalModel() {
+    public void checkOkapiRetrievalModel() {
         _retrievalModel.getItem(2).setSelected(true);
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     * Checks the menu radio button that corresponds to the no expansion model.
      */
-    public void checkNoneExpansionDictionary() {
-        _expansionDictionary.getItem(0).setSelected(true);
+    public void checkNoneExpansionModel() {
+        _expansionModel.getItem(0).setSelected(true);
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     * Checks the menu radio button that corresponds to the GloVe model.
      */
-    public void checkGloVeExpansionDictionary() {
-        _expansionDictionary.getItem(1).setSelected(true);
+    public void checkGloVeExpansionModel() {
+        _expansionModel.getItem(1).setSelected(true);
     }
 
     /**
-     * Checks the menu radio button that corresponds to the given query expansion dictionary.
+     * Checks the menu radio button that corresponds to the WordNet model.
      */
-    public void checkWordNetExpansionDictionary() {
-        _expansionDictionary.getItem(2).setSelected(true);
+    public void checkWordNetExpansionModel() {
+        _expansionModel.getItem(2).setSelected(true);
     }
 
     /**
-     * Unchecks all document props.
+     * Unchecks all document properties.
      */
     public void uncheckAllDocumentProps() {
         for (int i = 0; i < _documentProperties.getItemCount(); i++) {

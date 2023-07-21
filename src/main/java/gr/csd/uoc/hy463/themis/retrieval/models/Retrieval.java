@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * This is an abstract class that each retrieval model should extend
+ * This is an abstract class that each retrieval model should extend.
  */
-public abstract class ARetrievalModel {
+public abstract class Retrieval {
     public enum MODEL {
         OKAPI, VSM, EXISTENTIAL
     }
@@ -26,9 +26,14 @@ public abstract class ARetrievalModel {
      * Constructor.
      *
      * @param indexer
+     * @throws IOException
+     * @throws IndexNotLoadedException
      */
-    protected ARetrievalModel(Indexer indexer)
-            throws IOException {
+    protected Retrieval(Indexer indexer)
+            throws IOException, IndexNotLoadedException {
+        if (!indexer.isLoaded()) {
+            throw new IndexNotLoadedException();
+        }
         _indexer = indexer;
         _totalDocuments = indexer.getTotalDocuments();
         _documentPagerankWeight = indexer.getConfig().getDocumentPagerankWeight();
@@ -111,7 +116,7 @@ public abstract class ARetrievalModel {
     }
 
     /**
-     * Sets the weight for the Pagerank scores of the documents
+     * Sets the weight of the Pagerank scores of the documents
      *
      * @param weight
      */

@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * Implementation of the Okapi retrieval model. BM25+ is used as the scoring function.
  */
-public class OkapiBM25 extends ARetrievalModel {
+public class OkapiBM25P extends Retrieval {
     private final double _k1 = 2.0;
     private final double _b = 0.75;
     private final double _avgdl;
@@ -22,8 +22,8 @@ public class OkapiBM25 extends ARetrievalModel {
     double[] _modelScore;
     double[][] _calculatedFreqs;
 
-    public OkapiBM25(Indexer index)
-            throws IndexNotLoadedException, IOException {
+    public OkapiBM25P(Indexer index)
+            throws IOException, IndexNotLoadedException {
         super(index);
         _calculatedFreqs = new double[_totalDocuments][];
         _modelScore = new double[_totalDocuments];
@@ -32,6 +32,7 @@ public class OkapiBM25 extends ARetrievalModel {
         _tokenCount = props.getTokenCount();
     }
 
+    @Override
     public List<Result> getRankedResults(List<QueryTerm> query, int endResult)
             throws IOException, IndexNotLoadedException {
         List<Result> results = new ArrayList<>();

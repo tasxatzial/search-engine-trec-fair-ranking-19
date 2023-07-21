@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Expands a query using a GloVe pre-trained word vectors file
+ * Expands a query using a GloVe pre-trained word vectors file.
  */
 public class GloVe extends QueryExpansion {
     private static GloVe _instance = null;
@@ -27,7 +27,7 @@ public class GloVe extends QueryExpansion {
         Themis.print("-> Initializing GloVe...");
         File gloveModel = new File(filePath);
         if (!gloveModel.exists()) {
-            throw new FileNotFoundException("GloVe file not found");
+            throw new FileNotFoundException();
         }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
 

@@ -5,7 +5,7 @@ import gr.csd.uoc.hy463.themis.indexer.Indexer;
 import gr.csd.uoc.hy463.themis.queryExpansion.Exceptions.QueryExpansionException;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.Retrieval;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.indexer.Exceptions.IndexNotLoadedException;
 import gr.csd.uoc.hy463.themis.utils.Time;
@@ -33,33 +33,33 @@ public class ThemisEval {
     private final Indexer _indexer;
 
     /**
-     * Initializes a new {@link Search} with the given arguments.
+     * Initializes a new {@link Search} using the given arguments.
      *
      * @param indexer
-     * @param model
-     * @param dictionary
+     * @param retrievalModel
+     * @param expansionModel
      * @throws IOException
      * @throws IndexNotLoadedException
      * @throws JWNLException
      */
-    public ThemisEval(Indexer indexer, ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary, double documentPagerankWeight)
+    public ThemisEval(Indexer indexer, Retrieval.MODEL retrievalModel, QueryExpansion.MODEL expansionModel, double documentPagerankWeight)
             throws IOException, IndexNotLoadedException, JWNLException {
         if (!indexer.isLoaded()) {
             throw new IndexNotLoadedException();
         }
         _indexer = indexer;
         _search = new Search(indexer);
-        _search.setRetrievalModel(model);
-        _search.setExpansionDictionary(dictionary);
+        _search.setRetrievalModel(retrievalModel);
+        _search.setExpansionModel(expansionModel);
         _search.setDocumentProperties(new HashSet<>());
         _search.setDocumentPagerankWeight(documentPagerankWeight);
     }
 
     /**
      * Initializes and runs the evaluation:
-     * 1) Parses JUDGEMENTS_FILE
+     * 1) Parses JUDGEMENTS_PATH
      * 2) Performs a search for each query
-     * 3) Writes results to EVALUATION_FILENAME located in INDEX_DIR. The file will have the current date appended to it.
+     * 3) Writes results to EVALUATION_FILENAME located in INDEX_DIR. The file will have the current date appended to it
      *
      * @throws IndexNotLoadedException
      * @throws IOException
@@ -67,35 +67,34 @@ public class ThemisEval {
      */
     public void run()
             throws IndexNotLoadedException, IOException, QueryExpansionException {
-        String __JUDGEMENTS_FILE__ = _indexer.getConfig().getJudgmentsPath();
-        if (!(new File(__JUDGEMENTS_FILE__).exists())) {
-            __LOGGER__.info("Judgements file not found");
-            Themis.print("Judgements file not found\n");
-            return;
+        Themis.print("-> Checking judgements file...");
+        String __JUDGEMENTS_PATH__ = _indexer.getConfig().getJudgmentsPath();
+        if (!(new File(__JUDGEMENTS_PATH__).exists())) {
+            throw new FileNotFoundException();
         }
-        String evaluationFilename = _indexer.getConfig().getEvaluationFilename();
+        Themis.print("found\n");
+        String evalFname = _indexer.getConfig().getEvaluationFilename();
         String timestamp = Instant.now().toString().replace(':', '.');
-        if (evaluationFilename.lastIndexOf('.') != -1) {
-            evaluationFilename = evaluationFilename.substring(0, evaluationFilename.lastIndexOf('.')) + '_' +
-                    timestamp + evaluationFilename.substring(evaluationFilename.lastIndexOf('.'));
+        if (evalFname.lastIndexOf('.') != -1) {
+            evalFname = evalFname.substring(0, evalFname.lastIndexOf('.')) + '_' +
+                    timestamp + evalFname.substring(evalFname.lastIndexOf('.'));
         }
         else {
-            evaluationFilename = evaluationFilename + '_' + timestamp;
+            evalFname = evalFname + '_' + timestamp;
         }
-        String __EVALUATION_FILE__ =  _indexer.getConfig().getIndexDir() + evaluationFilename;
-        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_FILE__), "UTF-8"));
-        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_FILE__), "UTF-8"));
+        String __EVALUATION_PATH__ =  _indexer.getConfig().getIndexDir() + evalFname;
+        BufferedReader judgementsReader = new BufferedReader(new InputStreamReader(new FileInputStream(__JUDGEMENTS_PATH__), "UTF-8"));
+        BufferedWriter evaluationWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(__EVALUATION_PATH__), "UTF-8"));
         Themis.print("-> Starting evaluation\n");
-        Themis.print("Saving evaluation results in " + __EVALUATION_FILE__ + "\n");
+        Themis.print("Saving evaluation results in " + __EVALUATION_PATH__ + "\n");
         Themis.print("-> Evaluation options:\n");
         Themis.print("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
-        Themis.print("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
+        Themis.print("Query expansion: " + _search.getExpansionModel().toString() +"\n");
         Themis.print("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
         evaluationWriter.write("Index path: " + _indexer.getConfig().getIndexDir() + "\n");
-        evaluationWriter.write("Index timestamp: " + _indexer.getIndexTimestamp() + "\n");
         evaluationWriter.write("-> Evaluation options:\n");
         evaluationWriter.write("Retrieval model: " + _search.getRetrievalmodel().toString() + "\n");
-        evaluationWriter.write("Query expansion: " + _search.getExpansionDictionary().toString() +"\n");
+        evaluationWriter.write("Query expansion: " + _search.getExpansionModel().toString() +"\n");
         evaluationWriter.write("Pagerank weight (documents): " + _search.getDocumentPagerankWeight() + "\n\n");
 
         evaluate(judgementsReader, evaluationWriter);

@@ -6,15 +6,15 @@ import gr.csd.uoc.hy463.themis.retrieval.QueryTerm;
 import java.util.List;
 
 /**
- * Abstract class for all query expansion models
+ * Abstract class for all query expansion models.
  */
 public abstract class QueryExpansion {
-    public enum DICTIONARY {
-        NONE, GLOVE, EXTJWNL
+    public enum MODEL {
+        NONE, GLOVE, WORDNET
     }
 
     /**
-     * Expands a given query using an expansion dictionary. The first term in each List<QueryTerm>
+     * Expands a given query using an expansion model. The first term in each List<QueryTerm>
      * should be the original term.
      *
      * @param query

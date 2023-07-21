@@ -6,7 +6,7 @@ import gr.csd.uoc.hy463.themis.indexer.model.DocInfo;
 import gr.csd.uoc.hy463.themis.metrics.ThemisEval;
 import gr.csd.uoc.hy463.themis.queryExpansion.QueryExpansion;
 import gr.csd.uoc.hy463.themis.retrieval.model.Result;
-import gr.csd.uoc.hy463.themis.retrieval.models.ARetrievalModel;
+import gr.csd.uoc.hy463.themis.retrieval.models.Retrieval;
 import gr.csd.uoc.hy463.themis.ui.Search;
 import gr.csd.uoc.hy463.themis.ui.View.View;
 import gr.csd.uoc.hy463.themis.utils.Time;
@@ -73,12 +73,12 @@ public class Themis {
             _view.getCreateIndex().addActionListener(new createIndexListener());
             _view.getInitSearch().addActionListener(new InitSearchListener());
             _view.getLoadIndex().addActionListener(new loadIndexListener());
-            _view.getEvaluateVSM().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.NONE));
-            _view.getEvaluateVSM_Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.GLOVE));
-            _view.getEvaluateVSM_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.VSM, QueryExpansion.DICTIONARY.EXTJWNL));
-            _view.getEvaluateBM25().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.NONE));
-            _view.getEvaluateBM25_Glove().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.GLOVE));
-            _view.getEvaluateBM25_JWNL().addActionListener(new evaluateListener(ARetrievalModel.MODEL.OKAPI, QueryExpansion.DICTIONARY.EXTJWNL));
+            _view.getEvaluateVSM().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.NONE));
+            _view.getEvaluateVSM_Glove().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.GLOVE));
+            _view.getEvaluateVSM_WordNet().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.WORDNET));
+            _view.getEvaluateOkapi().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.NONE));
+            _view.getEvaluateOkapi_Glove().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.GLOVE));
+            _view.getEvaluateOkapi_WordNet().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.WORDNET));
 
             _view.setVisible(true);
         }
@@ -99,8 +99,6 @@ public class Themis {
             indexer.load();
             Search search = new Search(indexer);
             Set<DocInfo.PROPERTY> props = new HashSet<>();
-
-            /* fetch the titles */
             props.add(DocInfo.PROPERTY.TITLE);
             search.setDocumentProperties(props);
 
@@ -118,16 +116,16 @@ public class Themis {
 
     /* Runs a complete set of evaluations. Weight for the document pagerank scores takes values 0 and 0.25 */
     private static void runFullEval() {
-        ARetrievalModel.MODEL[] models = {ARetrievalModel.MODEL.VSM, ARetrievalModel.MODEL.OKAPI};
-        QueryExpansion.DICTIONARY[] dictionaries = {QueryExpansion.DICTIONARY.NONE, QueryExpansion.DICTIONARY.GLOVE, QueryExpansion.DICTIONARY.EXTJWNL};
+        Retrieval.MODEL[] retrievalModels = {Retrieval.MODEL.VSM, Retrieval.MODEL.OKAPI};
+        QueryExpansion.MODEL[] expansionModels = {QueryExpansion.MODEL.NONE, QueryExpansion.MODEL.GLOVE, QueryExpansion.MODEL.WORDNET};
         double[] pagerankWeights = {0, 0.25};
         try {
             Indexer indexer = new Indexer();
             indexer.load();
-            for (QueryExpansion.DICTIONARY dictionary : dictionaries) {
-                for (ARetrievalModel.MODEL model : models) {
+            for (QueryExpansion.MODEL expansionModel : expansionModels) {
+                for (Retrieval.MODEL retrievalModel : retrievalModels) {
                     for (double pagerank : pagerankWeights) {
-                        ThemisEval eval = new ThemisEval(_indexer, model, dictionary, pagerank);
+                        ThemisEval eval = new ThemisEval(_indexer, retrievalModel, expansionModel, pagerank);
                         eval.run();
                     }
                 }
@@ -217,11 +215,11 @@ public class Themis {
 
     /* The listener for the items on the "evaluate" sub menu */
     private static class evaluateListener implements ActionListener {
-        private final ARetrievalModel.MODEL _model;
-        private final QueryExpansion.DICTIONARY _dictionary;
-        public evaluateListener(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
-           _model = model;
-           _dictionary = dictionary;
+        private final Retrieval.MODEL _retrievalModel;
+        private final QueryExpansion.MODEL _expansionModel;
+        public evaluateListener(Retrieval.MODEL retrievalModel, QueryExpansion.MODEL expansionModel) {
+           _retrievalModel = retrievalModel;
+           _expansionModel = expansionModel;
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -230,20 +228,19 @@ public class Themis {
             }
             _view.initOnlyResultsView();
             _searchButtonListener = null;
-            Evaluate_runnable evaluateVSM = new Evaluate_runnable(_model, _dictionary);
-            Thread runnableEvaluateVSM = new Thread(evaluateVSM);
-            runnableEvaluateVSM.start();
+            Thread runnableEvaluate = new Thread(new Evaluate_runnable(_retrievalModel, _expansionModel));
+            runnableEvaluate.start();
         }
     }
 
     /* runs when one of the "evaluate" menu items is clicked */
     private static class Evaluate_runnable implements Runnable {
-        private final ARetrievalModel.MODEL _model;
-        private final QueryExpansion.DICTIONARY _dictionary;
+        private final Retrieval.MODEL _retrievalModel;
+        private final QueryExpansion.MODEL _expansionModel;
 
-        public Evaluate_runnable(ARetrievalModel.MODEL model, QueryExpansion.DICTIONARY dictionary) {
-            _model = model;
-            _dictionary = dictionary;
+        public Evaluate_runnable(Retrieval.MODEL retrievalModel, QueryExpansion.MODEL expansionModel) {
+            _retrievalModel = retrievalModel;
+            _expansionModel = expansionModel;
         }
 
         @Override
@@ -256,7 +253,7 @@ public class Themis {
                 if (!_indexer.isLoaded()) {
                     _indexer.load();
                 }
-                ThemisEval eval = new ThemisEval(_indexer, _model, _dictionary, 0.25);
+                ThemisEval eval = new ThemisEval(_indexer, _retrievalModel, _expansionModel, 0.25);
                 eval.run();
             } catch (Exception ex) {
                 print(ex + "\n");
@@ -321,7 +318,7 @@ public class Themis {
             try {
                 _search = new Search(_indexer);
                 setViewRetrievalModel();
-                setViewExpansionDictionary();
+                setViewExpansionModel();
                 _view.uncheckAllDocumentProps();
             } catch (Exception ex) {
                 print(ex + "\n");
@@ -340,25 +337,25 @@ public class Themis {
                 case "VSM":
                     _view.checkVSMRetrievalModel();
                     break;
-                case "BM25":
-                    _view.checkBM25RetrievalModel();
+                case "OkapiBM25+":
+                    _view.checkOkapiRetrievalModel();
                     break;
             }
         }
 
-        /* reads the default query expansion dictionary from config and updates view */
-        private void setViewExpansionDictionary() {
+        /* reads the default query expansion model from config and updates view */
+        private void setViewExpansionModel() {
             if (!_indexer.getConfig().getUseQueryExpansion()) {
-                _view.checkNoneExpansionDictionary();
+                _view.checkNoneExpansionModel();
                 return;
             }
             String model = _indexer.getConfig().getQueryExpansionModel();
             switch (model) {
                 case "GloVe":
-                    _view.checkGloVeExpansionDictionary();
+                    _view.checkGloVeExpansionModel();
                     break;
                 case "WordNet":
-                    _view.checkWordNetExpansionDictionary();
+                    _view.checkWordNetExpansionModel();
                     break;
             }
         }
@@ -370,7 +367,7 @@ public class Themis {
         public void run() {
             _task = TASK.SEARCH;
             try {
-                setExpansionDictionary(_search);
+                setExpansionModel(_search);
                 setDocumentProps(_search);
                 setRetrievalModel(_search);
                 String query = _view.getQuery();
@@ -382,14 +379,14 @@ public class Themis {
 
                 /* return all results when the retrieval model is existential, else return top endResult results */
                 List<Result> results;
-                if (_search.getRetrievalmodel() == ARetrievalModel.MODEL.EXISTENTIAL) {
+                if (_search.getRetrievalmodel() == Retrieval.MODEL.EXISTENTIAL) {
                     results = _search.search(_view.getQuery());
                 } else {
                     results = _search.search(_view.getQuery(), endResult);
                 }
                 print("Search time: " + new Time(System.nanoTime() - startTime) + "\n");
                 print("Found " + _search.getTotalResults() + " results\n");
-                if (_search.getTotalResults() != 0 && _search.getRetrievalmodel() != ARetrievalModel.MODEL.EXISTENTIAL) {
+                if (_search.getTotalResults() != 0 && _search.getRetrievalmodel() != Retrieval.MODEL.EXISTENTIAL) {
                     print("Returning top " + Math.min(_search.getTotalResults(), endResult) + " results\n");
                 }
 
@@ -402,19 +399,19 @@ public class Themis {
             }
         }
 
-        /* reads the expansion dictionary from view and updates search */
-        private void setExpansionDictionary(Search search)
+        /* reads the query expansion model from view and updates search */
+        private void setExpansionModel(Search search)
                 throws IndexNotLoadedException, FileNotFoundException, JWNLException {
-            String dictionary = _view.getExpansionDictionary();
-            switch (dictionary) {
+            String model = _view.getExpansionModel();
+            switch (model) {
                 case "None":
-                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.NONE);
+                    search.setExpansionModel(QueryExpansion.MODEL.NONE);
                     break;
                 case "GloVe":
-                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.GLOVE);
+                    search.setExpansionModel(QueryExpansion.MODEL.GLOVE);
                     break;
                 case "WordNet":
-                    search.setExpansionDictionary(QueryExpansion.DICTIONARY.EXTJWNL);
+                    search.setExpansionModel(QueryExpansion.MODEL.WORDNET);
                     break;
             }
         }
@@ -441,7 +438,7 @@ public class Themis {
                     case "Year":
                         props.add(DocInfo.PROPERTY.YEAR);
                         break;
-                    case "Citations Pagerank":
+                    case "Citation Pagerank":
                         props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
                         break;
                     case "VSM Weight":
@@ -467,13 +464,13 @@ public class Themis {
             String model = _view.getRetrievalModel();
             switch (model) {
                 case "Existential":
-                    search.setRetrievalModel(ARetrievalModel.MODEL.EXISTENTIAL);
+                    search.setRetrievalModel(Retrieval.MODEL.EXISTENTIAL);
                     break;
                 case "VSM":
-                    search.setRetrievalModel(ARetrievalModel.MODEL.VSM);
+                    search.setRetrievalModel(Retrieval.MODEL.VSM);
                     break;
-                case "BM25":
-                    search.setRetrievalModel(ARetrievalModel.MODEL.OKAPI);
+                case "Okapi BM25+":
+                    search.setRetrievalModel(Retrieval.MODEL.OKAPI);
                     break;
             }
         }

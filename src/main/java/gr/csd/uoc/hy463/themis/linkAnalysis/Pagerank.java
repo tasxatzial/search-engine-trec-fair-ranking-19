@@ -21,7 +21,7 @@ import java.util.*;
 public class Pagerank {
     private final Indexer _indexer;
     private final int _totalDocuments;
-    private final String __CITATIONS_GRAPH__;
+    private final String __CITATIONS_GRAPH_PATH__;
 
     /**
      * Constructor.
@@ -32,7 +32,7 @@ public class Pagerank {
     public Pagerank(Indexer indexer)
             throws IOException {
         _indexer = indexer;
-        __CITATIONS_GRAPH__ = _indexer.getConfig().getIndexDir() + "graph";
+        __CITATIONS_GRAPH_PATH__ = _indexer.getConfig().getIndexDir() + "graph";
         _totalDocuments = _indexer.getTotalDocuments();
     }
 
@@ -56,7 +56,7 @@ public class Pagerank {
         double[] scores = computeCitationsPagerank(graph);
         Themis.print("Iterations completed in " + new Time(System.nanoTime() - startTime) + '\n');
         writeDocumentsScore(scores);
-        Files.deleteIfExists(new File(__CITATIONS_GRAPH__).toPath());
+        Files.deleteIfExists(new File(__CITATIONS_GRAPH_PATH__).toPath());
     }
 
     /* Parses the collection and saves the graph data to 'INDEX_DIR/graph' (random access file).
@@ -75,7 +75,7 @@ public class Pagerank {
         }
 
         Map<String, Integer> strToIntID = stringIDMap();
-        BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__CITATIONS_GRAPH__, "rw").getFD()));
+        BufferedOutputStream graphWriter = new BufferedOutputStream(new FileOutputStream(new RandomAccessFile(__CITATIONS_GRAPH_PATH__, "rw").getFD()));
 
         /* parse the collection and write the required data to 'INDEX_DIR/graph' */
         for (File corpusFile : corpus) {
@@ -180,7 +180,7 @@ public class Pagerank {
     /* Reads 'INDEX_DIR/graph' and initializes the Pagerank graph */
     private PagerankNode[] initCitationsGraph()
             throws IOException {
-        BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream(new RandomAccessFile(__CITATIONS_GRAPH__, "r").getFD()));
+        BufferedInputStream graphReader = new BufferedInputStream(new FileInputStream(new RandomAccessFile(__CITATIONS_GRAPH_PATH__, "r").getFD()));
         PagerankNode[] graph = new PagerankNode[_totalDocuments];
         for (int i = 0; i < _totalDocuments; i++) {
             graph[i] = new PagerankNode();
