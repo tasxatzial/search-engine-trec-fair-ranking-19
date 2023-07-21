@@ -70,12 +70,7 @@ The above values are hardcoded, but the program can be easily modified to suppor
 
 ## Configuration
 
-Configuration options for indexing/searching/evaluation can be changed in the themis.config file. Some of the options can also be changed from the GUI.
-
-Note that any changes to the config file are taken into account only when:
-
-* A new index is created.
-* An index is loaded.
+Configuration options for indexing, searching, and evaluation can be changed in the themis.config file. However, some of the options can also be modified through the GUI.
 
 ## Screenshots
 
