@@ -47,7 +47,7 @@ public class Pagerank {
     public void citationsPagerank()
             throws IOException {
         long startTime = System.nanoTime();
-        Themis.print("-> Constructing Pagerank graph of the citations...\n");
+        Themis.print("-> Creating Pagerank graph of the citations...\n");
         dumpCitationsData();
         PagerankNode[] graph = initCitationsGraph();
         Themis.print("Graph created in " + new Time(System.nanoTime() - startTime) + '\n');

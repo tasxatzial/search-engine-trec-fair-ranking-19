@@ -28,7 +28,6 @@ public class Themis {
     private static Indexer _indexer;
     private static Search _search;
     private static View _view;
-    private static ActionListener _searchButtonListener = null;
     private static TASK _task = null;
 
     /* one of the 5 available tasks. Only one task is allowed to run at a time */
@@ -58,27 +57,25 @@ public class Themis {
             /* resize listeners for the GUI window (does not include maximizing) */
             _view.addComponentListener(new ComponentAdapter() {
                 public void componentResized(ComponentEvent e) {
-                    _view.setOnlyResultsBounds();
                     _view.setTitleAreaBounds();
                     _view.setSearchViewBounds();
                 }
             });
 
             /* toggle maximize listeners for the GUI window */
-            _view.addWindowStateListener(e -> _view.setOnlyResultsBounds());
             _view.addWindowStateListener(e -> _view.setTitleAreaBounds());
             _view.addWindowStateListener(e -> _view.setSearchViewBounds());
 
             /* listeners for the menu items */
             _view.getCreateIndex().addActionListener(new createIndexListener());
             _view.getInitSearch().addActionListener(new InitSearchListener());
-            _view.getLoadIndex().addActionListener(new loadIndexListener());
             _view.getEvaluateVSM().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.NONE));
             _view.getEvaluateVSM_Glove().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.GLOVE));
             _view.getEvaluateVSM_WordNet().addActionListener(new evaluateListener(Retrieval.MODEL.VSM, QueryExpansion.MODEL.WORDNET));
             _view.getEvaluateOkapi().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.NONE));
             _view.getEvaluateOkapi_Glove().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.GLOVE));
             _view.getEvaluateOkapi_WordNet().addActionListener(new evaluateListener(Retrieval.MODEL.OKAPI, QueryExpansion.MODEL.WORDNET));
+            _view.getSearchButton().addActionListener(new searchButtonListener());
 
             _view.setVisible(true);
         }
@@ -169,8 +166,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            _view.initOnlyResultsView();
-            _searchButtonListener = null;
+            _view.clearResultsArea();
             Thread runnableCreate = new Thread(new CreateIndex_runnable());
             runnableCreate.start();
         }
@@ -183,33 +179,9 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            if (_indexer == null || !_indexer.isLoaded()) {
-                _view.initOnlyResultsView();
-                print("Index is not loaded!");
-                _task = null;
-                return;
-            }
-            _view.initSearchView();
-            if (_searchButtonListener == null) {
-                _searchButtonListener = new searchButtonListener();
-                _view.getSearchButton().addActionListener(_searchButtonListener);
-            }
-            Thread runnableInitQuery = new Thread(new InitSearch_runnable());
-            runnableInitQuery.start();
-        }
-    }
-
-    /* The listener for the "load index" menu item */
-    private static class loadIndexListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (_task != null) {
-                return;
-            }
-            _view.initOnlyResultsView();
-            _searchButtonListener = null;
-            Thread runnableLoad = new Thread(new LoadIndex_runnable());
-            runnableLoad.start();
+            _view.clearResultsArea();
+            Thread runnableInitSearch = new Thread(new InitSearch_runnable());
+            runnableInitSearch.start();
         }
     }
 
@@ -226,8 +198,7 @@ public class Themis {
             if (_task != null) {
                 return;
             }
-            _view.initOnlyResultsView();
-            _searchButtonListener = null;
+            _view.clearResultsArea();
             Thread runnableEvaluate = new Thread(new Evaluate_runnable(_retrievalModel, _expansionModel));
             runnableEvaluate.start();
         }
@@ -256,6 +227,7 @@ public class Themis {
                 ThemisEval eval = new ThemisEval(_indexer, _retrievalModel, _expansionModel, 0.25);
                 eval.run();
             } catch (Exception ex) {
+                _indexer = null;
                 print(ex + "\n");
             } finally {
                 _task = null;
@@ -283,26 +255,7 @@ public class Themis {
                 _indexer.deleteIndex();
                 _indexer.index();
             } catch (Exception ex) {
-                print(ex + "\n");
-            } finally {
-                _task = null;
-            }
-        }
-    }
-
-    /* runs when the "load default index" menu item is clicked */
-    private static class LoadIndex_runnable implements Runnable {
-        @Override
-        public void run() {
-            _task = TASK.LOAD_INDEX;
-            try {
-                if (_indexer == null) {
-                    _indexer = new Indexer();
-                } else {
-                    _indexer.unload();
-                }
-                _indexer.load();
-            } catch (Exception ex) {
+                _indexer = null;
                 print(ex + "\n");
             } finally {
                 _task = null;
@@ -316,47 +269,21 @@ public class Themis {
         public void run() {
             _task = TASK.INIT_SEARCH;
             try {
-                _search = new Search(_indexer);
-                setViewRetrievalModel();
-                setViewExpansionModel();
-                _view.uncheckAllDocumentProps();
+                if (_indexer == null) {
+                    _indexer = new Indexer();
+                }
+                _indexer.load();
+                if (_search == null) {
+                    _search = new Search(_indexer);
+                    setViewRetrievalModel();
+                    setViewExpansionModel();
+                    _view.uncheckAllDocumentProps();
+                }
             } catch (Exception ex) {
-                print(ex + "\n");
+                _indexer = null;
+                _search = null;
             } finally {
                 _task = null;
-            }
-        }
-
-        /* reads the default retrieval model from config and updates view */
-        private void setViewRetrievalModel() {
-            String model = _indexer.getConfig().getRetrievalModel();
-            switch (model) {
-                case "Existential":
-                    _view.checkExistentialRetrievalModel();
-                    break;
-                case "VSM":
-                    _view.checkVSMRetrievalModel();
-                    break;
-                case "OkapiBM25+":
-                    _view.checkOkapiRetrievalModel();
-                    break;
-            }
-        }
-
-        /* reads the default query expansion model from config and updates view */
-        private void setViewExpansionModel() {
-            if (!_indexer.getConfig().getUseQueryExpansion()) {
-                _view.checkNoneExpansionModel();
-                return;
-            }
-            String model = _indexer.getConfig().getQueryExpansionModel();
-            switch (model) {
-                case "GloVe":
-                    _view.checkGloVeExpansionModel();
-                    break;
-                case "WordNet":
-                    _view.checkWordNetExpansionModel();
-                    break;
             }
         }
     }
@@ -367,12 +294,17 @@ public class Themis {
         public void run() {
             _task = TASK.SEARCH;
             try {
+                if (_search == null) {
+                    print("Search is not initialized!");
+                    _task = null;
+                    return;
+                }
                 setExpansionModel(_search);
                 setDocumentProps(_search);
                 setRetrievalModel(_search);
                 String query = _view.getQuery();
                 long startTime = System.nanoTime();
-                print(">>> Searching for: " + query + " ...\n");
+                print("-> Searching for: " + query + " ...\n");
 
                 /* maximum results that should be returned */
                 int endResult = 50;
@@ -398,81 +330,114 @@ public class Themis {
                 _task = null;
             }
         }
+    }
 
-        /* reads the query expansion model from view and updates search */
-        private void setExpansionModel(Search search)
-                throws IndexNotLoadedException, FileNotFoundException, JWNLException {
-            String model = _view.getExpansionModel();
-            switch (model) {
-                case "None":
-                    search.setExpansionModel(QueryExpansion.MODEL.NONE);
+    /* reads the query expansion model from view and updates search */
+    private static void setExpansionModel(Search search)
+            throws IndexNotLoadedException, FileNotFoundException, JWNLException {
+        String model = _view.getExpansionModel();
+        switch (model) {
+            case "None":
+                search.setExpansionModel(QueryExpansion.MODEL.NONE);
+                break;
+            case "GloVe":
+                search.setExpansionModel(QueryExpansion.MODEL.GLOVE);
+                break;
+            case "WordNet":
+                search.setExpansionModel(QueryExpansion.MODEL.WORDNET);
+                break;
+        }
+    }
+
+    /* reads the selected document props from view and updates search */
+    private static void setDocumentProps(Search search)
+            throws IndexNotLoadedException {
+        Set<DocInfo.PROPERTY> props = new HashSet<>();
+        List<String> checkedProps = _view.getCheckedDocumentProps();
+        for (String checkedProp : checkedProps) {
+            switch (checkedProp) {
+                case "Title":
+                    props.add(DocInfo.PROPERTY.TITLE);
                     break;
-                case "GloVe":
-                    search.setExpansionModel(QueryExpansion.MODEL.GLOVE);
+                case "Authors":
+                    props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
                     break;
-                case "WordNet":
-                    search.setExpansionModel(QueryExpansion.MODEL.WORDNET);
+                case "Author ids":
+                    props.add(DocInfo.PROPERTY.AUTHORS_IDS);
+                    break;
+                case "Journal":
+                    props.add(DocInfo.PROPERTY.JOURNAL_NAME);
+                    break;
+                case "Year":
+                    props.add(DocInfo.PROPERTY.YEAR);
+                    break;
+                case "Citation Pagerank":
+                    props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
+                    break;
+                case "VSM Weight":
+                    props.add(DocInfo.PROPERTY.VSM_WEIGHT);
+                    break;
+                case "Token count":
+                    props.add(DocInfo.PROPERTY.TOKEN_COUNT);
+                    break;
+                case "Max TF":
+                    props.add(DocInfo.PROPERTY.MAX_TF);
+                    break;
+                case "Document Size":
+                    props.add(DocInfo.PROPERTY.DOCUMENT_SIZE);
                     break;
             }
         }
+        search.setDocumentProperties(props);
+    }
 
-        /* reads the selected document props from view and updates search */
-        private void setDocumentProps(Search search)
-                throws IndexNotLoadedException {
-            Set<DocInfo.PROPERTY> props = new HashSet<>();
-            List<String> checkedProps = _view.getCheckedDocumentProps();
-            for (String checkedProp : checkedProps) {
-                switch (checkedProp) {
-                    case "Title":
-                        props.add(DocInfo.PROPERTY.TITLE);
-                        break;
-                    case "Authors":
-                        props.add(DocInfo.PROPERTY.AUTHORS_NAMES);
-                        break;
-                    case "Author ids":
-                        props.add(DocInfo.PROPERTY.AUTHORS_IDS);
-                        break;
-                    case "Journal":
-                        props.add(DocInfo.PROPERTY.JOURNAL_NAME);
-                        break;
-                    case "Year":
-                        props.add(DocInfo.PROPERTY.YEAR);
-                        break;
-                    case "Citation Pagerank":
-                        props.add(DocInfo.PROPERTY.CITATIONS_PAGERANK);
-                        break;
-                    case "VSM Weight":
-                        props.add(DocInfo.PROPERTY.VSM_WEIGHT);
-                        break;
-                    case "Token count":
-                        props.add(DocInfo.PROPERTY.TOKEN_COUNT);
-                        break;
-                    case "Max TF":
-                        props.add(DocInfo.PROPERTY.MAX_TF);
-                        break;
-                    case "Document Size":
-                        props.add(DocInfo.PROPERTY.DOCUMENT_SIZE);
-                        break;
-                }
-            }
-            search.setDocumentProperties(props);
+    /* reads the query retrieval model from view and updates search */
+    private static void setRetrievalModel(Search search)
+            throws IndexNotLoadedException, IOException {
+        String model = _view.getRetrievalModel();
+        switch (model) {
+            case "Existential":
+                search.setRetrievalModel(Retrieval.MODEL.EXISTENTIAL);
+                break;
+            case "VSM":
+                search.setRetrievalModel(Retrieval.MODEL.VSM);
+                break;
+            case "Okapi BM25+":
+                search.setRetrievalModel(Retrieval.MODEL.OKAPI);
+                break;
         }
+    }
 
-        /* reads the query retrieval model from view and updates search */
-        private void setRetrievalModel(Search search)
-                throws IndexNotLoadedException, IOException {
-            String model = _view.getRetrievalModel();
-            switch (model) {
-                case "Existential":
-                    search.setRetrievalModel(Retrieval.MODEL.EXISTENTIAL);
-                    break;
-                case "VSM":
-                    search.setRetrievalModel(Retrieval.MODEL.VSM);
-                    break;
-                case "Okapi BM25+":
-                    search.setRetrievalModel(Retrieval.MODEL.OKAPI);
-                    break;
-            }
+    /* reads the default retrieval model from config and updates view */
+    private static void setViewRetrievalModel() {
+        String model = _indexer.getConfig().getRetrievalModel();
+        switch (model) {
+            case "Existential":
+                _view.checkExistentialRetrievalModel();
+                break;
+            case "VSM":
+                _view.checkVSMRetrievalModel();
+                break;
+            case "OkapiBM25+":
+                _view.checkOkapiRetrievalModel();
+                break;
+        }
+    }
+
+    /* reads the default query expansion model from config and updates view */
+    private static void setViewExpansionModel() {
+        if (!_indexer.getConfig().getUseQueryExpansion()) {
+            _view.checkNoneExpansionModel();
+            return;
+        }
+        String model = _indexer.getConfig().getQueryExpansionModel();
+        switch (model) {
+            case "GloVe":
+                _view.checkGloVeExpansionModel();
+                break;
+            case "WordNet":
+                _view.checkWordNetExpansionModel();
+                break;
         }
     }
 }

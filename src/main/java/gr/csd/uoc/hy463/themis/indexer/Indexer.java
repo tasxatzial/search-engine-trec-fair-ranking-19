@@ -663,7 +663,7 @@ public class Indexer {
         __DOCID_BUFFER__ = ByteBuffer.wrap(__DOCID_ARRAY__);
 
         __INDEX_IS_LOADED__ = true;
-        Themis.print("Done\n");
+        Themis.print("Done\n\n");
     }
 
     /**
@@ -1169,7 +1169,7 @@ public class Indexer {
         }
         return Boolean.parseBoolean(__INDEX_META__.get("use_stemmer"));
     }
-    
+
     /**
      * Returns the general configuration options used by this Indexer.
      *

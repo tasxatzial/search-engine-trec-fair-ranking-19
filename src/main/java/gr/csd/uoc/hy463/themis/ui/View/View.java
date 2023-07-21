@@ -8,21 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class View extends JFrame {
-
-    /* true when the search bar and button are visible */
-    private boolean _searchInitialized = false;
-
-    /* true when the results area is visible */
-    private boolean resultsAreaInitialized = false;
-
     /* The main menu bar */
     private JMenuBar _menu;
 
     /* The "create index" menu item */
     private JMenuItem _createIndex;
-
-    /* The "load index" menu item */
-    private JMenuItem _loadIndex;
 
     /* The "initialize search" menu item */
     private JMenuItem _initSearch;
@@ -33,16 +23,16 @@ public class View extends JFrame {
     /* The "evaluate VSM/Glove" menu item */
     private JMenuItem _evaluateVSM_Glove;
 
-    /* The "evaluate BM25" menu item */
+    /* The "evaluate Okapi BM25+" menu item */
     private JMenuItem _evaluateOkapi;
 
-    /* The "evaluate BM25/Glove" menu item */
+    /* The "evaluate Okapi BM25+ / Glove" menu item */
     private JMenuItem _evaluateOkapi_Glove;
 
-    /* The "evaluate VSM/WordNet" menu item */
+    /* The "evaluate VSM / WordNet" menu item */
     private JMenuItem _evaluateVSM_WordNet;
 
-    /* The "evaluate BM25/WordNet" menu item */
+    /* The "evaluate Okapi BM25+ / WordNet" menu item */
     private JMenuItem _evaluateOkapi_WordNet;
 
     /* Title area (top) */
@@ -85,23 +75,21 @@ public class View extends JFrame {
         setTitle("Themis search engine v1.1");
         setSize(800, 600); //initial frame size
         _mainPane = new JLayeredPane();
-        initTitleArea();
+        initTitle();
+        initSearch();
         getContentPane().add(_mainPane);
     }
 
     /* Initializes the menu bar */
     private void initMenu() {
-
         /* index menu */
         JMenu index = new JMenu("Index");
-        _createIndex = new JMenuItem("Create index");
-        _loadIndex = new JMenuItem("Load index");
+        _createIndex = new JMenuItem("Create");
         index.add(_createIndex);
-        index.add(_loadIndex);
 
         /* search menu */
         JMenu search = new JMenu("Search");
-        _initSearch = new JMenuItem("Initialize search");
+        _initSearch = new JMenuItem("Initialize");
 
         _retrievalModel = new JMenu("Retrieval model");
         ButtonGroup group = new ButtonGroup();
@@ -157,10 +145,10 @@ public class View extends JFrame {
         JMenuItem evaluate = new JMenu("Evaluate");
         _evaluateVSM = new JMenuItem("VSM");
         _evaluateOkapi = new JMenuItem("Okapi BM25+");
-        _evaluateVSM_Glove = new JMenuItem("VSM/GloVe");
-        _evaluateOkapi_Glove = new JMenuItem("Okapi BM25+/GloVe");
-        _evaluateVSM_WordNet = new JMenuItem("VSM/WordNet");
-        _evaluateOkapi_WordNet = new JMenuItem("Okapi BM25+/WordNet");
+        _evaluateVSM_Glove = new JMenuItem("VSM / GloVe");
+        _evaluateOkapi_Glove = new JMenuItem("Okapi BM25+ / GloVe");
+        _evaluateVSM_WordNet = new JMenuItem("VSM / WordNet");
+        _evaluateOkapi_WordNet = new JMenuItem("Okapi BM25+ / WordNet");
         evaluate.add(_evaluateVSM);
         evaluate.add(_evaluateOkapi);
         evaluate.add(_evaluateVSM_Glove);
@@ -177,8 +165,8 @@ public class View extends JFrame {
         setJMenuBar(_menu);
     }
 
-    /* Initializes the title Area */
-    private void initTitleArea() {
+    /* Initializes the title area */
+    private void initTitle() {
         _titleArea = new JLabel("Themis");
         _titleArea.setFont(new Font("SansSerif", Font.PLAIN, 20));
         _titleArea.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.BLACK));
@@ -186,64 +174,25 @@ public class View extends JFrame {
         _mainPane.add(_titleArea);
     }
 
-    /* Initializes the area that shows the results of create/load index or search */
-    private void initResultsArea() {
-        if (_searchInitialized || resultsAreaInitialized) {
-            return;
-        }
-        _resultsArea = new JTextArea();
-        _resultsArea.setEditable(false);
-        _resultsArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        _outputPane = new JScrollPane(_resultsArea);
-        _mainPane.add(_outputPane);
-    }
-
-    /**
-     * Modifies the view when the "create index", "load index", "evaluate VSM", "evaluate BM25" menu items
-     * are clicked
-     */
-    public void initOnlyResultsView() {
-        if (resultsAreaInitialized) {
-            clearResultsArea();
-            return;
-        }
-        if (_searchInitialized) {
-            _mainPane.remove(_searchButton);
-            _mainPane.remove(_searchField);
-            _mainPane.remove(_outputPane);
-            _searchInitialized = false;
-        }
-        initResultsArea();
-        resultsAreaInitialized = true;
-        setOnlyResultsBounds();
-    }
-
-    /**
-     * Modifies the view when the "query collection" menu item is clicked
-     */
-    public void initSearchView() {
-        if (_searchInitialized) {
-            clearResultsArea();
-            clearQuery();
-            return;
-        }
-        if (resultsAreaInitialized) {
-            _mainPane.remove(_outputPane);
-            resultsAreaInitialized = false;
-        }
+    /* Initializes the search view */
+    private void initSearch() {
         _searchButton = new JButton("Search");
         _searchButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
         _searchField = new JTextField();
         _searchField.setFont(new Font("SansSerif", Font.PLAIN, 16));
         _mainPane.add(_searchField);
         _mainPane.add(_searchButton);
-        initResultsArea();
-        _searchInitialized = true;
+
+        _resultsArea = new JTextArea();
+        _resultsArea.setEditable(false);
+        _resultsArea.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        _outputPane = new JScrollPane(_resultsArea);
         setSearchViewBounds();
+        _mainPane.add(_outputPane);
     }
 
     /**
-     * Sets the proper bounds of the title area
+     * Sets the proper bounds of the title area.
      */
     public void setTitleAreaBounds() {
         Dimension frameDim = getBounds().getSize();
@@ -256,29 +205,9 @@ public class View extends JFrame {
     }
 
     /**
-     * Sets the proper bounds of the results area when the "create index", "load index", "evaluate VSM",
-     * "evaluate BM25" menu items are clicked
-     */
-    public void setOnlyResultsBounds() {
-        if (!resultsAreaInitialized) {
-            return;
-        }
-        Dimension frameDim = getBounds().getSize();
-        int resultsPaneWidth = frameDim.width - getInsets().left - getInsets().right;
-        int resultsPaneHeight = frameDim.height - getInsets().top - getInsets().bottom -
-                _titleArea.getHeight() - _menu.getHeight();
-        int resultsPaneX = 0;
-        int resultsPaneY = _titleArea.getHeight();
-        _outputPane.setBounds(resultsPaneX, resultsPaneY, resultsPaneWidth, resultsPaneHeight);
-    }
-
-    /**
-     * Sets the proper bounds of the results area
+     * Sets the proper bounds of the search area.
      */
     public void setSearchViewBounds() {
-        if (!_searchInitialized) {
-            return;
-        }
         Dimension frameDim = getBounds().getSize();
 
         int searchButtonWidth = 150;
@@ -303,21 +232,17 @@ public class View extends JFrame {
     }
 
     /**
-     * Clears the results of clear/load index, search
+     * Clears the area that shows the results.
      */
     public void clearResultsArea() {
-        if (_resultsArea != null) {
-            _resultsArea.setText("");
-        }
+        _resultsArea.setText("");
     }
 
     /**
-     * Clears the search input area
+     * Clears the search input.
      */
     public void clearQuery() {
-        if (_searchField != null) {
-            _searchField.setText("");
-        }
+        _searchField.setText("");
     }
 
     /**
@@ -339,19 +264,19 @@ public class View extends JFrame {
     }
 
     /**
-     * Prints the given text to the results area
+     * Prints the given text to the area that shows the results.
+     *
      * @param text
      * @throws IOException
      */
     public void print(String text) {
-        if (_resultsArea != null) {
-            _resultsArea.append(text);
-            _resultsArea.setCaretPosition(_resultsArea.getDocument().getLength());
-        }
+        _resultsArea.append(text);
+        _resultsArea.setCaretPosition(_resultsArea.getDocument().getLength());
     }
 
     /**
      * Returns the "create index" menu item
+     *
      * @return
      */
     public JMenuItem getCreateIndex() {
@@ -360,6 +285,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "initialize search" menu item.
+     *
      * @return
      */
     public JMenuItem getInitSearch() {
@@ -367,15 +293,8 @@ public class View extends JFrame {
     }
 
     /**
-     * Returns the "load index" menu item.
-     * @return
-     */
-    public JMenuItem getLoadIndex() {
-        return _loadIndex;
-    }
-
-    /**
      * Returns the "evaluate VSM" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateVSM() {
@@ -384,6 +303,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "evaluate Okapi BM25+" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateOkapi() {
@@ -392,6 +312,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "evaluate VSM/GloVe" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateVSM_Glove() {
@@ -400,6 +321,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "evaluate Okapi BM25+/Glove" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateOkapi_Glove() {
@@ -408,6 +330,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "evaluate VSM/WordNet" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateVSM_WordNet() {
@@ -416,6 +339,7 @@ public class View extends JFrame {
 
     /**
      * Returns the "evaluate Okapi BM25+/WordNet" menu item.
+     *
      * @return
      */
     public JMenuItem getEvaluateOkapi_WordNet() {
@@ -424,6 +348,7 @@ public class View extends JFrame {
 
     /**
      * Returns the search button.
+     *
      * @return
      */
     public JButton getSearchButton() {
@@ -432,6 +357,7 @@ public class View extends JFrame {
 
     /**
      * Returns the text content of the search field.
+     *
      * @return
      */
     public String getQuery() {
@@ -440,6 +366,7 @@ public class View extends JFrame {
 
     /**
      * Returns the name of the selected retrieval model.
+     *
      * @return
      */
     public String getRetrievalModel() {
