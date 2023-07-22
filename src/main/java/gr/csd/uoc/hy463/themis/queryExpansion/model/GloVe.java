@@ -27,10 +27,9 @@ public class GloVe extends QueryExpansion {
         Themis.print("-> Initializing GloVe...");
         File gloveModel = new File(filePath);
         if (!gloveModel.exists()) {
-            throw new FileNotFoundException();
+            throw new FileNotFoundException(filePath);
         }
         _model = WordVectorSerializer.readWord2VecModel(gloveModel);
-
         Themis.print("Done\n");
     }
 

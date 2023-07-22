@@ -84,8 +84,8 @@ public class Indexer {
      */
     public void index()
             throws IOException {
-        if (!areIndexDirEmpty()) {
-            Themis.print("Previous index found. Aborting...\n");
+        if (indexDirNotEmpty()) {
+            Themis.print("Previous index found in " + __CONFIG__.getIndexDir() + " or " + __CONFIG__.getIndexTmpDir() + "\n");
             return;
         }
 
@@ -753,19 +753,19 @@ public class Indexer {
     }
 
     /**
-     * Returns true if INDEX_DIR and INDEX_TMP_DIR are empty, false otherwise.
+     * Returns true if INDEX_DIR and INDEX_TMP_DIR are present and not empty, else false.
      *
      * @return
      */
-    public boolean areIndexDirEmpty() {
-        File file = new File(__CONFIG__.getIndexDir());
-        File[] fileList = file.listFiles();
+    public boolean indexDirNotEmpty() {
+        File indexDir = new File(__CONFIG__.getIndexDir());
+        File[] fileList = indexDir.listFiles();
         if (fileList != null && fileList.length != 0) {
-            return false;
+            return true;
         }
-        file = new File(__CONFIG__.getIndexTmpDir());
-        fileList = file.listFiles();
-        return fileList == null || fileList.length == 0;
+        File indexTmpDir = new File(__CONFIG__.getIndexTmpDir());
+        fileList = indexTmpDir.listFiles();
+        return fileList != null && fileList.length != 0;
     }
 
     /**

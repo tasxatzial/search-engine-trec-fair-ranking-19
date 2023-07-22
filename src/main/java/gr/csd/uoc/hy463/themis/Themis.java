@@ -122,7 +122,7 @@ public class Themis {
             for (QueryExpansion.MODEL expansionModel : expansionModels) {
                 for (Retrieval.MODEL retrievalModel : retrievalModels) {
                     for (double pagerank : pagerankWeights) {
-                        ThemisEval eval = new ThemisEval(_indexer, retrievalModel, expansionModel, pagerank);
+                        ThemisEval eval = new ThemisEval(indexer, retrievalModel, expansionModel, pagerank);
                         eval.run();
                     }
                 }
@@ -218,16 +218,15 @@ public class Themis {
         public void run() {
             _task = TASK.EVALUATE;
             try {
-                if (_indexer == null) {
-                    _indexer = new Indexer();
+                if (_indexer != null) {
+                    _indexer.unload();
                 }
-                if (!_indexer.isLoaded()) {
-                    _indexer.load();
-                }
+                _indexer = new Indexer();
+                _search = null;
+                _indexer.load();
                 ThemisEval eval = new ThemisEval(_indexer, _retrievalModel, _expansionModel, 0.25);
                 eval.run();
             } catch (Exception ex) {
-                _indexer = null;
                 print(ex + "\n");
             } finally {
                 _task = null;
@@ -241,21 +240,23 @@ public class Themis {
         public void run() {
             _task = TASK.CREATE_INDEX;
             try {
-                if (_indexer == null) {
-                    _indexer = new Indexer();
-                }
-                if (!_indexer.areIndexDirEmpty()) {
+                Indexer indexer = new Indexer();
+                if (indexer.indexDirNotEmpty()) {
                     boolean deleteIndex = _view.showYesNoMessage("Delete previous index folders?");
-                    if (!deleteIndex) {
+                    if (deleteIndex) {
+                        if (_indexer != null) {
+                            _indexer.unload();
+                        }
+                        indexer.deleteIndex();
+                    } else {
                         _task = null;
                         return;
                     }
                 }
-                _indexer.unload();
-                _indexer.deleteIndex();
-                _indexer.index();
+                indexer.index();
+                _indexer = indexer;
+                _search = null;
             } catch (Exception ex) {
-                _indexer = null;
                 print(ex + "\n");
             } finally {
                 _task = null;
@@ -269,19 +270,18 @@ public class Themis {
         public void run() {
             _task = TASK.INIT_SEARCH;
             try {
-                if (_indexer == null) {
-                    _indexer = new Indexer();
+                if (_indexer != null) {
+                    _indexer.unload();
                 }
-                _indexer.load();
-                if (_search == null) {
-                    _search = new Search(_indexer);
-                    setViewRetrievalModel();
-                    setViewExpansionModel();
-                    _view.uncheckAllDocumentProps();
-                }
-            } catch (Exception ex) {
-                _indexer = null;
+                _indexer = new Indexer();
                 _search = null;
+                _indexer.load();
+                _search = new Search(_indexer);
+                setViewRetrievalModel();
+                setViewExpansionModel();
+                _view.uncheckAllDocumentProps();
+            } catch (Exception ex) {
+                print(ex + "\n");
             } finally {
                 _task = null;
             }

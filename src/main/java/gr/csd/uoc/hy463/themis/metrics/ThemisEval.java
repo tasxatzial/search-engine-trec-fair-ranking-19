@@ -31,6 +31,7 @@ public class ThemisEval {
     private static final Logger __LOGGER__ = LogManager.getLogger(ThemisEval.class);
     private final Search _search;
     private final Indexer _indexer;
+    private final String __JUDGEMENTS_PATH__;
 
     /**
      * Initializes a new {@link Search} using the given arguments.
@@ -46,6 +47,10 @@ public class ThemisEval {
             throws IOException, IndexNotLoadedException, JWNLException {
         if (!indexer.isLoaded()) {
             throw new IndexNotLoadedException();
+        }
+        __JUDGEMENTS_PATH__ = indexer.getConfig().getJudgmentsPath();
+        if (!(new File(__JUDGEMENTS_PATH__).exists())) {
+            throw new FileNotFoundException(__JUDGEMENTS_PATH__);
         }
         _indexer = indexer;
         _search = new Search(indexer);
@@ -67,12 +72,6 @@ public class ThemisEval {
      */
     public void run()
             throws IndexNotLoadedException, IOException, QueryExpansionException {
-        Themis.print("-> Checking judgements file...");
-        String __JUDGEMENTS_PATH__ = _indexer.getConfig().getJudgmentsPath();
-        if (!(new File(__JUDGEMENTS_PATH__).exists())) {
-            throw new FileNotFoundException();
-        }
-        Themis.print("found\n");
         String evalFname = _indexer.getConfig().getEvaluationFilename();
         String timestamp = Instant.now().toString().replace(':', '.');
         if (evalFname.lastIndexOf('.') != -1) {
