@@ -1,8 +1,6 @@
-# Evaluation
+# Evaluation (stemming on)
 
-Here you'll find some evaluation results for different search options.
-
-* [index_meta.idx](index_meta.idx): Configuration options for this index.
+* [index_meta.idx](index_meta.idx): Index metadata.
 * [indexing](indexing.txt): Log of the indexing process.
 * [Vector space model - No query expansion - Pagerank weight = 0](evaluation_2023-05-20T01.50.09.120764500Z.txt)
 * [Vector space model - EXTJWNL query expansion - Pagerank weight = 0](evaluation_2023-05-20T08.02.03.593531Z.txt)

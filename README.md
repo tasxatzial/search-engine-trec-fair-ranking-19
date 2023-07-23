@@ -10,7 +10,7 @@ Themis is a search engine that was built to index and query the collection of do
   * Okapi
 * Query expansion using pre-trained word vectors from deep learning models:
   * Statistical Dictionary [GloVe](https://nlp.stanford.edu/projects/glove/).
-  * Lexical Dictionary [WordNet](https://wordnet.princeton.edu/) ([extJWNL](http://extjwnl.sourceforge.net/) library).
+  * Lexical Dictionary [WordNet](https://wordnet.princeton.edu/).
 * Pagerank ranking.
 * Option to use stemming.
 * Option to use a list of stopwords.
@@ -18,7 +18,7 @@ Themis is a search engine that was built to index and query the collection of do
 
 ## Indexing
 
-Indexing took 2h:30m on a i9-9900k with 64GB DDR4 RAM and 1TB SSD. Both stemming and stopwords were enabled. 235 partial indexes were created, these were then merged to create the final index.
+Indexing took 2h:30m on a i9-9900k with 64GB DDR4 RAM and 1TB SSD. Both stemming and stopwords were enabled. 235 partial indexes were created and merged to form the final index.
 
 ## Evaluation
 
@@ -32,7 +32,7 @@ These numbers depend on the search parameters (retrieval model/query expansion/p
 
 ## Results
 
-The '[results](results/)' folder contains a complete log of the indexing & evaluation results including a simple analysis of the graph structure of the citations.
+The [results](results/) folder contains a complete log of the indexing & evaluation results including a simple analysis of the graph structure of the citations.
 
 ## Compile
 
@@ -43,19 +43,19 @@ From the command line switch to the root directory of the project and run:
     mvn dependency:copy-dependencies
     mvn package
 
-The first command should copy all .jar dependencies in the 'target/dependency' directory. The second command should build the final executable jar file in the 'target' folder.
+The first command should copy all .jar dependencies in the `target/dependency` folder. The second command should build the final executable jar file in the `target` folder.
 
 ## Run
 
-### Running the project without a GUI
+### Without a GUI
 
-Write all code in the main function of the class gr.csd.uoc.hy463.themis.Themis. Compile the project then switch to the 'target' folder and run:
+Write all code in the main function of the class `Themis`. Compile the project then switch to the `target` folder and run:
 
     java -Xmx32G -jar fairness-trec-2019-1.0-SNAPSHOT.jar
 
-### Running the project with a GUI
+### With a GUI
 
-The GUI gives us access to most of the needed functionality. Switch to the 'target' folder and run:
+The GUI gives us access to most of the needed functionality. Switch to the `target` folder and run:
 
     java -Xmx32G -jar fairness-trec-2019-1.0-SNAPSHOT.jar gui
 
@@ -70,7 +70,7 @@ The above values are hardcoded, but the program can be easily modified to suppor
 
 ## Configuration
 
-Configuration options for indexing, searching, and evaluation can be changed in the themis.config file. However, some of the options can also be modified through the GUI.
+Configuration options for indexing, searching, and evaluation can be changed in the `themis.config` file. However, some of the options can also be modified through the GUI.
 
 ## Screenshots
 
